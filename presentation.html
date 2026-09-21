@@ -111,6 +111,7 @@
       max-width: 1360px;
       height: 85%;
       opacity: 0;
+      visibility: hidden;
       transform: translateX(40px);
       pointer-events: none;
       transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
@@ -120,6 +121,7 @@
     }
     .slide.active {
       opacity: 1;
+      visibility: visible;
       transform: translateX(0);
       pointer-events: auto;
     }
@@ -669,8 +671,108 @@
       </div>
     </div>
 
-    <!-- Slide 12: Grand Conclusion & Call to Action -->
+        <!-- Slide 12: 4-Phase Operational Roadmap to Medical Nobility -->
     <div class="slide" data-slide="12">
+      <div class="slide-category">Operationalizing Nobility • 4-Phase Trajectory</div>
+      <h2 class="slide-title">실행 로드맵: <span>의료 노블리티 완성 4단계 워크플로우</span></h2>
+      <div class="slide-content-grid" style="grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+        
+        <div class="card card-cyan" style="padding: 1.2rem;">
+          <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--cyan); font-weight: 800;">PHASE 0 • FOUNDATION</div>
+          <h3 style="font-size: 1.15rem; color: #fff; margin: 0.35rem 0 0.6rem 0;">자체 거버넌스 & 노블리티 감사 (Audit)</h3>
+          <ul class="feature-list" style="font-size: 0.8rem; line-height: 1.5;">
+            <li><strong>불변식 기계가독 코드화:</strong> 가이드라인 만료 시각 대비 위험 시계 오차 제로화.</li>
+            <li><strong>의료진 인지부하 경감:</strong> 경고당 인지 피로도 및 시간당 수락률 정량 감사.</li>
+            <li><strong>암호화 불변 원장:</strong> 모든 루프 개폐 이벤트를 블록체인급 위변조 방지 원장에 기록.</li>
+          </ul>
+        </div>
+
+        <div class="card card-emerald" style="padding: 1.2rem;">
+          <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--emerald); font-weight: 800;">PHASE 1 • LOCAL PROOF</div>
+          <h3 style="font-size: 1.15rem; color: #fff; margin: 0.35rem 0 0.6rem 0;">노벨 테스트 (전향적 무작위 대조시험 cRCT)</h3>
+          <ul class="feature-list" style="font-size: 0.8rem; line-height: 1.5;">
+            <li><strong>ClinicalTrials.gov 사전등록:</strong> 아주대학교병원 단일센터 엄격 임상시험.</li>
+            <li><strong>3개 군 비교 분리:</strong> (1) 표준진료 vs (2) 의사 루프만 vs (3) 이중루프 완전 가동.</li>
+            <li><strong>진실을 향한 헌신:</strong> 양성/음성 결과 여부와 관계없이 최고 권위 저널(NEJM/Lancet) 무조건 공개.</li>
+          </ul>
+        </div>
+
+        <div class="card" style="padding: 1.2rem; border-color: rgba(167, 139, 250, 0.4);">
+          <div style="font-family: var(--font-mono); font-size: 0.75rem; color: #a78bfa; font-weight: 800;">PHASE 2 • NETWORKED PROOF</div>
+          <h3 style="font-size: 1.15rem; color: #fff; margin: 0.35rem 0 0.6rem 0;">연합학습(FL) 기반 다기관 사후 안전감시</h3>
+          <ul class="feature-list" style="font-size: 0.8rem; line-height: 1.5;">
+            <li><strong>개인정보 유출 제로 연합학습:</strong> 병원 간 환자 데이터 전송 없이 암호화 그래디언트만 통합.</li>
+            <li><strong>통계적 공정관리(SPC):</strong> 데이터 드리프트 및 하위집단 성능 편차 실시간 감지.</li>
+            <li><strong>독립 거버넌스 위원회:</strong> 임상의, 생명윤리학자, 환자 대표가 알고리즘 변경 최종 승인.</li>
+          </ul>
+        </div>
+
+        <div class="card" style="padding: 1.2rem; border-color: rgba(251, 191, 36, 0.4);">
+          <div style="font-family: var(--font-mono); font-size: 0.75rem; color: #fbbf24; font-weight: 800;">PHASE 3 • REGULATION & ETHICS</div>
+          <h3 style="font-size: 1.15rem; color: #fff; margin: 0.35rem 0 0.6rem 0;">식약처/FDA 사전변경관리계획(PCCP) & 노블리티 표준</h3>
+          <ul class="feature-list" style="font-size: 0.8rem; line-height: 1.5;">
+            <li><strong>적응형 AI SaMD 인허가:</strong> 재심사 없이 로컬 보정이 가능한 사전변경관리계획(PCCP) 수립.</li>
+            <li><strong>인간 존엄 가이드라인 준수:</strong> 바티칸 생명학술원(PAV) 로마 선언 의료 AI 인간 중심 원칙 공표.</li>
+            <li><strong>노블리티 공인 인증(Nobility-Certified):</strong> 기술력과 윤리적 투명성을 겸비한 세계적 표준 정립.</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Slide 13: 6 Breakthrough Legacy Institutions -->
+    <div class="slide" data-slide="13">
+      <div class="slide-category">Legacy Innovations • Institutionalizing Compassion</div>
+      <h2 class="slide-title">의료사적 유산: <span>ClinLoop 6대 브레인스톰 제도</span></h2>
+      <div class="slide-content-grid" style="grid-template-columns: repeat(3, 1fr); gap: 0.9rem;">
+
+        <div class="card" style="padding: 1rem; border-left: 4px solid var(--cyan);">
+          <h4 style="font-size: 0.95rem; color: #fff; margin-bottom: 0.4rem;">1. 히포크라테스 불변식 레지스트리 (HIR)</h4>
+          <p style="font-size: 0.76rem; color: #94a3b8; line-height: 1.45; margin: 0;">
+            성공뿐만 아니라 <strong>지연된 루프의 원인과 개선책을 투명하게 공개</strong>하는 위변조 방지 글로벌 레지스트리.
+          </p>
+        </div>
+
+        <div class="card" style="padding: 1rem; border-left: 4px solid var(--rose);">
+          <h4 style="font-size: 0.95rem; color: #fff; margin-bottom: 0.4rem;">2. 라스트마일 결정론적 에스컬레이션 (DEP)</h4>
+          <p style="font-size: 0.76rem; color: #94a3b8; line-height: 1.45; margin: 0;">
+            의료진의 극심한 피로로 확인이 지연될 때, <strong>자동으로 환자 보호 및 과장 에스컬레이션을 가동하는 임상적 데드맨 스위치</strong>.
+          </p>
+        </div>
+
+        <div class="card" style="padding: 1rem; border-left: 4px solid #ec4899;">
+          <h4 style="font-size: 0.95rem; color: #fff; margin-bottom: 0.4rem;">3. 환자 서사 코퍼스 & 인과 최적화 (PNC)</h4>
+          <p style="font-size: 0.76rem; color: #94a3b8; line-height: 1.45; margin: 0;">
+            미세 무작위 배정(MRT)과 인과 포레스트를 활용해 환자군별 최적의 순응도를 이끌어내는 <strong>정밀 공감 소통 엔진</strong>.
+          </p>
+        </div>
+
+        <div class="card" style="padding: 1rem; border-left: 4px solid #fbbf24;">
+          <h4 style="font-size: 0.95rem; color: #fff; margin-bottom: 0.4rem;">4. ClinLoop 의료 노블리티 국제상</h4>
+          <p style="font-size: 0.76rem; color: #94a3b8; line-height: 1.45; margin: 0;">
+            의료 취약지 및 개발도상국 병원에서 진단 누락을 혁신적으로 방지한 팀에게 수여하는 <strong>글로벌 연대 어워드 및 시스템 기증</strong>.
+          </p>
+        </div>
+
+        <div class="card" style="padding: 1rem; border-left: 4px solid var(--emerald);">
+          <h4 style="font-size: 0.95rem; color: #fff; margin-bottom: 0.4rem;">5. 인간 존엄 인터페이스 계층</h4>
+          <p style="font-size: 0.76rem; color: #94a3b8; line-height: 1.45; margin: 0;">
+            <em>"환자분은 데이터가 아닙니다. 우리가 생명을 지켜낼 소중한 사람입니다."</em> — 루프 종결 시 환자에게 인과적 생명 가치를 증명.
+          </p>
+        </div>
+
+        <div class="card" style="padding: 1rem; border-left: 4px solid #8b5cf6;">
+          <h4 style="font-size: 0.95rem; color: #fff; margin-bottom: 0.4rem;">6. 환자 불안 디지털 트윈</h4>
+          <p style="font-size: 0.76rem; color: #94a3b8; line-height: 1.45; margin: 0;">
+            원내 온프레미스 GPU에서 환자의 심리적 저항과 두려움을 사전 시뮬레이션하여 <strong>가장 따뜻하고 효과적인 언어로 다가가는 기술</strong>.
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Slide 14: Grand Conclusion & Call to Action -->
+    <div class="slide" data-slide="14">
       <div class="slide-category">Conclusion • Grand Vision</div>
       <h1 class="slide-title" style="font-size: 3rem;">
         “단 한 명의 환자도 침묵 속에<br>
@@ -706,7 +808,7 @@
       <div class="progress-bar" id="progress-bar"></div>
     </div>
     <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);">
-      Slide <span id="current-slide-num">1</span> / <span id="total-slides-num">12</span>
+      Slide <span id="current-slide-num">1</span> / <span id="total-slides-num">14</span>
     </div>
     <button class="nav-btn" id="next-btn">Next ▶</button>
   </footer>
@@ -733,6 +835,16 @@
       progressBar.style.width = `${((currentIdx + 1) / totalSlides) * 100}%`;
       curNumEl.textContent = currentIdx + 1;
     }
+
+    const initialSlide = parseInt(new URLSearchParams(window.location.search).get('slide') || window.location.hash.replace('#', '')) - 1;
+    if (!isNaN(initialSlide) && initialSlide >= 0) {
+      showSlide(initialSlide);
+    }
+
+    window.addEventListener('hashchange', () => {
+      const idx = parseInt(window.location.hash.replace('#', '')) - 1;
+      if (!isNaN(idx) && idx >= 0) showSlide(idx);
+    });
 
     document.getElementById('prev-btn').addEventListener('click', () => showSlide(currentIdx - 1));
     document.getElementById('next-btn').addEventListener('click', () => showSlide(currentIdx + 1));

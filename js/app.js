@@ -588,6 +588,18 @@ class ClinLoopApp {
         const m = document.getElementById('outreach-modal');
         if (m) m.classList.add('open');
       }, 300);
+    } else if (urlParams.get('modal') === 'nobility') {
+      const m = document.getElementById('nobility-modal');
+      if (m) {
+        m.classList.add('open');
+        setTimeout(() => {
+          const body = m.querySelector('.comparison-modal');
+          if (body) {
+            if (urlParams.get('scroll') === 'workflow') body.scrollTop = 600;
+            else if (urlParams.get('scroll') === 'legacy') body.scrollTop = 1200;
+          }
+        }, 150);
+      }
     }
 
     if (btnApiKeys && apiModal) {
