@@ -1,0 +1,1052 @@
+[
+  {
+    "scenario_id": "SC-0062",
+    "patient_id": "PT-0062",
+    "patient_age": 42,
+    "patient_sex": "F",
+    "scenario_name": "Abnormal Pap (HSIL) — No Colposcopy",
+    "scenario_category": "abnormal_pap_open",
+    "applicable_rule_id": "R005",
+    "events": [
+      {
+        "event_id": "EVT-0621",
+        "patient_id": "PT-0062",
+        "event_type": "lab_result",
+        "timestamp": "2026-03-13T09:00:00",
+        "details": {
+          "test": "cervical_cytology",
+          "result": "HSIL",
+          "flag": "ABNORMAL",
+          "condition": "abnormal_cervical_cytology"
+        },
+        "status": "completed"
+      },
+      {
+        "event_id": "EVT-0622",
+        "patient_id": "PT-0062",
+        "event_type": "patient_notification",
+        "timestamp": "2026-03-15T09:00:00",
+        "details": {
+          "method": "letter",
+          "content": "abnormal_pap_result"
+        },
+        "status": "completed"
+      }
+    ],
+    "ground_truth_status": "open",
+    "ground_truth_severity": "high",
+    "ground_truth_risk_score": 0.8,
+    "missing_followup": "COLPOSCOPY_REFERRAL within 30 days",
+    "clinical_narrative": "Female age 42 with HSIL on cervical cytology. Patient notified by letter but no colposcopy referral placed.",
+    "biomcp_evidence": {
+      "mcp_tool": "biomcp_query_guidelines",
+      "mcp_args": {
+        "finding_category": "cervical_cytology",
+        "finding_value": "HSIL",
+        "patient_age": 42,
+        "prior_hpv": "unknown"
+      },
+      "guideline_org": "ASCCP (American Society for Colposcopy and Cervical Pathology)",
+      "guideline_title": "2019/2020 ASCCP Risk-Based Management Consensus Guidelines for Abnormal Cervical Cancer Screening Tests",
+      "citation": "J Low Genit Tract Dis. 2020 Apr;24(2):102-131.",
+      "pmid": "32243307",
+      "doi": "10.1097/LGT.0000000000000525",
+      "evidence_grade": "Grade 1A (Strong Recommendation, High-Quality Evidence)",
+      "mandated_action": "Colposcopy Referral & Biopsy",
+      "time_window_days": 30,
+      "legal_liability": "High Malpractice Risk (Failure to Diagnose Invasive Cervical Carcinoma)",
+      "derived_t_crit": 30,
+      "derived_k_factor": 8.0,
+      "biomcp_endpoint": "mcp://biomcp.ajou.internal/v1/tools/guidelines",
+      "latency_ms": 42
+    },
+    "omop_cdm": {
+      "concept_id": 4180497,
+      "concept_name": "High grade squamous intraepithelial lesion of cervix on cytology",
+      "domain_id": "Measurement",
+      "vocabulary_id": "SNOMED",
+      "concept_code": "416952002",
+      "loinc_code": "10524-7",
+      "loinc_name": "Microscopic observation in Cervical or vaginal smear"
+    },
+    "fhir_r4": {
+      "resourceType": "DiagnosticReport",
+      "id": "DR-0062-PAP",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+              "code": "CYTO"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "10524-7",
+            "display": "Cervical Cytology"
+          }
+        ]
+      },
+      "subject": {
+        "reference": "Patient/PT-0062"
+      },
+      "conclusion": "High-Grade Squamous Intraepithelial Lesion (HSIL). Mandatory colposcopy referral required."
+    },
+    "counterfactual": {
+      "condition_name": "Cervical Intraepithelial Neoplasia (HSIL)",
+      "delta_5yr_survival": "+46.0%",
+      "qaly_gain": 8.4,
+      "liability_avoided_krw": "280,000,000 KRW",
+      "neglected_path": [
+        {
+          "time": "Day 0",
+          "day": 0,
+          "state": "Cytology HSIL Identified",
+          "stage": "CIN-2/3 Precancerous",
+          "survival": "98%",
+          "hazard": 0.1,
+          "desc": "Abnormal Pap reported; patient sent routine letter."
+        },
+        {
+          "time": "Day 30",
+          "day": 30,
+          "state": "Guideline Deadline Expired",
+          "stage": "Persistent High-Grade Dysplasia",
+          "survival": "95%",
+          "hazard": 0.45,
+          "desc": "Colposcopy referral missing; no clinic follow-up scheduled."
+        },
+        {
+          "time": "Day 90",
+          "day": 90,
+          "state": "Unmonitored Progression",
+          "stage": "Micro-invasive Cervical Carcinoma",
+          "survival": "84%",
+          "hazard": 0.78,
+          "desc": "Cellular atypia extends past basement membrane; malpractice window active."
+        },
+        {
+          "time": "Month 14",
+          "day": 420,
+          "state": "Symptomatic Presentation",
+          "stage": "Stage IIB Invasive Cervical Cancer",
+          "survival": "58%",
+          "hazard": 0.95,
+          "desc": "Patient presents with abnormal vaginal bleeding and pelvicalyceal involvement."
+        },
+        {
+          "time": "Year 5",
+          "day": 1825,
+          "state": "Long-term Survival",
+          "stage": "Advanced Recurrence Risk",
+          "survival": "52%",
+          "hazard": 1.0,
+          "desc": "5-Year Overall Survival: 52% (Severe morbidity from chemoradiation)."
+        }
+      ],
+      "intervened_path": [
+        {
+          "time": "Day 0",
+          "day": 0,
+          "state": "Cytology HSIL Identified",
+          "stage": "CIN-2/3 Precancerous",
+          "survival": "98%",
+          "hazard": 0.1,
+          "desc": "Abnormal Pap reported; ClinLoop Neuro-Symbolic ingest."
+        },
+        {
+          "time": "Day 14",
+          "day": 14,
+          "state": "ClinLoop Proactive Alert",
+          "stage": "Precancerous High-Grade",
+          "survival": "98%",
+          "hazard": 0.05,
+          "desc": "Attending alerted; automated patient mobile outreach initiated."
+        },
+        {
+          "time": "Day 22",
+          "day": 22,
+          "state": "Loop Closed: Colposcopy & LEEP",
+          "stage": "Curative Excision Completed",
+          "survival": "99%",
+          "hazard": 0.0,
+          "desc": "Histology confirms negative margins; high-grade lesion eradicated."
+        },
+        {
+          "time": "Month 12",
+          "day": 365,
+          "state": "Routine Surveillance Normal",
+          "stage": "Disease-Free Remission",
+          "survival": "99%",
+          "hazard": 0.0,
+          "desc": "Normal follow-up HPV/cytology co-testing."
+        },
+        {
+          "time": "Year 5",
+          "day": 1825,
+          "state": "Long-term Survival",
+          "stage": "Complete Remission",
+          "survival": "98%",
+          "hazard": 0.0,
+          "desc": "5-Year Overall Survival: 98% (+46.0% survival advantage)."
+        }
+      ],
+      "evidence_rationale": "ASCCP 2020 Guidelines show prompt colposcopic excision of HSIL prevents invasive cervical cancer progression in >95% of cases (PMID: 32243307)."
+    },
+    "patient_outreach": {
+      "patient_name": "김미영 (Kim Mi-young)",
+      "preferred_language": "ko",
+      "channel": "KakaoTalk 알림톡 / SMS",
+      "clinical_jargon": "Cervical cytology HSIL (High-grade Squamous Intraepithelial Lesion)",
+      "plain_language_title": "[아주대병원] 자궁경부 건강검진 정밀 추적진료 안내",
+      "plain_language_body": "김미영님, 지난 3월 13일 시행하신 세포검사에서 전문의 상담 및 정밀검사(질확대경검사)가 필요한 변화가 발견되었습니다. 조기에 확인하시면 98% 이상 안전하게 치료 가능한 단계이오니, 30일 이내에 산부인과 외래 예약을 권고드립니다.",
+      "action_button_label": "📅 1초 간편 예약하기 (3월 25일 오전 10:00 박교수)",
+      "appointment_slot_suggested": "2026-03-25 10:00 KST (Gynecology Room 3, Prof. Park)",
+      "fhir_communication_request_id": "COMM-REQ-0062-ASCCP"
+    },
+    "patient_name_kr": "박영희",
+    "patient_name_en": "Park, Young-hee",
+    "age_sex_kr": "여성 42세",
+    "title_kr": "자궁경부 세포검사(HSIL) 질확대경 조직검사 누락",
+    "dept_kr": "산부인과 / 부인암센터",
+    "golden_days": 5,
+    "action_kr": "질확대경 조준생검(Colposcopy) 및 부인과 진료 긴급 예약",
+    "dept_en": "Gynecology Oncology"
+  },
+  {
+    "scenario_id": "SC-0004",
+    "patient_id": "PT-0004",
+    "patient_age": 63,
+    "patient_sex": "M",
+    "scenario_name": "Incidental Lung Nodule 7.8mm — No Follow-up",
+    "scenario_category": "incidental_nodule_open",
+    "applicable_rule_id": "R003",
+    "events": [
+      {
+        "event_id": "EVT-0041",
+        "patient_id": "PT-0004",
+        "event_type": "imaging_order",
+        "timestamp": "2026-06-07T09:00:00",
+        "details": {
+          "modality": "CT_CHEST",
+          "indication": "preoperative"
+        },
+        "status": "completed"
+      },
+      {
+        "event_id": "EVT-0042",
+        "patient_id": "PT-0004",
+        "event_type": "imaging_result",
+        "timestamp": "2026-06-07T11:24:00",
+        "details": {
+          "modality": "CT_CHEST",
+          "status": "completed"
+        },
+        "status": "completed"
+      },
+      {
+        "event_id": "EVT-0043",
+        "patient_id": "PT-0004",
+        "event_type": "radiology_report",
+        "timestamp": "2026-06-07T21:00:00",
+        "details": {
+          "finding": "incidental_pulmonary_nodule",
+          "nodule_size_mm": 7.8,
+          "recommendation": "follow_up_CT_in_6_months",
+          "location": "RUL"
+        },
+        "status": "completed"
+      },
+      {
+        "event_id": "EVT-0044",
+        "patient_id": "PT-0004",
+        "event_type": "discharge",
+        "timestamp": "2026-06-08T09:00:00",
+        "details": {
+          "primary_diagnosis": "ruled_out_acute_condition",
+          "discharge_instructions": "follow_up_with_PCP"
+        },
+        "status": "completed"
+      }
+    ],
+    "ground_truth_status": "open",
+    "ground_truth_severity": "high",
+    "ground_truth_risk_score": 0.85,
+    "missing_followup": "FOLLOWUP_CT within 180 days",
+    "clinical_narrative": "Patient (age 63M) presented to ED with preoperative. CT chest showed incidental 7.8mm pulmonary nodule in RUL. Patient discharged after primary condition ruled out. Radiologist recommended follow-up CT in 6 months. No follow-up CT was ever scheduled or performed.",
+    "biomcp_evidence": {
+      "mcp_tool": "biomcp_query_fleischner",
+      "mcp_args": {
+        "nodule_type": "solid_single",
+        "nodule_size_mm": 7.8,
+        "patient_age": 63,
+        "patient_risk": "high"
+      },
+      "guideline_org": "Fleischner Society International Consensus",
+      "guideline_title": "Guidelines for Management of Incidental Pulmonary Nodules Detected on CT Images",
+      "citation": "Radiology. 2017 Jul;284(1):228-243.",
+      "pmid": "28240562",
+      "doi": "10.1148/radiol.2017161659",
+      "evidence_grade": "Grade 1B (Strong Recommendation, Moderate-Quality Evidence)",
+      "mandated_action": "Thin-Slice Follow-up CT Chest (3 to 6 months)",
+      "time_window_days": 180,
+      "legal_liability": "Critical Malpractice Risk (Stage I to Stage IV Lung Cancer Progression)",
+      "derived_t_crit": 180,
+      "derived_k_factor": 6.5,
+      "biomcp_endpoint": "mcp://biomcp.ajou.internal/v1/tools/fleischner",
+      "latency_ms": 38
+    },
+    "omop_cdm": {
+      "concept_id": 4144111,
+      "concept_name": "Solitary pulmonary nodule",
+      "domain_id": "Condition",
+      "vocabulary_id": "SNOMED",
+      "concept_code": "268529007",
+      "loinc_code": "24627-2",
+      "loinc_name": "CT Chest diagnostic report"
+    },
+    "fhir_r4": {
+      "resourceType": "DiagnosticReport",
+      "id": "DR-0004-CT",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+              "code": "RAD"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "24627-2",
+            "display": "CT Chest"
+          }
+        ]
+      },
+      "subject": {
+        "reference": "Patient/PT-0004"
+      },
+      "conclusion": "Incidental 7.8mm solid nodule in Right Upper Lobe. Fleischner Society 2017 follow-up CT recommended at 6 months."
+    },
+    "counterfactual": {
+      "condition_name": "Incidental Pulmonary Nodule (7.8mm RUL)",
+      "delta_5yr_survival": "+75.0%",
+      "qaly_gain": 11.2,
+      "liability_avoided_krw": "350,000,000 KRW",
+      "neglected_path": [
+        {
+          "time": "Day 0",
+          "day": 0,
+          "state": "Incidental 7.8mm Nodule",
+          "stage": "Early Stage IA1 (Occult)",
+          "survival": "92%",
+          "hazard": 0.15,
+          "desc": "Noted in CT abdomen/chest lower cuts; patient discharged home."
+        },
+        {
+          "time": "Day 180",
+          "day": 180,
+          "state": "6-Month Fleischner Cutoff",
+          "stage": "Nodule Doubling (12.4mm)",
+          "survival": "82%",
+          "hazard": 0.7,
+          "desc": "No surveillance CT ordered; tumor cell doubling unmonitored."
+        },
+        {
+          "time": "Month 12",
+          "day": 365,
+          "state": "Vascular Invasion",
+          "stage": "Stage IIB / Local Lymph Node Spread",
+          "survival": "54%",
+          "hazard": 0.88,
+          "desc": "Nodule expands to 22mm with hilar lymphadenopathy."
+        },
+        {
+          "time": "Month 18",
+          "day": 540,
+          "state": "Metastatic Presentation",
+          "stage": "Stage IV Non-Small Cell Lung Cancer",
+          "survival": "18%",
+          "hazard": 1.0,
+          "desc": "Hemoptysis; PET-CT confirms pleural and bone metastases."
+        },
+        {
+          "time": "Year 5",
+          "day": 1825,
+          "state": "Long-term Survival",
+          "stage": "Terminal Progression",
+          "survival": "15%",
+          "hazard": 1.0,
+          "desc": "5-Year Overall Survival: 15% (Stage IV NSCLC)."
+        }
+      ],
+      "intervened_path": [
+        {
+          "time": "Day 0",
+          "day": 0,
+          "state": "Incidental 7.8mm Nodule",
+          "stage": "Early Stage IA1 (Occult)",
+          "survival": "92%",
+          "hazard": 0.15,
+          "desc": "Noted in radiology report; Safety Clock set to 180d."
+        },
+        {
+          "time": "Day 150",
+          "day": 150,
+          "state": "ClinLoop Advance Notice",
+          "stage": "Stage IA (Localized)",
+          "survival": "92%",
+          "hazard": 0.1,
+          "desc": "Automated care coordinator flag & patient mobile notification."
+        },
+        {
+          "time": "Day 175",
+          "day": 175,
+          "state": "Surveillance CT Ordered",
+          "stage": "Stage IA (Localized)",
+          "survival": "92%",
+          "hazard": 0.0,
+          "desc": "Low-dose CT detects interval growth; early VATS resection scheduled."
+        },
+        {
+          "time": "Day 190",
+          "day": 190,
+          "state": "VATS Wedge Resection",
+          "stage": "Curative Resection (R0)",
+          "survival": "94%",
+          "hazard": 0.0,
+          "desc": "Early Stage IA adenocarcinoma cured surgically with clean margins."
+        },
+        {
+          "time": "Year 5",
+          "day": 1825,
+          "state": "Long-term Survival",
+          "stage": "Cancer-Free Remission",
+          "survival": "90%",
+          "hazard": 0.0,
+          "desc": "5-Year Overall Survival: 90% (+75.0% survival advantage)."
+        }
+      ],
+      "evidence_rationale": "Fleischner Society 2017 & NLST trial show detecting malignancy at Stage IA vs. Stage IV alters 5-year survival from 15% to >90% (Radiology 2017; PMID: 28240562)."
+    },
+    "patient_outreach": {
+      "patient_name": "이정호 (Lee Jung-ho)",
+      "preferred_language": "ko",
+      "channel": "KakaoTalk 알림톡 / SMS",
+      "clinical_jargon": "Incidental Pulmonary Nodule 7.8mm Right Upper Lobe (Fleischner Guideline)",
+      "plain_language_title": "[아주대병원] 흉부 CT 추적검사 일정 사전 안내",
+      "plain_language_body": "이정호님, 지난 6월 검사에서 폐 상엽에 7.8mm의 작은 결절(점)이 관찰되었습니다. 대다수의 결절은 양성이지만, 의학 안전 가이드라인에 따라 6개월 뒤 크기 변화 유무를 재확인하는 저선량 CT 검사가 필수적입니다. 권장 일정에 맞춰 검사를 예약해 드립니다.",
+      "action_button_label": "📅 흉부 CT 추적검사 일정 확정하기 (11월 20일)",
+      "appointment_slot_suggested": "2026-11-20 14:30 KST (Radiology CT Suite 2)",
+      "fhir_communication_request_id": "COMM-REQ-0004-FLEISCHNER"
+    },
+    "patient_name_kr": "김철수",
+    "patient_name_en": "Kim, Chul-soo",
+    "age_sex_kr": "남성 52세",
+    "title_kr": "우연 폐 결절 7.8mm 추적검사(CT) 누락",
+    "dept_kr": "응급의학과 → 호흡기내과",
+    "golden_days": 24,
+    "action_kr": "저선량 흉부 CT 추적검사 처방 및 호흡기내과 협진",
+    "dept_en": "Emergency → Pulmonology"
+  },
+  {
+    "scenario_id": "SC-0098",
+    "patient_id": "PT-0098",
+    "patient_age": 71,
+    "patient_sex": "F",
+    "scenario_name": "Warfarin Dose ↑ — No INR Recheck",
+    "scenario_category": "warfarin_no_inr",
+    "applicable_rule_id": "R007",
+    "events": [
+      {
+        "event_id": "EVT-0981",
+        "patient_id": "PT-0098",
+        "event_type": "medication_change",
+        "timestamp": "2026-05-06T09:00:00",
+        "details": {
+          "drug": "warfarin",
+          "old_dose": "5mg",
+          "new_dose": "7.5mg",
+          "reason": "subtherapeutic_INR",
+          "condition": "anticoagulant_dose_change"
+        },
+        "status": "completed"
+      }
+    ],
+    "ground_truth_status": "open",
+    "ground_truth_severity": "high",
+    "ground_truth_risk_score": 0.78,
+    "missing_followup": "INR_RECHECK within 7 days",
+    "clinical_narrative": "Patient's warfarin dose increased from 5mg to 7.5mg but no INR recheck was ordered within 7 days.",
+    "biomcp_evidence": {
+      "mcp_tool": "biomcp_query_openfda_safety",
+      "mcp_args": {
+        "active_ingredient": "warfarin_sodium",
+        "clinical_event": "dose_escalation",
+        "indication": "atrial_fibrillation_thromboembolism_prevention"
+      },
+      "guideline_org": "US FDA & CHEST Antithrombotic Guidelines",
+      "guideline_title": "FDA Boxed Warning: Bleeding Risk of Warfarin & CHEST 9th Ed. Antithrombotic Therapy",
+      "citation": "Chest. 2012 Feb;141(2 Suppl):e152S-e184S / FDA Drug Safety Label #009218",
+      "pmid": "22315265",
+      "doi": "10.1378/chest.11-2292",
+      "evidence_grade": "FDA Black Box Warning (Highest Regulatory Safety Mandate)",
+      "mandated_action": "Prothrombin Time / INR Recheck within 3 to 7 days",
+      "time_window_days": 7,
+      "legal_liability": "Severe Malpractice Risk (Fatal Intracranial / GI Hemorrhage)",
+      "derived_t_crit": 7,
+      "derived_k_factor": 12.0,
+      "biomcp_endpoint": "mcp://biomcp.ajou.internal/v1/tools/openfda",
+      "latency_ms": 29
+    },
+    "omop_cdm": {
+      "concept_id": 1310149,
+      "concept_name": "Warfarin sodium 7.5 MG Oral Tablet",
+      "domain_id": "Drug",
+      "vocabulary_id": "RxNorm",
+      "concept_code": "855318",
+      "loinc_code": "6301-6",
+      "loinc_name": "INR in Platelet poor plasma by Coagulation assay"
+    },
+    "fhir_r4": {
+      "resourceType": "MedicationStatement",
+      "id": "MS-0098-WARFARIN",
+      "status": "active",
+      "medicationCodeableConcept": {
+        "coding": [
+          {
+            "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+            "code": "855318",
+            "display": "Warfarin 7.5mg"
+          }
+        ]
+      },
+      "subject": {
+        "reference": "Patient/PT-0098"
+      },
+      "note": [
+        {
+          "text": "Dose escalated from 5mg to 7.5mg. Mandatory INR recheck ordered within 7 days."
+        }
+      ]
+    },
+    "counterfactual": {
+      "condition_name": "Warfarin Anticoagulation Dose Escalation",
+      "delta_5yr_survival": "+45.0%",
+      "qaly_gain": 5.8,
+      "liability_avoided_krw": "220,000,000 KRW",
+      "neglected_path": [
+        {
+          "time": "Day 0",
+          "day": 0,
+          "state": "Warfarin Dose Increased 5mg -> 7.5mg",
+          "stage": "Anticoagulated State",
+          "survival": "99%",
+          "hazard": 0.15,
+          "desc": "Outpatient dose change; INR recheck recommended but not booked."
+        },
+        {
+          "time": "Day 7",
+          "day": 7,
+          "state": "Safety Window Overdue",
+          "stage": "Supratherapeutic INR (INR 4.8)",
+          "survival": "92%",
+          "hazard": 0.65,
+          "desc": "Coagulation cascade unmonitored; high risk of occult micro-bleed."
+        },
+        {
+          "time": "Day 16",
+          "day": 16,
+          "state": "Acute Hemorrhagic Event",
+          "stage": "Massive Subdural Hematoma (INR 7.2)",
+          "survival": "45%",
+          "hazard": 0.98,
+          "desc": "Patient collapses at home; emergency neurosurgical craniotomy required."
+        },
+        {
+          "time": "Year 5",
+          "day": 1825,
+          "state": "Long-term Survival",
+          "stage": "Severe Neurological Disability",
+          "survival": "50%",
+          "hazard": 1.0,
+          "desc": "Permanent hemi-paresis; 5-Year Survival: 50%."
+        }
+      ],
+      "intervened_path": [
+        {
+          "time": "Day 0",
+          "day": 0,
+          "state": "Warfarin Dose Increased 5mg -> 7.5mg",
+          "stage": "Anticoagulated State",
+          "survival": "99%",
+          "hazard": 0.15,
+          "desc": "Dose change logged in EHR; ClinLoop activates 7-day clock."
+        },
+        {
+          "time": "Day 4",
+          "day": 4,
+          "state": "ClinLoop Priority Advisory",
+          "stage": "Early Titration",
+          "survival": "99%",
+          "hazard": 0.05,
+          "desc": "Coordinator contacts patient; lab draw ordered for Day 5."
+        },
+        {
+          "time": "Day 5",
+          "day": 5,
+          "state": "Loop Closed: INR Recheck",
+          "stage": "INR 3.2 (Mild Over-target)",
+          "survival": "99%",
+          "hazard": 0.0,
+          "desc": "Dose adjusted back to 6mg; bleeding prevented before adverse event."
+        },
+        {
+          "time": "Year 5",
+          "day": 1825,
+          "state": "Long-term Survival",
+          "stage": "Stable Anticoagulation",
+          "survival": "95%",
+          "hazard": 0.0,
+          "desc": "5-Year Overall Survival: 95% (+45.0% survival advantage)."
+        }
+      ],
+      "evidence_rationale": "CHEST Antithrombotic Guidelines & FDA Boxed Warning: Monitoring INR within 3-7 days of dose change reduces intracranial bleeding by 82% (PMID: 22315265)."
+    },
+    "patient_outreach": {
+      "patient_name": "박순자 (Park Soon-ja)",
+      "preferred_language": "ko",
+      "channel": "긴급 안심 음성전화 (Voice AI) + SMS",
+      "clinical_jargon": "Warfarin dose increased to 7.5mg; Unmonitored INR Bleeding Risk",
+      "plain_language_title": "[아주대병원] 와파린(항응고제) 복용량 변경에 따른 혈액응고(INR) 검사 안내",
+      "plain_language_body": "박순자님, 최근 와파린 용량이 변경되어 약효가 안전하게 작용하는지 확인하기 위해 이번 주 내(7일 이내) 혈액검사(INR)가 꼭 필요합니다. 검사를 거르시면 멍이나 출혈 위험이 증가할 수 있습니다. 내일 오전 가까운 채혈실로 내원 부탁드립니다.",
+      "action_button_label": "🩸 내일 채혈실 방문 확인 (원클릭 접수)",
+      "appointment_slot_suggested": "2026-05-10 09:00 KST (Central Phlebotomy Lab)",
+      "fhir_communication_request_id": "COMM-REQ-0098-WARFARIN"
+    },
+    "patient_name_kr": "박순자",
+    "patient_name_en": "Park, Soon-ja",
+    "age_sex_kr": "여성 71세",
+    "title_kr": "와파린 증량(5mg→7.5mg) 후 PT/INR 혈액검사 누락",
+    "dept_kr": "순환기내과 / 심장혈관센터",
+    "golden_days": 2,
+    "action_kr": "긴급 혈액응고검사(PT/INR) 시행 및 출혈 위험 모니터링",
+    "dept_en": "Cardiology Clinic"
+  },
+  {
+    "scenario_id": "SC-0164",
+    "patient_id": "PT-0164",
+    "patient_age": 58,
+    "patient_sex": "F",
+    "scenario_name": "Incidental Lung Nodule 10.8mm — Properly Followed",
+    "scenario_category": "incidental_nodule_closed",
+    "applicable_rule_id": "R003",
+    "events": [
+      {
+        "event_id": "EVT-1641",
+        "patient_id": "PT-0164",
+        "event_type": "imaging_order",
+        "timestamp": "2026-06-21T09:00:00",
+        "details": {
+          "modality": "CT_CHEST",
+          "indication": "chest_pain"
+        },
+        "status": "completed"
+      },
+      {
+        "event_id": "EVT-1642",
+        "patient_id": "PT-0164",
+        "event_type": "radiology_report",
+        "timestamp": "2026-06-21T21:00:00",
+        "details": {
+          "finding": "incidental_pulmonary_nodule",
+          "nodule_size_mm": 10.8,
+          "recommendation": "follow_up_CT_in_6_months",
+          "location": "RLL"
+        },
+        "status": "completed"
+      },
+      {
+        "event_id": "EVT-1643",
+        "patient_id": "PT-0164",
+        "event_type": "patient_notification",
+        "timestamp": "2026-06-23T09:00:00",
+        "details": {
+          "method": "phone_call",
+          "content": "incidental_finding_explained"
+        },
+        "status": "completed"
+      },
+      {
+        "event_id": "EVT-1644",
+        "patient_id": "PT-0164",
+        "event_type": "followup_ct",
+        "timestamp": "2026-11-22T09:00:00",
+        "details": {
+          "modality": "CT_CHEST",
+          "result": "stable_nodule",
+          "comparison": "prior_CT"
+        },
+        "status": "completed"
+      }
+    ],
+    "ground_truth_status": "closed",
+    "ground_truth_severity": "high",
+    "ground_truth_risk_score": 0.0,
+    "missing_followup": "",
+    "clinical_narrative": "Patient properly notified and follow-up CT performed at day 154.",
+    "biomcp_evidence": {
+      "mcp_tool": "biomcp_query_fleischner",
+      "mcp_args": {
+        "nodule_type": "solid_single",
+        "nodule_size_mm": 10.8,
+        "patient_age": 58,
+        "status": "followup_verified"
+      },
+      "guideline_org": "Fleischner Society International Consensus",
+      "guideline_title": "Guidelines for Management of Incidental Pulmonary Nodules (>8mm Management)",
+      "citation": "Radiology. 2017 Jul;284(1):228-243.",
+      "pmid": "28240562",
+      "doi": "10.1148/radiol.2017161659",
+      "evidence_grade": "Grade 1A Protocol Compliance",
+      "mandated_action": "Contrast CT, PET-CT, or Tissue Sampling within 3-6 months",
+      "time_window_days": 180,
+      "legal_liability": "Zero Liability (Loop Successfully Closed at Day 154)",
+      "derived_t_crit": 180,
+      "derived_k_factor": 6.5,
+      "biomcp_endpoint": "mcp://biomcp.ajou.internal/v1/tools/fleischner",
+      "latency_ms": 35
+    },
+    "omop_cdm": {
+      "concept_id": 4144111,
+      "concept_name": "Solitary pulmonary nodule (Followed)",
+      "domain_id": "Condition",
+      "vocabulary_id": "SNOMED",
+      "concept_code": "268529007",
+      "loinc_code": "24627-2",
+      "loinc_name": "CT Chest follow-up"
+    },
+    "fhir_r4": {
+      "resourceType": "ServiceRequest",
+      "id": "SR-0164-CT-CLOSE",
+      "status": "completed",
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "24627-2",
+            "display": "Follow-up CT Chest"
+          }
+        ]
+      },
+      "subject": {
+        "reference": "Patient/PT-0164"
+      },
+      "occurrenceDateTime": "2026-11-22"
+    },
+    "counterfactual": {
+      "condition_name": "Incidental 10.8mm Lung Nodule (Properly Closed)",
+      "delta_5yr_survival": "+50.0%",
+      "qaly_gain": 6.2,
+      "liability_avoided_krw": "300,000,000 KRW",
+      "neglected_path": [
+        {
+          "time": "Day 0",
+          "day": 0,
+          "state": "10.8mm Nodule Detected",
+          "stage": "High-Risk Nodule",
+          "survival": "88%",
+          "hazard": 0.2,
+          "desc": "Chest pain CT noted 10.8mm nodule."
+        },
+        {
+          "time": "Day 180",
+          "day": 180,
+          "state": "Theoretical Neglect",
+          "stage": "Progressive Neoplasia",
+          "survival": "70%",
+          "hazard": 0.75,
+          "desc": "Had follow-up been missed, progressive malignancy risk was 30-40%."
+        },
+        {
+          "time": "Year 5",
+          "day": 1825,
+          "state": "Theoretical Survival",
+          "stage": "Untreated Progression",
+          "survival": "48%",
+          "hazard": 1.0,
+          "desc": "5-Year Survival: 48%."
+        }
+      ],
+      "intervened_path": [
+        {
+          "time": "Day 0",
+          "day": 0,
+          "state": "10.8mm Nodule Detected",
+          "stage": "High-Risk Nodule",
+          "survival": "88%",
+          "hazard": 0.2,
+          "desc": "Chest pain CT noted 10.8mm nodule."
+        },
+        {
+          "time": "Day 2",
+          "day": 2,
+          "state": "Patient Direct Notification",
+          "stage": "Phone Call Completed",
+          "survival": "92%",
+          "hazard": 0.1,
+          "desc": "Patient informed and advised on 6-month CT."
+        },
+        {
+          "time": "Day 154",
+          "day": 154,
+          "state": "Follow-up CT Performed",
+          "stage": "Stable Benign Nodule (Granuloma)",
+          "survival": "98%",
+          "hazard": 0.0,
+          "desc": "Loop closed on schedule; nodule proved completely stable and non-malignant."
+        },
+        {
+          "time": "Year 5",
+          "day": 1825,
+          "state": "Long-term Survival",
+          "stage": "Complete Reassurance",
+          "survival": "98%",
+          "hazard": 0.0,
+          "desc": "5-Year Survival: 98% (Zero Malpractice Risk)."
+        }
+      ],
+      "evidence_rationale": "Timely follow-up according to Fleischner 2017 criteria prevents delayed resection of malignant nodules while providing definitive closure for benign lesions."
+    },
+    "patient_outreach": {
+      "patient_name": "최은숙 (Choi Eun-sook)",
+      "preferred_language": "ko",
+      "channel": "KakaoTalk 알림톡",
+      "clinical_jargon": "Incidental 10.8mm RLL Nodule; Follow-up Completed at Day 154",
+      "plain_language_title": "[아주대병원] 흉부 추적 CT 검사 결과 안심 안내",
+      "plain_language_body": "최은숙님, 권장 일정에 맞춰 시행하신 흉부 CT 검사 결과, 이전 결절이 커지지 않고 완전히 안정적인 양성 소견(비악성)으로 최종 확인되었습니다. 폐쇄루프 추적관리가 성공적으로 완료되었습니다.",
+      "action_button_label": "✓ 검사 결과지 및 영상 확인하기",
+      "appointment_slot_suggested": "Completed / Verified Stable",
+      "fhir_communication_request_id": "COMM-REQ-0164-CLOSED"
+    },
+    "patient_name_kr": "최민경",
+    "patient_name_en": "Choi, Min-kyung",
+    "age_sex_kr": "여성 58세",
+    "title_kr": "폐 결절 10.8mm 적시 추적 및 수술 완료 (정상 종결)",
+    "dept_kr": "흉부외과 (폐암 클리닉)",
+    "golden_days": 0,
+    "action_kr": "추적완료 (조기 흉강경 절제술 완료, 완치 추적)",
+    "dept_en": "Thoracic Surgery"
+  },
+  {
+    "scenario_id": "SC-0083",
+    "patient_id": "PT-0083",
+    "patient_age": 40,
+    "patient_sex": "M",
+    "scenario_name": "Post-discharge Positive Blood Culture (P. aeruginosa) — No Callback",
+    "scenario_category": "post_discharge_culture_critical",
+    "applicable_rule_id": "R006",
+    "events": [
+      {
+        "event_id": "EVT-0831",
+        "patient_id": "PT-0083",
+        "event_type": "discharge",
+        "timestamp": "2026-03-01T09:00:00",
+        "details": {
+          "primary_diagnosis": "fever_of_unknown_origin",
+          "status": "discharged_stable"
+        },
+        "status": "completed"
+      },
+      {
+        "event_id": "EVT-0832",
+        "patient_id": "PT-0083",
+        "event_type": "culture_result",
+        "timestamp": "2026-03-02T21:00:00",
+        "details": {
+          "specimen": "blood",
+          "result": "positive",
+          "organism": "P. aeruginosa",
+          "condition": "positive_post_discharge",
+          "sensitivity": "pending"
+        },
+        "status": "completed"
+      }
+    ],
+    "ground_truth_status": "open",
+    "ground_truth_severity": "critical",
+    "ground_truth_risk_score": 0.98,
+    "missing_followup": "CALLBACK within 24 hours",
+    "clinical_narrative": "Patient discharged with fever workup. Blood culture returned positive for P. aeruginosa 1.5 days post-discharge. No callback was made.",
+    "biomcp_evidence": {
+      "mcp_tool": "biomcp_query_clsi_critical_lab",
+      "mcp_args": {
+        "specimen": "blood_culture",
+        "isolate": "Pseudomonas aeruginosa",
+        "patient_status": "post_discharge"
+      },
+      "guideline_org": "CLSI & IDSA (Infectious Diseases Society of America)",
+      "guideline_title": "CLSI GP47: Management of Critical- and Significant-Risk Laboratory Results",
+      "citation": "Clinical and Laboratory Standards Institute Standard GP47-Ed1 / Clin Infect Dis 2021",
+      "pmid": "34582573",
+      "doi": "10.1093/cid/ciab540",
+      "evidence_grade": "Critical Laboratory Actionable Panic Value (Immediate Mandate)",
+      "mandated_action": "Direct Emergency Callback & Targeted Antipseudomonal Therapy",
+      "time_window_days": 1,
+      "legal_liability": "Extreme Mortality & Malpractice Risk (Gram-Negative Sepsis >40% Mortality)",
+      "derived_t_crit": 1,
+      "derived_k_factor": 16.0,
+      "biomcp_endpoint": "mcp://biomcp.ajou.internal/v1/tools/clsi_critical",
+      "latency_ms": 24
+    },
+    "omop_cdm": {
+      "concept_id": 4149419,
+      "concept_name": "Bacteremia due to Pseudomonas aeruginosa",
+      "domain_id": "Condition",
+      "vocabulary_id": "SNOMED",
+      "concept_code": "82091000",
+      "loinc_code": "600-7",
+      "loinc_name": "Bacteria identified in Blood by Culture"
+    },
+    "fhir_r4": {
+      "resourceType": "DiagnosticReport",
+      "id": "DR-0083-CULTURE",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+              "code": "MB"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "600-7",
+            "display": "Blood Culture"
+          }
+        ]
+      },
+      "subject": {
+        "reference": "Patient/PT-0083"
+      },
+      "conclusion": "PANIC VALUE: Pseudomonas aeruginosa positive post-discharge. Immediate clinical callback required."
+    },
+    "counterfactual": {
+      "condition_name": "Post-Discharge Pseudomonas aeruginosa Bacteremia",
+      "delta_5yr_survival": "+68.0%",
+      "qaly_gain": 9.5,
+      "liability_avoided_krw": "400,000,000 KRW",
+      "neglected_path": [
+        {
+          "time": "Day 0",
+          "day": 0,
+          "state": "Blood Culture Drawn in ED",
+          "stage": "Fever of Unknown Origin",
+          "survival": "85%",
+          "hazard": 0.25,
+          "desc": "Patient discharged on oral amoxicillin-clavulanate."
+        },
+        {
+          "time": "Day 1.5",
+          "day": 1,
+          "state": "Culture Flags Positive (P. aeruginosa)",
+          "stage": "Gram-Negative Bacteremia",
+          "survival": "70%",
+          "hazard": 0.75,
+          "desc": "Lab finishes culture; patient already home; no callback executed."
+        },
+        {
+          "time": "Day 4",
+          "day": 4,
+          "state": "Fulminant Sepsis Presentation",
+          "stage": "Septic Shock / Multi-Organ Failure",
+          "survival": "25%",
+          "hazard": 1.0,
+          "desc": "Patient arrives in cardiac arrest; ICU admission with pressors; mortality >60%."
+        },
+        {
+          "time": "Year 5",
+          "day": 1825,
+          "state": "Long-term Survival",
+          "stage": "Severe In-Hospital Mortality",
+          "survival": "22%",
+          "hazard": 1.0,
+          "desc": "5-Year Overall Survival: 22%."
+        }
+      ],
+      "intervened_path": [
+        {
+          "time": "Day 0",
+          "day": 0,
+          "state": "Blood Culture Drawn in ED",
+          "stage": "Fever of Unknown Origin",
+          "survival": "85%",
+          "hazard": 0.25,
+          "desc": "Patient discharged stable; culture placed in ClinLoop active watch."
+        },
+        {
+          "time": "Day 1.5",
+          "day": 1,
+          "state": "ClinLoop Panic Lab Trigger",
+          "stage": "Critical Alert",
+          "survival": "85%",
+          "hazard": 0.2,
+          "desc": "ClinLoop detects post-discharge positive culture; alerts ED physician & coordinator."
+        },
+        {
+          "time": "Day 2",
+          "day": 2,
+          "state": "Emergency Callback Completed",
+          "stage": "Targeted IV Cefepime Started",
+          "survival": "92%",
+          "hazard": 0.0,
+          "desc": "Patient instructed to return to ED immediately; bacteremia cleared before septic shock."
+        },
+        {
+          "time": "Year 5",
+          "day": 1825,
+          "state": "Long-term Survival",
+          "stage": "Full Recovery",
+          "survival": "90%",
+          "hazard": 0.0,
+          "desc": "5-Year Overall Survival: 90% (+68.0% survival advantage)."
+        }
+      ],
+      "evidence_rationale": "IDSA Sepsis Guidelines and CLSI GP47 standard state every hour delay in appropriate antibiotic therapy for P. aeruginosa bacteremia increases mortality by 7.6% (CID 2021; PMID: 34582573)."
+    },
+    "patient_outreach": {
+      "patient_name": "정우진 (Jung Woo-jin)",
+      "preferred_language": "ko",
+      "channel": "응급 자동 전화 (Direct Urgent Voice Callback)",
+      "clinical_jargon": "Post-discharge Blood Culture Positive: Pseudomonas aeruginosa",
+      "plain_language_title": "[아주대병원 응급의료센터] 퇴원 후 혈액배양검사 결과 긴급 방문 요청",
+      "plain_language_body": "정우진님, 응급실 퇴원 후 진행 중이던 혈액배양검사에서 표적 항생제 치료가 필요한 세균(녹농균)이 확인되었습니다. 고열이나 패혈증으로 진행되기 전에 즉시 병원으로 재내원하셔서 정맥 항생제 치료를 받으셔야 합니다.",
+      "action_button_label": "🚨 응급실 당직의 즉시 전화 연결",
+      "appointment_slot_suggested": "IMMEDIATE RETURN TO ED (Bed Reserved)",
+      "fhir_communication_request_id": "COMM-REQ-0083-CRITICAL"
+    },
+    "patient_name_kr": "정우성",
+    "patient_name_en": "Jung, Woo-sung",
+    "age_sex_kr": "남성 48세",
+    "title_kr": "퇴원 후 혈액배양 녹농균(P. aeruginosa) 양성 미통보",
+    "dept_kr": "감염내과 / 응급의학과",
+    "golden_days": 1,
+    "action_kr": "환자 즉시 리콜(응급실 재내원) 및 표적 감수성 항생제 투여",
+    "dept_en": "Emergency / ID"
+  }
+]

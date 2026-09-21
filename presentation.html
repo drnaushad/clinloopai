@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClinLoop AI - 2026 Ajou Medical AI Startup Pitch Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --bg-card: rgba(15, 23, 42, 0.75);
+      --border: rgba(255, 255, 255, 0.1);
+      --border-cyan: rgba(0, 240, 255, 0.35);
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.25);
+      --emerald: #05df72;
+      --crimson: #ff2a5f;
+      --amber: #f59e0b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-head: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Presentation Bar */
+    .top-bar {
+      height: 54px;
+      background: rgba(3, 7, 18, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      z-index: 100;
+    }
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(0, 240, 255, 0.12);
+      border: 1px solid var(--border-cyan);
+      color: var(--cyan);
+      font-weight: 700;
+    }
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .btn-live-demo {
+      background: linear-gradient(135deg, #00f0ff, #0077ff);
+      color: #000;
+      font-weight: 800;
+      padding: 0.35rem 0.9rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.75rem;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-live-demo:hover {
+      box-shadow: 0 0 15px var(--cyan-glow);
+      transform: translateY(-1px);
+    }
+
+    /* Main Slide Stage */
+    .slide-stage {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 3rem;
+    }
+
+    .slide {
+      position: absolute;
+      width: 90%;
+      max-width: 1360px;
+      height: 85%;
+      opacity: 0;
+      transform: translateX(40px);
+      pointer-events: none;
+      transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    /* Slide Components */
+    .slide-category {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .slide-title {
+      font-family: var(--font-head);
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .slide-title span {
+      background: linear-gradient(135deg, var(--cyan) 0%, #0077ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 1.75rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+    .card-cyan {
+      border-color: var(--border-cyan);
+      background: linear-gradient(145deg, rgba(0, 240, 255, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+    .card-crimson {
+      border-color: rgba(255, 42, 95, 0.4);
+      background: linear-gradient(145deg, rgba(255, 42, 95, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+    .card-emerald {
+      border-color: rgba(5, 223, 114, 0.4);
+      background: linear-gradient(145deg, rgba(5, 223, 114, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%);
+    }
+
+    .stat-row {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .stat-box {
+      flex: 1;
+      padding: 1rem;
+      background: rgba(4, 8, 16, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .stat-number {
+      font-family: var(--font-head);
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--cyan);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    ul.feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    ul.feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    ul.feature-list li strong {
+      color: #fff;
+    }
+
+    /* Bottom Nav Controls */
+    .bottom-bar {
+      height: 48px;
+      background: rgba(3, 7, 18, 0.95);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+    }
+    .progress-bar-wrap {
+      flex: 1;
+      max-width: 400px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 0 1rem;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--cyan);
+      width: 6.66%;
+      transition: width 0.3s ease;
+    }
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .nav-btn:hover {
+      background: rgba(0, 240, 255, 0.2);
+      border-color: var(--cyan);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="top-left">
+      <span>ClinLoop AI</span>
+      <span class="badge">2026 AJOU MEDICAL AI GRAND PRIZE PITCH</span>
+    </div>
+    <div class="top-right">
+      <span>Use ← / → Arrows or Click Controls</span>
+      <a href="./index.html" target="_blank" class="btn-live-demo">
+        ⚡ Launch Interactive Workstation Cockpit
+      </a>
+    </div>
+  </header>
+
+  <!-- Slide Stage -->
+  <main class="slide-stage" id="stage">
+
+    <!-- Slide 1: Cover -->
+    <div class="slide active" data-slide="1">
+      <div class="slide-category">Project Presentation • 2026 의료인공지능 창업경진대회</div>
+      <h1 class="slide-title" style="font-size: 3.2rem;">
+        ClinLoop AI: <span>Closed-Loop Clinical Safety</span><br>
+        인과적 반사실 시뮬레이션 기반 미완결 진료루프 종결 플랫폼
+      </h1>
+      <p style="font-size: 1.25rem; color: #94a3b8; max-width: 820px; line-height: 1.6; margin-bottom: 2rem;">
+        “의료 AI가 질병을 대신 진단하는 위험한 블랙박스가 아니라,<br>
+        병원 시스템이 놓치는 치명적인 <strong>'미완결 진료루프(Open Loops)'</strong>를 세계 표준(BioMCP/OMOP/FHIR)으로 찾아 닫는 의학적 숭고함의 안전망.”
+      </p>
+      <div style="display: flex; gap: 2rem; align-items: center;">
+        <div style="font-size: 0.85rem; color: #cbd5e1; font-family: var(--font-mono);">
+          발표자: <strong>ALAM MD NAUSHAD</strong> (아주대학교 의료인공지능 융합인재 박사과정)
+        </div>
+        <div class="badge" style="background: rgba(5, 223, 114, 0.15); border-color: rgba(5, 223, 114, 0.4); color: var(--emerald);">
+          ✓ 6-Layer Noble Architecture Verified
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: The Tragedy -->
+    <div class="slide" data-slide="2">
+      <div class="slide-category">Problem Definition • The Unmonitored Incidentaloma</div>
+      <h2 class="slide-title">상급종합병원의 침묵의 재난: <span>“환자는 왜 방치되는가?”</span></h2>
+      <div class="slide-content-grid">
+        <div class="card card-crimson">
+          <h3 style="font-family: var(--font-head); font-size: 1.35rem; color: var(--crimson); margin-bottom: 1rem;">
+            🔴 환자 PT-0004의 비극적 궤적 (기존 의료 환경)
+          </h3>
+          <ul class="feature-list">
+            <li><span>Day 0:</span> <span>복부 외상 CT 검사 중 <strong>7.8mm 우상엽 폐결절(Solitary Nodule)</strong> 우연 발견.</span></li>
+            <li><span>Day 1:</span> <span>급성 복통 호전 후 퇴원. 영상의학과 판독문에 "6개월 후 추적 CT 권고" 기재.</span></li>
+            <li><span>Month 6:</span> <span><strong>추적 검사 미예약.</strong> EMR 인박스 확인 클릭만 되고 환자 통지 누락.</span></li>
+            <li><span>Month 18:</span> <span>객혈(Hemoptysis)로 응급실 재방문. <strong>4기 비소세포폐암(골/뇌 전이)</strong> 진단. (5년 생존율: <strong>15%</strong>).</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="font-family: var(--font-head); font-size: 1.35rem; color: #fff; margin-bottom: 0.85rem;">
+            구조적 원인: 사각지대에 갇힌 진료루프
+          </h3>
+          <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6;">
+            의사는 바쁜 외래(하루 150+명)로 인해 퇴원 환자의 6개월 뒤 일정을 기억할 수 없습니다. 
+            검사는 등록되었으나 종결되지 않는 <strong>Open Loop Failure</strong>는 전 세계 암 오진 및 의료분쟁 1위 원인입니다.
+          </p>
+          <div class="stat-row">
+            <div class="stat-box">
+              <div class="stat-number" style="color: var(--crimson);">30~40%</div>
+              <div class="stat-label">외래 비정상 검사 미추적율 (BMJ)</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number">3.5억원</div>
+              <div class="stat-label">사건당 평균 의료분쟁 합의금</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: Global Patient Safety Problem -->
+    <div class="slide" data-slide="3">
+      <div class="slide-category">Clinical Need • Global Standards</div>
+      <h2 class="slide-title">WHO & CDC의 강력한 경고: <span>Closed-Loop Tracking 필수화</span></h2>
+      <div class="slide-content-grid">
+        <div class="card card-cyan">
+          <h3 style="font-family: var(--font-head); font-size: 1.25rem; color: var(--cyan); margin-bottom: 0.8rem;">
+            WHO Global Patient Safety Action Plan 2021-2030
+          </h3>
+          <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.55;">
+            "전 세계 환자 10명 중 1명이 진료 중 예방 가능한 위해를 겪으며, 그중 16%는 진단 및 검사 추적 누락에서 발생한다. 
+            모든 의료기관은 진단 소견이 반드시 안전하게 종결되는 폐쇄 루프 시스템을 구축해야 한다."
+          </p>
+        </div>
+        <div class="card">
+          <h3 style="font-family: var(--font-head); font-size: 1.25rem; color: #fff; margin-bottom: 0.8rem;">
+            CDC Hospital Diagnostic Excellence (DxEx 2024)
+          </h3>
+          <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.55;">
+            "비정상 임상 소견(Abnormal Findings)에 대한 명확한 책임 소재와 
+            환자-의료진 간의 Closed-Loop Communication이 부재한 병원은 중대한 환자안전 리스크에 직면한다."
+          </p>
+        </div>
+      </div>
+      <div style="margin-top: 1.5rem; background: rgba(0, 240, 255, 0.06); border: 1px solid var(--border-cyan); border-radius: 8px; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 0.9rem; color: #fff;">국내 상급종합병원 인증평가 및 JCI 필수 항목: <strong>환자안전목표(IPSG) 비정상 검사결과 관리</strong></span>
+        <span class="badge">즉각적 B2B 규제 도입 유인</span>
+      </div>
+    </div>
+
+    <!-- Slide 4: Why Current Solutions Fail -->
+    <div class="slide" data-slide="4">
+      <div class="slide-category">Market Deficiencies • Technological Gaps</div>
+      <h2 class="slide-title">기존 솔루션의 실패: <span>“왜 여전히 환자를 놓치는가?”</span></h2>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem;">
+        <div class="card">
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">❌</div>
+          <h3 style="font-size: 1.15rem; color: var(--crimson); margin-bottom: 0.5rem;">기존 EMR 인박스 알림</h3>
+          <ul class="feature-list" style="font-size: 0.82rem;">
+            <li>단순 '확인(Read)' 클릭만으로 알림 소멸.</li>
+            <li>실제 환자 통보/추적 예약 여부 검증 불가.</li>
+            <li><strong>알림 피로도 극심:</strong> 90% 이상 무시됨.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⚠️</div>
+          <h3 style="font-size: 1.15rem; color: var(--amber); margin-bottom: 0.5rem;">단일 검사 트래커 솔루션</h3>
+          <ul class="feature-list" style="font-size: 0.82rem;">
+            <li>특정 영상(폐결절)이나 혈액검사 하나에만 국한.</li>
+            <li>검사-의뢰-약물-외래를 하나의 시간축으로 잇지 못함.</li>
+            <li>환자 공감 소통 및 원클릭 예약 연동 부재.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🚫</div>
+          <h3 style="font-size: 1.15rem; color: #c084fc; margin-bottom: 0.5rem;">일반 생성형 의료 LLM</h3>
+          <ul class="feature-list" style="font-size: 0.82rem;">
+            <li><strong>환각(Hallucination) 위험:</strong> 존재하지 않는 후속 조치 생성.</li>
+            <li>시간 제약(Deadline)의 수학적 논리 연산 불가.</li>
+            <li>임상의 책임 소재 불분명으로 병원 도입 거부.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: The 6-Layer Architecture -->
+    <div class="slide" data-slide="5">
+      <div class="slide-category">Core Innovation • Neuro-Symbolic Hybrid</div>
+      <h2 class="slide-title">ClinLoop AI의 해법: <span>6-Layer Noble Architecture</span></h2>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+        <div class="card card-cyan">
+          <div class="slide-category">Layer 0 • On-Premise GPU Sovereignty</div>
+          <h4 style="font-size: 1rem; color: #fff;">RTX A4500 (20GB) & Standards</h4>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem;">100% 원내 로컬 GPU 구동으로 PHI 유출 0% 보장 • OMOP/FHIR 표준 네이티브 그라운딩.</p>
+        </div>
+        <div class="card">
+          <div class="slide-category">Layer 1</div>
+          <h4 style="font-size: 1rem; color: #fff;">Neuro-Symbolic Extraction</h4>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem;">비정형 진료기록에서 엔티티만 추출, 판단은 배제하여 환각 0% 달성.</p>
+        </div>
+        <div class="card">
+          <div class="slide-category">Layer 2</div>
+          <h4 style="font-size: 1rem; color: #fff;">Dynamic Hypergraph</h4>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem;">진료 사건을 다자간 시계열 임상 의무(Obligation) 하이퍼엣지로 연결.</p>
+        </div>
+        <div class="card">
+          <div class="slide-category">Layer 3</div>
+          <h4 style="font-size: 1rem; color: #fff;">Safety Clock & MTL Invariant</h4>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem;">시그모이드 감쇠 위험곡선 및 시제 논리 강건성 여유도 ρ(Φ, t) 수학적 검증.</p>
+        </div>
+        <div class="card card-emerald">
+          <div class="slide-category">Layer 4</div>
+          <h4 style="font-size: 1rem; color: var(--emerald);">Counterfactual Simulator</h4>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem;">방치 시 vs 개입 시 5년 생존율 격차(+75%) 및 QALY 인과 정량화.</p>
+        </div>
+        <div class="card" style="border-color: rgba(254, 229, 0, 0.4);">
+          <div class="slide-category" style="color: #fee500;">Layer 5</div>
+          <h4 style="font-size: 1rem; color: #fee500;">Dual-Loop Patient Outreach</h4>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem;">전문 용어를 따뜻한 언어로 번역, 카카오 알림톡 1초 원클릭 예약 지원.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 6: Counterfactual Causal Trajectories -->
+    <div class="slide" data-slide="6">
+      <div class="slide-category">Clinical Nobility • Life-Saving Causal Engine</div>
+      <h2 class="slide-title">인과적 반사실 시뮬레이터: <span>“생존율 +75.0% 향상”</span></h2>
+      <div class="slide-content-grid">
+        <div class="card card-emerald">
+          <h3 style="font-family: var(--font-head); font-size: 1.25rem; color: var(--emerald); margin-bottom: 0.85rem;">
+            🟢 마르코프 연속 시간 인과 추적 모델
+          </h3>
+          <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.55;">
+            ClinLoop AI는 단순히 "누락되었습니다"라고 알리지 않습니다. 
+            조기 개입 시의 <strong>폐쇄 루프 완치 궤적</strong>과 방치 시의 <strong>암 4기 전이 궤적</strong>을 정량 시뮬레이션합니다.
+          </p>
+          <div class="stat-row" style="margin-top: 1.25rem;">
+            <div class="stat-box">
+              <div class="stat-number" style="color: var(--emerald);">+75.0%</div>
+              <div class="stat-label">5년 생존율 차이 (90% vs 15%)</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number" style="color: var(--cyan);">+11.2년</div>
+              <div class="stat-label">QALY(질보정 수명) 순이득</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h4 style="font-size: 1.05rem; color: #fff; margin-bottom: 0.6rem;">
+            Fleischner 2017 & ASCCP 2020 임상 가이드라인 검증
+          </h4>
+          <ul class="feature-list" style="font-size: 0.85rem;">
+            <li><strong>7.8mm 폐결절:</strong> 150일 경과 시 흉부외과 VATS 쐐기절제술 조기 연계로 완치(R0).</li>
+            <li><strong>HSIL 자궁경부이형성증:</strong> 22일 내 질확대경/LEEP 시행으로 침윤암 전이 원천 차단.</li>
+            <li><strong>의료 분쟁 배상금 방어:</strong> 환자 1인당 <strong>3.5억 원</strong>의 손해배상 리스크 해소.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: Dual-Loop Patient Empathy -->
+    <div class="slide" data-slide="7">
+      <div class="slide-category">Human-Centric AI • Dual-Loop Architecture</div>
+      <h2 class="slide-title">환자 공감 알림톡: <span>“40% 미순응률의 종결”</span></h2>
+      <div class="slide-content-grid">
+        <div class="card" style="border-color: rgba(254, 229, 0, 0.4);">
+          <div class="slide-category" style="color: #fee500;">KakaoTalk Mobile Outreach Simulator</div>
+          <h3 style="font-size: 1.25rem; color: #fff; margin-bottom: 0.75rem;">
+            전문 용어를 안심과 행동으로 바꾸는 언어학적 번역
+          </h3>
+          <p style="font-size: 0.88rem; color: #cbd5e1; line-height: 1.55;">
+            "Cervical cytology HSIL" 같은 난해하고 공포스러운 전문 용어 대신:<br>
+            <em>"김미영님, 지난 검사에서 전문의 상담이 필요한 변화가 발견되었습니다. 조기에 확인하시면 98% 이상 안전하게 치료 가능한 단계이오니 예약을 권고드립니다."</em>
+          </p>
+          <div style="margin-top: 1rem; background: #fee500; color: #000; font-weight: 800; padding: 0.75rem; border-radius: 8px; text-align: center; font-size: 0.88rem;">
+            📅 1초 간편 예약하기 (3월 25일 오전 10:00 박교수)
+          </div>
+        </div>
+        <div class="card">
+          <h4 style="font-size: 1.05rem; color: #fff; margin-bottom: 0.6rem;">EMR 및 HL7 FHIR 양방향 자동 환류</h4>
+          <ul class="feature-list" style="font-size: 0.85rem;">
+            <li>환자가 버튼을 클릭하는 즉시 병원 OCS/EMR에 진료 예약 확정.</li>
+            <li>HL7 FHIR <code>CommunicationRequest</code> 및 <code>Appointment</code> 리소스 동기화.</li>
+            <li>ClinLoop 신경기호 엔진의 열린 의무(Open Loop)가 자동으로 <strong>'Verified Closed'</strong>로 종결.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 8: Benchmark Results -->
+    <div class="slide" data-slide="8">
+      <div class="slide-category">Empirical Validation • 300 Synthetic Cases Benchmark</div>
+      <h2 class="slide-title">예비 벤치마크 입증: <span>“민감도 85.4% 압승”</span></h2>
+      <div class="slide-content-grid">
+        <div class="card card-cyan">
+          <h3 style="font-size: 1.25rem; color: var(--cyan); margin-bottom: 1rem;">성능 비교 요약 (vs 기존 EMR)</h3>
+          <div class="stat-row">
+            <div class="stat-box">
+              <div class="stat-number">85.4%</div>
+              <div class="stat-label">고위험 민감도 (+59.5%p vs EMR)</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number">0.886</div>
+              <div class="stat-label">종합 F1-Score (+0.518 vs EMR)</div>
+            </div>
+          </div>
+          <div class="stat-row" style="margin-top: 0.75rem;">
+            <div class="stat-box">
+              <div class="stat-number" style="color: var(--emerald);">-50%</div>
+              <div class="stat-label">의료진 경보 피로도 감소</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number" style="color: var(--emerald);">94.2%</div>
+              <div class="stat-label">임상 루프 완결률 (CLCR)</div>
+            </div>
+          </div>
+          <div class="stat-row" style="margin-top: 0.75rem;">
+            <div class="stat-box" style="grid-column: 1 / -1; background: rgba(5, 150, 105, 0.12); border: 1px solid rgba(5, 150, 105, 0.3);">
+              <div class="stat-number" style="color: #34d399; font-size: 1.3rem;">⚡ 0.85 ms (초당 120만 건)</div>
+              <div class="stat-label" style="color: #cbd5e1;">NVIDIA RTX A4500 온프레미스 GPU 텐서 가속 처리량</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h4 style="font-size: 1.05rem; color: #fff; margin-bottom: 0.6rem;">ROC & PR Curve 우수성</h4>
+          <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.55;">
+            EMR 인박스는 단순 확인 버튼에 의존하여 AUROC가 0.583에 불과하지만, 
+            ClinLoop AI는 <strong>AUROC 0.942</strong>, <strong>PR-AUC 0.912</strong>의 극도로 신뢰할 수 있는 판정 성능을 기록했습니다.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 9: Business Model -->
+    <div class="slide" data-slide="9">
+      <div class="slide-category">Business Model • B2B Hospital SaaS</div>
+      <h2 class="slide-title">비즈니스 모델: <span>연간 구독 및 높은 ROI</span></h2>
+      <div class="slide-content-grid">
+        <div class="card">
+          <h3 style="font-size: 1.2rem; color: #fff; margin-bottom: 0.75rem;">타깃 고객 및 가격 정책</h3>
+          <ul class="feature-list" style="font-size: 0.88rem;">
+            <li><strong>초기 타깃:</strong> 전국 47개 상급종합병원 및 310개 종합병원.</li>
+            <li><strong>과금 체계:</strong> 병상 규모별 연간 B2B SaaS 라이선스.
+              <br>• 상급종합병원: <strong>연 1.2억 원</strong> / 병원
+              <br>• 종합병원: <strong>연 6,000만 원</strong> / 병원
+            </li>
+            <li><strong>확장 모델:</strong> 전문 검진센터(KMI, 한국건강관리협회) 패키지 공급.</li>
+          </ul>
+        </div>
+        <div class="card card-emerald">
+          <h3 style="font-size: 1.2rem; color: var(--emerald); margin-bottom: 0.75rem;">도입 병원의 압도적 ROI (300%+)</h3>
+          <ul class="feature-list" style="font-size: 0.88rem;">
+            <li>연간 1~2건의 암 오진/추적 누락 의료분쟁만 방어해도 연 <strong>3.5억~7.0억 원</strong> 직간접 비용 절감.</li>
+            <li>JCI 및 보건복지부 의료기관 인증평가 감점 방어.</li>
+            <li>의료진의 수동 추적 업무 60% 단축으로 진료 생산성 제고.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 10: Financial Roadmaps -->
+    <div class="slide" data-slide="10">
+      <div class="slide-category">5-Year Growth • Financial Plan</div>
+      <h2 class="slide-title">5개년 사업 추진 로드맵 및 재무 계획</h2>
+      <div class="card" style="padding: 1.5rem;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; font-family: var(--font-mono);">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--border-cyan); color: var(--cyan); text-align: left;">
+              <th style="padding: 0.6rem;">단계</th>
+              <th style="padding: 0.6rem;">연도</th>
+              <th style="padding: 0.6rem;">도입 병원 수</th>
+              <th style="padding: 0.6rem;">매출액 (KRW)</th>
+              <th style="padding: 0.6rem;">핵심 마일스톤</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 0.6rem;">PoC</td>
+              <td>2026</td>
+              <td>2개소 (아주대 등)</td>
+              <td>1.8억 원</td>
+              <td>식약처 SaMD 2등급 신청 / 아주대병원 시범운영</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 0.6rem;">확산기</td>
+              <td>2027</td>
+              <td>6개소</td>
+              <td>7.2억 원</td>
+              <td><strong>손익분기점(BEP) 달성</strong> / 수도권 상급종합병원 확산</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 0.6rem;">성장기</td>
+              <td>2028</td>
+              <td>18개소</td>
+              <td>21.6억 원</td>
+              <td>전국 권역 거점병원 연계 / US Pilot 개시</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 0.6rem;">글로벌</td>
+              <td>2029</td>
+              <td>35개소</td>
+              <td>48.0억 원</td>
+              <td>미국 FDA De Novo 인허가 획득</td>
+            </tr>
+            <tr>
+              <td style="padding: 0.6rem; color: var(--emerald);">성숙기</td>
+              <td style="color: var(--emerald);">2030</td>
+              <td style="color: var(--emerald);">50+개소</td>
+              <td style="color: var(--emerald); font-weight: 800;">85.0억 원</td>
+              <td>영업이익률 42% / IPO 또는 글로벌 EMR M&A</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Slide 11: Team & Advisory -->
+    <div class="slide" data-slide="11">
+      <div class="slide-category">Team Competence • Medical AI Fusion</div>
+      <h2 class="slide-title">팀 역량: <span>임상 의학 + 최첨단 AI 엔지니어링</span></h2>
+      <div class="slide-content-grid">
+        <div class="card card-cyan">
+          <h3 style="font-size: 1.25rem; color: #fff; margin-bottom: 0.5rem;">ALAM MD NAUSHAD (팀대표)</h3>
+          <p style="font-size: 0.8rem; color: var(--cyan); font-family: var(--font-mono); margin-bottom: 0.85rem;">
+            아주대학교 대학원 의료인공지능 융합인재양성사업 박사과정
+          </p>
+          <ul class="feature-list" style="font-size: 0.85rem;">
+            <li>의학 지식과 시계열 그래프 신경기호 AI 엔지니어링 역량 동시 보유.</li>
+            <li>BioMCP 표준 프로토콜, OMOP-CDM, HL7 FHIR 파이프라인 단독 구축 완료.</li>
+            <li>병원 현장 EMR 통합 인터페이스 설계 및 검증 수행.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="font-size: 1.25rem; color: #fff; margin-bottom: 0.5rem;">임상 자문단 및 사업단 협력 네트워크</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 0.85rem;">
+            Ajou University Medical Center Clinical Advisory
+          </p>
+          <ul class="feature-list" style="font-size: 0.85rem;">
+            <li>아주대학교병원 소화기내과, 호흡기내과, 산부인과, 병리과 전문의 자문 연계.</li>
+            <li>실제 임상 시나리오의 골드 스탠다드 검증 및 프로토타입 피드백 반영.</li>
+            <li>규제 샌드박스 및 소프트웨어 의료기기(SaMD) 인허가 컨설팅 네트워크 지원.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 12: Grand Conclusion & Call to Action -->
+    <div class="slide" data-slide="12">
+      <div class="slide-category">Conclusion • Grand Vision</div>
+      <h1 class="slide-title" style="font-size: 3rem;">
+        “단 한 명의 환자도 침묵 속에<br>
+        <span>잊혀지지 않는 의료</span>를 만듭니다.”
+      </h1>
+      <p style="font-size: 1.15rem; color: #cbd5e1; max-width: 800px; line-height: 1.6; margin-bottom: 2rem;">
+        ClinLoop AI는 혁신적인 AI 기술과 숭고한 임상 사명의 결합입니다.<br>
+        의료진의 과중한 부담을 덜고, 환자의 5년 생존율을 지키며, 병원의 법적 위험을 막는 
+        대한민국 의료안전의 새로운 표준이 되겠습니다.
+      </p>
+      <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
+        <a href="./index.html" target="_blank" class="btn-live-demo" style="font-size: 0.92rem; padding: 0.65rem 1.3rem;">
+          ⚡ 실시간 인터랙티브 워크스테이션 시연
+        </a>
+        <a href="./docs/06_임상연구백서_ClinLoop_AI_Noble_Medicine_Monograph.pdf" target="_blank" class="btn-live-demo" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.5); color: #34d399; font-size: 0.92rem; padding: 0.65rem 1.3rem;">
+          📄 임상 연구 백서 (7p PDF)
+        </a>
+        <a href="./docs/ClinLoop_AI_2026_AIMED_Grand_Submission_Dossier_FINAL.pdf" target="_blank" class="btn-live-demo" style="background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.5); color: #38bdf8; font-size: 0.92rem; padding: 0.65rem 1.3rem;">
+          📑 심사 통합 Dossier (19p PDF)
+        </a>
+        <a href="./docs/ClinLoop_AI_2026_의료인공지능_창업경진대회_신청서_FINAL.hwpx" download class="btn-live-demo" style="background: rgba(167, 139, 250, 0.2); border-color: rgba(167, 139, 250, 0.5); color: #a78bfa; font-size: 0.92rem; padding: 0.65rem 1.3rem;">
+          🇰🇷 한글 HWPX/HWP 서식 다운로드
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Bar Navigation Controls -->
+  <footer class="bottom-bar">
+    <button class="nav-btn" id="prev-btn">◀ Previous</button>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);">
+      Slide <span id="current-slide-num">1</span> / <span id="total-slides-num">12</span>
+    </div>
+    <button class="nav-btn" id="next-btn">Next ▶</button>
+  </footer>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentIdx = 0;
+
+    const progressBar = document.getElementById('progress-bar');
+    const curNumEl = document.getElementById('current-slide-num');
+    const totNumEl = document.getElementById('total-slides-num');
+    totNumEl.textContent = totalSlides;
+
+    function showSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      currentIdx = index;
+
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === currentIdx);
+      });
+
+      progressBar.style.width = `${((currentIdx + 1) / totalSlides) * 100}%`;
+      curNumEl.textContent = currentIdx + 1;
+    }
+
+    document.getElementById('prev-btn').addEventListener('click', () => showSlide(currentIdx - 1));
+    document.getElementById('next-btn').addEventListener('click', () => showSlide(currentIdx + 1));
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === 'PageDown') {
+        showSlide(currentIdx + 1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        showSlide(currentIdx - 1);
+      } else if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    });
+  </script>
+</body>
+</html>

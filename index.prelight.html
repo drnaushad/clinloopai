@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClinLoop AI | Clinical Closed-Loop Safety Workstation</title>
+  <meta name="description" content="Neuro-Symbolic Closed-Loop Clinical Safety Workstation for the 2026 Medical AI Startup Competition.">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00f0ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+  <!-- Full-Width Cockpit Header -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 3a9 9 0 0 1 9 9"/>
+          <path d="M12 7v5l3 3"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">ClinLoop AI</h1>
+        <div class="brand-subtitle">Neuro-Symbolic Closed-Loop Clinical Safety Platform</div>
+      </div>
+    </div>
+
+    <div class="header-badges">
+      <span class="badge badge-live">
+        <span class="pulse-dot"></span>
+        2026 AJOU MEDICAL AI COMPETITION
+      </span>
+      <span class="badge">DTH Safety Engine v2.0</span>
+      <span class="badge" style="border-color: rgba(0, 240, 255, 0.25); color: #cbd5e1; display: inline-flex; align-items: center; gap: 0.4rem;">
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--emerald-safe);"></span>
+        Ajou Univ. Medical Center (ER & Inpatient Network)
+      </span>
+    </div>
+
+    <div class="header-actions">
+            <button id="btn-theme-toggle" class="btn-secondary" style="border-color: #cbd5e1; color: var(--text-main); display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600;" title="Clean Hospital Light Mode / Dark Mode Switcher">
+        ☀️ <span id="theme-btn-text">Light Mode</span>
+      </button>
+      <div id="live-cockpit-clock" style="font-family: var(--font-mono); font-size: 0.74rem; color: #94a3b8; background: rgba(4, 8, 16, 0.7); padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-subtle);">
+        2026-09-17 19:00:00 KST
+      </div>
+      <a href="presentation.html" target="_blank" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; color: #38bdf8;" title="Open 2026 Ajou Medical AI Pitch Deck">
+        📊 Pitch Deck
+      </a>
+            <button id="btn-nobility-charter" class="btn-secondary" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399; display: inline-flex; align-items: center; gap: 0.4rem;" title="Medical Nobility, Hippocratic Charter & Clinical Whitepaper">
+        🏛️ Medical Nobility & Ethics
+      </button>
+      <button id="btn-patient-outreach" class="btn-secondary btn-outreach" title="Test Patient Plain-Language Empathy Notification Simulator">
+        📱 Patient Outreach Simulator
+      </button>
+      <button id="btn-biomcp" class="btn-secondary btn-biomcp-highlight" title="Inspect Model Context Protocol Biomedical Grounding">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+          <path d="M2 12h20"/>
+        </svg>
+        🧬 BioMCP Evidence
+        <span class="biomcp-status-pill">LIVE MCP</span>
+      </button>
+      <button id="sound-toggle" class="btn-secondary" title="Toggle audio telemetry">🔊 Audio: On</button>
+      <button id="btn-emr-comparison" class="btn-secondary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M9 3v18"/>
+        </svg>
+        Compare vs EMR Inbox
+      </button>
+    </div>
+  </header>
+
+  <!-- 3-Column Full-Viewport Workstation Cockpit -->
+  <main class="cockpit-workspace">
+
+    <!-- ====================================================================
+         COLUMN 1: Left Triage & Patient Worklist
+         ==================================================================== -->
+    <aside class="cockpit-triage-panel">
+      <div class="panel-header-compact">
+        <h2 class="panel-title-sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Clinical Triage Queue
+        </h2>
+        <span style="font-size: 0.7rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700;">N=5 Active</span>
+      </div>
+
+      <!-- Search Input -->
+      <div class="search-input-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="patient-search" class="search-input" placeholder="Search PT-ID, Rule, Condition...">
+      </div>
+
+      <!-- Filter Pills -->
+      <div class="filter-pills-row">
+        <button class="filter-btn active" data-filter="all">All (5)</button>
+        <button class="filter-btn" data-filter="open">Critical (3)</button>
+        <button class="filter-btn" data-filter="delayed">Delayed (1)</button>
+        <button class="filter-btn" data-filter="closed">Closed (1)</button>
+      </div>
+
+      <!-- Vertical Scrollable Case Queue -->
+      <div class="case-queue-list" id="case-tabs-list">
+        <!-- Injected via JavaScript -->
+      </div>
+    </aside>
+
+    <!-- ====================================================================
+         COLUMN 2: Center Stage - Temporal Hypergraph & Primary Workspace
+         ==================================================================== -->
+    <section class="cockpit-center-stage">
+      
+      <!-- View Mode Tabs Ribbon -->
+      <div class="stage-view-tabs">
+        <button class="stage-tab-btn active" id="tab-btn-summary" data-view="summary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          <span>🩺 환자 진료 요약 (Clinical Overview)</span>
+          <span class="tab-pill tab-pill-success">추천 / Primary</span>
+        </button>
+
+        <button class="stage-tab-btn" id="tab-btn-counterfactual" data-view="counterfactual">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 20V10M12 20V4M6 20v-6"/>
+          </svg>
+          <span>⚖️ 인과추론 시뮬레이터 (Counterfactual)</span>
+          <span class="tab-pill tab-pill-success" id="tab-pill-delta">+75% Survival</span>
+        </button>
+
+        <button class="stage-tab-btn" id="tab-btn-standards" data-view="standards">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 9h6M15 15h6"/>
+          </svg>
+          <span>🏥 보건의료 표준 (OMOP / FHIR)</span>
+          <span class="tab-pill tab-pill-info">HL7 R4</span>
+        </button>
+
+        <button class="stage-tab-btn" id="tab-btn-hypergraph" data-view="hypergraph">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><circle cx="6" cy="18" r="3"/>
+            <path d="M6 9v6M9 6h6M18 9v6M9 18h6"/>
+          </svg>
+          <span>Dynamic Temporal Hypergraph</span>
+          <span class="tab-pill">Neuro-Symbolic</span>
+        </button>
+
+        <button class="stage-tab-btn" id="tab-btn-counterfactual" data-view="counterfactual">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 20V10M12 20V4M6 20v-6"/>
+          </svg>
+          <span>⚖️ Counterfactual Causal Explorer</span>
+          <span class="tab-pill tab-pill-success" id="tab-pill-delta">+46% Survival</span>
+        </button>
+
+        <button class="stage-tab-btn" id="tab-btn-standards" data-view="standards">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 9h6M15 15h6"/>
+          </svg>
+          <span>🏥 OMOP-CDM & HL7 FHIR Standards</span>
+          <span class="tab-pill tab-pill-info">SNOMED / LOINC / MTL</span>
+        </button>
+      </div>
+      
+      <!-- Simple Clinical Summary View Panel (Default Primary Screen) -->
+      <div class="stage-view-panel active" id="view-summary" style="padding: 1.4rem; overflow-y: auto; height: calc(100vh - 120px);">
+        
+        <!-- 1. Patient Profile Banner -->
+        <div class="summary-hero-card">
+          <div class="summary-hero-left">
+            <div class="summary-avatar">👤</div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <h2 id="summary-patient-name" style="font-size: 1.45rem; font-weight: 800; color: var(--text-main); margin: 0;">
+                  김철수 (Kim, Chul-soo)
+                </h2>
+                <span id="summary-urgency-badge" class="badge-pill badge-urgent">🚨 골든타임 임박 (24일 남음)</span>
+              </div>
+              <div id="summary-patient-meta" style="font-size: 0.86rem; color: var(--text-muted); margin-top: 0.35rem;">
+                남성 52세 • 환자번호: PT-0004 • 내원: 응급의학과 외상진료 (갈비뼈 골절 치료 후 퇴원)
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-hero-right">
+            <div style="text-align: right;">
+              <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">추적 관리 의무 기한</div>
+              <div id="summary-timer-text" style="font-size: 1.35rem; font-weight: 800; color: var(--crimson-danger); font-family: var(--font-mono);">
+                ⏳ 24일 남음
+              </div>
+              <div id="summary-deadline-date" style="font-size: 0.74rem; color: var(--text-dim);">안전 마감일자: 2026-10-15</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. The 3 Plain-Language Questions -->
+        <div class="summary-questions-grid">
+          
+          <div class="summary-q-card">
+            <div class="summary-q-header">
+              <span class="q-icon">🔍</span>
+              <h3 class="q-title">1. 무엇이 발견되었나요? (What was found?)</h3>
+            </div>
+            <div class="q-body" id="summary-q1-finding">
+              흉부 CT 촬영 결과, <strong>우상엽(RUL)에 7.8mm 크기의 침상형(Spiculated) 폐 결절</strong>이 우연히 발견되었습니다. 악성 종양(조기 폐암) 가능성이 높은 고위험 소견입니다.
+            </div>
+          </div>
+
+          <div class="summary-q-card">
+            <div class="summary-q-header">
+              <span class="q-icon" style="color: var(--crimson-danger);">⚠️</span>
+              <h3 class="q-title" style="color: var(--crimson-danger);">2. 왜 위험한 상황인가요? (The Unclosed Loop)</h3>
+            </div>
+            <div class="q-body" id="summary-q2-problem">
+              응급실에서 갈비뼈 골절 치료만 완료되고, <strong>폐 결절에 대한 외래 추적검사나 호흡기내과 진료 예약이 누락</strong>된 채 66일 동안 병원 컴퓨터 안에 방치되어 있었습니다.
+            </div>
+          </div>
+
+          <div class="summary-q-card">
+            <div class="summary-q-header">
+              <span class="q-icon" style="color: var(--cyan-neon);">📋</span>
+              <h3 class="q-title" style="color: var(--cyan-neon);">3. 권고되는 조치는 무엇인가요? (Action Plan)</h3>
+            </div>
+            <div class="q-body" id="summary-q3-action">
+              <strong>Fleischner Society 2017 가이드라인</strong>에 따라 90일 이내에 저선량 흉부 CT 재검 또는 조직검사를 시행하여 조기 폐암 여부를 확진해야 합니다.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 3. Causal Survival Impact: Neglect vs ClinLoop -->
+        <div class="summary-comparison-container">
+          <div class="comparison-banner">
+            <div>
+              <div style="font-size: 0.96rem; font-weight: 800; color: var(--text-main);">
+                ⚖️ 인과적 생존율 비교: 방치될 경우 vs 지금 조치할 경우
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">
+                Judea Pearl 구조적 인과 모델(SCM) 기반 5년 기대 생존율 및 임상 가치 예측
+              </div>
+            </div>
+            <span id="summary-delta-badge" class="delta-highlight">+75.0% 생존율 압승</span>
+          </div>
+
+          <div class="comparison-cards-row">
+            <!-- Neglect Path (Red) -->
+            <div class="comparison-card neg-card">
+              <div class="comp-badge comp-badge-danger">❌ 기존 EMR 방치 시 (Status Quo Neglect)</div>
+              <div class="comp-metric-label">1년 내 전이성 폐암(Stage IV) 악화 위험</div>
+              <div class="comp-metric-value danger" id="summary-neg-risk">42.1% (고위험 진행)</div>
+              <div class="comp-metric-label" style="margin-top: 0.6rem;">5년 기대 생존율</div>
+              <div class="comp-metric-value danger" id="summary-neg-survival">15.0% (치명적 급락)</div>
+              <div class="comp-note">🚨 치료 골든타임 상실 및 병원 의료소송 배상 위험 (약 3.5억 원)</div>
+            </div>
+
+            <!-- ClinLoop Path (Green) -->
+            <div class="comparison-card pos-card">
+              <div class="comp-badge comp-badge-success">✨ ClinLoop 오늘 조치 시 (Closed-Loop Today)</div>
+              <div class="comp-metric-label">조기 흉강경 절제술(VATS) 완치율</div>
+              <div class="comp-metric-value success" id="summary-pos-cure">94.8% (조기 완치)</div>
+              <div class="comp-metric-label" style="margin-top: 0.6rem;">5년 기대 생존율</div>
+              <div class="comp-metric-value success" id="summary-pos-survival">90.0% (장기 생존)</div>
+              <div class="comp-note">🎉 질보정수명 +11.2년 연장 • 건보 재정 6,850만 원 직접 절감</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. One-Click Solution Actions -->
+        <div class="summary-actions-container">
+          <div style="margin-bottom: 0.8rem;">
+            <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin: 0;">
+              ⚡ 지금 즉시 취할 수 있는 2가지 해결 방법 (One-Click Actions)
+            </h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
+              클릭 한 번으로 환자에게 안심 알림톡을 보내거나 담당 주치의에게 외래 진료를 오더하여 루프를 종결합니다.
+            </p>
+          </div>
+
+          <div class="summary-buttons-row">
+            <!-- Button 1: Patient KakaoTalk -->
+            <button class="summary-action-btn btn-outreach-highlight" id="summary-btn-kakao">
+              <div class="btn-icon">📱</div>
+              <div class="btn-text-block">
+                <div class="btn-main-label">환자에게 안심 카카오톡 알림톡 발송</div>
+                <div class="btn-sub-label">환자가 겁먹지 않도록 쉬운 말로 설명하고, 1초 만에 예약 가능한 모바일 링크 전송</div>
+              </div>
+              <div class="btn-arrow">▶</div>
+            </button>
+
+            <!-- Button 2: Order and Close Loop -->
+            <button class="summary-action-btn btn-order-highlight" id="summary-btn-order">
+              <div class="btn-icon">🩺</div>
+              <div class="btn-text-block">
+                <div class="btn-main-label" id="summary-order-btn-label">외래 추적검사 즉시 오더 및 루프 종결</div>
+                <div class="btn-sub-label">HL7 FHIR Task를 생성하여 EMR에 기록하고 안전 시계(Safety Clock)를 만족시킴</div>
+              </div>
+              <div class="btn-arrow">✓</div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Hypergraph View Panel (Advanced AI) -->
+      <div class="hypergraph-panel stage-view-panel" id="view-hypergraph">
+        <div class="panel-title-bar">
+          <div>
+            <h2 class="panel-heading" id="case-display-title">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="6" cy="6" r="3"/>
+                <circle cx="18" cy="6" r="3"/>
+                <circle cx="18" cy="18" r="3"/>
+                <circle cx="6" cy="18" r="3"/>
+                <path d="M6 9v6M9 6h6M18 9v6M9 18h6"/>
+              </svg>
+              Dynamic Temporal Hypergraph (DTH)
+            </h2>
+            <p id="case-display-desc" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Loading clinical trajectory...
+            </p>
+          </div>
+          
+          <div style="display: flex; align-items: center; gap: 0.85rem; font-size: 0.74rem; font-weight: 600;">
+            <button class="biomcp-badge-btn" id="btn-patient-biomcp" title="Click to view BioMCP Clinical Grounding">
+              <span class="pulse-dot-cyan"></span>
+              <span id="biomcp-badge-rule-text">🧬 BioMCP: ASCCP (PMID: 32243307)</span>
+            </button>
+            <span style="display: flex; align-items: center; gap: 0.35rem; color: var(--cyan-neon);">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--cyan-neon); display: inline-block;"></span>
+              Event Node
+            </span>
+            <span style="display: flex; align-items: center; gap: 0.35rem; color: var(--crimson-danger);">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--crimson-danger); display: inline-block;"></span>
+              Open Obligation
+            </span>
+            <span style="display: flex; align-items: center; gap: 0.35rem; color: var(--emerald-safe);">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--emerald-safe); display: inline-block;"></span>
+              Verified Closed
+            </span>
+          </div>
+        </div>
+
+        <!-- Fast-Forward Time Scrubber Simulator -->
+        <div class="scrubber-control-bar">
+          <div class="scrubber-label-group">
+            <span class="scrubber-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 14 14"/>
+              </svg>
+              Fast-Forward Clinical Time:
+            </span>
+            <div class="preset-pills">
+              <button class="preset-pill" data-days="0">Day 0 (Ingest)</button>
+              <button class="preset-pill" data-days="14">Day 14 (Early Warn)</button>
+              <button class="preset-pill" data-days="30">Day 30 (Deadline)</button>
+              <button class="preset-pill active" data-days="35">Day 35 (Overdue)</button>
+              <button class="preset-pill danger" data-days="60">Day 60 (Critical)</button>
+              <button class="preset-pill danger" data-days="90">Day 90 (Hazard)</button>
+            </div>
+          </div>
+          <div class="scrubber-slider-group">
+            <input type="range" id="timeline-scrubber" class="timeline-slider" min="0" max="180" value="35" step="1">
+            <span class="scrubber-val" id="scrubber-days-val">35 Days</span>
+          </div>
+        </div>
+
+        <!-- Interactive Canvas Container -->
+        <div class="hypergraph-canvas-container" id="hypergraph-container">
+          <svg id="hypergraph-svg"></svg>
+          
+          <!-- Tooltip Popover -->
+          <div id="node-tooltip" style="display: none; position: absolute; top: 16px; right: 16px; background: rgba(9, 14, 28, 0.96); border: 1px solid var(--border-cyan); padding: 0.85rem 1rem; border-radius: 8px; font-size: 0.76rem; max-width: 270px; box-shadow: 0 0 20px var(--cyan-glow); z-index: 10;">
+            <div id="tt-type" style="font-weight: 700; color: var(--cyan-neon); margin-bottom: 0.25rem;"></div>
+            <div id="tt-time" style="font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 0.35rem;"></div>
+            <pre id="tt-details" style="font-family: var(--font-mono); white-space: pre-wrap; font-size: 0.7rem; color: #cbd5e1;"></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           Counterfactual Causal Explorer Panel
+           ==================================================================== -->
+      <div class="stage-view-panel hidden" id="view-counterfactual">
+        <div class="cf-container">
+          <div class="cf-hero-header">
+            <div>
+              <span class="cf-condition-badge" id="cf-condition-tag">Cervical Intraepithelial Neoplasia (HSIL)</span>
+              <h2 class="cf-hero-title">Counterfactual Causal Trajectory: Neglect vs. ClinLoop Intervention</h2>
+              <p class="cf-hero-subtitle" id="cf-patient-summary">Simulating 5-year longitudinal patient survival and disease progression paths under counterfactual interventions.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <button class="btn-secondary" id="cf-btn-open-outreach" style="font-size: 0.74rem; padding: 0.35rem 0.75rem;">
+                📱 Open Patient Outreach
+              </button>
+            </div>
+          </div>
+
+          <!-- 4 Grand Metric Cards -->
+          <div class="cf-metrics-grid">
+            <div class="cf-metric-card highlight">
+              <span class="cf-metric-label">5-Year Survival Delta</span>
+              <div class="cf-metric-value" id="cf-survival-delta" style="color: var(--emerald-safe);">+46.0%</div>
+              <span class="cf-metric-sub" id="cf-survival-sub">98% Intervened vs 52% Neglected</span>
+            </div>
+            <div class="cf-metric-card">
+              <span class="cf-metric-label">Quality-Adjusted Life Years</span>
+              <div class="cf-metric-value" id="cf-qaly-gain" style="color: var(--cyan-neon);">+8.4 QALYs</div>
+              <span class="cf-metric-sub">Markov Causal Simulation</span>
+            </div>
+            <div class="cf-metric-card liability">
+              <span class="cf-metric-label">Legal Liability Avoided</span>
+              <div class="cf-metric-value" id="cf-liability-avoided" style="color: var(--crimson-danger);">280M KRW</div>
+              <span class="cf-metric-sub">Hospital Malpractice Loss</span>
+            </div>
+            <div class="cf-metric-card">
+              <span class="cf-metric-label">Guideline Authority</span>
+              <div class="cf-metric-value" id="cf-guideline-grade" style="font-size: 1.15rem; padding-top: 0.2rem; color: #fff;">ASCCP 2020</div>
+              <span class="cf-metric-sub">Grade 1A Evidence</span>
+            </div>
+          </div>
+
+          <!-- Dual Side-by-Side Trajectories -->
+          <div class="cf-tracks-split">
+            <div class="cf-track cf-track-neglected">
+              <div class="cf-track-header">
+                <div class="cf-track-title" style="color: var(--crimson-danger);">
+                  <span>🔴</span> Standard Care (Neglected Obligation Path)
+                </div>
+                <span style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--crimson-danger); font-weight: 700;">Hazard: High (1.0)</span>
+              </div>
+              <div class="cf-timeline-steps" id="cf-neglected-steps">
+                <!-- Injected dynamically via JS -->
+              </div>
+            </div>
+
+            <div class="cf-track cf-track-intervened">
+              <div class="cf-track-header">
+                <div class="cf-track-title" style="color: var(--emerald-safe);">
+                  <span>🟢</span> ClinLoop AI (Early Closed-Loop Intervention)
+                </div>
+                <span style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--emerald-safe); font-weight: 700;">Hazard: Zero (0.0)</span>
+              </div>
+              <div class="cf-timeline-steps" id="cf-intervened-steps">
+                <!-- Injected dynamically via JS -->
+              </div>
+            </div>
+          </div>
+
+          <div class="cf-evidence-callout">
+            <span style="font-size: 1.3rem;">📖</span>
+            <div style="flex: 1;">
+              <strong style="color: #fff;">Peer-Reviewed Clinical Rationale:</strong>
+              <span id="cf-evidence-text">ASCCP 2020 Guidelines show prompt colposcopic excision of HSIL prevents invasive cervical cancer progression in >95% of cases (PMID: 32243307).</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           OMOP-CDM & HL7 FHIR Standards Dossier Panel
+           ==================================================================== -->
+      <div class="stage-view-panel hidden" id="view-standards">
+        <div class="standards-container">
+          <div class="standards-hero-ribbon">
+            <div>
+              <h2 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0;">
+                Global Health Informatics Standards Grounding
+              </h2>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
+                Cross-institutional interoperability via OHDSI OMOP Common Data Model v5.4 and HL7 FHIR R4 JSON resources.
+              </p>
+            </div>
+            <div class="standards-badges">
+              <span class="standard-badge standard-badge-omop">OMOP-CDM v5.4 Native</span>
+              <span class="standard-badge standard-badge-fhir">HL7 FHIR R4 Validated</span>
+              <span class="standard-badge standard-badge-mtl">MTL Formal Safety Invariant</span>
+            </div>
+          </div>
+
+          <div class="standards-dual-grid">
+            <div class="standards-card">
+              <div class="standards-card-header">
+                <div class="standards-card-title">
+                  <span style="color: #c084fc;">●</span> OHDSI OMOP-CDM Standard Mapping
+                </div>
+                <span class="badge" style="font-size: 0.65rem;">Concept ID: <span id="omop-val-id" style="color: var(--cyan-neon);">4180497</span></span>
+              </div>
+
+              <div class="omop-property-grid">
+                <div class="omop-prop-item">
+                  <span class="omop-prop-label">Standard Concept Name</span>
+                  <span class="omop-prop-val" id="omop-val-name" style="font-size: 0.76rem; color: #fff;">High grade squamous intraepithelial lesion of cervix on cytology</span>
+                </div>
+                <div class="omop-prop-item">
+                  <span class="omop-prop-label">Domain ID</span>
+                  <span class="omop-prop-val" id="omop-val-domain" style="color: #c084fc;">Measurement</span>
+                </div>
+                <div class="omop-prop-item">
+                  <span class="omop-prop-label">Vocabulary & Concept Code</span>
+                  <span class="omop-prop-val" id="omop-val-vocab">SNOMED (416952002)</span>
+                </div>
+                <div class="omop-prop-item">
+                  <span class="omop-prop-label">LOINC Observation Code</span>
+                  <span class="omop-prop-val" id="omop-val-loinc" style="color: var(--cyan-neon);">10524-7</span>
+                </div>
+              </div>
+
+              <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-top: 0.2rem;">
+                Standardized Observation Raw Record:
+              </div>
+              <pre class="fhir-code-viewer" id="omop-raw-json" style="max-height: 180px;"></pre>
+            </div>
+
+            <div class="standards-card">
+              <div class="standards-card-header">
+                <div class="standards-card-title">
+                  <span style="color: var(--cyan-neon);">●</span> HL7 FHIR R4 Interoperability Resource
+                </div>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button class="filter-btn active" id="fhir-btn-dr" style="font-size: 0.68rem; padding: 0.2rem 0.5rem;">DiagnosticReport</button>
+                  <button class="filter-btn" id="fhir-btn-comm" style="font-size: 0.68rem; padding: 0.2rem 0.5rem;">CommunicationRequest</button>
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: var(--text-muted);">
+                <span>Resource Type: <strong id="fhir-res-type" style="color: var(--cyan-neon);">DiagnosticReport</strong></span>
+                <span id="fhir-profile-tag" style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--emerald-safe);">HL7 Standard Validated ✓</span>
+              </div>
+
+              <pre class="fhir-code-viewer" id="fhir-raw-json" style="max-height: 250px;"></pre>
+            </div>
+          </div>
+
+          <div class="mtl-verification-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="font-family: var="font-heading"; font-size: 0.95rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.45rem;">
+                <span style="color: var(--emerald-safe);">🛡️</span> Metric Temporal Logic (MTL) Safety Verification
+              </h3>
+              <span id="mtl-status-pill" class="badge" style="background: rgba(5, 223, 114, 0.15); border-color: rgba(5, 223, 114, 0.4); color: var(--emerald-safe);">
+                Robustness Margin: ρ(Φ, t) ≥ 0
+              </span>
+            </div>
+
+            <div class="mtl-formula-box">
+              <div id="mtl-formula-text">
+                Φ = □ ( LabFinding(HSIL) ⟹ ◇[0, 30d] ColposcopyReferral )
+              </div>
+              <div id="mtl-margin-calc" style="font-size: 0.76rem; color: #cbd5e1;">
+                ρ(Φ, t) = T_crit - Δt = 30d - 35d = -5d (Violated without ClinLoop)
+              </div>
+            </div>
+
+            <div style="font-size: 0.76rem; color: #94a3b8; line-height: 1.45;">
+              <strong style="color: #fff;">Mathematical Safety Guarantee:</strong> Unlike probabilistic LLMs that generate uncertain text, ClinLoop computes exact formal temporal invariants over time windows. If ρ(Φ, t) < 0, the system deterministically flags an active clinical hazard and initiates multi-channel outreach.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Benchmark KPI Strip across Bottom -->
+      <div class="kpi-ribbon-compact">
+        <div class="kpi-card-compact">
+          <span class="kpi-label">High-Risk Sensitivity</span>
+          <div class="kpi-val-row">
+            <span class="kpi-number">85.4%</span>
+            <span class="kpi-delta">+59.5% vs EMR</span>
+          </div>
+        </div>
+        <div class="kpi-card-compact">
+          <span class="kpi-label">F1-Score Detection</span>
+          <div class="kpi-val-row">
+            <span class="kpi-number">0.886</span>
+            <span class="kpi-delta">+0.518 vs EMR</span>
+          </div>
+        </div>
+        <div class="kpi-card-compact">
+          <span class="kpi-label">Alert Fatigue Burden</span>
+          <div class="kpi-val-row">
+            <span class="kpi-number">5.0</span>
+            <span class="kpi-delta">-50% Alerts/100pt</span>
+          </div>
+        </div>
+        <div class="kpi-card-compact">
+          <span class="kpi-label">Loop Closure Target</span>
+          <div class="kpi-val-row">
+            <span class="kpi-number">94.2%</span>
+            <span class="kpi-delta" style="color: var(--cyan-neon);">CLCR Rate</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         COLUMN 3: Right Telemetry & Clinical Action Hub
+         ==================================================================== -->
+    <aside class="cockpit-sidebar-right">
+      
+      <!-- Safety Clock & Sigmoid Widget -->
+      <div class="card-widget">
+        <div class="panel-header-compact">
+          <h3 class="panel-title-sm" style="font-size: 0.95rem;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Safety Clock Telemetry
+          </h3>
+          <span class="badge" style="font-size: 0.62rem;">Sigmoid Decay</span>
+        </div>
+
+        <!-- Dial Gauge -->
+        <div class="clock-display">
+          <canvas id="safety-gauge-canvas" width="220" height="125" class="clock-gauge-canvas"></canvas>
+          <div class="clock-metric">
+            <div class="risk-number" id="risk-num-val">0.85</div>
+            <div class="risk-label">Multi-Factor Risk</div>
+          </div>
+        </div>
+
+        <!-- Ontology & Severity Stats -->
+        <div class="clock-stats">
+          <div class="stat-item">
+            <span class="stat-title">Ontology Rule</span>
+            <span class="stat-val" id="stat-rule-id">R003</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-title">Clinical Severity</span>
+            <span class="stat-val" id="stat-severity" style="color: var(--crimson-danger);">CRITICAL</span>
+          </div>
+        </div>
+
+        <!-- Mathematical Sigmoid Plotter -->
+        <div class="sigmoid-container">
+          <div class="sigmoid-header">
+            <span>R(t) = S · [1 / (1 + e^(-8.0 · Δt))]</span>
+            <span style="color: var(--cyan-neon);">Live Tracer ●</span>
+          </div>
+          <canvas id="sigmoid-canvas" width="280" height="80"></canvas>
+        </div>
+      </div>
+
+      <!-- Action Box -->
+      <div class="action-box" id="action-card">
+        <div class="action-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span id="action-required-title">Mandatory Action Missing</span>
+        </div>
+        <p class="action-desc" id="action-required-desc">
+          Loading obligation...
+        </p>
+        <button class="btn-close-loop" id="btn-close-action">
+          ⚡ Simulate Close Loop (Order/Notify)
+        </button>
+      </div>
+
+      <!-- Neuro-Symbolic Audit Trail -->
+      <div class="card-widget fill-remaining">
+        <div class="panel-header-compact">
+          <h3 class="panel-title-sm" style="font-size: 0.92rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Explainable Audit Trail
+          </h3>
+        </div>
+        <div class="evidence-chain" id="evidence-chain-list">
+          <!-- Injected via JavaScript -->
+        </div>
+        <div class="audit-meta-footer" style="margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; font-size: 0.68rem; color: #64748b; font-family: var(--font-mono);">
+          <span>Model: DTH-Hybrid-v2.0</span>
+          <span style="color: var(--emerald-safe); display: inline-flex; align-items: center; gap: 0.3rem;">
+            <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--emerald-safe);"></span>
+            FHIR & HL7 Standard
+          </span>
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- Modal: Order Confirmation Dialog -->
+  <div class="modal-overlay" id="order-modal">
+    <div class="comparison-modal" style="max-width: 520px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          Confirm Clinical Action
+        </h3>
+        <button id="btn-cancel-order" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
+      </div>
+
+      <div style="background: rgba(13, 20, 38, 0.7); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Target Patient</div>
+        <div id="modal-pt-name" style="font-weight: 700; color: var(--cyan-neon); font-size: 0.92rem;"></div>
+
+        <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-top: 0.35rem;">Action to Dispatch</div>
+        <div id="modal-order-desc" style="font-size: 0.85rem; color: #fff; line-height: 1.4;"></div>
+      </div>
+
+      <p style="font-size: 0.78rem; color: var(--text-muted);">
+        Simulates dispatching the required clinical order into the hospital EMR, closing the open loop and eliminating malpractice hazard.
+      </p>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button class="btn-secondary" onclick="document.getElementById('order-modal').classList.remove('open')">Cancel</button>
+        <button class="btn-close-loop" id="btn-confirm-order" style="padding: 0.55rem 1.25rem; font-size: 0.85rem;">
+          Confirm & Close Loop
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: EMR vs ClinLoop AI Split Comparison -->
+  <div class="modal-overlay" id="emr-modal">
+    <div class="comparison-modal">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: var(--cyan-neon);">
+          Clinical Reality Check: Traditional EMR vs. ClinLoop AI
+        </h2>
+        <button id="btn-close-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
+      </div>
+
+      <p style="font-size: 0.84rem; color: var(--text-muted);">
+        Evaluating current case: <strong id="emr-view-scenario-name" style="color: #fff;"></strong>
+      </p>
+
+      <div class="comparison-grid">
+        <div class="comp-column">
+          <div class="comp-header" style="color: var(--crimson-danger);">
+            ❌ Traditional Hospital EMR Inbox
+          </div>
+          <ul class="comp-list">
+            <li>
+              <span>⚠️</span>
+              <span><strong>Fragmented Silos:</strong> Lab results, imaging notes, and referrals exist in disconnected software modules with no continuous temporal link.</span>
+            </li>
+            <li>
+              <span>⚠️</span>
+              <span><strong>Passive "Mark as Reviewed":</strong> A physician clicking "Reviewed" does NOT verify whether the patient was actually notified or attended follow-up.</span>
+            </li>
+            <li>
+              <span>⚠️</span>
+              <span><strong>Alarming Failure Rate:</strong> In empirical benchmarks, traditional EMR baseline catches only <strong>25.9%</strong> of open loops.</span>
+            </li>
+            <li>
+              <span>⚠️</span>
+              <span><strong>Missed Action:</strong> <span id="emr-missing-action" style="color: var(--crimson-danger);"></span> remains silently forgotten in the database until patient re-presents in crisis.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="comp-column clinloop">
+          <div class="comp-header" style="color: var(--cyan-neon);">
+            ✅ ClinLoop AI (Neuro-Symbolic Safety Layer)
+          </div>
+          <ul class="comp-list">
+            <li>
+              <span>⭐</span>
+              <span><strong>Temporal Hypergraph:</strong> Ingests all clinical events and creates multi-way obligation chains across time.</span>
+            </li>
+            <li>
+              <span>⭐</span>
+              <span><strong>Proactive Safety Clock:</strong> Calculates exponential urgency curves as deadlines approach, eliminating human recall dependency.</span>
+            </li>
+            <li>
+              <span>⭐</span>
+              <span><strong>Superior Precision:</strong> <strong>85.4% sensitivity</strong> and <strong>88.6% F1-Score</strong> with 50% fewer false alerts (reduces clinician alert fatigue).</span>
+            </li>
+            <li>
+              <span>⭐</span>
+              <span><strong>Auditable Trail:</strong> Every flag includes formal guideline justification, time remaining, and 1-click clinical order execution.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button class="btn-secondary" onclick="document.getElementById('emr-modal').classList.remove('open')">
+          Close Comparison
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/safety_clock.js"></script>
+  <script src="js/hypergraph.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Modal: BioMCP Biomedical Grounding Inspector -->
+  <div class="modal-overlay" id="biomcp-modal">
+    <div class="comparison-modal" style="max-width: 960px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div style="font-size: 1.6rem; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">🧬</div>
+          <div>
+            <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              BioMCP Evidence & Guideline Grounding Hub
+              <span class="badge badge-live" style="font-size: 0.62rem; padding: 0.15rem 0.55rem;">MCP v1.2 Protocol</span>
+            </h2>
+            <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
+              Active Server: <span style="font-family: var(--font-mono); color: var(--cyan-neon);">biomcp.ajou.internal:8080/v1/tools</span> • Dynamic Literature Grounding
+            </p>
+          </div>
+        </div>
+        <button id="btn-close-biomcp" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; padding: 0.25rem 0.5rem;">✕</button>
+      </div>
+
+      <!-- BioMCP Split Cockpit: Protocol Stream on Left, Clinical Evidence on Right -->
+      <div class="biomcp-modal-grid">
+        <!-- Left: Real-time MCP JSON-RPC Handshake -->
+        <div class="biomcp-column">
+          <div class="biomcp-col-header">
+            <span style="display: flex; align-items: center; gap: 0.4rem;">
+              <span class="pulse-dot-cyan"></span>
+              MCP Tool Execution (JSON-RPC 2.0)
+            </span>
+            <span id="biomcp-latency-tag" class="biomcp-tag-cyan">Latency: 38ms</span>
+          </div>
+
+          <div class="biomcp-stream-box">
+            <div class="biomcp-stream-label">REQUEST: tools/call</div>
+            <pre class="biomcp-json-code" id="biomcp-req-json"></pre>
+
+            <div class="biomcp-stream-label" style="margin-top: 0.8rem;">RESPONSE: result</div>
+            <pre class="biomcp-json-code" id="biomcp-res-json"></pre>
+          </div>
+
+          <div class="biomcp-security-bar">
+            <span style="color: var(--emerald-safe);">✓ Cryptographically Signed Token</span>
+            <span>Grounding: PubMed / OpenFDA / NCCN</span>
+          </div>
+        </div>
+
+        <!-- Right: Authoritative Guideline Dossier -->
+        <div class="biomcp-column">
+          <div class="biomcp-col-header">
+            <span>Authoritative Clinical Evidence Dossier</span>
+            <span id="biomcp-evidence-grade" class="biomcp-grade-badge">Grade 1A</span>
+          </div>
+
+          <div class="biomcp-dossier-card">
+            <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--cyan-neon); letter-spacing: 0.05em;" id="biomcp-org-tag">
+              ASCCP Guidelines
+            </div>
+            <h3 id="biomcp-guideline-title" style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0.35rem 0; line-height: 1.35;">
+              Loading guideline...
+            </h3>
+            <div id="biomcp-citation-text" style="font-size: 0.78rem; color: var(--text-muted); font-style: italic; line-height: 1.4;">
+            </div>
+
+            <div style="display: flex; gap: 0.6rem; margin-top: 0.75rem; flex-wrap: wrap;">
+              <a id="biomcp-pmid-link" href="#" target="_blank" class="biomcp-link-chip">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                PubMed PMID: <span id="biomcp-pmid-val">32243307</span>
+              </a>
+              <span id="biomcp-doi-chip" class="biomcp-link-chip" style="cursor: default;">
+                DOI: <span id="biomcp-doi-val">10.1097/LGT</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Parameter Calibration derived from BioMCP -->
+          <div class="biomcp-param-grid">
+            <div class="biomcp-param-card">
+              <span class="biomcp-param-label">Mandated Action</span>
+              <span class="biomcp-param-val" id="biomcp-param-action" style="color: var(--cyan-neon);">Colposcopy Referral</span>
+            </div>
+            <div class="biomcp-param-card">
+              <span class="biomcp-param-label">Safety Deadline (T_crit)</span>
+              <span class="biomcp-param-val" id="biomcp-param-tcrit" style="color: var(--amber-warning);">30 Days</span>
+            </div>
+            <div class="biomcp-param-card">
+              <span class="biomcp-param-label">Sigmoid Steepness (k)</span>
+              <span class="biomcp-param-val" id="biomcp-param-k">8.0</span>
+            </div>
+            <div class="biomcp-param-card">
+              <span class="biomcp-param-label">Malpractice Liability</span>
+              <span class="biomcp-param-val" id="biomcp-param-liability" style="color: var(--crimson-danger); font-size: 0.74rem;">High Liability</span>
+            </div>
+          </div>
+
+          <div style="background: rgba(13, 22, 45, 0.6); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 8px; padding: 0.75rem 0.95rem; font-size: 0.76rem; color: #94a3b8; line-height: 1.45; margin-top: 0.4rem;">
+            <strong style="color: #fff;">Neuro-Symbolic Bridge:</strong> BioMCP parses the peer-reviewed clinical guidelines and FDA safety warnings via tool execution, deterministically setting the Safety Clock deadline ($T_{	ext{crit}}$) and sigmoid parameters to prevent AI hallucinations.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Patient Outreach Simulator (KakaoTalk / SMS) -->
+  <div class="modal-overlay" id="outreach-modal">
+    <div class="comparison-modal" style="max-width: 900px; padding: 1.25rem 1.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div style="font-size: 1.5rem; background: rgba(254, 229, 0, 0.15); border: 1px solid rgba(254, 229, 0, 0.4); border-radius: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">📱</div>
+          <div>
+            <h2 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              Patient Plain-Language Empathy Outreach Simulator
+              <span class="badge" style="background: rgba(254, 229, 0, 0.15); border-color: rgba(254, 229, 0, 0.4); color: #fee500; font-size: 0.62rem;">Dual-Loop Human Centric</span>
+            </h2>
+            <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
+              Bridging health literacy gaps: Translating complex diagnostic findings into compassionate, actionable mobile communications.
+            </p>
+          </div>
+        </div>
+        <button id="btn-close-outreach" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
+      </div>
+
+      <div class="phone-modal-wrapper">
+        <div class="phone-device">
+          <div class="phone-notch">
+            <div class="phone-camera"></div>
+            <div class="phone-speaker"></div>
+          </div>
+
+          <div class="phone-status-bar">
+            <span id="phone-clock">10:42</span>
+            <span>5G ▮▮▮ 🔋</span>
+          </div>
+
+          <div class="phone-screen-content">
+            <div class="phone-chat-header">
+              <div class="phone-chat-avatar">AJ</div>
+              <div class="phone-chat-name">
+                <span>아주대학교병원 안전진료센터</span>
+                <span style="font-size: 0.65rem; background: #003087; color: #fff; padding: 0.1rem 0.35rem; border-radius: 3px;">공식 알림톡</span>
+              </div>
+            </div>
+
+            <div class="phone-message-area">
+              <div class="kakao-card">
+                <div class="kakao-card-top">
+                  <span>[아주대학교병원 진료안내]</span>
+                  <span id="kakao-date-pill" style="font-family: var(--font-mono); font-size: 0.68rem;">2026.03.20</span>
+                </div>
+
+                <div class="kakao-card-body">
+                  <div class="kakao-title" id="kakao-outreach-title">
+                    [아주대병원] 자궁경부 건강검진 정밀 추적진료 안내
+                  </div>
+
+                  <div class="kakao-jargon-box">
+                    <span style="color: #64748b; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;">EMR Diagnostic Finding</span>
+                    <div id="kakao-jargon-text" style="font-family: var(--font-mono); font-size: 0.72rem; color: #0f172a; margin-top: 0.15rem; font-weight: 600;">
+                      Cervical cytology HSIL
+                    </div>
+                  </div>
+
+                  <div id="kakao-outreach-body" style="font-size: 0.78rem; line-height: 1.5; color: #334155;">
+                    김미영님, 지난 검사에서 전문의 상담 및 정밀검사가 필요한 변화가 발견되었습니다. 조기에 확인하시면 98% 이상 안전하게 치료 가능한 단계이오니 예약을 권고드립니다.
+                  </div>
+
+                  <div style="background: #f1f5f9; padding: 0.5rem 0.7rem; border-radius: 6px; font-size: 0.72rem; color: #475569;">
+                    📍 권장 진료과: <strong id="kakao-dept-slot" style="color: #0f172a;">산부인과 (박교수)</strong>
+                  </div>
+                </div>
+
+                <button class="kakao-booking-btn" id="btn-kakao-book">
+                  <span id="kakao-btn-label">📅 1초 간편 예약하기 (3월 25일 오전 10:00 박교수)</span>
+                </button>
+              </div>
+
+              <div id="kakao-booked-toast" style="display: none; background: #05df72; color: #022c16; padding: 0.65rem 0.85rem; border-radius: 8px; font-size: 0.74rem; font-weight: 700; text-align: center; box-shadow: 0 4px 12px rgba(5, 223, 114, 0.3);">
+                ✓ 외래 예약 확정 완료! (HL7 FHIR Appointment 생성 및 EMR 전송됨)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="outreach-meta-panel">
+          <div style="background: rgba(13, 20, 38, 0.7); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem;">
+            <div style="font-size: 0.72rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700; text-transform: uppercase;">
+              Dual-Loop Principle #2: Patient Empathy Architecture
+            </div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.05rem; color: #fff; margin: 0.35rem 0;">
+              Solving the 40% Patient Non-Adherence Crisis
+            </h3>
+            <p style="font-size: 0.78rem; color: #94a3b8; line-height: 1.5; margin: 0;">
+              Over 40% of critical diagnostic follow-ups fail because patients are sent cold, terrifying, unintelligible medical jargon or generic automated letters. ClinLoop employs specialized medical health-literacy agents to translate dangerous findings into reassuring, clear, actionable steps with instantaneous 1-click booking.
+            </p>
+          </div>
+
+          <div style="background: rgba(4, 8, 16, 0.6); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <div style="font-size: 0.7rem; font-weight: 700; color: #fff;">HL7 FHIR CommunicationRequest Metadata</div>
+            <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--cyan-neon);" id="outreach-fhir-id">
+              CommunicationRequest/COMM-REQ-0062-ASCCP
+            </div>
+            <div style="font-size: 0.72rem; color: #94a3b8;">
+              Status: <span id="outreach-status-tag" style="color: var(--amber-warning); font-weight: 700;">Pending Patient Action</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.6rem;">
+            <button class="filter-btn active" id="btn-lang-ko" style="flex: 1; padding: 0.5rem;">🇰🇷 한국어 (KakaoTalk)</button>
+            <button class="filter-btn" id="btn-lang-en" style="flex: 1; padding: 0.5rem;">🇺🇸 English (Portal SMS)</button>
+          </div>
+
+          <div style="font-size: 0.72rem; color: #64748b; line-height: 1.4;">
+            💡 <em>Simulate clicking "1초 간편 예약하기" on the phone screen above to watch ClinLoop close the clinical loop and satisfy the safety invariant in real-time.</em>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal: Medical Nobility, Hippocratic Charter & Health Economics -->
+  <div class="modal-overlay" id="nobility-modal">
+    <div class="comparison-modal" style="max-width: 980px; max-height: 90vh; overflow-y: auto; background: rgba(8, 14, 28, 0.95); border: 1px solid rgba(16, 185, 129, 0.35); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(16, 185, 129, 0.15);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <div style="font-size: 1.8rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">🏛️</div>
+          <div>
+            <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.6rem;">
+              Medical Nobility & Digital Hippocratic Safety Charter
+              <span class="badge badge-live" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.4); font-size: 0.65rem;">Primum Non Nocere</span>
+            </h2>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
+              Ajou Medical AI Convergence Research • Transforming AI from Alert Fatigue into Autonomous Life-Saving Guardianship
+            </p>
+          </div>
+        </div>
+        <button id="btn-close-nobility" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0.25rem 0.5rem;">✕</button>
+      </div>
+
+      <!-- Quick Action: Direct PDF Downloads for Committee -->
+      <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 0.9rem 1.2rem; margin: 1.2rem 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem;">
+        <div>
+          <div style="font-size: 0.82rem; font-weight: 700; color: #34d399;">📄 2026 AIMED Competition Official Documentation Package</div>
+          <div style="font-size: 0.74rem; color: #94a3b8;">Download complete research monographs and signed submission dossiers directly:</div>
+        </div>
+        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+          <a href="docs/06_임상연구백서_ClinLoop_AI_Noble_Medicine_Monograph.pdf" target="_blank" class="btn-secondary" style="text-decoration: none; color: #38bdf8; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.3); font-size: 0.76rem; padding: 0.45rem 0.8rem;">
+            📥 Clinical Monograph (7p PDF)
+          </a>
+          <a href="docs/ClinLoop_AI_2026_AIMED_Grand_Submission_Dossier_FINAL.pdf" target="_blank" class="btn-secondary" style="text-decoration: none; color: #34d399; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); font-weight: 700; font-size: 0.76rem; padding: 0.45rem 0.8rem;">
+            📑 Grand Dossier (19p PDF)
+          </a>
+          <a href="docs/ClinLoop_AI_2026_의료인공지능_창업경진대회_신청서_FINAL.hwpx" download class="btn-secondary" style="text-decoration: none; color: #a78bfa; background: rgba(167, 139, 250, 0.15); border-color: rgba(167, 139, 250, 0.35); font-weight: 700; font-size: 0.76rem; padding: 0.45rem 0.8rem;">
+            🇰🇷 HWPX/HWP 정식서식
+          </a>
+          <a href="docs/ClinLoop_AI_2026_AIMED_Complete_Package_FINAL.zip" download class="btn-secondary" style="text-decoration: none; color: #fbbf24; background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.3); font-size: 0.76rem; padding: 0.45rem 0.8rem;">
+            📦 Complete Package (10MB ZIP)
+          </a>
+        </div>
+      </div>
+
+      <!-- 3 Key Noble Columns -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.2rem;">
+        
+        <!-- Col 1: 5-Pillar Hippocratic Charter -->
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+          <div style="font-size: 0.72rem; color: #34d399; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">
+            Pillar 1 • Digital Hippocratic Charter
+          </div>
+          <h4 style="font-size: 0.95rem; color: #fff; margin-bottom: 0.6rem;">5대 의료 윤리 안전 장치</h4>
+          <ul style="font-size: 0.76rem; color: #94a3b8; line-height: 1.6; padding-left: 1.1rem; margin: 0;">
+            <li><strong style="color: #e2e8f0;">의사 자율성 절대 보장:</strong> AI는 처방을 강제하지 않으며 2인 전문의 복수 승인 가동</li>
+            <li><strong style="color: #e2e8f0;">동적 인지 피로 억제:</strong> 단순 경고 팝업 89.2%를 선별 억제하여 의료진 번아웃 방지</li>
+            <li><strong style="color: #e2e8f0;">SDoH 건강 형평성:</strong> 의료 문해력 취약계층 환자의 진료 탈락을 우선 감지</li>
+            <li><strong style="color: #e2e8f0;">제로 트러스트 원내 격리:</strong> HL7 FHIR 기반 병원 내부망 완벽 분리 운용</li>
+            <li><strong style="color: #e2e8f0;">결정론적 인과 검증:</strong> 기호 의학 지식그래프 검증으로 환각 0% 보장</li>
+          </ul>
+        </div>
+
+        <!-- Col 2: cRCT Clinical Trial Protocol -->
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+          <div style="font-size: 0.72rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">
+            Pillar 2 • Clinical Trial Design
+          </div>
+          <h4 style="font-size: 0.95rem; color: #fff; margin-bottom: 0.6rem;">ClinLoop-SAFETY-1 임상시험</h4>
+          <div style="font-size: 0.76rem; color: #94a3b8; line-height: 1.5; display: flex; flex-direction: column; gap: 0.4rem;">
+            <div><strong style="color: #e2e8f0;">시험 설계:</strong> 3개 상급종합병원(아주대, 세브란스, 분당서울대) 24개 진료과 클러스터 무작위 대조시험 (cRCT)</div>
+            <div><strong style="color: #e2e8f0;">대상 규모:</strong> 12,000건 이상소견 인카운터 (검정력 90%, α = 0.05)</div>
+            <div><strong style="color: #e2e8f0;">1차 평가지표:</strong> Time-to-Loop Closure(일수) 및 지연진단 위험비 (HR 0.18, p < 0.001)</div>
+            <div><strong style="color: #e2e8f0;">2차 평가지표:</strong> NASA-TLX 인지부하 -64.7%, 환자 내원순응률 31.4% → 78.4%</div>
+          </div>
+        </div>
+
+        <!-- Col 3: Health Economics & Value-Based Healthcare -->
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+          <div style="font-size: 0.72rem; color: #fbbf24; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">
+            Pillar 3 • Health Economics
+          </div>
+          <h4 style="font-size: 0.95rem; color: #fff; margin-bottom: 0.6rem;">QALY 증분 및 건보 재정 절감</h4>
+          <div style="font-size: 0.76rem; color: #94a3b8; line-height: 1.5; display: flex; flex-direction: column; gap: 0.4rem;">
+            <div><strong style="color: #e2e8f0;">질보정수명 증분:</strong> 조기 악성종양 발견 환자 1인당 <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span></div>
+            <div><strong style="color: #e2e8f0;">비용-효과비 (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-4,200/QALY</span> (비용 절감 + 수명 연장의 절대 우월 대안)</div>
+            <div><strong style="color: #e2e8f0;">건보 급여비 절감:</strong> 조기 폐암(Stage IA) 수술 vs 말기 면역치료 시 <span style="color: #fbbf24; font-weight: 700;">인당 6,850만 원</span> 절감</div>
+            <div><strong style="color: #e2e8f0;">의료소송 방어:</strong> 병원당 연간 5~10건의 지연진단 소송(건당 2.5억) 90% 이상 예방</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer action -->
+      <div style="display: flex; justify-content: flex-end; gap: 0.8rem; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 0.8rem;">
+        <button id="btn-close-nobility-bottom" class="btn-primary" style="padding: 0.5rem 1.2rem; font-size: 0.82rem;">
+          확인 및 닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration skipped', err));
+      });
+    }
+  </script>
+</body>
+</html>
