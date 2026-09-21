@@ -154,7 +154,7 @@ class ClinLoopApp {
     this.searchQuery = '';
     this.currentScrubDays = 35;
     this.currentView = 'hypergraph';
-    this.currentLang = localStorage.getItem('clinloop_lang') || 'ko';
+    this.currentLang = localStorage.getItem('clinloop_lang') || 'en';
     this.outreachLang = this.currentLang;
   }
 
@@ -818,7 +818,7 @@ class ClinLoopApp {
       }
     };
 
-    const initialLang = localStorage.getItem('clinloop_lang') || 'ko';
+    const initialLang = (typeof urlParams !== 'undefined' ? urlParams.get('lang') : new URLSearchParams(window.location.search).get('lang')) || localStorage.getItem('clinloop_lang') || 'en';
     this.setLanguage(initialLang);
 
     if (btnHeaderLangKo) btnHeaderLangKo.addEventListener('click', () => { this.setLanguage('ko'); this._playTelemetrySound(800, 'sine', 0.05); });
