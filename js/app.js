@@ -24,7 +24,7 @@ const CLINLOOP_I18N = {
     tabCounterfactual: '⚖️ 인과추론 시뮬레이터 (Counterfactual)',
     tabStandards: '🏥 보건의료 표준 (OMOP / FHIR)',
     tabHypergraph: '🕸️ 지식 하이퍼그래프 (AI Graph)',
-    tabPrivacy: '🛡️ Privacy Shield',
+    tabPrivacy: '🛡️ 개인정보 보호 (Privacy Shield)',
     guideTitle: '💡 ClinLoop AI는 어떤 시스템인가요? (System Purpose & Core Value)',
     guideDesc: '환자가 응급실이나 검진을 마친 뒤, EMR 컴퓨터 속에 방치되어 <strong>암 4기로 악화되는 "추적검사 누락(Closed-Loop Failure)"을 AI와 GPU로 실시간 자동 감지</strong>하고, <strong>의료진에게는 1-클릭 오더, 환자에게는 안심 알림톡</strong>을 보내 소중한 생명을 지키는 <strong>의료 안전망(Safety Net) 플랫폼</strong>입니다.',
     guideSteps: '<span class="guide-step">① 좌측 환자 대기열에서 환자 선택</span> <span class="guide-arrow">➔</span> <span class="guide-step">② 3대 임상 요약 및 5년 생존율(+75% 완치) 확인</span> <span class="guide-arrow">➔</span> <span class="guide-step">③ 하단 [1-클릭 오더] 또는 [알림톡 발송]으로 종결</span>',
