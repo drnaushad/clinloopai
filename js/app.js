@@ -186,10 +186,11 @@ class ClinLoopApp {
       this.selectCase(caseParam);
     } else if (this.filteredCases.length > 0) {
       this.selectCase(this.filteredCases[0].scenario_id);
-    if (!window.location.hash) { this.switchView('summary'); }
     }
 
-    if (window.location.hash === '#biomcp' || window.location.search.includes('biomcp=1')) {
+    if (!window.location.hash || window.location.hash === '#summary') {
+      this.switchView('summary');
+    } else if (window.location.hash === '#biomcp' || window.location.search.includes('biomcp=1')) {
         this.populateBioMcpModal();
         const m = document.getElementById('biomcp-modal');
         if (m) m.classList.add('open');
@@ -197,6 +198,8 @@ class ClinLoopApp {
         this.switchView('counterfactual');
     } else if (window.location.hash === '#standards' || window.location.search.includes('view=standards')) {
         this.switchView('standards');
+    } else if (window.location.hash === '#hypergraph' || window.location.search.includes('view=hypergraph')) {
+        this.switchView('hypergraph');
     } else if (window.location.hash === '#outreach' || window.location.search.includes('outreach=1')) {
         this.updateOutreachModal();
         const m = document.getElementById('outreach-modal');
@@ -205,7 +208,8 @@ class ClinLoopApp {
 
     window.addEventListener('hashchange', () => {
       const h = window.location.hash;
-      if (h === '#counterfactual') this.switchView('counterfactual');
+      if (!h || h === '#' || h === '#summary') this.switchView('summary');
+      else if (h === '#counterfactual') this.switchView('counterfactual');
       else if (h === '#standards') this.switchView('standards');
       else if (h === '#hypergraph') this.switchView('hypergraph');
       else if (h === '#biomcp') {
@@ -1107,7 +1111,7 @@ class ClinLoopApp {
     if (this.filteredCases.length > 0) {
       if (!this.currentCase || !this.filteredCases.some(c => c.scenario_id === this.currentCase.scenario_id)) {
         this.selectCase(this.filteredCases[0].scenario_id);
-    if (!window.location.hash) { this.switchView('summary'); }
+        if (!window.location.hash || window.location.hash === '#summary') { this.switchView('summary'); }
       }
     }
   }
@@ -1481,7 +1485,15 @@ class ClinLoopApp {
 
   switchView(viewName) {
     this.currentView = viewName;
-    try { window.location.hash = viewName; } catch (e) {}
+    try {
+      if (viewName === 'summary') {
+        if (window.location.hash && window.location.hash === '#summary') {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      } else {
+        window.location.hash = viewName;
+      }
+    } catch (e) {}
     document.querySelectorAll('.stage-tab-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.view === viewName);
     });
