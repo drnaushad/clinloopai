@@ -98,6 +98,37 @@ const CLINLOOP_I18N = {
     txtResetKeys: '키 초기화 (GPU 전용 복귀)',
     txtSaveKeys: 'API 설정 저장 & 적용 (Save Keys)',
     lblActiveEngine: '🤖 Active Clinical Foundation Model (활성 AI 추론 엔진 선택):',
+
+    mathToggleSummary: '🔬 AI 감쇠곡선 수학식 (Technical Math)',
+    gpuModalTitle: '🔒 의료 노블리티 (Medical Nobility): 원내 완벽 격리 온프레미스 GPU 구동 (Zero-Cloud Data Egress)',
+    gpuModalDesc: '기존 상용 클라우드 LLM(ChatGPT, Claude 등)은 환자의 민감 진단명, 의무기록 텍스트, 환자 식별정보(PHI)를 외부 데이터센터로 전송하는 근본적 보안 취약점이 존재합니다.<br><br>반면 <strong>ClinLoop AI는 아주대학교의료원 원내 전산실의 워크스테이션 GPU(NVIDIA RTX A4500)</strong>에서 모든 추론을 완벽하게 자체 처리합니다.',
+    gpuLiveTitle: '🚀 1,000건 대규모 병렬 인과추론 실시간 벤치마크 (Live CUDA Tensor Benchmark)',
+    gpuLiveDesc: 'PyTorch CUDA 스트림을 가동하여 1,000명의 환자 궤적에 대한 Metric Temporal Logic 안전 불변식을 병렬 검증합니다.',
+    gpuBtnTest: '⚡ 벤치마크 즉시 가동 (Run GPU Test)',
+    gpuStatTime: '총 소요 시간',
+    gpuStatSpeed: '초당 처리 환자 수',
+    gpuStatViolations: '감지된 위반 건수',
+    gpuStatVram: '가용 VRAM',
+    gpuBtnClose: '확인 및 닫기',
+    
+    apiModalTitle2: '🛡️ 의료 노블리티 환자 프라이버시 보장 (Medical Nobility & Privacy Shield)',
+    apiModalDesc: 'ClinLoop AI의 기본 연산은 <strong>원내 완벽 격리 NVIDIA RTX A4500 온프레미스 GPU</strong>에서 100% 처리됩니다. 아래의 외부 연구용 클라우드 API를 활성화하더라도, <strong>HIPAA Safe Harbor 18개 PHI(개인건강정보) 실시간 비식별화 필터</strong>를 무조건 통과한 후 전송됩니다.',
+    apiGeminiDesc: '자연어 환자 설명문 생성, 다국어 의학 번역, 복합 질환 임상 요약에 활용되는 생성형 AI API 키입니다.',
+    apiAnthropicDesc: '최고 수준의 임상 의학 추론, 의료 윤리 안전 정렬 및 복합 다빈도 질환 퇴원 요약에 특화된 Anthropic 최상위 모델 API 키입니다.',
+    apiOpenaiDesc: '심층 임상 감별진단 추론(o1) 및 실시간 음성/영상 다중모달 환자 공감 소통(Astra / GPT-4o Realtime)에 활용되는 API 키입니다.',
+    apiNcbiDesc: 'NCBI API 키를 등록하면 초당 10회 고속 검색이 활성화되어 최신 의학 가이드라인 및 논문 원문을 지연 없이 검증합니다.',
+    apiFhirDesc: '원내 전자의무기록(EMR/EHR) 시스템(Epic, Cerner, 아주대 OCS)과 실시간 양방향 오더 연동을 위한 FHIR R4 토큰입니다.',
+
+    apiTestPing: '연결 테스트 (Ping)',
+    apiTestPubmed: 'PubMed 테스트',
+    apiTestFhir: 'FHIR 테스트',
+    apiBtnReset: '🔄 키 초기화 (Reset to GPU Only)',
+    apiBtnSave: '💾 API 설정 저장 & 적용 (Save Keys)',
+    apiBtnClose: '닫기 (Close)',
+    
+    dockTheme: '테마:',
+    dockLang: '언어:',
+
     descEngineAnthropic: '최고 임상 추론 & 의료 윤리 정렬',
     descEngineOpenai: '실시간 다중모달 & 심층 CoT 추론',
     descEngineGemini: '초고속 다국어 건강 문해력 요약',
@@ -175,7 +206,37 @@ const CLINLOOP_I18N = {
     riskMetricLabel: 'Multi-Factor Risk',
     statRuleTitle: 'Ontology Rule',
     statSeverityTitle: 'Clinical Severity',
-    mathToggleSummary: '🔬 Exponential Hazard Sigmoid Formula (Math)',
+    
+    mathToggleSummary: '🔬 Exponential Hazard Sigmoid Formula (Technical Math)',
+    gpuModalTitle: '🔒 Medical Nobility: On-Premise GPU (Zero-Cloud Data Egress)',
+    gpuModalDesc: 'Unlike commercial cloud LLMs (ChatGPT, Claude) which transmit sensitive patient PHI to external data centers, <strong>ClinLoop AI operates 100% on-premise on the hospital\'s NVIDIA RTX A4500 GPU.</strong>',
+    gpuLiveTitle: '🚀 1,000-Patient Live Parallel Causal Inference Benchmark',
+    gpuLiveDesc: 'Running PyTorch CUDA streams to parallel-verify Metric Temporal Logic safety invariants across 1,000 patient trajectories.',
+    gpuBtnTest: '⚡ Run GPU Test',
+    gpuStatTime: 'Total Processing Time',
+    gpuStatSpeed: 'Patients per Second',
+    gpuStatViolations: 'Violations Detected',
+    gpuStatVram: 'Available VRAM',
+    gpuBtnClose: 'Close & Verify',
+    
+    apiModalTitle2: '🛡️ Medical Nobility & Privacy Shield',
+    apiModalDesc: 'ClinLoop AI computations run 100% locally on the <strong>air-gapped on-premise NVIDIA RTX A4500 GPU</strong>. Even when external cloud APIs are enabled below, all queries are sanitized through the <strong>HIPAA Safe Harbor 18-element PHI de-identification shield</strong> prior to transmission.',
+    apiGeminiDesc: 'Generative AI API key used for natural language patient explanations, multilingual medical translation, and complex disease clinical summaries.',
+    apiAnthropicDesc: 'Highest-tier Anthropic model API key specialized in elite clinical medical reasoning, medical ethics safety alignment, and complex discharge summaries.',
+    apiOpenaiDesc: 'API key utilized for deep clinical differential diagnosis reasoning (o1) and real-time multimodal empathetic patient communication (Astra/GPT-4o Realtime).',
+    apiNcbiDesc: 'Enables high-speed 10 requests/sec search for real-time verification against the latest medical guidelines and PubMed literature.',
+    apiFhirDesc: 'FHIR R4 token for real-time bidirectional clinical order integration with hospital EMR systems (Epic, Cerner, Ajou OCS).',
+    
+    apiTestPing: 'Ping Test',
+    apiTestPubmed: 'PubMed Test',
+    apiTestFhir: 'FHIR Test',
+    apiBtnReset: '🔄 Reset Keys (GPU Only)',
+    apiBtnSave: '💾 Save & Apply Keys',
+    apiBtnClose: 'Close',
+    
+    dockTheme: 'Theme:',
+    dockLang: 'Language:',
+
     auditTrailTitle: 'Explainable AI Audit Trail',
     dockLblTheme: 'Theme:',
     dockLblLang: 'Language:',
@@ -1191,6 +1252,49 @@ class ClinLoopApp {
     setTxt('neg-card-badge', t.negCardBadge);
     setTxt('neg-metric1-lbl', t.negMetric1);
     setTxt('neg-metric2-lbl', t.negMetric2);
+
+    setTxt('summary-kakao-btn-label', t.summaryKakaoLbl);
+    setTxt('summary-kakao-sub', t.summaryKakaoSub);
+    setTxt('summary-order-btn-label', t.summaryOrderLbl);
+    setTxt('summary-order-sub', t.summaryOrderSub);
+    setTxt('math-toggle-summary', t.mathToggleSummary);
+    
+    // GPU Modal
+    setTxt('gpu-modal-title', t.gpuModalTitle);
+    setHtml('gpu-modal-desc', t.gpuModalDesc);
+    setTxt('gpu-live-title', t.gpuLiveTitle);
+    setTxt('gpu-live-desc', t.gpuLiveDesc);
+    setTxt('gpu-btn-test', t.gpuBtnTest);
+    setTxt('gpu-stat-time', t.gpuStatTime);
+    setTxt('gpu-stat-speed', t.gpuStatSpeed);
+    setTxt('gpu-stat-violations', t.gpuStatViolations);
+    setTxt('gpu-stat-vram', t.gpuStatVram);
+    setTxt('gpu-btn-close', t.gpuBtnClose);
+    
+    // API Modal
+    setTxt('api-modal-title-main', t.apiModalTitle);
+    setTxt('api-modal-title-2', t.apiModalTitle2);
+    setHtml('api-modal-desc', t.apiModalDesc);
+    
+    setTxt('desc-engine-gemini', t.apiGeminiDesc);
+    setTxt('desc-engine-anthropic', t.apiAnthropicDesc);
+    setTxt('desc-engine-openai', t.apiOpenaiDesc);
+    setTxt('desc-engine-ncbi', t.apiNcbiDesc);
+    setTxt('desc-engine-fhir', t.apiFhirDesc);
+    
+    setTxt('txt-test-gemini', t.apiTestPing);
+    setTxt('txt-test-anthropic', t.apiTestPing);
+    setTxt('txt-test-openai', t.apiTestPing);
+    setTxt('txt-test-ncbi', t.apiTestPubmed);
+    setTxt('txt-test-fhir', t.apiTestFhir);
+    
+    setTxt('txt-btn-reset-keys', t.apiBtnReset);
+    setTxt('txt-btn-save-keys', t.apiBtnSave);
+    setTxt('btn-cancel-api-modal', t.apiBtnClose);
+    
+    setTxt('dock-lbl-theme', t.dockTheme);
+    setTxt('dock-lbl-lang', t.dockLang);
+
 
     setTxt('firewall-demo-title', t.fwTitle);
     setTxt('firewall-demo-sub', t.fwSub);

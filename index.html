@@ -1744,19 +1744,19 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <div id="gpu-benchmark-result" style="display: none; margin-top: 0.85rem; padding: 0.85rem; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px;">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.65rem; text-align: center;">
             <div>
-              <div style="font-size: 0.7rem; color: var(--text-dim);">총 소요 시간</div>
+              <div id="gpu-stat-time" style="font-size: 0.7rem; color: var(--text-dim);">총 소요 시간</div>
               <div id="bench-time" style="font-size: 1.1rem; font-weight: 800; color: var(--cyan-neon); font-family: var(--font-mono);">--</div>
             </div>
             <div>
-              <div style="font-size: 0.7rem; color: var(--text-dim);">초당 처리 환자 수</div>
+              <div id="gpu-stat-speed" style="font-size: 0.7rem; color: var(--text-dim);">초당 처리 환자 수</div>
               <div id="bench-throughput" style="font-size: 1.1rem; font-weight: 800; color: var(--emerald-safe); font-family: var(--font-mono);">--</div>
             </div>
             <div>
-              <div style="font-size: 0.7rem; color: var(--text-dim);">감지된 위반 건수</div>
+              <div id="gpu-stat-violations" style="font-size: 0.7rem; color: var(--text-dim);">감지된 위반 건수</div>
               <div id="bench-violations" style="font-size: 1.1rem; font-weight: 800; color: var(--crimson-danger); font-family: var(--font-mono);">--</div>
             </div>
             <div>
-              <div style="font-size: 0.7rem; color: var(--text-dim);">가용 VRAM</div>
+              <div id="gpu-stat-vram" style="font-size: 0.7rem; color: var(--text-dim);">가용 VRAM</div>
               <div id="bench-vram" style="font-size: 1.1rem; font-weight: 800; color: var(--violet-neuro); font-family: var(--font-mono);">--</div>
             </div>
           </div>
