@@ -10,7 +10,7 @@ const CLINLOOP_I18N = {
     pitchDeck: '📊 피치덱 (Pitch Deck)',
     nobilityBtn: '🏛️ 의료 노블리티 & 윤리 헌장',
     outreachBtn: '📱 환자 알림톡',
-    biomcpBtn: '🧬 BioMCP 의학 근거',
+    biomcpBtn: '🧬 Triple-MCP 의학 근거',
     emrBtn: '기존 EMR과 비교',
     triageTitle: '임상 트리아지 대기열',
     triageCount: '5건 모니터링 중',
@@ -88,7 +88,7 @@ const CLINLOOP_I18N = {
     pitchDeck: '📊 Pitch Deck',
     nobilityBtn: '🏛️ Medical Nobility & Ethics',
     outreachBtn: '📱 Patient Outreach',
-    biomcpBtn: '🧬 BioMCP Evidence',
+    biomcpBtn: '🧬 Triple-MCP Evidence',
     emrBtn: 'Compare vs EMR',
     triageTitle: 'Clinical Triage Queue',
     triageCount: 'N=5 Active Trajectories',
@@ -245,7 +245,7 @@ class ClinLoopApp {
     this.currentView = 'hypergraph';
     this.currentLang = localStorage.getItem('clinloop_lang') || 'en';
     this.outreachLang = this.currentLang;
-    this.activeEngine = localStorage.getItem('clinloop_active_engine') || 'anthropic';
+    this.activeEngine = localStorage.getItem('clinloop_active_engine') || 'local';
   }
 
   async init() {
@@ -771,7 +771,7 @@ class ClinLoopApp {
 
     loadSavedKeys();
     setTimeout(() => {
-      const storedEngine = localStorage.getItem('clinloop_active_engine') || 'anthropic';
+      const storedEngine = localStorage.getItem('clinloop_active_engine') || 'local';
       updateEngineSelectionUI(storedEngine);
     }, 100);
 
@@ -2122,7 +2122,7 @@ class ClinLoopApp {
 
     if (fhirId) fhirId.textContent = outreach.fhir_communication_request_id || `CommunicationRequest/COMM-REQ-${c.scenario_id}`;
 
-    const engine = this.activeEngine || 'anthropic';
+    const engine = this.activeEngine || 'local';
     const outreachPill = document.getElementById('outreach-model-pill');
     if (outreachPill) {
       outreachPill.textContent = (engine === 'anthropic') ? '🧠 Claude 3.5 Active' : (engine === 'openai') ? '⚡ OpenAI Astra Active' : (engine === 'gemini') ? '🌐 Gemini 2.5 Active' : '🔒 Local GPU Active';

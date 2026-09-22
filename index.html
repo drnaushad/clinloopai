@@ -912,7 +912,7 @@
               <span class="badge badge-live" style="font-size: 0.62rem; padding: 0.15rem 0.55rem;">MCP v1.2 Protocol</span>
             </h2>
             <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
-              Active Server: <span style="font-family: var(--font-mono); color: var(--cyan-neon);">biomcp.ajou.internal:8080/v1/tools</span> • Dynamic Literature Grounding
+              Active Servers: <span style="font-family: var(--font-mono); color: var(--cyan-neon);">3 MCP Servers Connected</span> • Dynamic Literature Grounding
             </p>
           </div>
         </div>
@@ -990,6 +990,39 @@
             <div class="biomcp-param-card">
               <span class="biomcp-param-label">Malpractice Liability</span>
               <span class="biomcp-param-val" id="biomcp-param-liability" style="color: var(--crimson-danger); font-size: 0.74rem;">High Liability</span>
+            </div>
+          </div>
+
+          <!-- EHR MCP Server -->
+          <div style="margin-top: 1rem; border-top: 1px solid var(--border-subtle); padding-top: 0.8rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="font-size: 1rem;">🏥</span>
+              <strong style="color: #38bdf8; font-size: 0.85rem;">EHR MCP Server (Epic / Cerner)</strong>
+              <span class="badge badge-live" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">READY</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
+              <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 6px; padding: 0.45rem 0.6rem;">
+                <code style="color: #38bdf8; font-size: 0.7rem;">ehr_query_encounters</code>
+                <div style="font-size: 0.62rem; color: var(--text-dim); margin-top: 0.15rem;">Query patient visit history from hospital EHR</div>
+              </div>
+              <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 6px; padding: 0.45rem 0.6rem;">
+                <code style="color: #38bdf8; font-size: 0.7rem;">ehr_push_fhir_task</code>
+                <div style="font-size: 0.62rem; color: var(--text-dim); margin-top: 0.15rem;">Push 1-click FHIR orders back to EHR</div>
+              </div>
+            </div>
+          </div>
+          <!-- PACS MCP Server -->
+          <div style="margin-top: 0.8rem; border-top: 1px solid var(--border-subtle); padding-top: 0.8rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="font-size: 1rem;">🩻</span>
+              <strong style="color: #f59e0b; font-size: 0.85rem;">PACS MCP Server (Radiology / DICOM)</strong>
+              <span class="badge badge-live" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">READY</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 0.4rem;">
+              <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 6px; padding: 0.45rem 0.6rem;">
+                <code style="color: #f59e0b; font-size: 0.7rem;">pacs_fetch_dicom_metadata</code>
+                <div style="font-size: 0.62rem; color: var(--text-dim); margin-top: 0.15rem;">Fetch DICOM metadata from hospital PACS (CT, MRI, X-ray)</div>
+              </div>
             </div>
           </div>
 
