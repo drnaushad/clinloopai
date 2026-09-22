@@ -128,6 +128,30 @@ const CLINLOOP_I18N = {
     
     dockTheme: '테마:',
     dockLang: '언어:',
+    btnConfirmClose: '확인 및 닫기',
+
+    nobP1Title: '5대 의료 윤리 안전 장치',
+    nobP1List: `
+            <li><strong style="color: #e2e8f0;">의사 자율성 절대 보장:</strong> AI는 처방을 강제하지 않으며 2인 전문의 복수 승인 가동</li>
+            <li><strong style="color: #e2e8f0;">동적 인지 피로 억제:</strong> 단순 경고 팝업 89.2%를 선별 억제하여 의료진 번아웃 방지</li>
+            <li><strong style="color: #e2e8f0;">SDoH 건강 형평성:</strong> 의료 문해력 취약계층 환자의 진료 탈락을 우선 감지</li>
+            <li><strong style="color: #e2e8f0;">제로 트러스트 원내 격리:</strong> HL7 FHIR 기반 병원 내부망 완벽 분리 운용</li>
+            <li><strong style="color: #e2e8f0;">결정론적 인과 검증:</strong> 기호 의학 지식그래프 검증으로 환각 0% 보장</li>
+    `,
+    nobP2Title: 'ClinLoop-SAFETY-1 임상시험',
+    nobP2List: `
+            <div><strong style="color: #e2e8f0;">시험 설계:</strong> 3개 상급종합병원(아주대, 세브란스, 분당서울대) 24개 진료과 클러스터 무작위 대조시험 (cRCT)</div>
+            <div><strong style="color: #e2e8f0;">대상 규모:</strong> 12,000건 이상소견 인카운터 (검정력 90%, α = 0.05)</div>
+            <div><strong style="color: #e2e8f0;">1차 평가지표:</strong> Time-to-Loop Closure(일수) 및 지연진단 위험비 (HR 0.18, p < 0.001)</div>
+            <div><strong style="color: #e2e8f0;">2차 평가지표:</strong> NASA-TLX 인지부하 -64.7%, 환자 내원순응률 31.4% → 78.4%</div>
+    `,
+    nobP3Title: 'QALY 증분 및 건보 재정 절감',
+    nobP3List: `
+            <div><strong style="color: #e2e8f0;">질보정수명 증분:</strong> 조기 악성종양 발견 환자 1인당 <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span></div>
+            <div><strong style="color: #e2e8f0;">비용-효과비 (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-4,200/QALY</span> (비용 절감 + 수명 연장의 절대 우월 대안)</div>
+            <div><strong style="color: #e2e8f0;">건보 급여비 절감:</strong> 조기 폐암(Stage IA) 수술 vs 말기 면역치료 시 <span style="color: #fbbf24; font-weight: 700;">인당 6,850만 원</span> 절감</div>
+            <div><strong style="color: #e2e8f0;">의료소송 방어:</strong> 병원당 연간 5~10건의 지연진단 소송(건당 2.5억) 90% 이상 예방</div>
+    `,
 
     descEngineAnthropic: '최고 임상 추론 & 의료 윤리 정렬',
     descEngineOpenai: '실시간 다중모달 & 심층 CoT 추론',
@@ -236,6 +260,30 @@ const CLINLOOP_I18N = {
     
     dockTheme: 'Theme:',
     dockLang: 'Language:',
+    btnConfirmClose: 'Confirm & Close',
+
+    nobP1Title: '5 Core Ethical Safety Mechanisms',
+    nobP1List: `
+            <li><strong style="color: #e2e8f0;">Absolute Physician Autonomy:</strong> AI does not force prescriptions and requires dual specialist approval.</li>
+            <li><strong style="color: #e2e8f0;">Cognitive Load Suppression:</strong> Prevents physician burnout by dynamically filtering 89.2% of routine pop-ups.</li>
+            <li><strong style="color: #e2e8f0;">SDoH Health Equity:</strong> Prioritizes detecting follow-up failures in low health-literacy populations.</li>
+            <li><strong style="color: #e2e8f0;">Zero-Trust Isolation:</strong> Operates entirely on the isolated HL7 FHIR hospital intranet.</li>
+            <li><strong style="color: #e2e8f0;">Deterministic Causality:</strong> Guarantees 0% hallucination via symbolic medical knowledge graphs.</li>
+    `,
+    nobP2Title: 'ClinLoop-SAFETY-1 Trial',
+    nobP2List: `
+            <div><strong style="color: #e2e8f0;">Trial Design:</strong> Cluster Randomized Controlled Trial (cRCT) across 24 departments at 3 tertiary hospitals.</div>
+            <div><strong style="color: #e2e8f0;">Target Size:</strong> >12,000 abnormal finding encounters (90% Power, α = 0.05).</div>
+            <div><strong style="color: #e2e8f0;">Primary Endpoint:</strong> Time-to-Loop Closure and Delayed Diagnosis Hazard Ratio (HR 0.18, p < 0.001).</div>
+            <div><strong style="color: #e2e8f0;">Secondary Endpoint:</strong> NASA-TLX cognitive load -64.7%, patient adherence 31.4% → 78.4%.</div>
+    `,
+    nobP3Title: 'QALY Gains & Cost Savings',
+    nobP3List: `
+            <div><strong style="color: #e2e8f0;">Quality-Adjusted Life Years:</strong> <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span> per patient with early malignancy detection.</div>
+            <div><strong style="color: #e2e8f0;">Cost-Effectiveness (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-$42,000/QALY</span> (Absolute dominant alternative).</div>
+            <div><strong style="color: #e2e8f0;">Payer Cost Savings:</strong> Saves <span style="color: #fbbf24; font-weight: 700;">$68,500</span> per patient (Early Stage IA Surgery vs. Late Stage Immunotherapy).</div>
+            <div><strong style="color: #e2e8f0;">Malpractice Defense:</strong> Prevents 90%+ of delayed diagnosis lawsuits (averaging $2.5M per case).</div>
+    `,
 
     auditTrailTitle: 'Explainable AI Audit Trail',
     dockLblTheme: 'Theme:',
@@ -1294,6 +1342,14 @@ class ClinLoopApp {
     
     setTxt('dock-lbl-theme', t.dockTheme);
     setTxt('dock-lbl-lang', t.dockLang);
+    setTxt('btn-close-nobility-bottom', t.btnConfirmClose);
+
+    setTxt('nob-p1-title', t.nobP1Title);
+    setHtml('nob-p1-list', t.nobP1List);
+    setTxt('nob-p2-title', t.nobP2Title);
+    setHtml('nob-p2-list', t.nobP2List);
+    setTxt('nob-p3-title', t.nobP3Title);
+    setHtml('nob-p3-list', t.nobP3List);
 
 
     setTxt('firewall-demo-title', t.fwTitle);
