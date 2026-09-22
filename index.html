@@ -496,6 +496,23 @@
             </div>
           </div>
 
+          
+          <!-- Causal Diagram (SCM: do-calculus) -->
+          <div style="background:rgba(15,23,42,0.8); border:1px solid rgba(139,92,246,0.3); border-radius:10px; padding:1.5rem; margin-bottom:1.5rem;">
+            <div style="font-size:0.8rem; font-weight:700; color:#a78bfa; margin-bottom:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">
+              Judea Pearl Causal Model — Intervention: do(FollowUp=True)
+            </div>
+            <div style="font-family:var(--font-mono); font-size:0.75rem; color:#d8b4fe; line-height:1.4;">
+              <pre style="margin:0; text-align:center;">
+[Incidental Finding] ──(causes)──> [Missed Follow-up] ──(causes)──> [Disease Progression] ──(causes)──> [Mortality]
+        │                                  │                                   │
+        └──────(ClinLoop Detection)────────┘                                   │
+                                           │                                   │
+                                  [do(Intervention)] ──(prevents)──────────────┘
+              </pre>
+            </div>
+          </div>
+          
           <!-- Dual Side-by-Side Trajectories -->
           <div class="cf-tracks-split">
             <div class="cf-track cf-track-neglected">
