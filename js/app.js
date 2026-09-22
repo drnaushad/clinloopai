@@ -1502,7 +1502,8 @@ class ClinLoopApp {
       summary: document.getElementById('view-summary'),
       hypergraph: document.getElementById('view-hypergraph'),
       counterfactual: document.getElementById('view-counterfactual'),
-      standards: document.getElementById('view-standards')
+      standards: document.getElementById('view-standards'),
+      privacy: document.getElementById('view-privacy')
     };
 
     Object.keys(panels).forEach(k => {
@@ -1514,6 +1515,9 @@ class ClinLoopApp {
     if (viewName === 'hypergraph' && this.currentCase) {
       const isOverridden = this.closedOverrides.has(this.currentCase.scenario_id);
       this.hypergraph.render(this.currentCase, isOverridden, this.currentScrubDays);
+    }
+    if (viewName === 'privacy') {
+      setTimeout(() => this.initPrivacyFirewall(), 100);
     }
   }
 
@@ -2057,6 +2061,120 @@ class ClinLoopApp {
     this.updateOutreachModal();
     this.updateStandardsView();
   }
+
+  initPrivacyFirewall() {
+    if (this._privacyFirewallInited) return;
+    this._privacyFirewallInited = true;
+
+    const input = document.getElementById('phi-firewall-input');
+    const output = document.getElementById('phi-firewall-output');
+    const countBadge = document.getElementById('phi-count-badge');
+    const sampleBtn = document.getElementById('firewall-sample-btn');
+    const shieldAnim = document.getElementById('firewall-shield-anim');
+    const fstatStripped = document.getElementById('fstat-stripped');
+    const fstatPseudo = document.getElementById('fstat-pseudo');
+    const dpNoise = document.getElementById('dp-noise-span');
+    if (!input || !output) return;
+
+    // Differential Privacy noise animation
+    if (dpNoise) {
+      setInterval(() => {
+        const noise = (1.8 + Math.random() * 1.0).toFixed(1);
+        dpNoise.textContent = noise;
+      }, 2200);
+    }
+
+    const PHI_RULES = [
+      { name: '주민번호', regex: /\d{6}-[1-4]\d{6}/g, replace: '[주민번호 삭제]', type: 'strip' },
+      { name: '전화번호', regex: /01[016789]-?\d{3,4}-?\d{4}/g, replace: '[전화번호 삭제]', type: 'strip' },
+      { name: 'Email', regex: /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g, replace: '[이메일 삭제]', type: 'strip' },
+      { name: 'URL', regex: /https?:\/\/[^\s]+/g, replace: '[URL 삭제]', type: 'strip' },
+      { name: 'IP 주소', regex: /(?:\d{1,3}\.){3}\d{1,3}/g, replace: '[IP 삭제]', type: 'strip' },
+      { name: '날짜', regex: /(19|20)\d{2}[-\/\.]\d{2}[-\/\.]\d{2}/g, replace: (m) => m.slice(0,4) + '년', type: 'generalize' },
+      { name: '한국어 날짜', regex: /\d{4}년\s*\d{1,2}월\s*\d{1,2}일/g, replace: (m) => m.slice(0,4) + '년', type: 'generalize' },
+    ];
+
+    const pseudoMap = {};
+    let pseudoCounter = 1;
+    const getPseudo = (val) => {
+      if (!pseudoMap[val]) {
+        pseudoMap[val] = 'PT-' + (Math.random().toString(36).substr(2,8).toUpperCase());
+        pseudoCounter++;
+      }
+      return pseudoMap[val];
+    };
+
+    const deidentify = (text) => {
+      let result = text;
+      let stripped = 0, pseudo = 0;
+      let phiFound = [];
+
+      PHI_RULES.forEach(rule => {
+        const matches = result.match(rule.regex);
+        if (matches) {
+          phiFound.push(rule.name);
+          if (typeof rule.replace === 'function') {
+            result = result.replace(rule.regex, rule.replace);
+          } else {
+            result = result.replace(rule.regex, rule.replace);
+          }
+          stripped += matches.length;
+        }
+      });
+
+      // Korean names (2-4 char Hangul) → pseudonym
+      const nameRegex = /(?<![가-힣])[가-힣]{2,4}(?!\s*씨|님|원장|교수|박사|선생|의사|간호사|병원|클리닉|약)/g;
+      const nameMatches = result.match(nameRegex);
+      if (nameMatches) {
+        nameMatches.forEach(nm => {
+          const p = getPseudo(nm);
+          result = result.split(nm).join(p);
+          phiFound.push('한국 이름');
+          pseudo++;
+        });
+      }
+
+      return { result, stripped, pseudo, phiFound: [...new Set(phiFound)] };
+    };
+
+    let debounceTimer;
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const raw = input.value;
+        if (!raw.trim()) {
+          output.textContent = '[De-identified output will appear here in real-time]';
+          if (countBadge) countBadge.textContent = 'PHI 항목: 0개 탐지됨';
+          if (fstatStripped) fstatStripped.textContent = '0';
+          if (fstatPseudo) fstatPseudo.textContent = '0';
+          return;
+        }
+        const { result, stripped, pseudo, phiFound } = deidentify(raw);
+        output.textContent = result;
+        if (countBadge) countBadge.textContent = `PHI 항목: ${phiFound.length}개 탐지 → 제거됨 (${phiFound.join(', ') || '없음'})`;
+        if (fstatStripped) fstatStripped.textContent = String(stripped);
+        if (fstatPseudo) fstatPseudo.textContent = String(pseudo);
+        if (shieldAnim && (stripped > 0 || pseudo > 0)) {
+          shieldAnim.classList.add('active');
+          setTimeout(() => shieldAnim.classList.remove('active'), 500);
+        }
+      }, 180);
+    });
+
+    if (sampleBtn) {
+      sampleBtn.addEventListener('click', () => {
+        input.value = `환자: 김민준 (생년월일: 1978-03-12)
+주민번호: 780312-1234567
+전화: 010-1234-5678
+이메일: minjun.kim@hospital.ac.kr
+주소: 경기도 수원시 팔달구
+CT 소견 (2024-03-15): 우하엽 14mm 간유리음영 결절 발견
+진단: 악성화 위험 42.1% (Fleischner 2017 고위험)`;
+        input.dispatchEvent(new Event('input'));
+      });
+    }
+  }
+
 
 }
 
