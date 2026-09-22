@@ -1067,6 +1067,21 @@
             </div>
           </div>
 
+          
+          <!-- Model Selection Pill for Outreach -->
+          <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; padding: 0.7rem 0.85rem; display: flex; flex-direction: column; gap: 0.4rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.72rem; font-weight: 800; color: #c084fc;">AI Empathy Engine Selection:</span>
+              <span class="badge" id="outreach-model-pill" style="font-size: 0.62rem; color: #a78bfa; background: rgba(167, 139, 250, 0.15); border-color: rgba(167, 139, 250, 0.35);">🧠 Claude 3.5 Active</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.35rem;">
+              <button class="filter-btn active btn-outreach-engine" data-engine="anthropic" id="btn-engine-anthropic" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">🧠 Claude 3.5</button>
+              <button class="filter-btn btn-outreach-engine" data-engine="openai" id="btn-engine-openai" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">⚡ OpenAI Astra</button>
+              <button class="filter-btn btn-outreach-engine" data-engine="gemini" id="btn-engine-gemini" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">🌐 Gemini 2.5</button>
+              <button class="filter-btn btn-outreach-engine" data-engine="local" id="btn-engine-local" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">🔒 Local GPU</button>
+            </div>
+          </div>
+
           <div style="display: flex; gap: 0.6rem;">
             <button class="filter-btn active" id="btn-lang-ko" style="flex: 1; padding: 0.5rem;">🇰🇷 한국어 (KakaoTalk)</button>
             <button class="filter-btn" id="btn-lang-en" style="flex: 1; padding: 0.5rem;">🇺🇸 English (Portal SMS)</button>
@@ -1455,6 +1470,55 @@
           ClinLoop AI의 기본 연산은 <strong>원내 완벽 격리 NVIDIA RTX A4500 온프레미스 GPU</strong>에서 100% 로컬 처리됩니다. 외부 클라우드 API를 등록하더라도, 시스템은 <strong>HIPAA Safe Harbor 18개 개인식별정보(PHI) 완전 비식별화 필터</strong>를 거쳐 환자 익명성을 절대적으로 수호합니다.
         </div>
       </div>
+
+      
+      <!-- Primary Clinical Model Selector -->
+      <div style="margin-top: 1rem; background: rgba(15, 23, 42, 0.7); border: 1.5px solid rgba(139, 92, 246, 0.35); border-radius: 10px; padding: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.4rem;">
+          <div style="font-size: 0.82rem; font-weight: 800; color: #c084fc; display: flex; align-items: center; gap: 0.4rem;">
+            <span>🤖 Active Clinical Foundation Model (활성 AI 추론 엔진 선택):</span>
+          </div>
+          <span class="badge" id="active-model-badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; font-size: 0.68rem; font-weight: 700; border-color: rgba(139, 92, 246, 0.4);">
+            🧠 Anthropic Claude 3.5 Sonnet
+          </span>
+        </div>
+        <div class="active-engine-options" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.6rem;">
+          
+          <div class="engine-opt-card active" data-engine="anthropic" id="engine-card-anthropic" style="cursor: pointer; border: 1.5px solid #a78bfa; background: rgba(139, 92, 246, 0.18); border-radius: 8px; padding: 0.65rem; transition: all 0.2s;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <strong style="font-size: 0.78rem; color: #fff;">🧠 Anthropic Claude 3.5</strong>
+              <span class="badge" style="font-size: 0.6rem; color: #a78bfa; background: rgba(167, 139, 250, 0.2);">BEST REASONING</span>
+            </div>
+            <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">최고 임상 추론 & 의료 윤리 정렬</div>
+          </div>
+
+          <div class="engine-opt-card" data-engine="openai" id="engine-card-openai" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: rgba(30, 41, 59, 0.5); border-radius: 8px; padding: 0.65rem; transition: all 0.2s;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <strong style="font-size: 0.78rem; color: #fff;">⚡ OpenAI Astra (o1)</strong>
+              <span class="badge" style="font-size: 0.6rem; color: #38bdf8; background: rgba(56, 189, 248, 0.2);">MULTIMODAL</span>
+            </div>
+            <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">실시간 다중모달 & 심층 CoT 추론</div>
+          </div>
+
+          <div class="engine-opt-card" data-engine="gemini" id="engine-card-gemini" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: rgba(30, 41, 59, 0.5); border-radius: 8px; padding: 0.65rem; transition: all 0.2s;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <strong style="font-size: 0.78rem; color: #fff;">🌐 Google Gemini 2.5</strong>
+              <span class="badge" style="font-size: 0.6rem; color: var(--emerald-safe); background: rgba(5, 150, 105, 0.2);">FAST TRANSLATION</span>
+            </div>
+            <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">초고속 다국어 건강 문해력 요약</div>
+          </div>
+
+          <div class="engine-opt-card" data-engine="local" id="engine-card-local" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: rgba(30, 41, 59, 0.5); border-radius: 8px; padding: 0.65rem; transition: all 0.2s;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <strong style="font-size: 0.78rem; color: #fff;">🔒 Local RTX A4500</strong>
+              <span class="badge" style="font-size: 0.6rem; color: var(--amber-warning); background: rgba(245, 158, 11, 0.2);">AIR-GAPPED</span>
+            </div>
+            <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">100% 원내 로컬 GPU 격리 (Default)</div>
+          </div>
+
+        </div>
+      </div>
+
 
       <!-- API Keys Form Grid -->
       <div class="api-key-grid">

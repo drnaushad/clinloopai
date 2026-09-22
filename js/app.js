@@ -164,6 +164,7 @@ class ClinLoopApp {
     this.currentView = 'hypergraph';
     this.currentLang = localStorage.getItem('clinloop_lang') || 'en';
     this.outreachLang = this.currentLang;
+    this.activeEngine = localStorage.getItem('clinloop_active_engine') || 'anthropic';
   }
 
   async init() {
@@ -529,6 +530,87 @@ class ClinLoopApp {
     // -----------------------------------------------------------------------
     // API Key & Hospital Security Credentials Modal Integration
     // -----------------------------------------------------------------------
+    // Active Clinical Foundation Model Switcher (Anthropic Claude 3.5, OpenAI Astra, Gemini 2.5, Local GPU)
+    const engineCards = document.querySelectorAll('.engine-opt-card');
+    const activeModelBadge = document.getElementById('active-model-badge');
+
+    const updateEngineSelectionUI = (engine) => {
+      this.activeEngine = engine;
+      localStorage.setItem('clinloop_active_engine', engine);
+
+      engineCards.forEach(card => {
+        const isMatch = card.dataset.engine === engine;
+        card.classList.toggle('active', isMatch);
+        if (isMatch) {
+          card.style.borderColor = (engine === 'anthropic') ? '#a78bfa' : (engine === 'openai') ? '#38bdf8' : (engine === 'gemini') ? 'var(--emerald-safe)' : 'var(--amber-warning)';
+          card.style.background = (engine === 'anthropic') ? 'rgba(139, 92, 246, 0.18)' : (engine === 'openai') ? 'rgba(56, 189, 248, 0.18)' : (engine === 'gemini') ? 'rgba(5, 150, 105, 0.18)' : 'rgba(245, 158, 11, 0.18)';
+        } else {
+          card.style.borderColor = 'var(--border-subtle)';
+          card.style.background = 'rgba(30, 41, 59, 0.5)';
+        }
+      });
+
+      if (activeModelBadge) {
+        if (engine === 'anthropic') {
+          activeModelBadge.textContent = '🧠 Anthropic Claude 3.5 Sonnet';
+          activeModelBadge.style.color = '#c084fc';
+        } else if (engine === 'openai') {
+          activeModelBadge.textContent = '⚡ OpenAI Astra / o1 Realtime';
+          activeModelBadge.style.color = '#38bdf8';
+        } else if (engine === 'gemini') {
+          activeModelBadge.textContent = '🌐 Google Gemini 2.5 Flash';
+          activeModelBadge.style.color = 'var(--emerald-safe)';
+        } else {
+          activeModelBadge.textContent = '🔒 Local RTX A4500 (Air-Gapped)';
+          activeModelBadge.style.color = 'var(--amber-warning)';
+        }
+      }
+
+      if (apiStatusPill) {
+        if (engine === 'anthropic') {
+          apiStatusPill.textContent = 'CLAUDE 3.5';
+          apiStatusPill.style.background = '#7c3aed';
+        } else if (engine === 'openai') {
+          apiStatusPill.textContent = 'OPENAI ASTRA';
+          apiStatusPill.style.background = '#0284c7';
+        } else if (engine === 'gemini') {
+          apiStatusPill.textContent = 'GEMINI 2.5';
+          apiStatusPill.style.background = '#059669';
+        } else {
+          apiStatusPill.textContent = 'ON-PREM GPU';
+          apiStatusPill.style.background = '#d97706';
+        }
+      }
+
+      // Sync outreach simulator engine buttons if open
+      const outreachBtns = document.querySelectorAll('.btn-outreach-engine');
+      outreachBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.engine === engine));
+      const outreachPill = document.getElementById('outreach-model-pill');
+      if (outreachPill) {
+        outreachPill.textContent = (engine === 'anthropic') ? '🧠 Claude 3.5 Active' : (engine === 'openai') ? '⚡ OpenAI Astra Active' : (engine === 'gemini') ? '🌐 Gemini 2.5 Active' : '🔒 Local GPU Active';
+      }
+
+      if (this.updateOutreachModal) this.updateOutreachModal();
+    };
+
+    engineCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const engine = card.dataset.engine;
+        updateEngineSelectionUI(engine);
+        this._playTelemetrySound(880, 'sine', 0.1);
+      });
+    });
+
+    // Outreach Engine Persona Buttons in #outreach-modal
+    const outreachBtns = document.querySelectorAll('.btn-outreach-engine');
+    outreachBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const engine = btn.dataset.engine;
+        updateEngineSelectionUI(engine);
+        this._playTelemetrySound(920, 'sine', 0.08);
+      });
+    });
+
     const btnApiKeys = document.getElementById('btn-api-keys');
     const apiModal = document.getElementById('api-keys-modal');
     const btnCloseApiModal = document.getElementById('btn-close-api-modal');
@@ -600,6 +682,10 @@ class ClinLoopApp {
     };
 
     loadSavedKeys();
+    setTimeout(() => {
+      const storedEngine = localStorage.getItem('clinloop_active_engine') || 'anthropic';
+      updateEngineSelectionUI(storedEngine);
+    }, 100);
 
     // Auto-open modal if specified in query string (?modal=api-keys or ?modal=outreach)
     const urlParams = new URLSearchParams(window.location.search);
@@ -1891,16 +1977,42 @@ class ClinLoopApp {
 
     if (fhirId) fhirId.textContent = outreach.fhir_communication_request_id || `CommunicationRequest/COMM-REQ-${c.scenario_id}`;
 
+    const engine = this.activeEngine || 'anthropic';
+    const outreachPill = document.getElementById('outreach-model-pill');
+    if (outreachPill) {
+      outreachPill.textContent = (engine === 'anthropic') ? '🧠 Claude 3.5 Active' : (engine === 'openai') ? '⚡ OpenAI Astra Active' : (engine === 'gemini') ? '🌐 Gemini 2.5 Active' : '🔒 Local GPU Active';
+    }
+
     if (this.outreachLang === 'en') {
       if (titleEl) titleEl.textContent = `[Ajou Hospital] Important Clinical Follow-up Notice`;
       if (jargonEl) jargonEl.textContent = outreach.clinical_jargon || c.scenario_name;
-      if (bodyEl) bodyEl.textContent = `Dear ${c.patient_id}, your recent diagnostic test results require an expedited specialist review within recommended guidelines to ensure optimal health. Please confirm your reserved appointment slot with one click below.`;
+      
+      if (engine === 'anthropic') {
+        if (bodyEl) bodyEl.textContent = `Dear ${c.patient_id}, Dr. Park's clinical team reviewed your recent diagnostic screening. While unexpected test results can feel concerning, this finding was caught at an early stage where curative intervention is over 98% effective. We have reserved a private consultation slot on March 25 so we can answer all your questions. Please tap below to confirm.`;
+      } else if (engine === 'openai') {
+        if (bodyEl) bodyEl.textContent = `Hi ${c.patient_id}, Ajou Hospital Care Navigator reaching out. Your health is our highest priority—we have confirmed your direct follow-up slot with Dr. Park for March 25. You can tap below to confirm in 1 click, or tap the voice icon to speak directly with our real-time interactive AI Care Navigator.`;
+      } else if (engine === 'gemini') {
+        if (bodyEl) bodyEl.textContent = `Dear ${c.patient_id}, diagnostic report follow-up notice: 1) Initial finding: ${c.scenario_name}. 2) Early clinical action ensures optimal health outcome. 3) Recommended step: Outpatient specialist evaluation within guideline window. Tap below to confirm.`;
+      } else {
+        if (bodyEl) bodyEl.textContent = `Dear ${c.patient_id}, your recent diagnostic test results require an expedited specialist review within recommended guidelines to ensure optimal health. Please confirm your reserved appointment slot with one click below.`;
+      }
+
       if (deptEl) deptEl.textContent = outreach.appointment_slot_suggested || 'Outpatient Clinic';
       if (btnLabel) btnLabel.textContent = `📅 1-Click Confirm Booking (${outreach.appointment_slot_suggested ? outreach.appointment_slot_suggested.split('(')[0].trim() : 'Next Available'})`;
     } else {
       if (titleEl) titleEl.textContent = outreach.plain_language_title || `[아주대병원] ${c.scenario_name} 추적진료 안내`;
       if (jargonEl) jargonEl.textContent = outreach.clinical_jargon || c.scenario_name;
-      if (bodyEl) bodyEl.textContent = outreach.plain_language_body || c.clinical_narrative;
+
+      if (engine === 'anthropic') {
+        if (bodyEl) bodyEl.textContent = `[아주대병원 안심 진료 안내] 김미영님, 지난 세포검사에서 전문의의 세심한 확인(질확대경검사)이 권고되는 초기 단계 변화가 발견되었습니다. 지금 단계는 98% 이상 안전하게 치료 가능한 가장 안전한 시기이오니 불안해하지 마시고, 편안한 시간에 전문의 상담을 받으실 수 있도록 1초 간편 예약을 준비했습니다.`;
+      } else if (engine === 'openai') {
+        if (bodyEl) bodyEl.textContent = `[아주대병원 실시간 케어 내비게이터] 김미영님, 아주대병원 안심 진료팀입니다. 조기 완치율 98%의 골든타임을 지켜드리고자 박 교수님 진료석을 우선 배정해 두었습니다. 아래 버튼을 눌러 예약을 확정하시거나, 실시간 음성 케어 내비게이터와 언제든 바로 상담하실 수 있습니다.`;
+      } else if (engine === 'gemini') {
+        if (bodyEl) bodyEl.textContent = `[아주대병원 정밀 추적진료] 김미영님, 검사 결과 요약: 1) 자궁경부 세포검사상 정밀상담 필요. 2) 조기 확인 시 98% 이상 안전 완치 가능. 3) 30일 이내 외래 진료 권고. 아래 1초 예약 버튼으로 일정을 확정해 주세요.`;
+      } else {
+        if (bodyEl) bodyEl.textContent = outreach.plain_language_body || c.clinical_narrative;
+      }
+
       if (deptEl) deptEl.textContent = outreach.appointment_slot_suggested || '전문 외래 클리닉';
       if (btnLabel) btnLabel.textContent = outreach.action_button_label || `📅 1초 간편 예약하기`;
     }
