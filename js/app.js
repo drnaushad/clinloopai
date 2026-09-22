@@ -63,6 +63,10 @@ const CLINLOOP_I18N = {
     apiNobilityDesc: 'ClinLoop AI의 기본 연산은 <strong>원내 완벽 격리 NVIDIA RTX A4500 온프레미스 GPU</strong>에서 100% 로컬 처리됩니다. 외부 클라우드 API를 등록하더라도, 시스템은 <strong>HIPAA Safe Harbor 18개 개인식별정보(PHI) 완전 비식별화 필터</strong>를 거쳐 환자 익명성을 절대적으로 수호합니다.',
     lblGemini: 'Google Gemini / 임상 파운데이션 모델 API',
     descGemini: '자연어 환자 설명문 생성, 다국어 의학 번역, 복합 질환 임상 요약에 활용되는 생성형 AI API 키입니다.',
+    lblAnthropic: 'Anthropic Claude (클로드 3.5 소넷 / 오퍼스)',
+    descAnthropic: '최고 수준의 임상 의학 추론, 의료 윤리 안전 정렬 및 복합 다빈도 질환 퇴원 요약에 특화된 Anthropic 최상위 모델 API 키입니다.',
+    lblOpenAI: 'OpenAI (프로젝트 아스트라 / o1 / GPT-4o 실시간)',
+    descOpenAI: '심층 임상 감별진단 추론(o1) 및 실시간 음성/영상 다중모달 환자 공감 소통(Astra / GPT-4o Realtime)에 활용되는 API 키입니다.',
     lblNcbi: 'NCBI / PubMed / BioMCP E-Utilities API',
     descNcbi: 'NCBI API 키를 등록하면 초당 10회 고속 검색이 활성화되어 최신 의학 가이드라인 및 논문 원문을 지연 없이 검증합니다.',
     lblFhir: '원내 EMR / SMART on FHIR OAuth 토큰',
@@ -130,6 +134,10 @@ const CLINLOOP_I18N = {
     apiNobilityDesc: 'ClinLoop AI computations run 100% locally on the <strong>air-gapped on-premise NVIDIA RTX A4500 GPU</strong>. Even when external cloud APIs are enabled, all queries are sanitized through the <strong>HIPAA Safe Harbor 18-element PHI de-identification shield</strong> prior to transmission.',
     lblGemini: 'Google Gemini / Medical Foundation Model API',
     descGemini: 'Generative clinical LLM API key for plain-language patient explanations, multilingual translation, and complex discharge summaries.',
+    lblAnthropic: 'Anthropic Claude (Claude 3.5 Sonnet / Opus)',
+    descAnthropic: 'State-of-the-art clinical safety reasoning, medical ethics alignment, and complex multi-morbid discharge summarization.',
+    lblOpenAI: 'OpenAI (Project Astra / o1 / GPT-4o Realtime)',
+    descOpenAI: 'Deep chain-of-thought clinical diagnosis (o1) and real-time multimodal voice/video empathy interaction (Astra / GPT-4o).',
     lblNcbi: 'NCBI / PubMed / BioMCP E-Utilities API',
     descNcbi: 'Enables 10 requests/sec high-throughput PubMed literature and clinical guideline verification.',
     lblFhir: 'Hospital EHR / SMART on FHIR OAuth Token',
@@ -529,14 +537,20 @@ class ClinLoopApp {
     const btnResetApiKeys = document.getElementById('btn-reset-api-keys');
 
     const inputGemini = document.getElementById('input-key-gemini');
+    const inputAnthropic = document.getElementById('input-key-anthropic');
+    const inputOpenAI = document.getElementById('input-key-openai');
     const inputNcbi = document.getElementById('input-key-ncbi');
     const inputFhir = document.getElementById('input-key-fhir');
 
     const btnTestGemini = document.getElementById('btn-test-gemini');
+    const btnTestAnthropic = document.getElementById('btn-test-anthropic');
+    const btnTestOpenAI = document.getElementById('btn-test-openai');
     const btnTestNcbi = document.getElementById('btn-test-ncbi');
     const btnTestFhir = document.getElementById('btn-test-fhir');
 
     const feedGemini = document.getElementById('feedback-gemini');
+    const feedAnthropic = document.getElementById('feedback-anthropic');
+    const feedOpenAI = document.getElementById('feedback-openai');
     const feedNcbi = document.getElementById('feedback-ncbi');
     const feedFhir = document.getElementById('feedback-fhir');
 
@@ -546,15 +560,25 @@ class ClinLoopApp {
       try {
         const saved = JSON.parse(localStorage.getItem('clinloop_api_keys') || '{}');
         if (inputGemini) inputGemini.value = saved.gemini || '';
+        if (inputAnthropic) inputAnthropic.value = saved.anthropic || '';
+        if (inputOpenAI) inputOpenAI.value = saved.openai || '';
         if (inputNcbi) inputNcbi.value = saved.ncbi || '';
         if (inputFhir) inputFhir.value = saved.fhir || '';
 
         const badgeGemini = document.getElementById('badge-gemini-status');
+        const badgeAnthropic = document.getElementById('badge-anthropic-status');
+        const badgeOpenAI = document.getElementById('badge-openai-status');
         const badgeNcbi = document.getElementById('badge-ncbi-status');
         const badgeFhir = document.getElementById('badge-fhir-status');
 
         if (saved.gemini) {
-          if (badgeGemini) { badgeGemini.textContent = '✓ Cloud LLM Key Configured'; badgeGemini.style.color = 'var(--emerald-safe)'; }
+          if (badgeGemini) { badgeGemini.textContent = '✓ Gemini Active'; badgeGemini.style.color = 'var(--emerald-safe)'; }
+        }
+        if (saved.anthropic) {
+          if (badgeAnthropic) { badgeAnthropic.textContent = '✓ Claude 3.5 Ready'; badgeAnthropic.style.color = 'var(--emerald-safe)'; }
+        }
+        if (saved.openai) {
+          if (badgeOpenAI) { badgeOpenAI.textContent = '✓ Astra / o1 Ready'; badgeOpenAI.style.color = 'var(--emerald-safe)'; }
         }
         if (saved.ncbi) {
           if (badgeNcbi) { badgeNcbi.textContent = '✓ 10 req/s Authenticated'; badgeNcbi.style.color = 'var(--emerald-safe)'; }
@@ -564,7 +588,7 @@ class ClinLoopApp {
         }
 
         if (apiStatusPill) {
-          if (saved.gemini || saved.ncbi || saved.fhir) {
+          if (saved.gemini || saved.anthropic || saved.openai || saved.ncbi || saved.fhir) {
             apiStatusPill.textContent = 'API HYBRID';
             apiStatusPill.style.background = '#059669';
           } else {
@@ -666,6 +690,12 @@ class ClinLoopApp {
     if (btnTestGemini && inputGemini && feedGemini) {
       btnTestGemini.addEventListener('click', () => testKeyConnection('gemini', inputGemini, feedGemini, btnTestGemini));
     }
+    if (btnTestAnthropic && inputAnthropic && feedAnthropic) {
+      btnTestAnthropic.addEventListener('click', () => testKeyConnection('anthropic', inputAnthropic, feedAnthropic, btnTestAnthropic));
+    }
+    if (btnTestOpenAI && inputOpenAI && feedOpenAI) {
+      btnTestOpenAI.addEventListener('click', () => testKeyConnection('openai', inputOpenAI, feedOpenAI, btnTestOpenAI));
+    }
     if (btnTestNcbi && inputNcbi && feedNcbi) {
       btnTestNcbi.addEventListener('click', () => testKeyConnection('ncbi', inputNcbi, feedNcbi, btnTestNcbi));
     }
@@ -677,6 +707,8 @@ class ClinLoopApp {
       btnSaveApiKeys.addEventListener('click', async () => {
         const keys = {
           gemini: inputGemini ? inputGemini.value.trim() : '',
+          anthropic: inputAnthropic ? inputAnthropic.value.trim() : '',
+          openai: inputOpenAI ? inputOpenAI.value.trim() : '',
           ncbi: inputNcbi ? inputNcbi.value.trim() : '',
           fhir: inputFhir ? inputFhir.value.trim() : ''
         };
@@ -689,9 +721,11 @@ class ClinLoopApp {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               gemini_key: keys.gemini,
+              anthropic_key: keys.anthropic,
+              openai_key: keys.openai,
               ncbi_key: keys.ncbi,
               fhir_token: keys.fhir,
-              active_mode: (keys.gemini || keys.ncbi || keys.fhir) ? 'cloud_hybrid' : 'on_prem_gpu'
+              active_mode: (keys.gemini || keys.anthropic || keys.openai || keys.ncbi || keys.fhir) ? 'cloud_hybrid' : 'on_prem_gpu'
             })
           });
         } catch (e) {}
@@ -706,14 +740,20 @@ class ClinLoopApp {
     if (btnResetApiKeys) {
       btnResetApiKeys.addEventListener('click', () => {
         if (inputGemini) inputGemini.value = '';
+        if (inputAnthropic) inputAnthropic.value = '';
+        if (inputOpenAI) inputOpenAI.value = '';
         if (inputNcbi) inputNcbi.value = '';
         if (inputFhir) inputFhir.value = '';
         localStorage.removeItem('clinloop_api_keys');
 
         const badgeGemini = document.getElementById('badge-gemini-status');
+        const badgeAnthropic = document.getElementById('badge-anthropic-status');
+        const badgeOpenAI = document.getElementById('badge-openai-status');
         const badgeNcbi = document.getElementById('badge-ncbi-status');
         const badgeFhir = document.getElementById('badge-fhir-status');
         if (badgeGemini) { badgeGemini.textContent = 'On-Premise Local Active'; badgeGemini.style.color = 'var(--emerald-safe)'; }
+        if (badgeAnthropic) { badgeAnthropic.textContent = 'On-Premise Local Active'; badgeAnthropic.style.color = 'var(--text-muted)'; }
+        if (badgeOpenAI) { badgeOpenAI.textContent = 'On-Premise Local Active'; badgeOpenAI.style.color = 'var(--text-muted)'; }
         if (badgeNcbi) { badgeNcbi.textContent = 'Active (3 req/s limit)'; badgeNcbi.style.color = 'var(--cyan-neon)'; }
         if (badgeFhir) { badgeFhir.textContent = 'Local Mock Active'; badgeFhir.style.color = 'var(--text-muted)'; }
 
@@ -937,6 +977,12 @@ class ClinLoopApp {
     setHtml('modal-api-nobility-desc', t.apiNobilityDesc);
     setTxt('lbl-gemini-title', t.lblGemini);
     setTxt('desc-gemini-key', t.descGemini);
+    setTxt('lbl-anthropic-title', t.lblAnthropic);
+    setTxt('desc-anthropic-key', t.descAnthropic);
+    setTxt('lbl-openai-title', t.lblOpenAI);
+    setTxt('desc-openai-key', t.descOpenAI);
+    setTxt('txt-test-anthropic', t.txtTestPing);
+    setTxt('txt-test-openai', t.txtTestPing);
     setTxt('lbl-ncbi-title', t.lblNcbi);
     setTxt('desc-ncbi-key', t.descNcbi);
     setTxt('lbl-fhir-title', t.lblFhir);
