@@ -17,6 +17,28 @@ const CLINLOOP_I18N = {
     searchPlaceholder: '환자번호, 진단명, 검사 항목 검색...',
     filterAll: '전체 (5)',
     filterOpen: '위급/골든타임 (3)',
+
+    fwTitle: '실시간 PHI 방화벽 — 환자 텍스트 입력 및 비식별화 확인',
+    fwSub: '클라우드(Claude / OpenAI)로 전송되기 전 실시간 차단 시뮬레이션',
+    fwLblRaw: '🔴 원본 입력 (PHI 포함 — 클라우드 전송 차단)',
+    fwLblSafe: '✅ 비식별화 출력 (Claude / OpenAI 전송 안전)',
+    prvL1Title: '온프레미스 로컬 앙상블',
+    prvL1Desc: 'DeepSeek-R1, MedLlama2 등 최고 수준의 오픈 모델이 병원 방화벽 내부의 NVIDIA RTX A4500 GPU에서 실행됩니다. 인터넷이 필요하지 않습니다.',
+    prvL2Title: '연합 학습 (Federated Learning)',
+    prvL2Desc: '모델이 병원 데이터로 이동하며 데이터는 이동하지 않습니다. 수학적 가중치만 공유됩니다.',
+    prvL3Title: '차등 프라이버시 (Differential Privacy)',
+    prvL3Desc: '위험도에 수학적 노이즈를 추가하여 개별 환자 식별을 원천적으로 차단합니다.',
+    prvL4Title: '기밀 컴퓨팅 (TEE)',
+    prvL4Desc: '하드웨어 격리 환경(Intel SGX)에서 데이터를 처리하여 클라우드 제공자조차 데이터를 볼 수 없습니다.',
+    prvL5Title: '합성 데이터 트윈',
+    prvL5Desc: '실제 환자 데이터 0%. 임상적으로 검증된 100% 합성 데이터로만 훈련되었습니다.',
+    prvL6Title: '실시간 PHI 방화벽',
+    prvL6Desc: '모든 프롬프트에서 HIPAA 18개 항목 및 주민번호를 실시간 차단합니다.',
+    prvL7Title: '동형 암호 (Homomorphic Enc)',
+    prvL7Desc: '암호화된 텍스트 자체에서 직접 AI 추론을 실행합니다. 수학적으로 완벽한 보안입니다.',
+    prvL8Title: 'PHI 금고 + 토큰 치환',
+    prvL8Desc: '식별자는 온프레미스 금고에 보관되고 클라우드는 PT-99F7 같은 가상 토큰만 보게 됩니다.',
+
     filterDelayed: '지연위험 (1)',
     filterClosed: '종결완료 (1)',
     tabSummary: '🩺 환자 진료 요약 (Clinical Overview)',
@@ -95,6 +117,28 @@ const CLINLOOP_I18N = {
     searchPlaceholder: 'Search PT-ID, condition, rule, finding...',
     filterAll: 'All (5)',
     filterOpen: 'Critical (3)',
+
+    fwTitle: 'Live PHI Firewall — Type Patient Text & Watch It Get De-identified',
+    fwSub: 'Simulates what happens before ANY text is sent to Claude / OpenAI / Gemini',
+    fwLblRaw: '🔴 Raw Input (Contains PHI — NEVER sent to cloud)',
+    fwLblSafe: '✅ De-identified Output (Safe for Claude / OpenAI)',
+    prvL1Title: 'On-Premise Local Sovereign Ensemble',
+    prvL1Desc: 'An ensemble of world-class open models runs entirely on the NVIDIA RTX A4500 GPU inside the hospital firewall. Zero internet required.',
+    prvL2Title: 'Federated Learning',
+    prvL2Desc: 'The model travels to each hospital\'s data — data never travels to the model. Only mathematical gradients are shared.',
+    prvL3Title: 'Differential Privacy (ε-DP)',
+    prvL3Desc: 'Statistical noise is mathematically added to analytics. Provably prevents individual re-identification.',
+    prvL4Title: 'Confidential Computing (TEE)',
+    prvL4Desc: 'Hardware-isolated secure enclaves process encrypted patient data in the cloud. Even Azure/AWS cannot see the plaintext.',
+    prvL5Title: 'Synthetic Data Twins',
+    prvL5Desc: 'Trained exclusively on clinically-validated synthetic patients. Zero real PHI exists in the development pipeline.',
+    prvL6Title: 'PHI Firewall (Prompt Interceptor)',
+    prvL6Desc: 'Real-time scanner automatically detects and redacts HIPAA 18 PHI categories + Korean PIPA identifiers.',
+    prvL7Title: 'Homomorphic Encryption (HE)',
+    prvL7Desc: 'Run AI inference directly on encrypted ciphertext. Mathematically perfect privacy (2027 Roadmap).',
+    prvL8Title: 'PHI Vault + Token Substitution',
+    prvL8Desc: 'Real identifiers are swapped for cryptographic pseudonyms. Cloud LLMs only ever see tokens like PT-99F74B58.',
+
     filterDelayed: 'Delayed (1)',
     filterClosed: 'Closed (1)',
     tabSummary: '🩺 Clinical Overview (Summary)',
@@ -1147,6 +1191,28 @@ class ClinLoopApp {
     setTxt('neg-card-badge', t.negCardBadge);
     setTxt('neg-metric1-lbl', t.negMetric1);
     setTxt('neg-metric2-lbl', t.negMetric2);
+
+    setTxt('firewall-demo-title', t.fwTitle);
+    setTxt('firewall-demo-sub', t.fwSub);
+    setTxt('firewall-input-label', t.fwLblRaw);
+    setTxt('firewall-output-label', t.fwLblSafe);
+    setTxt('prv-l1-title', t.prvL1Title);
+    setTxt('prv-l1-desc', t.prvL1Desc);
+    setTxt('prv-l2-title', t.prvL2Title);
+    setTxt('prv-l2-desc', t.prvL2Desc);
+    setTxt('prv-l3-title', t.prvL3Title);
+    setTxt('prv-l3-desc', t.prvL3Desc);
+    setTxt('prv-l4-title', t.prvL4Title);
+    setTxt('prv-l4-desc', t.prvL4Desc);
+    setTxt('prv-l5-title', t.prvL5Title);
+    setTxt('prv-l5-desc', t.prvL5Desc);
+    setTxt('prv-l6-title', t.prvL6Title);
+    setTxt('prv-l6-desc', t.prvL6Desc);
+    setTxt('prv-l7-title', t.prvL7Title);
+    setTxt('prv-l7-desc', t.prvL7Desc);
+    setTxt('prv-l8-title', t.prvL8Title);
+    setTxt('prv-l8-desc', t.prvL8Desc);
+
     setTxt('neg-card-note', t.negCardNote);
 
     setTxt('pos-card-badge', t.posCardBadge);
