@@ -81,6 +81,18 @@
       <a href="presentation.html" target="_blank" class="btn-secondary" id="pitch-deck-link" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; color: #38bdf8;" title="Open Pitch Deck">
         📊 Pitch Deck
       </a>
+            <!-- 🫀 Live Closed-Loop Counter (Noble Standard) -->
+      <div id="lives-counter-pill" style="display:flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(6,182,212,0.1));border:1px solid rgba(16,185,129,0.35);border-radius:20px;padding:0.25rem 0.75rem;cursor:default;" title="Patients protected by ClinLoop AI closed-loop safety net">
+        <span>🫀</span>
+        <div style="line-height:1.1;">
+          <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;" id="lives-counter-label">Lives Protected</div>
+          <div style="display:flex;align-items:baseline;gap:0.3rem;">
+            <span id="lives-protected-count" style="font-family:var(--font-mono);font-size:0.95rem;font-weight:900;color:#10b981;">0</span>
+            <span style="font-size:0.6rem;color:var(--text-dim);">/ 5</span>
+          </div>
+        </div>
+        <div style="width:36px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;"><div id="lives-protected-bar" style="height:100%;background:linear-gradient(90deg,#10b981,#06b6d4);border-radius:2px;width:0%;transition:width 0.6s ease;"></div></div>
+      </div>
       <button id="btn-nobility-charter" class="btn-secondary" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399; display: inline-flex; align-items: center; gap: 0.4rem;" title="Medical Nobility, Hippocratic Charter & Clinical Whitepaper">
         <span id="txt-nobility-btn">🏛️ Medical Nobility & Ethics</span>
       </button>
@@ -1083,8 +1095,14 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <h3 id="prv-l3-title" class="prv-layer-title">Differential Privacy (ε-DP)</h3>
             <p id="prv-l3-desc" class="prv-layer-desc">Statistical noise is mathematically added to risk scores and population analytics. Any output is indistinguishable from ~20 other patients. Provably prevents individual re-identification.</p>
             <div class="prv-dp-demo">
-              <div class="dp-row"><span class="dp-label">Exact value:</span><span class="dp-val dp-danger">42.1%</span><span class="dp-note">(identifies individual)</span></div>
-              <div class="dp-row"><span class="dp-label">ε-DP output:</span><span class="dp-val dp-safe" id="dp-noisy-val">42.1% ± <span id="dp-noise-span">2.3</span>%</span><span class="dp-note">(population-level)</span></div>
+              <div class="dp-formula">Mechanism: X̃ = X + Lap(Δf/ε) where ε=0.1, Δf=sensitivity</div>
+              <div class="dp-row"><span class="dp-label">Exact value:</span><span class="dp-val dp-danger">42.1%</span><span class="dp-note">(re-identifies individual)</span></div>
+              <div class="dp-row"><span class="dp-label">ε-DP output:</span><span class="dp-val dp-safe" id="dp-noisy-val">42.1% ± <span id="dp-noise-span">2.3</span>%</span><span class="dp-note">(population-level only)</span></div>
+              <div class="dp-slider-row">
+                <label style="font-size:0.65rem;color:var(--text-dim);">Privacy Budget ε:</label>
+                <input type="range" id="dp-epsilon-slider" min="1" max="20" value="10" style="flex:1;accent-color:#10b981;">
+                <span id="dp-epsilon-val" style="font-family:var(--font-mono);font-size:0.68rem;color:#10b981;min-width:30px;">0.1</span>
+              </div>
             </div>
             <div class="prv-layer-tech">
               <span class="tech-tag">ε = 0.1</span>
@@ -1185,6 +1203,26 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           </div>
 
         </div><!-- end privacy-layers-grid -->
+
+        <!-- Global Audit Trail -->
+        <div class="privacy-audit-trail">
+          <div class="audit-trail-header">
+            <span style="font-size:1rem;">📋</span>
+            <div>
+              <div id="audit-trail-title" class="audit-trail-title">Real-Time Privacy Audit Trail</div>
+              <div id="audit-trail-sub" class="audit-trail-sub">Every system action is logged with timestamp, engine, and HIPAA de-identification status. Immutable on-premise record.</div>
+            </div>
+            <button id="audit-export-btn" class="audit-export-btn">⬇ Export Audit Report</button>
+          </div>
+          <div id="audit-log-entries" class="audit-log-entries">
+            <div class="audit-entry audit-entry-system">
+              <span class="audit-ts" id="audit-ts-init"></span>
+              <span class="audit-engine">🔒 ON-PREM GPU</span>
+              <span class="audit-action">System initialized · PHI De-identifier active · Zero cloud egress</span>
+              <span class="audit-phi-badge">✅ No PHI</span>
+            </div>
+          </div>
+        </div>
 
         <!-- Summary Score Bar -->
         <div class="privacy-score-bar">

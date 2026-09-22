@@ -3198,3 +3198,63 @@ body.dark-theme .api-test-btn:hover {
 .pscore-total { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
 .pscore-score { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 900; color: #10b981; }
 .pscore-label { font-size: 0.75rem; color: var(--text-muted); max-width: 80px; line-height: 1.3; }
+
+/* ── DP Formula + Slider ── */
+.dp-formula {
+  font-family: var(--font-mono); font-size: 0.65rem; color: #8b5cf6;
+  background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2);
+  border-radius: 6px; padding: 0.3rem 0.5rem; margin-bottom: 0.5rem;
+  letter-spacing: 0.01em;
+}
+.dp-slider-row {
+  display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem;
+}
+
+/* ── Global Audit Trail Panel ── */
+.privacy-audit-trail {
+  background: rgba(15,23,42,0.6); border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 14px; padding: 1rem; margin-bottom: 1.2rem;
+}
+.audit-trail-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 0.75rem; flex-wrap: wrap;
+}
+.audit-trail-title { font-family: var(--font-heading); font-size: 0.88rem; font-weight: 700; color: var(--text-main); }
+.audit-trail-sub { font-size: 0.72rem; color: var(--text-muted); }
+.audit-export-btn {
+  margin-left: auto; font-size: 0.7rem; font-weight: 700;
+  background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3);
+  color: #a5b4fc; border-radius: 8px; padding: 0.3rem 0.7rem; cursor: pointer;
+}
+.audit-export-btn:hover { background: rgba(99,102,241,0.25); }
+.audit-log-entries {
+  max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.3rem;
+}
+.audit-entry {
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  font-size: 0.7rem; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 0.3rem 0.5rem;
+  border-left: 3px solid;
+}
+.audit-entry-system  { border-color: rgba(16,185,129,0.5); }
+.audit-entry-kakao   { border-color: rgba(254,229,0,0.5); }
+.audit-entry-order   { border-color: rgba(99,102,241,0.5); }
+.audit-entry-model   { border-color: rgba(6,182,212,0.5); }
+.audit-entry-warning { border-color: rgba(239,68,68,0.5); }
+.audit-ts { font-family: var(--font-mono); color: var(--text-dim); min-width: 80px; font-size: 0.65rem; }
+.audit-engine { font-weight: 700; color: #a5b4fc; min-width: 90px; }
+.audit-action { flex: 1; color: var(--text-muted); }
+.audit-phi-badge { font-size: 0.62rem; font-weight: 700; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #10b981; border-radius: 4px; padding: 0.1rem 0.35rem; }
+
+/* ── Hippocratic Oath Banner (inside Nobility Modal) ── */
+.hippocratic-oath-banner {
+  background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(99,102,241,0.06));
+  border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;
+  padding: 1rem 1.2rem; margin-bottom: 1rem; position: relative; overflow: hidden;
+}
+.hippocratic-oath-text {
+  font-style: italic; font-size: 0.78rem; color: #94a3b8; line-height: 1.7;
+  position: relative; z-index: 1;
+}
+.hippocratic-oath-attr {
+  font-size: 0.68rem; color: var(--text-dim); margin-top: 0.5rem; font-style: normal;
+}

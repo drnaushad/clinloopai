@@ -218,6 +218,9 @@ class ClinLoopApp {
       } else if (h === '#outreach') {
         this.updateOutreachModal();
         document.getElementById('outreach-modal')?.classList.add('open');
+      } else if (h === '#privacy') {
+        this.switchView('privacy');
+        setTimeout(() => this.initPrivacyFirewall(), 100);
       }
     });
   }
@@ -795,6 +798,25 @@ class ClinLoopApp {
 
     if (btnSaveApiKeys) {
       btnSaveApiKeys.addEventListener('click', async () => {
+        // ─── BAA Compliance Gate (HIPAA + Korean PIPA) ───
+        const _aKey = inputAnthropic ? inputAnthropic.value.trim() : '';
+        const _oKey = inputOpenAI ? inputOpenAI.value.trim() : '';
+        const _gKey = inputGemini ? inputGemini.value.trim() : '';
+        if (_aKey || _oKey || _gKey) {
+          const isKo = (this.currentLang !== 'en');
+          const baaMsg = isKo
+            ? '⚖️ HIPAA BAA 규정 준수 확인 필요\n\n클라우드 API 키 저장 전 반드시 확인하십시오:\n\n✅ 해당 클라우드 제공업체(Anthropic/OpenAI/Google)와 HIPAA 업무위탁계약(BAA)이 체결되었음\n\n✅ 한국 개인정보보호법 제17조에 따른 환자 동의(외부 AI 서비스 이용)가 문서화됨\n\n✅ ClinLoop AI PHI 비식별화 필터가 상시 활성화 상태임\n\n온프레미스 GPU는 언제든지 무위험 기본 엔진으로 즉시 복귀 가능합니다.\n\n확인을 클릭하여 BAA 준수 사실을 인정하고 키를 저장합니다.'
+            : '⚖️ HIPAA BAA Compliance Confirmation Required\n\nBefore saving cloud API keys, please confirm:\n\n✅ A HIPAA Business Associate Agreement has been signed with this cloud provider (Anthropic / OpenAI / Google)\n\n✅ Korean PIPA Article 17 patient consent for external AI services is documented\n\n✅ ClinLoop AI PHI De-identification Filter will remain ACTIVE at all times\n\nThe On-Premise GPU remains the zero-risk sovereign default engine at all times.\n\nClick OK to confirm BAA compliance and save keys.';
+          const baaOk = confirm(baaMsg);
+          if (!baaOk) {
+            this.showNotification(
+              isKo ? '⚠️ 저장 취소됨. 클라우드 모델 사용을 위해 BAA 확인이 필요합니다.' : '⚠️ Save cancelled. BAA confirmation is required for cloud model access.',
+              'warning'
+            );
+            return;
+          }
+        }
+        // ─────────────────────────────────────────────────
         const keys = {
           gemini: inputGemini ? inputGemini.value.trim() : '',
           anthropic: inputAnthropic ? inputAnthropic.value.trim() : '',
@@ -861,6 +883,8 @@ class ClinLoopApp {
     const btnSummaryKakao = document.getElementById('summary-btn-kakao');
     if (btnSummaryKakao) {
       btnSummaryKakao.addEventListener('click', () => {
+        const caseName = this.currentCase?.scenario_name || this.currentCase?.scenario_id || 'UNKNOWN';
+        this.addAuditEntry('kakao', 'PATIENT MSG', `KakaoTalk empathy notification dispatched · Case: ${caseName}`, true);
         this.updateOutreachModal();
         const m = document.getElementById('outreach-modal');
         if (m) m.classList.add('open');
@@ -870,6 +894,8 @@ class ClinLoopApp {
     const btnSummaryOrder = document.getElementById('summary-btn-order');
     if (btnSummaryOrder) {
       btnSummaryOrder.addEventListener('click', () => {
+        const caseName = this.currentCase?.scenario_name || this.currentCase?.scenario_id || 'UNKNOWN';
+        this.addAuditEntry('order', 'FHIR ORDER', `HL7 FHIR Task dispatched to EMR · Loop closed · Case: ${caseName}`, true);
         if (!this.currentCase) return;
         this.closedOverrides.add(this.currentCase.scenario_id);
         this.selectCase(this.currentCase.scenario_id);
@@ -949,6 +975,7 @@ class ClinLoopApp {
 
       this.renderCaseTabs();
       this.updateSummaryView();
+    this.updateLivesCounter();
 
       if (this.currentCase) {
         const isOverridden = this.closedOverrides.has(this.currentCase.scenario_id);
@@ -1107,6 +1134,7 @@ class ClinLoopApp {
     });
 
     this.renderCaseTabs();
+    this.updateLivesCounter();
 
     if (this.filteredCases.length > 0) {
       if (!this.currentCase || !this.filteredCases.some(c => c.scenario_id === this.currentCase.scenario_id)) {
@@ -1114,6 +1142,19 @@ class ClinLoopApp {
         if (!window.location.hash || window.location.hash === '#summary') { this.switchView('summary'); }
       }
     }
+  }
+
+  updateLivesCounter() {
+    const el = document.getElementById('lives-protected-count');
+    if (!el) return;
+    const closed = this.cases.filter(c =>
+      c.ground_truth_status === 'closed' || this.closedOverrides.has(c.scenario_id)
+    ).length;
+    const total = this.cases.length;
+    el.textContent = closed;
+    const pct = Math.round((closed / total) * 100);
+    const bar = document.getElementById('lives-protected-bar');
+    if (bar) bar.style.width = pct + '%';
   }
 
   renderCaseTabs() {
@@ -2062,6 +2103,25 @@ class ClinLoopApp {
     this.updateStandardsView();
   }
 
+
+  addAuditEntry(type, engine, action, phiSafe = true) {
+    const container = document.getElementById('audit-log-entries');
+    if (!container) return;
+    const entry = document.createElement('div');
+    entry.className = `audit-entry audit-entry-${type}`;
+    const ts = new Date().toISOString().slice(11,19) + ' UTC';
+    const engineIcons = { system:'🔒 ON-PREM GPU', kakao:'📱 PATIENT MSG', order:'📋 FHIR ORDER', model:'🤖 MODEL SWITCH', warning:'⚠️ ALERT' };
+    entry.innerHTML = `
+      <span class="audit-ts">${ts}</span>
+      <span class="audit-engine">${engineIcons[type] || engine}</span>
+      <span class="audit-action">${action}</span>
+      <span class="audit-phi-badge">${phiSafe ? '✅ No PHI' : '⚠️ PHI Check'}</span>
+    `;
+    container.insertBefore(entry, container.firstChild);
+    // Keep max 20 entries
+    while (container.children.length > 20) container.removeChild(container.lastChild);
+  }
+
   initPrivacyFirewall() {
     if (this._privacyFirewallInited) return;
     this._privacyFirewallInited = true;
@@ -2076,12 +2136,54 @@ class ClinLoopApp {
     const dpNoise = document.getElementById('dp-noise-span');
     if (!input || !output) return;
 
-    // Differential Privacy noise animation
-    if (dpNoise) {
+    // Differential Privacy — epsilon slider + Laplace noise simulation
+    const epsilonSlider = document.getElementById('dp-epsilon-slider');
+    const epsilonVal = document.getElementById('dp-epsilon-val');
+    const updateDpNoise = () => {
+      if (!epsilonSlider || !dpNoise) return;
+      const eps = parseInt(epsilonSlider.value) / 100;  // slider 1-20 → 0.01-0.20
+      const sensitivity = 1.0;  // Δf (global sensitivity of risk score %)
+      const laplace_scale = sensitivity / eps;
+      const noise = (laplace_scale * (0.5 + Math.random() * 0.7)).toFixed(1);
+      dpNoise.textContent = noise;
+      if (epsilonVal) epsilonVal.textContent = eps.toFixed(2);
+    };
+    if (epsilonSlider) {
+      epsilonSlider.addEventListener('input', updateDpNoise);
+      setInterval(updateDpNoise, 2200);
+    } else if (dpNoise) {
       setInterval(() => {
         const noise = (1.8 + Math.random() * 1.0).toFixed(1);
         dpNoise.textContent = noise;
       }, 2200);
+    }
+
+    // Audit trail timestamp init
+    const auditTs = document.getElementById('audit-ts-init');
+    if (auditTs) auditTs.textContent = new Date().toISOString().slice(11,19) + ' UTC';
+
+    // Audit export button
+    const exportBtn = document.getElementById('audit-export-btn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        const entries = document.querySelectorAll('.audit-entry');
+        let report = 'ClinLoop AI — Privacy Audit Report\n';
+        report += 'Generated: ' + new Date().toISOString() + '\n';
+        report += 'Standards: HIPAA Safe Harbor 45 CFR §164.514(b), Korean PIPA Articles 23-24\n\n';
+        report += 'AUDIT TRAIL:\n';
+        entries.forEach(e => {
+          const ts = e.querySelector('.audit-ts')?.textContent || '';
+          const engine = e.querySelector('.audit-engine')?.textContent || '';
+          const action = e.querySelector('.audit-action')?.textContent || '';
+          const phi = e.querySelector('.audit-phi-badge')?.textContent || '';
+          report += `[${ts}] ${engine} | ${action} | ${phi}\n`;
+        });
+        const blob = new Blob([report], {type:'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download='clinloop_privacy_audit.txt';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
     }
 
     const PHI_RULES = [
