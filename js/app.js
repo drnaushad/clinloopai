@@ -1460,12 +1460,6 @@ class ClinLoopApp {
     setTxt('dock-lbl-lang', t.dockLang);
     setTxt('btn-close-nobility-bottom', t.btnConfirmClose);
 
-    setTxt('nob-p1-title', t.nobP1Title);
-    setHtml('nob-p1-list', t.nobP1List);
-    setTxt('nob-p2-title', t.nobP2Title);
-    setHtml('nob-p2-list', t.nobP2List);
-    setTxt('nob-p3-title', t.nobP3Title);
-    setHtml('nob-p3-list', t.nobP3List);
 
 
     setTxt('firewall-demo-title', t.fwTitle);
