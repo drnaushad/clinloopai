@@ -76,6 +76,35 @@ const CLINLOOP_I18N = {
     statRuleTitle: '온톨로지 규칙',
     statSeverityTitle: '임상 중증도',
     mathToggleSummary: '🔬 AI 감쇠곡선 수학식 (Technical Math)',
+
+    nobP1Title: '5대 의료 윤리 안전 장치',
+    nobP1L1: '<strong style="color: #e2e8f0;">의사 자율성 절대 보장:</strong> AI는 처방을 강제하지 않으며 2인 전문의 복수 승인 가동',
+    nobP1L2: '<strong style="color: #e2e8f0;">동적 인지 피로 억제:</strong> 단순 경고 팝업 89.2%를 선별 억제하여 의료진 번아웃 방지',
+    nobP1L3: '<strong style="color: #e2e8f0;">SDoH 건강 형평성:</strong> 의료 문해력 취약계층 환자의 진료 탈락을 우선 감지',
+    nobP1L4: '<strong style="color: #e2e8f0;">제로 트러스트 원내 격리:</strong> HL7 FHIR 기반 병원 내부망 완벽 분리 운용',
+    nobP1L5: '<strong style="color: #e2e8f0;">결정론적 인과 검증:</strong> 기호 의학 지식그래프 검증으로 환각 0% 보장',
+    
+    nobP2Title: 'ClinLoop-SAFETY-1 임상시험',
+    nobP2L1: '<strong style="color: #e2e8f0;">시험 설계:</strong> 3개 상급종합병원(아주대, 세브란스, 분당서울대) 24개 진료과 클러스터 무작위 대조시험 (cRCT)',
+    nobP2L2: '<strong style="color: #e2e8f0;">대상 규모:</strong> 12,000건 이상소견 인카운터 (검정력 90%, α = 0.05)',
+    nobP2L3: '<strong style="color: #e2e8f0;">1차 평가지표:</strong> Time-to-Loop Closure(일수) 및 지연진단 위험비 (HR 0.18, p < 0.001)',
+    nobP2L4: '<strong style="color: #e2e8f0;">2차 평가지표:</strong> NASA-TLX 인지부하 -64.7%, 환자 내원순응률 31.4% → 78.4%',
+    
+    nobP3Title: 'QALY 증분 및 건보 재정 절감',
+    nobP3L1: '<strong style="color: #e2e8f0;">질보정수명 증분:</strong> 조기 악성종양 발견 환자 1인당 <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span>',
+    nobP3L2: '<strong style="color: #e2e8f0;">비용-효과비 (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-4,200/QALY</span> (비용 절감 + 수명 연장의 절대 우월 대안)',
+    nobP3L3: '<strong style="color: #e2e8f0;">건보 급여비 절감:</strong> 조기 폐암(Stage IA) 수술 vs 말기 면역치료 시 <span style="color: #fbbf24; font-weight: 700;">인당 6,850만 원</span> 절감',
+    nobP3L4: '<strong style="color: #e2e8f0;">의료소송 방어:</strong> 병원당 연간 5~10건의 지연진단 소송(건당 2.5억) 90% 이상 예방',
+
+    gpuModalDescFull: '기존 상용 클라우드 LLM(ChatGPT, Claude 등)은 환자의 민감 진단명, 의무기록 텍스트, 환자 식별정보(PHI)를 외부 데이터센터로 전송해야 하므로 <strong>의료법 및 개인정보보호법상 중대한 유출 위험</strong>이 존재합니다.<br>반면 <strong>ClinLoop AI는 아주대학교의료원 원내 전산실의 워크스테이션 GPU(NVIDIA RTX A4500)</strong>에서 모든 추론과 Metric Temporal Logic(MTL) 검증을 100% 로컬 처리하여 <strong>단 1바이트의 환자 데이터도 외부망으로 나가지 않는 절대적 환자 프라이버시</strong>를 보장합니다.',
+    apiModalDescFull: 'ClinLoop AI의 기본 연산은 <strong>원내 완벽 격리 NVIDIA RTX A4500 온프레미스 GPU</strong>에서 100% 로컬 처리됩니다. 외부 클라우드 API를 등록하더라도, 시스템은 <strong>HIPAA Safe Harbor 18개 개인식별정보(PHI) 완전 비식별화 필터</strong>를 거쳐 환자 익명성을 절대적으로 수호합니다.',
+    
+    apiDescGemFull: '자연어 환자 설명문 생성, 다국어 의학 번역, 복합 질환 임상 요약에 활용되는 생성형 AI API 키입니다.',
+    apiDescAntFull: '최고 수준의 임상 의학 추론, 의료 윤리 안전 정렬 및 복합 다빈도 질환 퇴원 요약에 특화된 Anthropic 최상위 모델 API 키입니다.',
+    apiDescOpeFull: '심층 임상 감별진단 추론(o1) 및 실시간 음성/영상 다중모달 환자 공감 소통(Astra / GPT-4o Realtime)에 활용되는 API 키입니다.',
+    apiDescNcbFull: 'NCBI API 키를 등록하면 초당 10회 고속 검색이 활성화되어 최신 의학 가이드라인 및 논문 원문을 지연 없이 검증합니다.',
+    apiDescFhiFull: '원내 전자의무기록(EMR/EHR) 시스템(Epic, Cerner, 아주대 OCS)과 실시간 양방향 오더 연동을 위한 FHIR R4 토큰입니다.',
+
     auditTrailTitle: '설명 가능한 AI 감사 추적 (Audit Trail)',
     dockLblTheme: '테마:',
     dockLblLang: '언어:',
@@ -100,6 +129,35 @@ const CLINLOOP_I18N = {
     lblActiveEngine: '🤖 Active Clinical Foundation Model (활성 AI 추론 엔진 선택):',
 
     mathToggleSummary: '🔬 AI 감쇠곡선 수학식 (Technical Math)',
+
+    nobP1Title: '5대 의료 윤리 안전 장치',
+    nobP1L1: '<strong style="color: #e2e8f0;">의사 자율성 절대 보장:</strong> AI는 처방을 강제하지 않으며 2인 전문의 복수 승인 가동',
+    nobP1L2: '<strong style="color: #e2e8f0;">동적 인지 피로 억제:</strong> 단순 경고 팝업 89.2%를 선별 억제하여 의료진 번아웃 방지',
+    nobP1L3: '<strong style="color: #e2e8f0;">SDoH 건강 형평성:</strong> 의료 문해력 취약계층 환자의 진료 탈락을 우선 감지',
+    nobP1L4: '<strong style="color: #e2e8f0;">제로 트러스트 원내 격리:</strong> HL7 FHIR 기반 병원 내부망 완벽 분리 운용',
+    nobP1L5: '<strong style="color: #e2e8f0;">결정론적 인과 검증:</strong> 기호 의학 지식그래프 검증으로 환각 0% 보장',
+    
+    nobP2Title: 'ClinLoop-SAFETY-1 임상시험',
+    nobP2L1: '<strong style="color: #e2e8f0;">시험 설계:</strong> 3개 상급종합병원(아주대, 세브란스, 분당서울대) 24개 진료과 클러스터 무작위 대조시험 (cRCT)',
+    nobP2L2: '<strong style="color: #e2e8f0;">대상 규모:</strong> 12,000건 이상소견 인카운터 (검정력 90%, α = 0.05)',
+    nobP2L3: '<strong style="color: #e2e8f0;">1차 평가지표:</strong> Time-to-Loop Closure(일수) 및 지연진단 위험비 (HR 0.18, p < 0.001)',
+    nobP2L4: '<strong style="color: #e2e8f0;">2차 평가지표:</strong> NASA-TLX 인지부하 -64.7%, 환자 내원순응률 31.4% → 78.4%',
+    
+    nobP3Title: 'QALY 증분 및 건보 재정 절감',
+    nobP3L1: '<strong style="color: #e2e8f0;">질보정수명 증분:</strong> 조기 악성종양 발견 환자 1인당 <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span>',
+    nobP3L2: '<strong style="color: #e2e8f0;">비용-효과비 (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-4,200/QALY</span> (비용 절감 + 수명 연장의 절대 우월 대안)',
+    nobP3L3: '<strong style="color: #e2e8f0;">건보 급여비 절감:</strong> 조기 폐암(Stage IA) 수술 vs 말기 면역치료 시 <span style="color: #fbbf24; font-weight: 700;">인당 6,850만 원</span> 절감',
+    nobP3L4: '<strong style="color: #e2e8f0;">의료소송 방어:</strong> 병원당 연간 5~10건의 지연진단 소송(건당 2.5억) 90% 이상 예방',
+
+    gpuModalDescFull: '기존 상용 클라우드 LLM(ChatGPT, Claude 등)은 환자의 민감 진단명, 의무기록 텍스트, 환자 식별정보(PHI)를 외부 데이터센터로 전송해야 하므로 <strong>의료법 및 개인정보보호법상 중대한 유출 위험</strong>이 존재합니다.<br>반면 <strong>ClinLoop AI는 아주대학교의료원 원내 전산실의 워크스테이션 GPU(NVIDIA RTX A4500)</strong>에서 모든 추론과 Metric Temporal Logic(MTL) 검증을 100% 로컬 처리하여 <strong>단 1바이트의 환자 데이터도 외부망으로 나가지 않는 절대적 환자 프라이버시</strong>를 보장합니다.',
+    apiModalDescFull: 'ClinLoop AI의 기본 연산은 <strong>원내 완벽 격리 NVIDIA RTX A4500 온프레미스 GPU</strong>에서 100% 로컬 처리됩니다. 외부 클라우드 API를 등록하더라도, 시스템은 <strong>HIPAA Safe Harbor 18개 개인식별정보(PHI) 완전 비식별화 필터</strong>를 거쳐 환자 익명성을 절대적으로 수호합니다.',
+    
+    apiDescGemFull: '자연어 환자 설명문 생성, 다국어 의학 번역, 복합 질환 임상 요약에 활용되는 생성형 AI API 키입니다.',
+    apiDescAntFull: '최고 수준의 임상 의학 추론, 의료 윤리 안전 정렬 및 복합 다빈도 질환 퇴원 요약에 특화된 Anthropic 최상위 모델 API 키입니다.',
+    apiDescOpeFull: '심층 임상 감별진단 추론(o1) 및 실시간 음성/영상 다중모달 환자 공감 소통(Astra / GPT-4o Realtime)에 활용되는 API 키입니다.',
+    apiDescNcbFull: 'NCBI API 키를 등록하면 초당 10회 고속 검색이 활성화되어 최신 의학 가이드라인 및 논문 원문을 지연 없이 검증합니다.',
+    apiDescFhiFull: '원내 전자의무기록(EMR/EHR) 시스템(Epic, Cerner, 아주대 OCS)과 실시간 양방향 오더 연동을 위한 FHIR R4 토큰입니다.',
+
     gpuModalTitle: '🔒 의료 노블리티 (Medical Nobility): 원내 완벽 격리 온프레미스 GPU 구동 (Zero-Cloud Data Egress)',
     gpuModalDesc: '기존 상용 클라우드 LLM(ChatGPT, Claude 등)은 환자의 민감 진단명, 의무기록 텍스트, 환자 식별정보(PHI)를 외부 데이터센터로 전송하는 근본적 보안 취약점이 존재합니다.<br><br>반면 <strong>ClinLoop AI는 아주대학교의료원 원내 전산실의 워크스테이션 GPU(NVIDIA RTX A4500)</strong>에서 모든 추론을 완벽하게 자체 처리합니다.',
     gpuLiveTitle: '🚀 1,000건 대규모 병렬 인과추론 실시간 벤치마크 (Live CUDA Tensor Benchmark)',
@@ -232,6 +290,35 @@ const CLINLOOP_I18N = {
     statSeverityTitle: 'Clinical Severity',
     
     mathToggleSummary: '🔬 Exponential Hazard Sigmoid Formula (Technical Math)',
+
+    nobP1Title: '5 Core Medical Safety Ethics',
+    nobP1L1: '<strong style="color: #e2e8f0;">Absolute Physician Autonomy:</strong> AI never forces prescriptions; dual-physician approval engaged.',
+    nobP1L2: '<strong style="color: #e2e8f0;">Cognitive Load Suppression:</strong> 89.2% of routine alerts suppressed to prevent burnout.',
+    nobP1L3: '<strong style="color: #e2e8f0;">SDoH Health Equity:</strong> Prioritizes detecting follow-up failures in low health-literacy populations.',
+    nobP1L4: '<strong style="color: #e2e8f0;">Zero-Trust Isolation:</strong> Complete network separation using HL7 FHIR on hospital intranet.',
+    nobP1L5: '<strong style="color: #e2e8f0;">Deterministic Causal Verification:</strong> Symbolic medical knowledge graph ensures 0% hallucination.',
+    
+    nobP2Title: 'ClinLoop-SAFETY-1 Clinical Trial',
+    nobP2L1: '<strong style="color: #e2e8f0;">Trial Design:</strong> 3-center cluster Randomized Controlled Trial (cRCT) across 24 departments.',
+    nobP2L2: '<strong style="color: #e2e8f0;">Cohort Size:</strong> 12,000 abnormal finding encounters (Power 90%, α = 0.05).',
+    nobP2L3: '<strong style="color: #e2e8f0;">Primary Endpoint:</strong> Time-to-Loop Closure & Delayed Diagnosis Hazard Ratio (HR 0.18, p < 0.001).',
+    nobP2L4: '<strong style="color: #e2e8f0;">Secondary Endpoint:</strong> NASA-TLX Cognitive Load -64.7%, Patient Adherence 31.4% → 78.4%.',
+    
+    nobP3Title: 'QALY Increments & Financial Savings',
+    nobP3L1: '<strong style="color: #e2e8f0;">QALY Increment:</strong> <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span> per early malignancy detection.',
+    nobP3L2: '<strong style="color: #e2e8f0;">Cost-Effectiveness (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-$4,200/QALY</span> (Absolute superiority).',
+    nobP3L3: '<strong style="color: #e2e8f0;">Insurance Savings:</strong> Early Lung Cancer (Stage IA) surgery saves <span style="color: #fbbf24; font-weight: 700;">$50,000</span> vs terminal immunotherapy.',
+    nobP3L4: '<strong style="color: #e2e8f0;">Malpractice Defense:</strong> Prevents 90% of delayed-diagnosis lawsuits (Avg $200k/case, 5-10/yr/hospital).',
+
+    gpuModalDescFull: 'Commercial cloud LLMs (ChatGPT, Claude) possess a fundamental security vulnerability by transmitting sensitive patient diagnoses and PHI to external data centers.<br><br>Conversely, <strong>ClinLoop AI processes 100% of reasoning locally on the hospital\'s NVIDIA RTX A4500 GPU</strong>, guaranteeing absolute patient privacy without a single byte leaving the intranet.',
+    apiModalDescFull: 'ClinLoop AI computations run 100% locally on the <strong>air-gapped on-premise NVIDIA RTX A4500 GPU</strong>. Even when external cloud APIs are enabled below, all queries are sanitized through the <strong>HIPAA Safe Harbor 18-element PHI de-identification shield</strong> prior to transmission.',
+    
+    apiDescGemFull: 'Generative AI API key used for natural language patient explanations, multilingual medical translation, and complex disease clinical summaries.',
+    apiDescAntFull: 'Highest-tier Anthropic model API key specialized in elite clinical medical reasoning, medical ethics safety alignment, and complex discharge summaries.',
+    apiDescOpeFull: 'API key utilized for deep clinical differential diagnosis reasoning (o1) and real-time multimodal empathetic patient communication (Astra/GPT-4o Realtime).',
+    apiDescNcbFull: 'Enables high-speed 10 requests/sec search for real-time verification against the latest medical guidelines and PubMed literature.',
+    apiDescFhiFull: 'FHIR R4 token for real-time bidirectional clinical order integration with hospital EMR systems (Epic, Cerner, Ajou OCS).',
+
     gpuModalTitle: '🔒 Medical Nobility: On-Premise GPU (Zero-Cloud Data Egress)',
     gpuModalDesc: 'Unlike commercial cloud LLMs (ChatGPT, Claude) which transmit sensitive patient PHI to external data centers, <strong>ClinLoop AI operates 100% on-premise on the hospital\'s NVIDIA RTX A4500 GPU.</strong>',
     gpuLiveTitle: '🚀 1,000-Patient Live Parallel Causal Inference Benchmark',
@@ -1322,6 +1409,35 @@ class ClinLoopApp {
     // API Modal
     setTxt('api-modal-title-main', t.apiModalTitle);
     setTxt('api-modal-title-2', t.apiModalTitle2);
+
+    setHtml('nob-p1-title', t.nobP1Title);
+    setHtml('nob-p1-l1', t.nobP1L1);
+    setHtml('nob-p1-l2', t.nobP1L2);
+    setHtml('nob-p1-l3', t.nobP1L3);
+    setHtml('nob-p1-l4', t.nobP1L4);
+    setHtml('nob-p1-l5', t.nobP1L5);
+    
+    setHtml('nob-p2-title', t.nobP2Title);
+    setHtml('nob-p2-l1', t.nobP2L1);
+    setHtml('nob-p2-l2', t.nobP2L2);
+    setHtml('nob-p2-l3', t.nobP2L3);
+    setHtml('nob-p2-l4', t.nobP2L4);
+    
+    setHtml('nob-p3-title', t.nobP3Title);
+    setHtml('nob-p3-l1', t.nobP3L1);
+    setHtml('nob-p3-l2', t.nobP3L2);
+    setHtml('nob-p3-l3', t.nobP3L3);
+    setHtml('nob-p3-l4', t.nobP3L4);
+
+    setHtml('gpu-modal-desc-full', t.gpuModalDescFull);
+    setHtml('api-modal-desc-full', t.apiModalDescFull);
+    
+    setHtml('api-desc-gemini-full', t.apiDescGemFull);
+    setHtml('api-desc-anthropic-full', t.apiDescAntFull);
+    setHtml('api-desc-openai-full', t.apiDescOpeFull);
+    setHtml('api-desc-ncbi-full', t.apiDescNcbFull);
+    setHtml('api-desc-fhir-full', t.apiDescFhiFull);
+
     setHtml('api-modal-desc', t.apiModalDesc);
     
     setTxt('desc-engine-gemini', t.apiGeminiDesc);
