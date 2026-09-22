@@ -74,7 +74,13 @@ const CLINLOOP_I18N = {
     descFhir: '원내 전자의무기록(EMR/EHR) 시스템(Epic, Cerner, 아주대 OCS)과 실시간 양방향 오더 연동을 위한 FHIR R4 토큰입니다.',
     txtTestPing: '연결 테스트 (Ping)',
     txtResetKeys: '키 초기화 (GPU 전용 복귀)',
-    txtSaveKeys: 'API 설정 저장 & 적용 (Save Keys)'
+    txtSaveKeys: 'API 설정 저장 & 적용 (Save Keys)',
+    lblActiveEngine: '🤖 Active Clinical Foundation Model (활성 AI 추론 엔진 선택):',
+    descEngineAnthropic: '최고 임상 추론 & 의료 윤리 정렬',
+    descEngineOpenai: '실시간 다중모달 & 심층 CoT 추론',
+    descEngineGemini: '초고속 다국어 건강 문해력 요약',
+    descEngineLocal: '100% 원내 로컬 GPU 격리 (Default)',
+    btnCancelApi: '닫기 (Close)'
   },
   en: {
     brandSubtitle: 'Closed-Loop Clinical Safety Platform (On-Premise GPU)',
@@ -146,7 +152,13 @@ const CLINLOOP_I18N = {
     descFhir: 'HL7 FHIR R4 token for bi-directional live clinical order dispatch into hospital EHR (Epic, Cerner, Ajou OCS).',
     txtTestPing: 'Test Connection',
     txtResetKeys: 'Reset to GPU Only',
-    txtSaveKeys: 'Save & Apply Keys'
+    txtSaveKeys: 'Save & Apply Keys',
+    lblActiveEngine: '🤖 Active Clinical Foundation Model:',
+    descEngineAnthropic: 'State-of-the-Art Reasoning & Ethics',
+    descEngineOpenai: 'Real-time Multimodal & Deep CoT',
+    descEngineGemini: 'High-speed Multilingual Summarization',
+    descEngineLocal: '100% Air-Gapped Local GPU (Default)',
+    btnCancelApi: 'Close'
   }
 };
 
@@ -1179,6 +1191,12 @@ class ClinLoopApp {
     setTxt('txt-test-fhir', t.txtTestPing);
     setTxt('txt-btn-reset-keys', t.txtResetKeys);
     setTxt('txt-btn-save-keys', t.txtSaveKeys);
+    setTxt('lbl-active-engine', t.lblActiveEngine);
+    setTxt('desc-engine-anthropic', t.descEngineAnthropic);
+    setTxt('desc-engine-openai', t.descEngineOpenai);
+    setTxt('desc-engine-gemini', t.descEngineGemini);
+    setTxt('desc-engine-local', t.descEngineLocal);
+    setTxt('btn-cancel-api-modal', t.btnCancelApi);
   }
 
 

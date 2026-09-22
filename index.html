@@ -1773,7 +1773,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
       <div style="margin-top: 1rem; background: rgba(15, 23, 42, 0.7); border: 1.5px solid rgba(139, 92, 246, 0.35); border-radius: 10px; padding: 1rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.4rem;">
           <div style="font-size: 0.82rem; font-weight: 800; color: #c084fc; display: flex; align-items: center; gap: 0.4rem;">
-            <span>🤖 Active Clinical Foundation Model (활성 AI 추론 엔진 선택):</span>
+            <span id="lbl-active-engine">🤖 Active Clinical Foundation Model (활성 AI 추론 엔진 선택):</span>
           </div>
           <span class="badge" id="active-model-badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; font-size: 0.68rem; font-weight: 700; border-color: rgba(139, 92, 246, 0.4);">
             🧠 Anthropic Claude 3.5 Sonnet
@@ -1786,7 +1786,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <strong style="font-size: 0.78rem; color: #fff;">🧠 Anthropic Claude 3.5</strong>
               <span class="badge" style="font-size: 0.6rem; color: #a78bfa; background: rgba(167, 139, 250, 0.2);">BEST REASONING</span>
             </div>
-            <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">최고 임상 추론 & 의료 윤리 정렬</div>
+            <div id="desc-engine-anthropic" style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">최고 임상 추론 & 의료 윤리 정렬</div>
           </div>
 
           <div class="engine-opt-card" data-engine="openai" id="engine-card-openai" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: rgba(30, 41, 59, 0.5); border-radius: 8px; padding: 0.65rem; transition: all 0.2s;">
@@ -1794,7 +1794,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <strong style="font-size: 0.78rem; color: #fff;">⚡ OpenAI Astra (o1)</strong>
               <span class="badge" style="font-size: 0.6rem; color: #38bdf8; background: rgba(56, 189, 248, 0.2);">MULTIMODAL</span>
             </div>
-            <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">실시간 다중모달 & 심층 CoT 추론</div>
+            <div id="desc-engine-openai" style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">실시간 다중모달 & 심층 CoT 추론</div>
           </div>
 
           <div class="engine-opt-card" data-engine="gemini" id="engine-card-gemini" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: rgba(30, 41, 59, 0.5); border-radius: 8px; padding: 0.65rem; transition: all 0.2s;">
@@ -1802,7 +1802,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <strong style="font-size: 0.78rem; color: #fff;">🌐 Google Gemini 2.5</strong>
               <span class="badge" style="font-size: 0.6rem; color: var(--emerald-safe); background: rgba(5, 150, 105, 0.2);">FAST TRANSLATION</span>
             </div>
-            <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">초고속 다국어 건강 문해력 요약</div>
+            <div id="desc-engine-gemini" style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">초고속 다국어 건강 문해력 요약</div>
           </div>
 
           <div class="engine-opt-card" data-engine="local" id="engine-card-local" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: rgba(30, 41, 59, 0.5); border-radius: 8px; padding: 0.65rem; transition: all 0.2s;">
@@ -1810,7 +1810,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <strong style="font-size: 0.78rem; color: #fff;">🔒 Local RTX A4500</strong>
               <span class="badge" style="font-size: 0.6rem; color: var(--amber-warning); background: rgba(245, 158, 11, 0.2);">AIR-GAPPED</span>
             </div>
-            <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">100% 원내 로컬 GPU 격리 (Default)</div>
+            <div id="desc-engine-local" style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">100% 원내 로컬 GPU 격리 (Default)</div>
           </div>
 
         </div>
