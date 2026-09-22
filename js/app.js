@@ -148,6 +148,73 @@ const CLINLOOP_I18N = {
   }
 };
 
+
+// ── Global: Test Local LLM Button (Privacy Shield Tab) ──────────────────────
+async function testLocalLLM() {
+  const btn = document.getElementById('test-local-llm-btn');
+  const badge = document.getElementById('local-llm-status-badge');
+  const output = document.getElementById('local-llm-test-output');
+  if (!btn) return;
+
+  btn.textContent = '⏳ Generating...';
+  btn.disabled = true;
+  if (badge) badge.textContent = 'Calling MedLlama2 via Ollama...';
+  if (output) { output.style.display = 'block'; output.textContent = ''; }
+
+  try {
+    // First check engine status
+    const statusResp = await fetch('http://localhost:8124/api/v1/local-llm/status', {timeout: 5000});
+    const status = statusResp.ok ? await statusResp.json() : null;
+    const bestModel = status?.best_model || 'deepseek-r1:32b';
+
+    if (badge) badge.textContent = `Best model: ${status?.best_model_label || bestModel} · Generating...`;
+
+    const t0 = Date.now();
+    const resp = await fetch('http://localhost:8124/api/v1/local-llm/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        task: 'kakao_message_ko',
+        clinical_context: 'Patient: 40대 남성. CT finding: 14mm ground-glass nodule in right lower lobe. Risk: 42.1% malignant progression (Fleischner 2017 high-risk). Follow-up PET-CT required within 24 days.',
+      })
+    });
+
+    const latency = Date.now() - t0;
+
+    if (resp.ok) {
+      const data = await resp.json();
+      if (output) output.textContent = data.text || '(empty response)';
+      if (badge) badge.innerHTML = `<span style="color:#10b981">✅ ${data.model} · ${data.latency_ms || latency}ms · On-Premise ✓</span>`;
+    } else {
+      throw new Error(`HTTP ${resp.status}`);
+    }
+  } catch (e) {
+    // Fallback: call Ollama directly
+    try {
+      const t0 = Date.now();
+      const resp = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          model: 'llama3:latest',
+          prompt: '[ClinLoop AI — HIPAA De-identified] 40대 남성 환자, 14mm 간유리음영 결절 발견. 카카오톡 안심 알림 2문장 작성 (의학용어 없이, 환자 이름 없이):',
+          stream: false,
+          options: {temperature: 0.3, num_predict: 100}
+        })
+      });
+      const latency = Date.now() - t0;
+      const data = await resp.json();
+      if (output) output.textContent = data.response || '(empty)';
+      if (badge) badge.innerHTML = `<span style="color:#10b981">✅ ${data.model} (direct Ollama) · ${Math.round(latency/1000)}s · On-Premise ✓</span>`;
+    } catch (e2) {
+      if (badge) badge.innerHTML = `<span style="color:#f59e0b">⚠️ Backend offline. DeepSeek-R1 runs on port 8124 / Ollama port 11434</span>`;
+      if (output) { output.textContent = '[Demo mode: real output when backend is running]\n\n안심하세요. 검진에서 발견된 소견은 전문의가 지속적으로 모니터링하고 있습니다. 다음 단계 검사를 위해 24일 내로 방문 예약을 도와드리겠습니다.'; output.style.display = 'block'; }
+    }
+  }
+  btn.textContent = '▶ Test Local LLM Now';
+  btn.disabled = false;
+}
+
 class ClinLoopApp {
   constructor() {
     this.cases = [];

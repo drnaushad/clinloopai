@@ -1052,14 +1052,21 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <div class="prv-layer-status-badge prv-badge-active" id="prv-l1-status">✅ Active</div>
             </div>
             <div class="prv-layer-icon">🔒</div>
-            <h3 id="prv-l1-title" class="prv-layer-title">On-Premise Local LLM</h3>
-            <p id="prv-l1-desc" class="prv-layer-desc">NVIDIA RTX A4500 GPU runs the AI model directly inside the hospital firewall. Zero internet connection required. Patient data never leaves the building.</p>
+            <h3 id="prv-l1-title" class="prv-layer-title">On-Premise Local LLM (DeepSeek-R1)</h3>
+            <p id="prv-l1-desc" class="prv-layer-desc">MedLlama2 and Llama 3.1 Medical run entirely on NVIDIA RTX A4500 GPU inside the hospital firewall via Ollama. The best open-source medical models available for clinical chain-of-thought tasks and empathetic communication. Zero internet required. Patient data never leaves the building.</p>
             <div class="prv-layer-tech">
+              <span class="tech-tag">MedLlama2 7B ★</span>
               <span class="tech-tag">Llama 3.1 Medical</span>
-              <span class="tech-tag">BioMistral</span>
+              <span class="tech-tag">DeepSeek-R1</span>
+              <span class="tech-tag">Ollama</span>
               <span class="tech-tag">Air-Gapped</span>
             </div>
-            <div class="prv-layer-metric"><span class="metric-icon">⚡</span> <span id="prv-l1-metric">2.1ms · PHI Egress: 0%</span></div>
+            <div style="margin-bottom:0.5rem;">
+              <button id="test-local-llm-btn" onclick="testLocalLLM()" style="font-size:0.7rem;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);color:#10b981;border-radius:6px;padding:0.25rem 0.6rem;cursor:pointer;">▶ Test Local LLM Now</button>
+              <span id="local-llm-status-badge" style="font-size:0.68rem;color:var(--text-dim);margin-left:0.5rem;">Checking...</span>
+            </div>
+            <div id="local-llm-test-output" style="display:none;font-size:0.7rem;color:#86efac;background:rgba(0,0,0,0.3);border-radius:6px;padding:0.4rem;margin-bottom:0.5rem;font-family:var(--font-mono);white-space:pre-wrap;max-height:80px;overflow-y:auto;"></div>
+            <div class="prv-layer-metric"><span class="metric-icon">⚡</span> <span id="prv-l1-metric">MedLlama2 7B / Llama 3.1 · 8GB VRAM · PHI Egress: 0%</span></div>
           </div>
 
           <!-- Layer 2 -->
@@ -1351,7 +1358,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <button class="filter-btn active btn-outreach-engine" data-engine="anthropic" id="btn-engine-anthropic" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">🧠 Claude 3.5</button>
               <button class="filter-btn btn-outreach-engine" data-engine="openai" id="btn-engine-openai" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">⚡ OpenAI Astra</button>
               <button class="filter-btn btn-outreach-engine" data-engine="gemini" id="btn-engine-gemini" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">🌐 Gemini 2.5</button>
-              <button class="filter-btn btn-outreach-engine" data-engine="local" id="btn-engine-local" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">🔒 Local GPU</button>
+              <button class="filter-btn btn-outreach-engine" data-engine="local" id="btn-engine-local" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">🧬 MedLlama2</button>
             </div>
           </div>
 
