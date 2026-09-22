@@ -3103,7 +3103,7 @@ body.dark-theme .api-test-btn:hover {
 
 /* Live PHI Firewall Demo */
 .privacy-firewall-demo {
-  background: rgba(15,23,42,0.6); border: 1px solid rgba(239,68,68,0.3);
+  background: var(--bg-card); border: 1px solid rgba(239,68,68,0.3);
   border-radius: 14px; padding: 1.2rem; margin-bottom: 1.2rem;
 }
 .firewall-demo-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
@@ -3140,7 +3140,7 @@ body.dark-theme .api-test-btn:hover {
   gap: 1rem; margin-bottom: 1.2rem;
 }
 .prv-layer-card {
-  background: rgba(15,23,42,0.5);
+  background: var(--bg-card);
   border-radius: 14px; padding: 1.1rem;
   border: 1px solid var(--border-subtle);
   transition: transform 0.2s, box-shadow 0.2s;
@@ -3212,7 +3212,7 @@ body.dark-theme .api-test-btn:hover {
 
 /* ── Global Audit Trail Panel ── */
 .privacy-audit-trail {
-  background: rgba(15,23,42,0.6); border: 1px solid rgba(99,102,241,0.25);
+  background: var(--bg-card); border: 1px solid rgba(99,102,241,0.25);
   border-radius: 14px; padding: 1rem; margin-bottom: 1.2rem;
 }
 .audit-trail-header {

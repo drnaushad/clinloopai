@@ -244,7 +244,7 @@
             <div class="summary-avatar">👤</div>
             <div>
               <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                <h2 id="summary-patient-name" style="font-size: 1.45rem; font-weight: 800; color: var(--text-main); margin: 0;">
+                <h2 id="summary-patient-name" style="font-size: 1.45rem; font-weight: 800; color: #fff; margin: 0;">
                   김철수 (Kim, Chul-soo)
                 </h2>
                 <span id="summary-urgency-badge" class="badge-pill badge-urgent">🚨 골든타임 임박 (24일 남음)</span>
@@ -305,7 +305,7 @@
         <div class="summary-comparison-container">
           <div class="comparison-banner">
             <div>
-              <div id="comp-title" style="font-size: 0.96rem; font-weight: 800; color: var(--text-main);">
+              <div id="comp-title" style="font-size: 0.96rem; font-weight: 800; color: #fff;">
                 ⚖️ 인과적 생존율 비교: 방치될 경우 vs 지금 조치할 경우
               </div>
               <div id="comp-sub" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">
@@ -341,7 +341,7 @@
         <!-- 4. One-Click Solution Actions -->
         <div class="summary-actions-container">
           <div style="margin-bottom: 0.8rem;">
-            <h3 id="action-sec-title" style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin: 0;">
+            <h3 id="action-sec-title" style="font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0;">
               ⚡ 지금 즉시 취할 수 있는 2가지 해결 방법 (One-Click Actions)
             </h3>
             <p id="action-sec-desc" style="font-size: 0.82rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
@@ -488,7 +488,7 @@
             </div>
             <div class="cf-metric-card">
               <span class="cf-metric-label">Guideline Authority</span>
-              <div class="cf-metric-value" id="cf-guideline-grade" style="font-size: 1.15rem; padding-top: 0.2rem; color: var(--text-main); font-weight: 700;">ASCCP 2020</div>
+              <div class="cf-metric-value" id="cf-guideline-grade" style="font-size: 1.15rem; padding-top: 0.2rem; color: #fff; font-weight: 700;">ASCCP 2020</div>
               <span class="cf-metric-sub">Grade 1A Evidence</span>
             </div>
           </div>
@@ -540,7 +540,7 @@
           <div class="cf-evidence-callout">
             <span style="font-size: 1.3rem;">📖</span>
             <div style="flex: 1;">
-              <strong style="color: var(--text-main);">Peer-Reviewed Clinical Rationale:</strong>
+              <strong style="color: #fff;">Peer-Reviewed Clinical Rationale:</strong>
               <span id="cf-evidence-text">ASCCP 2020 Guidelines show prompt colposcopic excision of HSIL prevents invasive cervical cancer progression in >95% of cases (PMID: 32243307).</span>
             </div>
           </div>
@@ -554,7 +554,7 @@
         <div class="standards-container">
           <div class="standards-hero-ribbon">
             <div>
-              <h2 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin: 0;">
+              <h2 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0;">
                 Global Health Informatics Standards Grounding
               </h2>
               <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
@@ -580,7 +580,7 @@
               <div class="omop-property-grid">
                 <div class="omop-prop-item">
                   <span class="omop-prop-label">Standard Concept Name</span>
-                  <span class="omop-prop-val" id="omop-val-name" style="font-size: 0.76rem; color: var(--text-main); font-weight: 600;">High grade squamous intraepithelial lesion of cervix on cytology</span>
+                  <span class="omop-prop-val" id="omop-val-name" style="font-size: 0.76rem; color: #fff; font-weight: 600;">High grade squamous intraepithelial lesion of cervix on cytology</span>
                 </div>
                 <div class="omop-prop-item">
                   <span class="omop-prop-label">Domain ID</span>
@@ -624,7 +624,7 @@
 
           <div class="mtl-verification-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <h3 style="font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.45rem;">
+              <h3 style="font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.45rem;">
                 <span style="color: var(--emerald-safe);">🛡️</span> Metric Temporal Logic (MTL) Safety Verification
               </h3>
               <span id="mtl-status-pill" class="badge" style="background: rgba(5, 223, 114, 0.15); border-color: rgba(5, 223, 114, 0.4); color: var(--emerald-safe);">
@@ -641,8 +641,8 @@
               </div>
             </div>
 
-            <div style="font-size: 0.76rem; color: #94a3b8; line-height: 1.45;">
-              <strong style="color: var(--text-main);">Mathematical Safety Guarantee:</strong> Unlike probabilistic LLMs that generate uncertain text, ClinLoop computes exact formal temporal invariants over time windows. If ρ(Φ, t) < 0, the system deterministically flags an active clinical hazard and initiates multi-channel outreach.
+            <div style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.45;">
+              <strong style="color: #fff;">Mathematical Safety Guarantee:</strong> Unlike probabilistic LLMs that generate uncertain text, ClinLoop computes exact formal temporal invariants over time windows. If ρ(Φ, t) < 0, the system deterministically flags an active clinical hazard and initiates multi-channel outreach.
             </div>
           </div>
         </div>
@@ -789,7 +789,7 @@
   <div class="modal-overlay" id="order-modal">
     <div class="comparison-modal" style="max-width: 520px;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+        <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-neon)" stroke-width="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
             <polyline points="22 4 12 14.01 9 11.01"/>
@@ -804,7 +804,7 @@
         <div id="modal-pt-name" style="font-weight: 700; color: var(--cyan-neon); font-size: 0.92rem;"></div>
 
         <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-top: 0.35rem;">Action to Dispatch</div>
-        <div id="modal-order-desc" style="font-size: 0.85rem; color: var(--text-main); line-height: 1.4; font-weight: 600;"></div>
+        <div id="modal-order-desc" style="font-size: 0.85rem; color: #fff; line-height: 1.4; font-weight: 600;"></div>
       </div>
 
       <p style="font-size: 0.78rem; color: var(--text-muted);">
@@ -831,7 +831,7 @@
       </div>
 
       <p style="font-size: 0.84rem; color: var(--text-muted);">
-        Evaluating current case: <strong id="emr-view-scenario-name" style="color: var(--text-main);"></strong>
+        Evaluating current case: <strong id="emr-view-scenario-name" style="color: #fff;"></strong>
       </p>
 
       <div class="comparison-grid">
@@ -904,7 +904,7 @@
         <div style="display: flex; align-items: center; gap: 0.6rem;">
           <div style="font-size: 1.6rem; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">🧬</div>
           <div>
-            <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
               BioMCP Evidence & Guideline Grounding Hub
               <span class="badge badge-live" style="font-size: 0.62rem; padding: 0.15rem 0.55rem;">MCP v1.2 Protocol</span>
             </h2>
@@ -953,7 +953,7 @@
             <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--cyan-neon); letter-spacing: 0.05em;" id="biomcp-org-tag">
               ASCCP Guidelines
             </div>
-            <h3 id="biomcp-guideline-title" style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin: 0.35rem 0; line-height: 1.35;">
+            <h3 id="biomcp-guideline-title" style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0.35rem 0; line-height: 1.35;">
               Loading guideline...
             </h3>
             <div id="biomcp-citation-text" style="font-size: 0.78rem; color: var(--text-muted); font-style: italic; line-height: 1.4;">
@@ -1023,8 +1023,8 @@
             </div>
           </div>
 
-          <div style="background: rgba(13, 22, 45, 0.6); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 8px; padding: 0.75rem 0.95rem; font-size: 0.76rem; color: #94a3b8; line-height: 1.45; margin-top: 0.4rem;">
-            <strong style="color: var(--text-main);">Neuro-Symbolic Bridge:</strong> BioMCP parses the peer-reviewed clinical guidelines and FDA safety warnings via tool execution, deterministically setting the Safety Clock deadline ($T_{	ext{crit}}$) and sigmoid parameters to prevent AI hallucinations.
+          <div style="background: rgba(13, 22, 45, 0.6); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 8px; padding: 0.75rem 0.95rem; font-size: 0.76rem; color: var(--text-muted); line-height: 1.45; margin-top: 0.4rem;">
+            <strong style="color: #fff;">Neuro-Symbolic Bridge:</strong> BioMCP parses the peer-reviewed clinical guidelines and FDA safety warnings via tool execution, deterministically setting the Safety Clock deadline ($T_{	ext{crit}}$) and sigmoid parameters to prevent AI hallucinations.
           </div>
         </div>
       </div>
@@ -1112,7 +1112,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <button id="test-local-llm-btn" onclick="testLocalLLM()" style="font-size:0.7rem;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);color:#10b981;border-radius:6px;padding:0.25rem 0.6rem;cursor:pointer;">▶ Test Local LLM Now</button>
               <span id="local-llm-status-badge" style="font-size:0.68rem;color:var(--text-dim);margin-left:0.5rem;">Checking...</span>
             </div>
-            <div id="local-llm-test-output" style="display:none;font-size:0.7rem;color:#86efac;background:rgba(0,0,0,0.3);border-radius:6px;padding:0.4rem;margin-bottom:0.5rem;font-family:var(--font-mono);white-space:pre-wrap;max-height:80px;overflow-y:auto;"></div>
+            <div id="local-llm-test-output" style="display:none;font-size:0.7rem;color:#86efac;background: var(--bg-card); border: 1px solid var(--border-subtle);border-radius:6px;padding:0.4rem;margin-bottom:0.5rem;font-family:var(--font-mono);white-space:pre-wrap;max-height:80px;overflow-y:auto;"></div>
             <div class="prv-layer-metric"><span class="metric-icon">⚡</span> <span id="prv-l1-metric">DeepSeek-R1 / MedLlama2 · Zero Cloud Egress: 100%</span></div>
           </div>
 
@@ -1298,7 +1298,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <div style="display: flex; align-items: center; gap: 0.6rem;">
           <div style="font-size: 1.5rem; background: rgba(254, 229, 0, 0.15); border: 1px solid rgba(254, 229, 0, 0.4); border-radius: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">📱</div>
           <div>
-            <h2 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
               Patient Plain-Language Empathy Outreach Simulator
               <span class="badge" style="background: rgba(254, 229, 0, 0.15); border-color: rgba(254, 229, 0, 0.4); color: #fee500; font-size: 0.62rem;">Dual-Loop Human Centric</span>
             </h2>
@@ -1327,7 +1327,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <div class="phone-chat-avatar">AJ</div>
               <div class="phone-chat-name">
                 <span>아주대학교병원 안전진료센터</span>
-                <span style="font-size: 0.65rem; background: #003087; color: #fff; padding: 0.1rem 0.35rem; border-radius: 3px;">공식 알림톡</span>
+                <span style="font-size: 0.65rem; background: #003087; color: var(--text-main); padding: 0.1rem 0.35rem; border-radius: 3px;">공식 알림톡</span>
               </div>
             </div>
 
@@ -1345,7 +1345,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
 
                   <div class="kakao-jargon-box">
                     <span style="color: #64748b; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;">EMR Diagnostic Finding</span>
-                    <div id="kakao-jargon-text" style="font-family: var(--font-mono); font-size: 0.72rem; color: #0f172a; margin-top: 0.15rem; font-weight: 600;">
+                    <div id="kakao-jargon-text" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-main); margin-top: 0.15rem; font-weight: 600;">
                       Cervical cytology HSIL
                     </div>
                   </div>
@@ -1355,7 +1355,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
                   </div>
 
                   <div style="background: #f1f5f9; padding: 0.5rem 0.7rem; border-radius: 6px; font-size: 0.72rem; color: #475569;">
-                    📍 권장 진료과: <strong id="kakao-dept-slot" style="color: #0f172a;">산부인과 (박교수)</strong>
+                    📍 권장 진료과: <strong id="kakao-dept-slot" style="color: var(--text-main);">산부인과 (박교수)</strong>
                   </div>
                 </div>
 
@@ -1376,20 +1376,20 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div style="font-size: 0.72rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700; text-transform: uppercase;">
               Dual-Loop Principle #2: Patient Empathy Architecture
             </div>
-            <h3 style="font-family: var(--font-heading); font-size: 1.05rem; color: var(--text-main); margin: 0.35rem 0;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.05rem; color: #fff; margin: 0.35rem 0;">
               Solving the 40% Patient Non-Adherence Crisis
             </h3>
-            <p style="font-size: 0.78rem; color: #94a3b8; line-height: 1.5; margin: 0;">
+            <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; margin: 0;">
               Over 40% of critical diagnostic follow-ups fail because patients are sent cold, terrifying, unintelligible medical jargon or generic automated letters. ClinLoop employs specialized medical health-literacy agents to translate dangerous findings into reassuring, clear, actionable steps with instantaneous 1-click booking.
             </p>
           </div>
 
           <div style="background: rgba(4, 8, 16, 0.6); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
-            <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-main);">HL7 FHIR CommunicationRequest Metadata</div>
+            <div style="font-size: 0.7rem; font-weight: 700; color: #fff;">HL7 FHIR CommunicationRequest Metadata</div>
             <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--cyan-neon);" id="outreach-fhir-id">
               CommunicationRequest/COMM-REQ-0062-ASCCP
             </div>
-            <div style="font-size: 0.72rem; color: #94a3b8;">
+            <div style="font-size: 0.72rem; color: var(--text-muted);">
               Status: <span id="outreach-status-tag" style="color: var(--amber-warning); font-weight: 700;">Pending Patient Action</span>
             </div>
           </div>
@@ -1430,7 +1430,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <div style="display: flex; align-items: center; gap: 0.8rem;">
           <div style="font-size: 1.8rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">🏛️</div>
           <div>
-            <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.6rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.6rem;">
               Medical Nobility & Digital Hippocratic Safety Charter
               <span class="badge badge-live" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.4); font-size: 0.65rem;">Primum Non Nocere</span>
             </h2>
@@ -1446,45 +1446,45 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.2rem;">
         
         <!-- Col 1: 5-Pillar Hippocratic Charter -->
-        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
           <div style="font-size: 0.72rem; color: #34d399; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">
             Pillar 1 • Digital Hippocratic Charter
           </div>
-          <h4 id="nob-p1-title" style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.6rem;">5대 의료 윤리 안전 장치</h4>
-          <ul id="nob-p1-list" style="font-size: 0.76rem; color: #94a3b8; line-height: 1.6; padding-left: 1.1rem; margin: 0;">
-            <li id="nob-p1-l1"><strong style="color: #e2e8f0;">의사 자율성 절대 보장:</strong> AI는 처방을 강제하지 않으며 2인 전문의 복수 승인 가동</li>
-            <li id="nob-p1-l2"><strong style="color: #e2e8f0;">동적 인지 피로 억제:</strong> 단순 경고 팝업 89.2%를 선별 억제하여 의료진 번아웃 방지</li>
-            <li id="nob-p1-l3"><strong style="color: #e2e8f0;">SDoH 건강 형평성:</strong> 의료 문해력 취약계층 환자의 진료 탈락을 우선 감지</li>
-            <li id="nob-p1-l4"><strong style="color: #e2e8f0;">제로 트러스트 원내 격리:</strong> HL7 FHIR 기반 병원 내부망 완벽 분리 운용</li>
-            <li id="nob-p1-l5"><strong style="color: #e2e8f0;">결정론적 인과 검증:</strong> 기호 의학 지식그래프 검증으로 환각 0% 보장</li>
+          <h4 id="nob-p1-title" style="font-size: 0.95rem; color: #fff; margin-bottom: 0.6rem;">5대 의료 윤리 안전 장치</h4>
+          <ul id="nob-p1-list" style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.6; padding-left: 1.1rem; margin: 0;">
+            <li id="nob-p1-l1"><strong style="color: #fff;">의사 자율성 절대 보장:</strong> AI는 처방을 강제하지 않으며 2인 전문의 복수 승인 가동</li>
+            <li id="nob-p1-l2"><strong style="color: #fff;">동적 인지 피로 억제:</strong> 단순 경고 팝업 89.2%를 선별 억제하여 의료진 번아웃 방지</li>
+            <li id="nob-p1-l3"><strong style="color: #fff;">SDoH 건강 형평성:</strong> 의료 문해력 취약계층 환자의 진료 탈락을 우선 감지</li>
+            <li id="nob-p1-l4"><strong style="color: #fff;">제로 트러스트 원내 격리:</strong> HL7 FHIR 기반 병원 내부망 완벽 분리 운용</li>
+            <li id="nob-p1-l5"><strong style="color: #fff;">결정론적 인과 검증:</strong> 기호 의학 지식그래프 검증으로 환각 0% 보장</li>
           </ul>
         </div>
 
         <!-- Col 2: cRCT Clinical Trial Protocol -->
-        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
           <div style="font-size: 0.72rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">
             Pillar 2 • Clinical Trial Design
           </div>
-          <h4 id="nob-p2-title" style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.6rem;">ClinLoop-SAFETY-1 임상시험</h4>
-          <div id="nob-p2-list" style="font-size: 0.76rem; color: #94a3b8; line-height: 1.5; display: flex; flex-direction: column; gap: 0.4rem;">
-            <div id="nob-p2-l1"><strong style="color: #e2e8f0;">시험 설계:</strong> 3개 상급종합병원(아주대, 세브란스, 분당서울대) 24개 진료과 클러스터 무작위 대조시험 (cRCT)</div>
-            <div id="nob-p2-l2"><strong style="color: #e2e8f0;">대상 규모:</strong> 12,000건 이상소견 인카운터 (검정력 90%, α = 0.05)</div>
-            <div id="nob-p2-l3"><strong style="color: #e2e8f0;">1차 평가지표:</strong> Time-to-Loop Closure(일수) 및 지연진단 위험비 (HR 0.18, p < 0.001)</div>
-            <div id="nob-p2-l4"><strong style="color: #e2e8f0;">2차 평가지표:</strong> NASA-TLX 인지부하 -64.7%, 환자 내원순응률 31.4% → 78.4%</div>
+          <h4 id="nob-p2-title" style="font-size: 0.95rem; color: #fff; margin-bottom: 0.6rem;">ClinLoop-SAFETY-1 임상시험</h4>
+          <div id="nob-p2-list" style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.5; display: flex; flex-direction: column; gap: 0.4rem;">
+            <div id="nob-p2-l1"><strong style="color: #fff;">시험 설계:</strong> 3개 상급종합병원(아주대, 세브란스, 분당서울대) 24개 진료과 클러스터 무작위 대조시험 (cRCT)</div>
+            <div id="nob-p2-l2"><strong style="color: #fff;">대상 규모:</strong> 12,000건 이상소견 인카운터 (검정력 90%, α = 0.05)</div>
+            <div id="nob-p2-l3"><strong style="color: #fff;">1차 평가지표:</strong> Time-to-Loop Closure(일수) 및 지연진단 위험비 (HR 0.18, p < 0.001)</div>
+            <div id="nob-p2-l4"><strong style="color: #fff;">2차 평가지표:</strong> NASA-TLX 인지부하 -64.7%, 환자 내원순응률 31.4% → 78.4%</div>
           </div>
         </div>
 
         <!-- Col 3: Health Economics & Value-Based Healthcare -->
-        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
           <div style="font-size: 0.72rem; color: #fbbf24; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">
             Pillar 3 • Health Economics
           </div>
-          <h4 id="nob-p3-title" style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.6rem;">QALY 증분 및 건보 재정 절감</h4>
-          <div id="nob-p3-list" style="font-size: 0.76rem; color: #94a3b8; line-height: 1.5; display: flex; flex-direction: column; gap: 0.4rem;">
-            <div id="nob-p3-l1"><strong style="color: #e2e8f0;">질보정수명 증분:</strong> 조기 악성종양 발견 환자 1인당 <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span></div>
-            <div id="nob-p3-l2"><strong style="color: #e2e8f0;">비용-효과비 (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-4,200/QALY</span> (비용 절감 + 수명 연장의 절대 우월 대안)</div>
-            <div id="nob-p3-l3"><strong style="color: #e2e8f0;">건보 급여비 절감:</strong> 조기 폐암(Stage IA) 수술 vs 말기 면역치료 시 <span style="color: #fbbf24; font-weight: 700;">인당 6,850만 원</span> 절감</div>
-            <div id="nob-p3-l4"><strong style="color: #e2e8f0;">의료소송 방어:</strong> 병원당 연간 5~10건의 지연진단 소송(건당 2.5억) 90% 이상 예방</div>
+          <h4 id="nob-p3-title" style="font-size: 0.95rem; color: #fff; margin-bottom: 0.6rem;">QALY 증분 및 건보 재정 절감</h4>
+          <div id="nob-p3-list" style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.5; display: flex; flex-direction: column; gap: 0.4rem;">
+            <div id="nob-p3-l1"><strong style="color: #fff;">질보정수명 증분:</strong> 조기 악성종양 발견 환자 1인당 <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span></div>
+            <div id="nob-p3-l2"><strong style="color: #fff;">비용-효과비 (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-4,200/QALY</span> (비용 절감 + 수명 연장의 절대 우월 대안)</div>
+            <div id="nob-p3-l3"><strong style="color: #fff;">건보 급여비 절감:</strong> 조기 폐암(Stage IA) 수술 vs 말기 면역치료 시 <span style="color: #fbbf24; font-weight: 700;">인당 6,850만 원</span> 절감</div>
+            <div id="nob-p3-l4"><strong style="color: #fff;">의료소송 방어:</strong> 병원당 연간 5~10건의 지연진단 소송(건당 2.5억) 90% 이상 예방</div>
           </div>
         </div>
 
@@ -1505,7 +1505,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 0.9rem;">
             <div style="font-size: 0.7rem; font-family: var(--font-mono); color: #38bdf8; font-weight: 800;">PHASE 0 • FOUNDATION</div>
             <div style="font-size: 0.88rem; font-weight: 700; color: #fff; margin: 0.3rem 0;">The Nobility Audit & Self-Governance</div>
-            <ul style="font-size: 0.73rem; color: #94a3b8; line-height: 1.5; padding-left: 1rem; margin: 0;">
+            <ul style="font-size: 0.73rem; color: var(--text-muted); line-height: 1.5; padding-left: 1rem; margin: 0;">
               <li><strong>Machine-Readable Invariants:</strong> Continuous tracking of hazard clock vs guideline deadlines.</li>
               <li><strong>Physician Ergonomics:</strong> Quantified cognitive load reduction and alert suppression.</li>
               <li><strong>Patient Empathy:</strong> NLP on patient replies and adherence subgroup tracking.</li>
@@ -1517,7 +1517,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.9rem;">
             <div style="font-size: 0.7rem; font-family: var(--font-mono); color: #34d399; font-weight: 800;">PHASE 1 • LOCAL PROOF</div>
             <div style="font-size: 0.88rem; font-weight: 700; color: #fff; margin: 0.3rem 0;">The Nobel Test (Pragmatic RCT)</div>
-            <ul style="font-size: 0.73rem; color: #94a3b8; line-height: 1.5; padding-left: 1rem; margin: 0;">
+            <ul style="font-size: 0.73rem; color: var(--text-muted); line-height: 1.5; padding-left: 1rem; margin: 0;">
               <li><strong>Pre-Registered Trial:</strong> Protocol pre-registered on ClinicalTrials.gov at Ajou Hospital.</li>
               <li><strong>3-Arm Isolation:</strong> (1) Standard Care, (2) AI-Physician Only, (3) Full Dual-Loop.</li>
               <li><strong>Endpoints:</strong> Time-to-action, 5-year survival delta, and Maslach Burnout Inventory.</li>
@@ -1529,7 +1529,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 8px; padding: 0.9rem;">
             <div style="font-size: 0.7rem; font-family: var(--font-mono); color: #a78bfa; font-weight: 800;">PHASE 2 • NETWORKED PROOF</div>
             <div style="font-size: 0.88rem; font-weight: 700; color: #fff; margin: 0.3rem 0;">Federated Post-Market Surveillance</div>
-            <ul style="font-size: 0.73rem; color: #94a3b8; line-height: 1.5; padding-left: 1rem; margin: 0;">
+            <ul style="font-size: 0.73rem; color: var(--text-muted); line-height: 1.5; padding-left: 1rem; margin: 0;">
               <li><strong>Federated Architecture:</strong> Encrypted gradients shared across hospitals without PHI egress.</li>
               <li><strong>Continuous Drift Monitoring:</strong> Statistical process control for calibration & distribution shift.</li>
               <li><strong>Multi-Stakeholder Governance:</strong> Independent committee of clinicians, ethicists, and patients.</li>
@@ -1540,7 +1540,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px; padding: 0.9rem;">
             <div style="font-size: 0.7rem; font-family: var(--font-mono); color: #fbbf24; font-weight: 800;">PHASE 3 • REGULATION</div>
             <div style="font-size: 0.88rem; font-weight: 700; color: #fff; margin: 0.3rem 0;">The Nobility Standard & SaMD PCCP</div>
-            <ul style="font-size: 0.73rem; color: #94a3b8; line-height: 1.5; padding-left: 1rem; margin: 0;">
+            <ul style="font-size: 0.73rem; color: var(--text-muted); line-height: 1.5; padding-left: 1rem; margin: 0;">
               <li><strong>FDA / MFDS PCCP:</strong> Predetermined Change Control Plan for adaptive continuous calibration.</li>
               <li><strong>Human Dignity Alignment:</strong> Subordination of AI to human reasoning (Pontifical Academy for Life).</li>
               <li><strong>Nobility Certification:</strong> Audited transparency, non-maleficence, and patient empathy standard.</li>
@@ -1566,7 +1566,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <span style="font-size: 0.85rem; font-weight: 800; color: #fff;">1. Hippocratic Invariant Registry (HIR)</span>
               <span class="badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-size: 0.65rem;">Radical Transparency</span>
             </div>
-            <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
+            <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.5; margin: 0.4rem 0 0 0;">
               Publicly auditable, cryptographically signed ledger that records closed loops and <strong>transparently publishes all delayed closures</strong> alongside their root-cause postmortems. It is the medical AI equivalent of open flight recorder black boxes.
             </p>
           </div>
@@ -1577,7 +1577,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <span style="font-size: 0.85rem; font-weight: 800; color: #fff;">2. Deterministic Escalation Protocol (DEP)</span>
               <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; font-size: 0.65rem;">Dead-Man's Switch</span>
             </div>
-            <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
+            <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.5; margin: 0.4rem 0 0 0;">
               A non-probabilistic hard safety net. If a D-5d loop remains unclosed at D-2d, the system autonomously triggers patient outreach and alerts the Department Chief, guaranteeing patient protection even during extreme clinical fatigue.
             </p>
           </div>
@@ -1588,7 +1588,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <span style="font-size: 0.85rem; font-weight: 800; color: #fff;">3. Patient Narrative Corpus (PNC)</span>
               <span class="badge" style="background: rgba(236, 72, 153, 0.2); color: #f472b6; font-size: 0.65rem;">Precision Empathy</span>
             </div>
-            <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
+            <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.5; margin: 0.4rem 0 0 0;">
               Uses micro-randomized trials (MRTs) and causal forests to learn which narrative structure (fear reduction, social reassurance, family impact) achieves highest adherence across specific demographic and clinical subpopulations.
             </p>
           </div>
@@ -1599,7 +1599,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <span style="font-size: 0.85rem; font-weight: 800; color: #fff;">4. ClinLoop "Medical Nobility" Prize</span>
               <span class="badge" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; font-size: 0.65rem;">Global Health Equity</span>
             </div>
-            <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
+            <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.5; margin: 0.4rem 0 0 0;">
               An annual international endowment awarded to clinicians who apply closed-loop safety to prevent diagnostic harm in resource-limited or rural hospitals, including a fully-funded on-premise ClinLoop deployment for their clinic.
             </p>
           </div>
@@ -1610,7 +1610,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <span style="font-size: 0.85rem; font-weight: 800; color: #fff;">5. The "Human Dignity" Interface Layer</span>
               <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.65rem;">Patient Sovereignty</span>
             </div>
-            <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
+            <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.5; margin: 0.4rem 0 0 0;">
               Reveals the complete causal chain to the patient upon loop closure: <em>"We caught this at Stage I. Your survival probability is 98%. Here is the exact clinical guideline protecting you. You are not a data point. You are a person whose life we are protecting."</em>
             </p>
           </div>
@@ -1621,7 +1621,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <span style="font-size: 0.85rem; font-weight: 800; color: #fff;">6. Digital Twin of the Patient's Fear</span>
               <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #a78bfa; font-size: 0.65rem;">Individualized Compassion</span>
             </div>
-            <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
+            <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.5; margin: 0.4rem 0 0 0;">
               A privacy-preserving behavioral twin running strictly on the on-premise GPU that models an individual patient's psychological barriers to care before dispatch, ensuring communication meets their emotional needs.
             </p>
           </div>
@@ -1652,7 +1652,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <div style="font-size: 1.6rem; background: rgba(5, 150, 105, 0.15); border: 1px solid rgba(5, 150, 105, 0.4); border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">⚡</div>
           <div>
-            <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
               NVIDIA RTX A4500 GPU Acceleration & On-Premise Privacy HUD
               <span class="badge badge-live" style="font-size: 0.65rem;">CUDA 13.2 ACTIVE</span>
             </h2>
@@ -1706,7 +1706,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
       <div class="modal-inner-box" style="margin-top: 1rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
           <div>
-            <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-main);">
+            <div style="font-size: 0.88rem; font-weight: 800; color: #fff;">
               🚀 1,000건 대규모 병렬 인과추론 실시간 벤치마크 (Live CUDA Tensor Benchmark)
             </div>
             <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.15rem;">
@@ -1753,7 +1753,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <div style="display: flex; align-items: center; gap: 0.6rem;">
           <div style="font-size: 1.6rem; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">🔑</div>
           <div>
-            <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;" id="modal-api-title">
+            <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 0.5rem;" id="modal-api-title">
               Hospital AI & Biomedical API Credentials
               <span class="badge" style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.4); color: #a78bfa; font-size: 0.62rem;">Zero-Leakage Security</span>
             </h2>
@@ -1793,7 +1793,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <strong style="font-size: 0.78rem; color: #fff;">🧠 Anthropic Claude 3.5</strong>
               <span class="badge" style="font-size: 0.6rem; color: #a78bfa; background: rgba(167, 139, 250, 0.2);">BEST REASONING</span>
             </div>
-            <div id="desc-engine-anthropic" style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">최고 임상 추론 & 의료 윤리 정렬</div>
+            <div id="desc-engine-anthropic" style="font-size: 0.68rem; color: var(--text-muted); margin-top: 0.25rem;">최고 임상 추론 & 의료 윤리 정렬</div>
           </div>
 
           <div class="engine-opt-card" data-engine="openai" id="engine-card-openai" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: rgba(30, 41, 59, 0.5); border-radius: 8px; padding: 0.65rem; transition: all 0.2s;">
@@ -1801,7 +1801,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <strong style="font-size: 0.78rem; color: #fff;">⚡ OpenAI Astra (o1)</strong>
               <span class="badge" style="font-size: 0.6rem; color: #38bdf8; background: rgba(56, 189, 248, 0.2);">MULTIMODAL</span>
             </div>
-            <div id="desc-engine-openai" style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">실시간 다중모달 & 심층 CoT 추론</div>
+            <div id="desc-engine-openai" style="font-size: 0.68rem; color: var(--text-muted); margin-top: 0.25rem;">실시간 다중모달 & 심층 CoT 추론</div>
           </div>
 
           <div class="engine-opt-card" data-engine="gemini" id="engine-card-gemini" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: rgba(30, 41, 59, 0.5); border-radius: 8px; padding: 0.65rem; transition: all 0.2s;">
@@ -1809,7 +1809,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <strong style="font-size: 0.78rem; color: #fff;">🌐 Google Gemini 2.5</strong>
               <span class="badge" style="font-size: 0.6rem; color: var(--emerald-safe); background: rgba(5, 150, 105, 0.2);">FAST TRANSLATION</span>
             </div>
-            <div id="desc-engine-gemini" style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">초고속 다국어 건강 문해력 요약</div>
+            <div id="desc-engine-gemini" style="font-size: 0.68rem; color: var(--text-muted); margin-top: 0.25rem;">초고속 다국어 건강 문해력 요약</div>
           </div>
 
           <div class="engine-opt-card" data-engine="local" id="engine-card-local" style="cursor: pointer; border: 1.5px solid var(--border-subtle); background: rgba(30, 41, 59, 0.5); border-radius: 8px; padding: 0.65rem; transition: all 0.2s;">
@@ -1817,7 +1817,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <strong style="font-size: 0.78rem; color: #fff;">🔒 Local RTX A4500</strong>
               <span class="badge" style="font-size: 0.6rem; color: var(--amber-warning); background: rgba(245, 158, 11, 0.2);">AIR-GAPPED</span>
             </div>
-            <div id="desc-engine-local" style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.25rem;">100% 원내 로컬 GPU 격리 (Default)</div>
+            <div id="desc-engine-local" style="font-size: 0.68rem; color: var(--text-muted); margin-top: 0.25rem;">100% 원내 로컬 GPU 격리 (Default)</div>
           </div>
 
         </div>
