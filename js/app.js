@@ -17,28 +17,6 @@ const CLINLOOP_I18N = {
     searchPlaceholder: '환자번호, 진단명, 검사 항목 검색...',
     filterAll: '전체 (5)',
     filterOpen: '위급/골든타임 (3)',
-
-    fwTitle: '실시간 PHI 방화벽 — 환자 텍스트 입력 및 비식별화 확인',
-    fwSub: '클라우드(Claude / OpenAI)로 전송되기 전 실시간 차단 시뮬레이션',
-    fwLblRaw: '🔴 원본 입력 (PHI 포함 — 클라우드 전송 차단)',
-    fwLblSafe: '✅ 비식별화 출력 (Claude / OpenAI 전송 안전)',
-    prvL1Title: '온프레미스 로컬 앙상블',
-    prvL1Desc: 'DeepSeek-R1, MedLlama2 등 최고 수준의 오픈 모델이 병원 방화벽 내부의 NVIDIA RTX A4500 GPU에서 실행됩니다. 인터넷이 필요하지 않습니다.',
-    prvL2Title: '연합 학습 (Federated Learning)',
-    prvL2Desc: '모델이 병원 데이터로 이동하며 데이터는 이동하지 않습니다. 수학적 가중치만 공유됩니다.',
-    prvL3Title: '차등 프라이버시 (Differential Privacy)',
-    prvL3Desc: '위험도에 수학적 노이즈를 추가하여 개별 환자 식별을 원천적으로 차단합니다.',
-    prvL4Title: '기밀 컴퓨팅 (TEE)',
-    prvL4Desc: '하드웨어 격리 환경(Intel SGX)에서 데이터를 처리하여 클라우드 제공자조차 데이터를 볼 수 없습니다.',
-    prvL5Title: '합성 데이터 트윈',
-    prvL5Desc: '실제 환자 데이터 0%. 임상적으로 검증된 100% 합성 데이터로만 훈련되었습니다.',
-    prvL6Title: '실시간 PHI 방화벽',
-    prvL6Desc: '모든 프롬프트에서 HIPAA 18개 항목 및 주민번호를 실시간 차단합니다.',
-    prvL7Title: '동형 암호 (Homomorphic Enc)',
-    prvL7Desc: '암호화된 텍스트 자체에서 직접 AI 추론을 실행합니다. 수학적으로 완벽한 보안입니다.',
-    prvL8Title: 'PHI 금고 + 토큰 치환',
-    prvL8Desc: '식별자는 온프레미스 금고에 보관되고 클라우드는 PT-99F7 같은 가상 토큰만 보게 됩니다.',
-
     filterDelayed: '지연위험 (1)',
     filterClosed: '종결완료 (1)',
     tabSummary: '🩺 환자 진료 요약 (Clinical Overview)',
@@ -76,35 +54,6 @@ const CLINLOOP_I18N = {
     statRuleTitle: '온톨로지 규칙',
     statSeverityTitle: '임상 중증도',
     mathToggleSummary: '🔬 AI 감쇠곡선 수학식 (Technical Math)',
-
-    nobP1Title: '5대 의료 윤리 안전 장치',
-    nobP1L1: '<strong style="color: var(--text-main);">의사 자율성 절대 보장:</strong> AI는 처방을 강제하지 않으며 2인 전문의 복수 승인 가동',
-    nobP1L2: '<strong style="color: var(--text-main);">동적 인지 피로 억제:</strong> 단순 경고 팝업 89.2%를 선별 억제하여 의료진 번아웃 방지',
-    nobP1L3: '<strong style="color: var(--text-main);">SDoH 건강 형평성:</strong> 의료 문해력 취약계층 환자의 진료 탈락을 우선 감지',
-    nobP1L4: '<strong style="color: var(--text-main);">제로 트러스트 원내 격리:</strong> HL7 FHIR 기반 병원 내부망 완벽 분리 운용',
-    nobP1L5: '<strong style="color: var(--text-main);">결정론적 인과 검증:</strong> 기호 의학 지식그래프 검증으로 환각 0% 보장',
-    
-    nobP2Title: 'ClinLoop-SAFETY-1 임상시험',
-    nobP2L1: '<strong style="color: var(--text-main);">시험 설계:</strong> 3개 상급종합병원(아주대, 세브란스, 분당서울대) 24개 진료과 클러스터 무작위 대조시험 (cRCT)',
-    nobP2L2: '<strong style="color: var(--text-main);">대상 규모:</strong> 12,000건 이상소견 인카운터 (검정력 90%, α = 0.05)',
-    nobP2L3: '<strong style="color: var(--text-main);">1차 평가지표:</strong> Time-to-Loop Closure(일수) 및 지연진단 위험비 (HR 0.18, p < 0.001)',
-    nobP2L4: '<strong style="color: var(--text-main);">2차 평가지표:</strong> NASA-TLX 인지부하 -64.7%, 환자 내원순응률 31.4% → 78.4%',
-    
-    nobP3Title: 'QALY 증분 및 건보 재정 절감',
-    nobP3L1: '<strong style="color: var(--text-main);">질보정수명 증분:</strong> 조기 악성종양 발견 환자 1인당 <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span>',
-    nobP3L2: '<strong style="color: var(--text-main);">비용-효과비 (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-4,200/QALY</span> (비용 절감 + 수명 연장의 절대 우월 대안)',
-    nobP3L3: '<strong style="color: var(--text-main);">건보 급여비 절감:</strong> 조기 폐암(Stage IA) 수술 vs 말기 면역치료 시 <span style="color: #fbbf24; font-weight: 700;">인당 6,850만 원</span> 절감',
-    nobP3L4: '<strong style="color: var(--text-main);">의료소송 방어:</strong> 병원당 연간 5~10건의 지연진단 소송(건당 2.5억) 90% 이상 예방',
-
-    gpuModalDescFull: '기존 상용 클라우드 LLM(ChatGPT, Claude 등)은 환자의 민감 진단명, 의무기록 텍스트, 환자 식별정보(PHI)를 외부 데이터센터로 전송해야 하므로 <strong>의료법 및 개인정보보호법상 중대한 유출 위험</strong>이 존재합니다.<br>반면 <strong>ClinLoop AI는 아주대학교의료원 원내 전산실의 워크스테이션 GPU(NVIDIA RTX A4500)</strong>에서 모든 추론과 Metric Temporal Logic(MTL) 검증을 100% 로컬 처리하여 <strong>단 1바이트의 환자 데이터도 외부망으로 나가지 않는 절대적 환자 프라이버시</strong>를 보장합니다.',
-    apiModalDescFull: 'ClinLoop AI의 기본 연산은 <strong>원내 완벽 격리 NVIDIA RTX A4500 온프레미스 GPU</strong>에서 100% 로컬 처리됩니다. 외부 클라우드 API를 등록하더라도, 시스템은 <strong>HIPAA Safe Harbor 18개 개인식별정보(PHI) 완전 비식별화 필터</strong>를 거쳐 환자 익명성을 절대적으로 수호합니다.',
-    
-    apiDescGemFull: '자연어 환자 설명문 생성, 다국어 의학 번역, 복합 질환 임상 요약에 활용되는 생성형 AI API 키입니다.',
-    apiDescAntFull: '최고 수준의 임상 의학 추론, 의료 윤리 안전 정렬 및 복합 다빈도 질환 퇴원 요약에 특화된 Anthropic 최상위 모델 API 키입니다.',
-    apiDescOpeFull: '심층 임상 감별진단 추론(o1) 및 실시간 음성/영상 다중모달 환자 공감 소통(Astra / GPT-4o Realtime)에 활용되는 API 키입니다.',
-    apiDescNcbFull: 'NCBI API 키를 등록하면 초당 10회 고속 검색이 활성화되어 최신 의학 가이드라인 및 논문 원문을 지연 없이 검증합니다.',
-    apiDescFhiFull: '원내 전자의무기록(EMR/EHR) 시스템(Epic, Cerner, 아주대 OCS)과 실시간 양방향 오더 연동을 위한 FHIR R4 토큰입니다.',
-
     auditTrailTitle: '설명 가능한 AI 감사 추적 (Audit Trail)',
     dockLblTheme: '테마:',
     dockLblLang: '언어:',
@@ -127,90 +76,6 @@ const CLINLOOP_I18N = {
     txtResetKeys: '키 초기화 (GPU 전용 복귀)',
     txtSaveKeys: 'API 설정 저장 & 적용 (Save Keys)',
     lblActiveEngine: '🤖 Active Clinical Foundation Model (활성 AI 추론 엔진 선택):',
-
-    mathToggleSummary: '🔬 AI 감쇠곡선 수학식 (Technical Math)',
-
-    nobP1Title: '5대 의료 윤리 안전 장치',
-    nobP1L1: '<strong style="color: var(--text-main);">의사 자율성 절대 보장:</strong> AI는 처방을 강제하지 않으며 2인 전문의 복수 승인 가동',
-    nobP1L2: '<strong style="color: var(--text-main);">동적 인지 피로 억제:</strong> 단순 경고 팝업 89.2%를 선별 억제하여 의료진 번아웃 방지',
-    nobP1L3: '<strong style="color: var(--text-main);">SDoH 건강 형평성:</strong> 의료 문해력 취약계층 환자의 진료 탈락을 우선 감지',
-    nobP1L4: '<strong style="color: var(--text-main);">제로 트러스트 원내 격리:</strong> HL7 FHIR 기반 병원 내부망 완벽 분리 운용',
-    nobP1L5: '<strong style="color: var(--text-main);">결정론적 인과 검증:</strong> 기호 의학 지식그래프 검증으로 환각 0% 보장',
-    
-    nobP2Title: 'ClinLoop-SAFETY-1 임상시험',
-    nobP2L1: '<strong style="color: var(--text-main);">시험 설계:</strong> 3개 상급종합병원(아주대, 세브란스, 분당서울대) 24개 진료과 클러스터 무작위 대조시험 (cRCT)',
-    nobP2L2: '<strong style="color: var(--text-main);">대상 규모:</strong> 12,000건 이상소견 인카운터 (검정력 90%, α = 0.05)',
-    nobP2L3: '<strong style="color: var(--text-main);">1차 평가지표:</strong> Time-to-Loop Closure(일수) 및 지연진단 위험비 (HR 0.18, p < 0.001)',
-    nobP2L4: '<strong style="color: var(--text-main);">2차 평가지표:</strong> NASA-TLX 인지부하 -64.7%, 환자 내원순응률 31.4% → 78.4%',
-    
-    nobP3Title: 'QALY 증분 및 건보 재정 절감',
-    nobP3L1: '<strong style="color: var(--text-main);">질보정수명 증분:</strong> 조기 악성종양 발견 환자 1인당 <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span>',
-    nobP3L2: '<strong style="color: var(--text-main);">비용-효과비 (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-4,200/QALY</span> (비용 절감 + 수명 연장의 절대 우월 대안)',
-    nobP3L3: '<strong style="color: var(--text-main);">건보 급여비 절감:</strong> 조기 폐암(Stage IA) 수술 vs 말기 면역치료 시 <span style="color: #fbbf24; font-weight: 700;">인당 6,850만 원</span> 절감',
-    nobP3L4: '<strong style="color: var(--text-main);">의료소송 방어:</strong> 병원당 연간 5~10건의 지연진단 소송(건당 2.5억) 90% 이상 예방',
-
-    gpuModalDescFull: '기존 상용 클라우드 LLM(ChatGPT, Claude 등)은 환자의 민감 진단명, 의무기록 텍스트, 환자 식별정보(PHI)를 외부 데이터센터로 전송해야 하므로 <strong>의료법 및 개인정보보호법상 중대한 유출 위험</strong>이 존재합니다.<br>반면 <strong>ClinLoop AI는 아주대학교의료원 원내 전산실의 워크스테이션 GPU(NVIDIA RTX A4500)</strong>에서 모든 추론과 Metric Temporal Logic(MTL) 검증을 100% 로컬 처리하여 <strong>단 1바이트의 환자 데이터도 외부망으로 나가지 않는 절대적 환자 프라이버시</strong>를 보장합니다.',
-    apiModalDescFull: 'ClinLoop AI의 기본 연산은 <strong>원내 완벽 격리 NVIDIA RTX A4500 온프레미스 GPU</strong>에서 100% 로컬 처리됩니다. 외부 클라우드 API를 등록하더라도, 시스템은 <strong>HIPAA Safe Harbor 18개 개인식별정보(PHI) 완전 비식별화 필터</strong>를 거쳐 환자 익명성을 절대적으로 수호합니다.',
-    
-    apiDescGemFull: '자연어 환자 설명문 생성, 다국어 의학 번역, 복합 질환 임상 요약에 활용되는 생성형 AI API 키입니다.',
-    apiDescAntFull: '최고 수준의 임상 의학 추론, 의료 윤리 안전 정렬 및 복합 다빈도 질환 퇴원 요약에 특화된 Anthropic 최상위 모델 API 키입니다.',
-    apiDescOpeFull: '심층 임상 감별진단 추론(o1) 및 실시간 음성/영상 다중모달 환자 공감 소통(Astra / GPT-4o Realtime)에 활용되는 API 키입니다.',
-    apiDescNcbFull: 'NCBI API 키를 등록하면 초당 10회 고속 검색이 활성화되어 최신 의학 가이드라인 및 논문 원문을 지연 없이 검증합니다.',
-    apiDescFhiFull: '원내 전자의무기록(EMR/EHR) 시스템(Epic, Cerner, 아주대 OCS)과 실시간 양방향 오더 연동을 위한 FHIR R4 토큰입니다.',
-
-    gpuModalTitle: '🔒 의료 노블리티 (Medical Nobility): 원내 완벽 격리 온프레미스 GPU 구동 (Zero-Cloud Data Egress)',
-    gpuModalDesc: '기존 상용 클라우드 LLM(ChatGPT, Claude 등)은 환자의 민감 진단명, 의무기록 텍스트, 환자 식별정보(PHI)를 외부 데이터센터로 전송하는 근본적 보안 취약점이 존재합니다.<br><br>반면 <strong>ClinLoop AI는 아주대학교의료원 원내 전산실의 워크스테이션 GPU(NVIDIA RTX A4500)</strong>에서 모든 추론을 완벽하게 자체 처리합니다.',
-    gpuLiveTitle: '🚀 1,000건 대규모 병렬 인과추론 실시간 벤치마크 (Live CUDA Tensor Benchmark)',
-    gpuLiveDesc: 'PyTorch CUDA 스트림을 가동하여 1,000명의 환자 궤적에 대한 Metric Temporal Logic 안전 불변식을 병렬 검증합니다.',
-    gpuBtnTest: '⚡ 벤치마크 즉시 가동 (Run GPU Test)',
-    gpuStatTime: '총 소요 시간',
-    gpuStatSpeed: '초당 처리 환자 수',
-    gpuStatViolations: '감지된 위반 건수',
-    gpuStatVram: '가용 VRAM',
-    gpuBtnClose: '확인 및 닫기',
-    
-    apiModalTitle2: '🛡️ 의료 노블리티 환자 프라이버시 보장 (Medical Nobility & Privacy Shield)',
-    apiModalDesc: 'ClinLoop AI의 기본 연산은 <strong>원내 완벽 격리 NVIDIA RTX A4500 온프레미스 GPU</strong>에서 100% 처리됩니다. 아래의 외부 연구용 클라우드 API를 활성화하더라도, <strong>HIPAA Safe Harbor 18개 PHI(개인건강정보) 실시간 비식별화 필터</strong>를 무조건 통과한 후 전송됩니다.',
-    apiGeminiDesc: '자연어 환자 설명문 생성, 다국어 의학 번역, 복합 질환 임상 요약에 활용되는 생성형 AI API 키입니다.',
-    apiAnthropicDesc: '최고 수준의 임상 의학 추론, 의료 윤리 안전 정렬 및 복합 다빈도 질환 퇴원 요약에 특화된 Anthropic 최상위 모델 API 키입니다.',
-    apiOpenaiDesc: '심층 임상 감별진단 추론(o1) 및 실시간 음성/영상 다중모달 환자 공감 소통(Astra / GPT-4o Realtime)에 활용되는 API 키입니다.',
-    apiNcbiDesc: 'NCBI API 키를 등록하면 초당 10회 고속 검색이 활성화되어 최신 의학 가이드라인 및 논문 원문을 지연 없이 검증합니다.',
-    apiFhirDesc: '원내 전자의무기록(EMR/EHR) 시스템(Epic, Cerner, 아주대 OCS)과 실시간 양방향 오더 연동을 위한 FHIR R4 토큰입니다.',
-
-    apiTestPing: '연결 테스트 (Ping)',
-    apiTestPubmed: 'PubMed 테스트',
-    apiTestFhir: 'FHIR 테스트',
-    apiBtnReset: '🔄 키 초기화 (Reset to GPU Only)',
-    apiBtnSave: '💾 API 설정 저장 & 적용 (Save Keys)',
-    apiBtnClose: '닫기 (Close)',
-    
-    dockTheme: '테마:',
-    dockLang: '언어:',
-    btnConfirmClose: '확인 및 닫기',
-
-    nobP1Title: '5대 의료 윤리 안전 장치',
-    nobP1List: `
-            <li><strong style="color: var(--text-main);">의사 자율성 절대 보장:</strong> AI는 처방을 강제하지 않으며 2인 전문의 복수 승인 가동</li>
-            <li><strong style="color: var(--text-main);">동적 인지 피로 억제:</strong> 단순 경고 팝업 89.2%를 선별 억제하여 의료진 번아웃 방지</li>
-            <li><strong style="color: var(--text-main);">SDoH 건강 형평성:</strong> 의료 문해력 취약계층 환자의 진료 탈락을 우선 감지</li>
-            <li><strong style="color: var(--text-main);">제로 트러스트 원내 격리:</strong> HL7 FHIR 기반 병원 내부망 완벽 분리 운용</li>
-            <li><strong style="color: var(--text-main);">결정론적 인과 검증:</strong> 기호 의학 지식그래프 검증으로 환각 0% 보장</li>
-    `,
-    nobP2Title: 'ClinLoop-SAFETY-1 임상시험',
-    nobP2List: `
-            <div><strong style="color: var(--text-main);">시험 설계:</strong> 3개 상급종합병원(아주대, 세브란스, 분당서울대) 24개 진료과 클러스터 무작위 대조시험 (cRCT)</div>
-            <div><strong style="color: var(--text-main);">대상 규모:</strong> 12,000건 이상소견 인카운터 (검정력 90%, α = 0.05)</div>
-            <div><strong style="color: var(--text-main);">1차 평가지표:</strong> Time-to-Loop Closure(일수) 및 지연진단 위험비 (HR 0.18, p < 0.001)</div>
-            <div><strong style="color: var(--text-main);">2차 평가지표:</strong> NASA-TLX 인지부하 -64.7%, 환자 내원순응률 31.4% → 78.4%</div>
-    `,
-    nobP3Title: 'QALY 증분 및 건보 재정 절감',
-    nobP3List: `
-            <div><strong style="color: var(--text-main);">질보정수명 증분:</strong> 조기 악성종양 발견 환자 1인당 <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span></div>
-            <div><strong style="color: var(--text-main);">비용-효과비 (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-4,200/QALY</span> (비용 절감 + 수명 연장의 절대 우월 대안)</div>
-            <div><strong style="color: var(--text-main);">건보 급여비 절감:</strong> 조기 폐암(Stage IA) 수술 vs 말기 면역치료 시 <span style="color: #fbbf24; font-weight: 700;">인당 6,850만 원</span> 절감</div>
-            <div><strong style="color: var(--text-main);">의료소송 방어:</strong> 병원당 연간 5~10건의 지연진단 소송(건당 2.5억) 90% 이상 예방</div>
-    `,
-
     descEngineAnthropic: '최고 임상 추론 & 의료 윤리 정렬',
     descEngineOpenai: '실시간 다중모달 & 심층 CoT 추론',
     descEngineGemini: '초고속 다국어 건강 문해력 요약',
@@ -230,28 +95,6 @@ const CLINLOOP_I18N = {
     searchPlaceholder: 'Search PT-ID, condition, rule, finding...',
     filterAll: 'All (5)',
     filterOpen: 'Critical (3)',
-
-    fwTitle: 'Live PHI Firewall — Type Patient Text & Watch It Get De-identified',
-    fwSub: 'Simulates what happens before ANY text is sent to Claude / OpenAI / Gemini',
-    fwLblRaw: '🔴 Raw Input (Contains PHI — NEVER sent to cloud)',
-    fwLblSafe: '✅ De-identified Output (Safe for Claude / OpenAI)',
-    prvL1Title: 'On-Premise Local Sovereign Ensemble',
-    prvL1Desc: 'An ensemble of world-class open models runs entirely on the NVIDIA RTX A4500 GPU inside the hospital firewall. Zero internet required.',
-    prvL2Title: 'Federated Learning',
-    prvL2Desc: 'The model travels to each hospital\'s data — data never travels to the model. Only mathematical gradients are shared.',
-    prvL3Title: 'Differential Privacy (ε-DP)',
-    prvL3Desc: 'Statistical noise is mathematically added to analytics. Provably prevents individual re-identification.',
-    prvL4Title: 'Confidential Computing (TEE)',
-    prvL4Desc: 'Hardware-isolated secure enclaves process encrypted patient data in the cloud. Even Azure/AWS cannot see the plaintext.',
-    prvL5Title: 'Synthetic Data Twins',
-    prvL5Desc: 'Trained exclusively on clinically-validated synthetic patients. Zero real PHI exists in the development pipeline.',
-    prvL6Title: 'PHI Firewall (Prompt Interceptor)',
-    prvL6Desc: 'Real-time scanner automatically detects and redacts HIPAA 18 PHI categories + Korean PIPA identifiers.',
-    prvL7Title: 'Homomorphic Encryption (HE)',
-    prvL7Desc: 'Run AI inference directly on encrypted ciphertext. Mathematically perfect privacy (2027 Roadmap).',
-    prvL8Title: 'PHI Vault + Token Substitution',
-    prvL8Desc: 'Real identifiers are swapped for cryptographic pseudonyms. Cloud LLMs only ever see tokens like PT-99F74B58.',
-
     filterDelayed: 'Delayed (1)',
     filterClosed: 'Closed (1)',
     tabSummary: '🩺 Clinical Overview (Summary)',
@@ -288,90 +131,7 @@ const CLINLOOP_I18N = {
     riskMetricLabel: 'Multi-Factor Risk',
     statRuleTitle: 'Ontology Rule',
     statSeverityTitle: 'Clinical Severity',
-    
-    mathToggleSummary: '🔬 Exponential Hazard Sigmoid Formula (Technical Math)',
-
-    nobP1Title: '5 Core Medical Safety Ethics',
-    nobP1L1: '<strong style="color: var(--text-main);">Absolute Physician Autonomy:</strong> AI never forces prescriptions; dual-physician approval engaged.',
-    nobP1L2: '<strong style="color: var(--text-main);">Cognitive Load Suppression:</strong> 89.2% of routine alerts suppressed to prevent burnout.',
-    nobP1L3: '<strong style="color: var(--text-main);">SDoH Health Equity:</strong> Prioritizes detecting follow-up failures in low health-literacy populations.',
-    nobP1L4: '<strong style="color: var(--text-main);">Zero-Trust Isolation:</strong> Complete network separation using HL7 FHIR on hospital intranet.',
-    nobP1L5: '<strong style="color: var(--text-main);">Deterministic Causal Verification:</strong> Symbolic medical knowledge graph ensures 0% hallucination.',
-    
-    nobP2Title: 'ClinLoop-SAFETY-1 Clinical Trial',
-    nobP2L1: '<strong style="color: var(--text-main);">Trial Design:</strong> 3-center cluster Randomized Controlled Trial (cRCT) across 24 departments.',
-    nobP2L2: '<strong style="color: var(--text-main);">Cohort Size:</strong> 12,000 abnormal finding encounters (Power 90%, α = 0.05).',
-    nobP2L3: '<strong style="color: var(--text-main);">Primary Endpoint:</strong> Time-to-Loop Closure & Delayed Diagnosis Hazard Ratio (HR 0.18, p < 0.001).',
-    nobP2L4: '<strong style="color: var(--text-main);">Secondary Endpoint:</strong> NASA-TLX Cognitive Load -64.7%, Patient Adherence 31.4% → 78.4%.',
-    
-    nobP3Title: 'QALY Increments & Financial Savings',
-    nobP3L1: '<strong style="color: var(--text-main);">QALY Increment:</strong> <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span> per early malignancy detection.',
-    nobP3L2: '<strong style="color: var(--text-main);">Cost-Effectiveness (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-$4,200/QALY</span> (Absolute superiority).',
-    nobP3L3: '<strong style="color: var(--text-main);">Insurance Savings:</strong> Early Lung Cancer (Stage IA) surgery saves <span style="color: #fbbf24; font-weight: 700;">$50,000</span> vs terminal immunotherapy.',
-    nobP3L4: '<strong style="color: var(--text-main);">Malpractice Defense:</strong> Prevents 90% of delayed-diagnosis lawsuits (Avg $200k/case, 5-10/yr/hospital).',
-
-    gpuModalDescFull: 'Commercial cloud LLMs (ChatGPT, Claude) possess a fundamental security vulnerability by transmitting sensitive patient diagnoses and PHI to external data centers.<br><br>Conversely, <strong>ClinLoop AI processes 100% of reasoning locally on the hospital\'s NVIDIA RTX A4500 GPU</strong>, guaranteeing absolute patient privacy without a single byte leaving the intranet.',
-    apiModalDescFull: 'ClinLoop AI computations run 100% locally on the <strong>air-gapped on-premise NVIDIA RTX A4500 GPU</strong>. Even when external cloud APIs are enabled below, all queries are sanitized through the <strong>HIPAA Safe Harbor 18-element PHI de-identification shield</strong> prior to transmission.',
-    
-    apiDescGemFull: 'Generative AI API key used for natural language patient explanations, multilingual medical translation, and complex disease clinical summaries.',
-    apiDescAntFull: 'Highest-tier Anthropic model API key specialized in elite clinical medical reasoning, medical ethics safety alignment, and complex discharge summaries.',
-    apiDescOpeFull: 'API key utilized for deep clinical differential diagnosis reasoning (o1) and real-time multimodal empathetic patient communication (Astra/GPT-4o Realtime).',
-    apiDescNcbFull: 'Enables high-speed 10 requests/sec search for real-time verification against the latest medical guidelines and PubMed literature.',
-    apiDescFhiFull: 'FHIR R4 token for real-time bidirectional clinical order integration with hospital EMR systems (Epic, Cerner, Ajou OCS).',
-
-    gpuModalTitle: '🔒 Medical Nobility: On-Premise GPU (Zero-Cloud Data Egress)',
-    gpuModalDesc: 'Unlike commercial cloud LLMs (ChatGPT, Claude) which transmit sensitive patient PHI to external data centers, <strong>ClinLoop AI operates 100% on-premise on the hospital\'s NVIDIA RTX A4500 GPU.</strong>',
-    gpuLiveTitle: '🚀 1,000-Patient Live Parallel Causal Inference Benchmark',
-    gpuLiveDesc: 'Running PyTorch CUDA streams to parallel-verify Metric Temporal Logic safety invariants across 1,000 patient trajectories.',
-    gpuBtnTest: '⚡ Run GPU Test',
-    gpuStatTime: 'Total Processing Time',
-    gpuStatSpeed: 'Patients per Second',
-    gpuStatViolations: 'Violations Detected',
-    gpuStatVram: 'Available VRAM',
-    gpuBtnClose: 'Close & Verify',
-    
-    apiModalTitle2: '🛡️ Medical Nobility & Privacy Shield',
-    apiModalDesc: 'ClinLoop AI computations run 100% locally on the <strong>air-gapped on-premise NVIDIA RTX A4500 GPU</strong>. Even when external cloud APIs are enabled below, all queries are sanitized through the <strong>HIPAA Safe Harbor 18-element PHI de-identification shield</strong> prior to transmission.',
-    apiGeminiDesc: 'Generative AI API key used for natural language patient explanations, multilingual medical translation, and complex disease clinical summaries.',
-    apiAnthropicDesc: 'Highest-tier Anthropic model API key specialized in elite clinical medical reasoning, medical ethics safety alignment, and complex discharge summaries.',
-    apiOpenaiDesc: 'API key utilized for deep clinical differential diagnosis reasoning (o1) and real-time multimodal empathetic patient communication (Astra/GPT-4o Realtime).',
-    apiNcbiDesc: 'Enables high-speed 10 requests/sec search for real-time verification against the latest medical guidelines and PubMed literature.',
-    apiFhirDesc: 'FHIR R4 token for real-time bidirectional clinical order integration with hospital EMR systems (Epic, Cerner, Ajou OCS).',
-    
-    apiTestPing: 'Ping Test',
-    apiTestPubmed: 'PubMed Test',
-    apiTestFhir: 'FHIR Test',
-    apiBtnReset: '🔄 Reset Keys (GPU Only)',
-    apiBtnSave: '💾 Save & Apply Keys',
-    apiBtnClose: 'Close',
-    
-    dockTheme: 'Theme:',
-    dockLang: 'Language:',
-    btnConfirmClose: 'Confirm & Close',
-
-    nobP1Title: '5 Core Ethical Safety Mechanisms',
-    nobP1List: `
-            <li><strong style="color: var(--text-main);">Absolute Physician Autonomy:</strong> AI does not force prescriptions and requires dual specialist approval.</li>
-            <li><strong style="color: var(--text-main);">Cognitive Load Suppression:</strong> Prevents physician burnout by dynamically filtering 89.2% of routine pop-ups.</li>
-            <li><strong style="color: var(--text-main);">SDoH Health Equity:</strong> Prioritizes detecting follow-up failures in low health-literacy populations.</li>
-            <li><strong style="color: var(--text-main);">Zero-Trust Isolation:</strong> Operates entirely on the isolated HL7 FHIR hospital intranet.</li>
-            <li><strong style="color: var(--text-main);">Deterministic Causality:</strong> Guarantees 0% hallucination via symbolic medical knowledge graphs.</li>
-    `,
-    nobP2Title: 'ClinLoop-SAFETY-1 Trial',
-    nobP2List: `
-            <div><strong style="color: var(--text-main);">Trial Design:</strong> Cluster Randomized Controlled Trial (cRCT) across 24 departments at 3 tertiary hospitals.</div>
-            <div><strong style="color: var(--text-main);">Target Size:</strong> >12,000 abnormal finding encounters (90% Power, α = 0.05).</div>
-            <div><strong style="color: var(--text-main);">Primary Endpoint:</strong> Time-to-Loop Closure and Delayed Diagnosis Hazard Ratio (HR 0.18, p < 0.001).</div>
-            <div><strong style="color: var(--text-main);">Secondary Endpoint:</strong> NASA-TLX cognitive load -64.7%, patient adherence 31.4% → 78.4%.</div>
-    `,
-    nobP3Title: 'QALY Gains & Cost Savings',
-    nobP3List: `
-            <div><strong style="color: var(--text-main);">Quality-Adjusted Life Years:</strong> <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span> per patient with early malignancy detection.</div>
-            <div><strong style="color: var(--text-main);">Cost-Effectiveness (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-$42,000/QALY</span> (Absolute dominant alternative).</div>
-            <div><strong style="color: var(--text-main);">Payer Cost Savings:</strong> Saves <span style="color: #fbbf24; font-weight: 700;">$68,500</span> per patient (Early Stage IA Surgery vs. Late Stage Immunotherapy).</div>
-            <div><strong style="color: var(--text-main);">Malpractice Defense:</strong> Prevents 90%+ of delayed diagnosis lawsuits (averaging $2.5M per case).</div>
-    `,
-
+    mathToggleSummary: '🔬 Exponential Hazard Sigmoid Formula (Math)',
     auditTrailTitle: 'Explainable AI Audit Trail',
     dockLblTheme: 'Theme:',
     dockLblLang: 'Language:',
@@ -507,6 +267,7 @@ class ClinLoopApp {
       this.selectCase(caseParam);
     } else if (this.filteredCases.length > 0) {
       this.selectCase(this.filteredCases[0].scenario_id);
+    if (!window.location.hash) { this.switchView('summary'); }
     }
 
     if (!window.location.hash || window.location.hash === '#summary') {
@@ -1316,6 +1077,49 @@ class ClinLoopApp {
     if (dockBtnKo) dockBtnKo.addEventListener('click', () => { this.setLanguage('ko'); this._playTelemetrySound(800, 'sine', 0.05); });
     if (dockBtnEn) dockBtnEn.addEventListener('click', () => { this.setLanguage('en'); this._playTelemetrySound(800, 'sine', 0.05); });
 
+    
+    // Summary View One-Click Action Buttons
+    const btnSummaryKakao = document.getElementById('summary-btn-kakao');
+    if (btnSummaryKakao) {
+      btnSummaryKakao.addEventListener('click', () => {
+        this.updateOutreachModal();
+        const m = document.getElementById('outreach-modal');
+        if (m) m.classList.add('open');
+      });
+    }
+
+    const btnSummaryOrder = document.getElementById('summary-btn-order');
+    if (btnSummaryOrder) {
+      btnSummaryOrder.addEventListener('click', () => {
+        if (!this.currentCase) return;
+        this.closedOverrides.add(this.currentCase.scenario_id);
+        this.selectCase(this.currentCase.scenario_id);
+        this._playTelemetrySound(880, 'sine', 0.15);
+      });
+    }
+
+    // Light / Dark Theme Toggle Button
+    const btnTheme = document.getElementById('btn-theme-toggle');
+    const themeText = document.getElementById('theme-btn-text');
+    if (btnTheme) {
+      const savedTheme = localStorage.getItem('clinloop_theme') || 'light';
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        if (themeText) themeText.textContent = 'Dark Mode';
+      } else {
+        document.body.classList.remove('dark-theme');
+        if (themeText) themeText.textContent = 'Light Mode';
+      }
+
+      btnTheme.addEventListener('click', () => {
+        document.body.classList.toggle('dark-theme');
+        const isDark = document.body.classList.contains('dark-theme');
+        localStorage.setItem('clinloop_theme', isDark ? 'dark' : 'light');
+        if (themeText) themeText.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+        btnTheme.innerHTML = isDark ? '🌙 <span id="theme-btn-text">Dark Mode</span>' : '☀️ <span id="theme-btn-text">Light Mode</span>';
+      });
+    }
+
     // Sound Toggle
     const soundToggle = document.getElementById('sound-toggle');
     if (soundToggle) {
@@ -1387,102 +1191,6 @@ class ClinLoopApp {
     setTxt('neg-card-badge', t.negCardBadge);
     setTxt('neg-metric1-lbl', t.negMetric1);
     setTxt('neg-metric2-lbl', t.negMetric2);
-
-    setTxt('summary-kakao-btn-label', t.summaryKakaoLbl);
-    setTxt('summary-kakao-sub', t.summaryKakaoSub);
-    setTxt('summary-order-btn-label', t.summaryOrderLbl);
-    setTxt('summary-order-sub', t.summaryOrderSub);
-    setTxt('math-toggle-summary', t.mathToggleSummary);
-    
-    // GPU Modal
-    setTxt('gpu-modal-title', t.gpuModalTitle);
-    setHtml('gpu-modal-desc', t.gpuModalDesc);
-    setTxt('gpu-live-title', t.gpuLiveTitle);
-    setTxt('gpu-live-desc', t.gpuLiveDesc);
-    setTxt('gpu-btn-test', t.gpuBtnTest);
-    setTxt('gpu-stat-time', t.gpuStatTime);
-    setTxt('gpu-stat-speed', t.gpuStatSpeed);
-    setTxt('gpu-stat-violations', t.gpuStatViolations);
-    setTxt('gpu-stat-vram', t.gpuStatVram);
-    setTxt('gpu-btn-close', t.gpuBtnClose);
-    
-    // API Modal
-    setTxt('api-modal-title-main', t.apiModalTitle);
-    setTxt('api-modal-title-2', t.apiModalTitle2);
-
-    setHtml('nob-p1-title', t.nobP1Title);
-    setHtml('nob-p1-l1', t.nobP1L1);
-    setHtml('nob-p1-l2', t.nobP1L2);
-    setHtml('nob-p1-l3', t.nobP1L3);
-    setHtml('nob-p1-l4', t.nobP1L4);
-    setHtml('nob-p1-l5', t.nobP1L5);
-    
-    setHtml('nob-p2-title', t.nobP2Title);
-    setHtml('nob-p2-l1', t.nobP2L1);
-    setHtml('nob-p2-l2', t.nobP2L2);
-    setHtml('nob-p2-l3', t.nobP2L3);
-    setHtml('nob-p2-l4', t.nobP2L4);
-    
-    setHtml('nob-p3-title', t.nobP3Title);
-    setHtml('nob-p3-l1', t.nobP3L1);
-    setHtml('nob-p3-l2', t.nobP3L2);
-    setHtml('nob-p3-l3', t.nobP3L3);
-    setHtml('nob-p3-l4', t.nobP3L4);
-
-    setHtml('gpu-modal-desc-full', t.gpuModalDescFull);
-    setHtml('api-modal-desc-full', t.apiModalDescFull);
-    
-    setHtml('api-desc-gemini-full', t.apiDescGemFull);
-    setHtml('api-desc-anthropic-full', t.apiDescAntFull);
-    setHtml('api-desc-openai-full', t.apiDescOpeFull);
-    setHtml('api-desc-ncbi-full', t.apiDescNcbFull);
-    setHtml('api-desc-fhir-full', t.apiDescFhiFull);
-
-    setHtml('api-modal-desc', t.apiModalDesc);
-    
-    setTxt('desc-engine-gemini', t.apiGeminiDesc);
-    setTxt('desc-engine-anthropic', t.apiAnthropicDesc);
-    setTxt('desc-engine-openai', t.apiOpenaiDesc);
-    setTxt('desc-engine-ncbi', t.apiNcbiDesc);
-    setTxt('desc-engine-fhir', t.apiFhirDesc);
-    
-    setTxt('txt-test-gemini', t.apiTestPing);
-    setTxt('txt-test-anthropic', t.apiTestPing);
-    setTxt('txt-test-openai', t.apiTestPing);
-    setTxt('txt-test-ncbi', t.apiTestPubmed);
-    setTxt('txt-test-fhir', t.apiTestFhir);
-    
-    setTxt('txt-btn-reset-keys', t.apiBtnReset);
-    setTxt('txt-btn-save-keys', t.apiBtnSave);
-    setTxt('btn-cancel-api-modal', t.apiBtnClose);
-    
-    setTxt('dock-lbl-theme', t.dockTheme);
-    setTxt('dock-lbl-lang', t.dockLang);
-    setTxt('btn-close-nobility-bottom', t.btnConfirmClose);
-
-
-
-    setTxt('firewall-demo-title', t.fwTitle);
-    setTxt('firewall-demo-sub', t.fwSub);
-    setTxt('firewall-input-label', t.fwLblRaw);
-    setTxt('firewall-output-label', t.fwLblSafe);
-    setTxt('prv-l1-title', t.prvL1Title);
-    setTxt('prv-l1-desc', t.prvL1Desc);
-    setTxt('prv-l2-title', t.prvL2Title);
-    setTxt('prv-l2-desc', t.prvL2Desc);
-    setTxt('prv-l3-title', t.prvL3Title);
-    setTxt('prv-l3-desc', t.prvL3Desc);
-    setTxt('prv-l4-title', t.prvL4Title);
-    setTxt('prv-l4-desc', t.prvL4Desc);
-    setTxt('prv-l5-title', t.prvL5Title);
-    setTxt('prv-l5-desc', t.prvL5Desc);
-    setTxt('prv-l6-title', t.prvL6Title);
-    setTxt('prv-l6-desc', t.prvL6Desc);
-    setTxt('prv-l7-title', t.prvL7Title);
-    setTxt('prv-l7-desc', t.prvL7Desc);
-    setTxt('prv-l8-title', t.prvL8Title);
-    setTxt('prv-l8-desc', t.prvL8Desc);
-
     setTxt('neg-card-note', t.negCardNote);
 
     setTxt('pos-card-badge', t.posCardBadge);
@@ -1563,6 +1271,7 @@ class ClinLoopApp {
     if (this.filteredCases.length > 0) {
       if (!this.currentCase || !this.filteredCases.some(c => c.scenario_id === this.currentCase.scenario_id)) {
         this.selectCase(this.filteredCases[0].scenario_id);
+    if (!window.location.hash) { this.switchView('summary'); }
         if (!window.location.hash || window.location.hash === '#summary') { this.switchView('summary'); }
       }
     }

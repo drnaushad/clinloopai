@@ -2,11 +2,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Pristine Hospital Light Theme (Default) */
-  --bg-deep: #f8fafc;
+  --bg-deep: #f1f5f9;
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
+  --bg-card-hover: #f8fafc;
   
   --border-subtle: #e2e8f0;
   --border-card: #cbd5e1;
@@ -17,7 +16,7 @@
   --text-dim: #64748b;
   
   --cyan-neon: #0284c7;
-  --cyan-glow: rgba(2, 132, 199, 0.15);
+  --cyan-glow: rgba(2, 132, 199, 0.12);
   --violet-neuro: #7c3aed;
   --violet-glow: rgba(124, 58, 237, 0.12);
   --crimson-danger: #e11d48;
@@ -36,9 +35,35 @@
   --radius-md: 8px;
   --radius-sm: 6px;
 
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.07);
+  --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.06);
   --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+body.dark-theme {
+  --bg-deep: #03060c;
+  --bg-surface: #070c18;
+  --bg-card: rgba(11, 18, 34, 0.85);
+  --bg-card-hover: rgba(18, 28, 52, 0.95);
+  
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-card: rgba(255, 255, 255, 0.12);
+  --border-cyan: rgba(0, 240, 255, 0.35);
+  
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  
+  --cyan-neon: #00f0ff;
+  --cyan-glow: rgba(0, 240, 255, 0.25);
+  --violet-neuro: #a855f7;
+  --violet-glow: rgba(168, 85, 247, 0.25);
+  --crimson-danger: #ff2a5f;
+  --crimson-glow: rgba(255, 42, 95, 0.35);
+  --amber-warning: #f59e0b;
+  --amber-glow: rgba(245, 158, 11, 0.25);
+  --emerald-safe: #05df72;
+  --emerald-glow: rgba(5, 223, 114, 0.3);
 }
 
 body.dark-theme {
@@ -2561,7 +2586,7 @@ body.dark-theme .case-card.active {
 body.dark-theme .modal-inner-box {
   background: rgba(13, 20, 38, 0.7);
   border-color: var(--border-subtle);
-  color: #f8fafc;
+  color: var(--text-main);
 }
 
 /* Dark Theme Overrides for Summary View */
@@ -2619,7 +2644,7 @@ body.dark-theme .btn-order-highlight:hover {
 }
 
 body.dark-theme .summary-action-btn .btn-main-label {
-  color: #f8fafc;
+  color: var(--text-main);
 }
 
 body.dark-theme .summary-action-btn .btn-sub-label {
@@ -2798,7 +2823,7 @@ body.dark-theme .guide-banner-desc {
 body.dark-theme .guide-step {
   background: rgba(11, 18, 34, 0.85);
   border-color: rgba(255, 255, 255, 0.15);
-  color: #f8fafc;
+  color: var(--text-main);
 }
 
 .guide-arrow {
@@ -3092,8 +3117,8 @@ body.dark-theme .api-test-btn:hover {
 }
 .privacy-hero-icon { font-size: 2.4rem; flex-shrink: 0; }
 .privacy-hero-text { flex: 1; min-width: 200px; }
-.privacy-hero-title { font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: #10b981; margin: 0 0 0.3rem; }
-.privacy-hero-sub { font-size: 1rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
+.privacy-hero-title { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 800; color: #10b981; margin: 0 0 0.3rem; }
+.privacy-hero-sub { font-size: 0.82rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
 .privacy-compliance-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
 .prv-badge { font-size: 0.7rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 20px; border: 1px solid; }
 .prv-badge-green { background: rgba(16,185,129,0.15); color: #10b981; border-color: rgba(16,185,129,0.4); }
@@ -3103,30 +3128,30 @@ body.dark-theme .api-test-btn:hover {
 
 /* Live PHI Firewall Demo */
 .privacy-firewall-demo {
-  background: var(--bg-card); border: 1px solid rgba(239,68,68,0.3);
+  background: rgba(15,23,42,0.6); border: 1px solid rgba(239,68,68,0.3);
   border-radius: 14px; padding: 1.2rem; margin-bottom: 1.2rem;
 }
 .firewall-demo-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
 .firewall-demo-icon { font-size: 1.5rem; }
-.firewall-demo-title { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; color: var(--text-main); }
-.firewall-demo-sub { font-size: 0.95rem; color: var(--text-muted); }
+.firewall-demo-title { font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+.firewall-demo-sub { font-size: 0.76rem; color: var(--text-muted); }
 .firewall-live-badge { margin-left: auto; font-size: 0.72rem; font-weight: 700; color: #10b981; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); border-radius: 20px; padding: 0.2rem 0.6rem; animation: pulse 1.8s infinite; }
 .firewall-io-grid { display: grid; grid-template-columns: 1fr 80px 1fr; gap: 0.8rem; align-items: start; }
 @media (max-width: 700px) { .firewall-io-grid { grid-template-columns: 1fr; } }
-.firewall-io-label { display: block; font-size: 0.95rem; font-weight: 700; margin-bottom: 0.4rem; }
+.firewall-io-label { display: block; font-size: 0.72rem; font-weight: 700; margin-bottom: 0.4rem; }
 .firewall-label-danger { color: #ef4444; }
 .firewall-label-safe { color: #10b981; }
-.firewall-textarea { width: 100%; box-sizing: border-box; border-radius: 10px; font-family: var(--font-mono); font-size: 0.95rem; line-height: 1.5; }
+.firewall-textarea { width: 100%; box-sizing: border-box; border-radius: 10px; font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.5; }
 .firewall-input-area { height: 120px; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.25); color: var(--text-main); padding: 0.6rem; resize: vertical; outline: none; }
 .firewall-input-area:focus { border-color: rgba(239,68,68,0.5); }
 .firewall-output-area { min-height: 120px; background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.25); color: #86efac; padding: 0.6rem; white-space: pre-wrap; word-break: break-word; }
 .firewall-input-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; }
-.phi-count { font-size: 0.9rem; color: #f59e0b; font-weight: 600; }
+.phi-count { font-size: 0.72rem; color: #f59e0b; font-weight: 600; }
 .firewall-sample-btn { font-size: 0.7rem; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; border-radius: 6px; padding: 0.2rem 0.6rem; cursor: pointer; }
 .firewall-sample-btn:hover { background: rgba(245,158,11,0.25); }
 .firewall-arrow-col { display: flex; align-items: center; justify-content: center; }
 .firewall-arrow-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
-.firewall-shield-anim { font-size: 2.5rem; transition: transform 0.3s; }
+.firewall-shield-anim { font-size: 1.8rem; transition: transform 0.3s; }
 .firewall-shield-anim.active { animation: shieldPulse 0.5s ease; }
 .firewall-arrow { font-size: 1.4rem; color: #10b981; font-weight: 900; }
 .firewall-stats { font-size: 0.68rem; color: var(--text-muted); text-align: center; }
@@ -3140,7 +3165,7 @@ body.dark-theme .api-test-btn:hover {
   gap: 1rem; margin-bottom: 1.2rem;
 }
 .prv-layer-card {
-  background: var(--bg-card);
+  background: rgba(15,23,42,0.5);
   border-radius: 14px; padding: 1.1rem;
   border: 1px solid var(--border-subtle);
   transition: transform 0.2s, box-shadow 0.2s;
@@ -3212,7 +3237,7 @@ body.dark-theme .api-test-btn:hover {
 
 /* ── Global Audit Trail Panel ── */
 .privacy-audit-trail {
-  background: var(--bg-card); border: 1px solid rgba(99,102,241,0.25);
+  background: rgba(15,23,42,0.6); border: 1px solid rgba(99,102,241,0.25);
   border-radius: 14px; padding: 1rem; margin-bottom: 1.2rem;
 }
 .audit-trail-header {
