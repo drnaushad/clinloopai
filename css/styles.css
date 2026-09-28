@@ -102,6 +102,93 @@ body.dark-theme {
   padding: 0;
 }
 
+/* ── Global Impact Bar ──────────────────────────────────────────────────────── */
+.impact-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+}
+.impact-stat-val {
+  font-family: var(--font-mono);
+  font-size: 1.0rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.impact-stat-lbl {
+  font-size: 0.56rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.impact-stat-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(0, 240, 255, 0.15);
+  flex-shrink: 0;
+}
+
+/* ── Animated Survival Chart Canvas ─────────────────────────────────────────── */
+#survival-canvas-container {
+  position: relative;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  overflow: hidden;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+#survival-chart-canvas {
+  width: 100%;
+  display: block;
+}
+.survival-chart-legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.6rem;
+  justify-content: center;
+}
+.survival-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.survival-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Case card live badge ────────────────────────────────────────────────────── */
+.case-card-overdue-badge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  background: rgba(225, 29, 72, 0.15);
+  color: var(--crimson-danger);
+  border: 1px solid rgba(225, 29, 72, 0.3);
+  border-radius: 10px;
+  padding: 0.1rem 0.45rem;
+  font-family: var(--font-mono);
+}
+.case-card-safe-badge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  background: rgba(5, 150, 105, 0.15);
+  color: var(--emerald-safe);
+  border: 1px solid rgba(5, 150, 105, 0.3);
+  border-radius: 10px;
+  padding: 0.1rem 0.45rem;
+  font-family: var(--font-mono);
+}
+
+
 html, body {
   height: 100%;
   width: 100%;

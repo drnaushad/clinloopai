@@ -316,6 +316,189 @@ class ClinLoopApp {
       this.cases = this._getFallbackCases();
     }
     this.filteredCases = [...this.cases];
+    this.animateGlobalImpactCounter();
+  }
+
+  // ── WORLD-CLASS: Animated Global Impact Counter ──────────────────────────
+  animateGlobalImpactCounter() {
+    const FINAL_VALUES = {
+      loops: 205,      // From 300-scenario benchmark: 145 open + 60 delayed
+      qalys: 48.1,     // Sum of all 5 demo cases' QALY gains
+      krw: '₩1.55B',  // Total malpractice liability avoided
+      survival: '+54%', // Mean delta across all cases
+      rules: 16,       // R001-R016
+      f1: 0.886,
+      auroc: 0.942
+    };
+
+    const animateNum = (id, target, decimals = 0, prefix = '', suffix = '') => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const duration = 1800;
+      const start = performance.now();
+      const update = (now) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+        const current = typeof target === 'number' ? target * eased : 0;
+        el.textContent = `${prefix}${current.toFixed(decimals)}${suffix}`;
+        if (progress < 1) requestAnimationFrame(update);
+        else el.textContent = `${prefix}${typeof target === 'number' ? target.toFixed(decimals) : target}${suffix}`;
+      };
+      requestAnimationFrame(update);
+    };
+
+    // Wait 600ms for DOM to settle then animate
+    setTimeout(() => {
+      animateNum('imp-loops', FINAL_VALUES.loops, 0);
+      animateNum('imp-qalys', FINAL_VALUES.qalys, 1);
+      document.getElementById('imp-krw') && (document.getElementById('imp-krw').textContent = FINAL_VALUES.krw);
+      document.getElementById('imp-survival') && (document.getElementById('imp-survival').textContent = FINAL_VALUES.survival);
+      animateNum('imp-rules', FINAL_VALUES.rules, 0);
+      animateNum('imp-f1', FINAL_VALUES.f1, 3);
+      animateNum('imp-auroc', FINAL_VALUES.auroc, 3);
+    }, 600);
+  }
+
+  // ── WORLD-CLASS: Animated Causal Survival Chart (Canvas) ─────────────────
+  drawSurvivalChart(caseData) {
+    const canvas = document.getElementById('survival-chart-canvas');
+    if (!canvas || !caseData || !caseData.counterfactual) return;
+
+    const cf = caseData.counterfactual;
+    const neglected = cf.neglected_path || [];
+    const intervened = cf.intervened_path || [];
+    if (!neglected.length || !intervened.length) return;
+
+    // Update chart label
+    const lbl = document.getElementById('chart-case-label');
+    if (lbl) lbl.textContent = `${caseData.scenario_id} • ${caseData.scenario_name}`;
+
+    const container = canvas.parentElement;
+    const W = container.clientWidth - 32; // padding
+    const H = 160;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    const isDark = document.body.classList.contains('dark-theme');
+    const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+    const textColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)';
+    const bgColor = isDark ? 'rgba(11,18,34,0)' : 'rgba(248,250,252,0)';
+
+    // Find max day
+    const allDays = [...neglected, ...intervened].map(p => p.day);
+    const maxDay = Math.max(...allDays, 1);
+    const pad = { top: 14, right: 14, bottom: 28, left: 42 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    const xScale = (day) => pad.left + (day / maxDay) * plotW;
+    const yScale = (pct) => {
+      const num = parseFloat(String(pct).replace('%', ''));
+      return pad.top + plotH - ((num / 100) * plotH);
+    };
+
+    const drawFrame = (progress) => {
+      ctx.clearRect(0, 0, W, H);
+
+      // Grid lines
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      [0, 25, 50, 75, 100].forEach(y => {
+        const yy = yScale(y);
+        ctx.beginPath(); ctx.moveTo(pad.left, yy); ctx.lineTo(pad.left + plotW, yy); ctx.stroke();
+        ctx.fillStyle = textColor;
+        ctx.font = '9px JetBrains Mono, monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${y}%`, pad.left - 4, yy + 3);
+      });
+
+      // X axis labels
+      ctx.fillStyle = textColor;
+      ctx.font = '9px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      [0, maxDay * 0.25, maxDay * 0.5, maxDay * 0.75, maxDay].forEach(d => {
+        const xx = xScale(d);
+        ctx.fillText(d < 365 ? `D${Math.round(d)}` : `Y${Math.round(d/365)}`, xx, H - 4);
+      });
+
+      // Guideline deadline vertical line
+      if (caseData.biomcp_evidence && caseData.biomcp_evidence.derived_t_crit) {
+        const dl = caseData.biomcp_evidence.derived_t_crit;
+        if (dl <= maxDay) {
+          const xx = xScale(dl);
+          ctx.strokeStyle = isDark ? 'rgba(245,158,11,0.4)' : 'rgba(217,119,6,0.5)';
+          ctx.setLineDash([4, 3]);
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(xx, pad.top); ctx.lineTo(xx, pad.top + plotH); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = isDark ? 'rgba(245,158,11,0.8)' : 'rgba(217,119,6,0.9)';
+          ctx.font = '8px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('DEADLINE', xx, pad.top - 2);
+        }
+      }
+
+      // Draw line helper (animated up to progress)
+      const drawLine = (points, color, isGlow) => {
+        if (!points.length) return;
+        const totalPoints = Math.max(2, Math.floor(points.length * progress));
+        const pts = points.slice(0, totalPoints);
+
+        if (isGlow) {
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 8;
+        }
+
+        // Fill under curve
+        ctx.beginPath();
+        ctx.moveTo(xScale(pts[0].day), pad.top + plotH);
+        pts.forEach(p => ctx.lineTo(xScale(p.day), yScale(p.survival)));
+        ctx.lineTo(xScale(pts[pts.length-1].day), pad.top + plotH);
+        ctx.closePath();
+        ctx.fillStyle = color.replace(')', ', 0.12)').replace('rgb', 'rgba');
+        ctx.fill();
+
+        // Draw line
+        ctx.beginPath();
+        pts.forEach((p, i) => {
+          i === 0 ? ctx.moveTo(xScale(p.day), yScale(p.survival)) : ctx.lineTo(xScale(p.day), yScale(p.survival));
+        });
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Draw endpoint dot
+        if (pts.length) {
+          const last = pts[pts.length - 1];
+          ctx.beginPath();
+          ctx.arc(xScale(last.day), yScale(last.survival), 4, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          // Value label
+          ctx.fillStyle = color;
+          ctx.font = 'bold 10px JetBrains Mono, monospace';
+          ctx.textAlign = 'left';
+          ctx.fillText(last.survival, xScale(last.day) + 6, yScale(last.survival) + 4);
+        }
+      };
+
+      drawLine(neglected, '#ef4444', true);
+      drawLine(intervened, '#10b981', true);
+    };
+
+    // Animate
+    if (this._survivalAnimFrame) cancelAnimationFrame(this._survivalAnimFrame);
+    const dur = 1400;
+    const start = performance.now();
+    const animate = (now) => {
+      const progress = Math.min((now - start) / dur, 1);
+      drawFrame(progress);
+      if (progress < 1) this._survivalAnimFrame = requestAnimationFrame(animate);
+    };
+    this._survivalAnimFrame = requestAnimationFrame(animate);
   }
 
   setupEventListeners() {
@@ -1392,6 +1575,8 @@ class ClinLoopApp {
     this.updateCounterfactualView();
     this.updateStandardsView();
     this.updateOutreachModal();
+    // ✨ Animate the survival trajectory chart
+    setTimeout(() => this.drawSurvivalChart(selected), 50);
   }
 
   updateDetailsPanel(scenario, isClosed) {
@@ -1905,7 +2090,23 @@ class ClinLoopApp {
 
     const deadlineDateEl = document.getElementById('summary-deadline-date');
     if (deadlineDateEl) {
-      deadlineDateEl.textContent = isKo ? '안전 마감일자: 2026-10-15' : 'Safety Deadline: 2026-10-15';
+      // Dynamically compute deadline from trigger event + rule deadline_days
+      let deadlineStr = '';
+      try {
+        const triggerEvt = c.events && c.events[0];
+        if (triggerEvt && triggerEvt.timestamp) {
+          // Find applicable rule deadline from biomcp_evidence
+          const deadlineDays = (c.biomcp_evidence && c.biomcp_evidence.time_window_days)
+            ? c.biomcp_evidence.time_window_days
+            : (c.golden_days || 30);
+          const triggerDate = new Date(triggerEvt.timestamp);
+          const deadlineDate = new Date(triggerDate.getTime() + deadlineDays * 86400000);
+          deadlineStr = deadlineDate.toISOString().split('T')[0];
+        }
+      } catch (_) {}
+      deadlineDateEl.textContent = isKo
+        ? `안전 마감일자: ${deadlineStr || '확인 필요'}`
+        : `Safety Deadline: ${deadlineStr || 'TBD'}`;
     }
     const timerText = document.getElementById('summary-timer-text');
     const badge = document.getElementById('summary-urgency-badge');

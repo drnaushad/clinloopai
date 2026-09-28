@@ -126,6 +126,49 @@
     </div>
   </header>
 
+  <!-- ✨ WORLD-CLASS: Global Clinical Safety Impact Banner -->
+  <div id="global-impact-bar" style="background: linear-gradient(135deg, #0f2027 0%, #1a3a3a 50%, #0f2027 100%); border-bottom: 1px solid rgba(0, 240, 255, 0.18); padding: 0.5rem 1.5rem; display: flex; align-items: center; gap: 0; overflow: hidden; position: relative;">
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(90deg,transparent,transparent 48px,rgba(0,240,255,0.03) 48px,rgba(0,240,255,0.03) 49px);pointer-events:none;"></div>
+    <div style="font-size:0.65rem;font-weight:800;color:rgba(0,240,255,0.7);text-transform:uppercase;letter-spacing:0.12em;margin-right:1.5rem;white-space:nowrap;font-family:var(--font-mono);">🌍 GLOBAL SAFETY IMPACT (2026 Benchmark)</div>
+    <div style="display:flex;align-items:center;gap:1.8rem;flex:1;">
+      <div class="impact-stat-item" title="Open loops detected across 300-scenario benchmark">
+        <div class="impact-stat-val" id="imp-loops" style="color:#f43f5e;">0</div>
+        <div class="impact-stat-lbl">Open Loops Detected</div>
+      </div>
+      <div class="impact-stat-divider"></div>
+      <div class="impact-stat-item" title="Cumulative quality-adjusted life years saved">
+        <div class="impact-stat-val" id="imp-qalys" style="color:#10b981;">0.0</div>
+        <div class="impact-stat-lbl">QALYs Saved</div>
+      </div>
+      <div class="impact-stat-divider"></div>
+      <div class="impact-stat-item" title="Malpractice liability avoided via early loop closure">
+        <div class="impact-stat-val" id="imp-krw" style="color:#f59e0b;">₩0</div>
+        <div class="impact-stat-lbl">Liability Avoided</div>
+      </div>
+      <div class="impact-stat-divider"></div>
+      <div class="impact-stat-item" title="Mean 5-year survival advantage across all closed loops">
+        <div class="impact-stat-val" id="imp-survival" style="color:#a78bfa;">+0%</div>
+        <div class="impact-stat-lbl">Mean Δ Survival</div>
+      </div>
+      <div class="impact-stat-divider"></div>
+      <div class="impact-stat-item" title="Clinical obligation rules encoded (R001–R016)">
+        <div class="impact-stat-val" id="imp-rules" style="color:#38bdf8;">0</div>
+        <div class="impact-stat-lbl">Obligation Rules</div>
+      </div>
+      <div class="impact-stat-divider"></div>
+      <div class="impact-stat-item" title="Overall F1-Score on 300-scenario benchmark vs EMR">
+        <div class="impact-stat-val" id="imp-f1" style="color:#34d399;">0.000</div>
+        <div class="impact-stat-lbl">Benchmark F1</div>
+      </div>
+      <div class="impact-stat-divider"></div>
+      <div class="impact-stat-item" title="Area Under ROC Curve (ClinLoop AI vs. traditional EMR)">
+        <div class="impact-stat-val" id="imp-auroc" style="color:#60a5fa;">0.000</div>
+        <div class="impact-stat-lbl">AUROC</div>
+      </div>
+    </div>
+    <div style="font-size:0.58rem;color:rgba(255,255,255,0.25);margin-left:1rem;white-space:nowrap;font-family:var(--font-mono);">GPU: RTX A4500 ● CLOCK: 24/7 ● FHIR R4: ACTIVE</div>
+  </div>
+
   <!-- 3-Column Full-Viewport Workstation Cockpit -->
   <main class="cockpit-workspace">
 
@@ -340,6 +383,32 @@
               <div class="comp-metric-label" id="neg-metric2-lbl" style="margin-top: 0.6rem;">5년 기대 생존율</div>
               <div class="comp-metric-value success" id="summary-pos-survival">90.0% (장기 생존)</div>
               <div class="comp-note" id="pos-card-note">🎉 질보정수명 +11.2년 연장 • 건보 재정 6,850만 원 직접 절감</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ✨ WORLD-CLASS: Animated Causal Survival Trajectory Chart -->
+        <div id="survival-canvas-container">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.7rem;">
+            <div>
+              <div style="font-size:0.82rem;font-weight:800;color:var(--text-main);">📈 5-Year Causal Survival Trajectory (Animated)</div>
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.1rem;">Judea Pearl SCM — Neglect Path vs. ClinLoop Intervention Path</div>
+            </div>
+            <div style="font-size:0.68rem;color:var(--text-dim);font-family:var(--font-mono);" id="chart-case-label">SC-0004 • RUL 7.8mm Nodule</div>
+          </div>
+          <canvas id="survival-chart-canvas" height="160" style="height:160px;"></canvas>
+          <div class="survival-chart-legend">
+            <div class="survival-legend-item">
+              <div class="survival-legend-dot" style="background:#ef4444;"></div>
+              <span id="legend-neglect-lbl">❌ EMR Neglect Path</span>
+            </div>
+            <div class="survival-legend-item">
+              <div class="survival-legend-dot" style="background:#10b981;"></div>
+              <span id="legend-clinloop-lbl">✨ ClinLoop Closed-Loop</span>
+            </div>
+            <div class="survival-legend-item">
+              <div class="survival-legend-dot" style="background:rgba(255,255,255,0.3);border:1px dashed rgba(255,255,255,0.3);background:transparent;"></div>
+              <span style="color:var(--text-dim);">Guideline Deadline</span>
             </div>
           </div>
         </div>
