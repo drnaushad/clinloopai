@@ -91,7 +91,7 @@ const CLINLOOP_I18N = {
     biomcpBtn: '🧬 Triple-MCP Evidence',
     emrBtn: 'Compare vs EMR',
     triageTitle: 'Clinical Triage Queue',
-    triageCount: 'N=5 Active Trajectories',
+    triageCount: '5 Cases Under Active Monitoring',
     searchPlaceholder: 'Search PT-ID, condition, rule, finding...',
     filterAll: 'All (5)',
     filterOpen: 'Critical (3)',
