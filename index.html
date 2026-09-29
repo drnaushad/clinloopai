@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClinLoop AI | Clinical Closed-Loop Safety Workstation</title>
-  <meta name="description" content="Neuro-Symbolic Closed-Loop Clinical Safety Workstation for the 2026 Medical AI Startup Competition.">
+  <title>ClinLoop AI | 진료 폐쇄루프 안전 감시 플랫폼 — Closed-Loop Clinical Safety Surveillance</title>
+  <meta name="description" content="ClinLoop AI — 신경기호 AI 기반 진료 폐쇄루프 안전 감시 플랫폼. Prevents diagnostic delays and patient harm. 2026 Medical AI Startup Competition, Ajou University.">
     <script>
     // Force immediate purge of stale service workers and caches
     if ('serviceWorker' in navigator) {
@@ -39,7 +39,7 @@
       </div>
       <div>
         <h1 class="brand-title">ClinLoop AI</h1>
-        <div class="brand-subtitle" id="i18n-brand-sub">Closed-Loop Clinical Safety Platform (On-Premise GPU)</div>
+        <div class="brand-subtitle" id="i18n-brand-sub">Closed-Loop Clinical Safety Surveillance Platform</div>
       </div>
 
       <!-- 1-CLICK PROMINENT THEME SWITCHER (Right next to ClinLoop AI Title) -->
@@ -70,7 +70,7 @@
       </button>
       <span class="badge" id="badge-hospital" style="border-color: rgba(2, 132, 199, 0.25); color: var(--text-muted); display: inline-flex; align-items: center; gap: 0.4rem;">
         <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--emerald-safe);"></span>
-        <span id="badge-hospital-text">Ajou Univ. Medical Center (ER & Inpatient Safety Net)</span>
+        <span id="badge-hospital-text">Ajou University Hospital — Safety Net: ED · Outpatient · Inpatient</span>
       </span>
     </div>
 
@@ -129,16 +129,16 @@
   <!-- ✨ WORLD-CLASS: Global Clinical Safety Impact Banner -->
   <div id="global-impact-bar" style="background: linear-gradient(135deg, #0f2027 0%, #1a3a3a 50%, #0f2027 100%); border-bottom: 1px solid rgba(0, 240, 255, 0.18); padding: 0.5rem 1.5rem; display: flex; align-items: center; gap: 0; overflow: hidden; position: relative;">
     <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(90deg,transparent,transparent 48px,rgba(0,240,255,0.03) 48px,rgba(0,240,255,0.03) 49px);pointer-events:none;"></div>
-    <div style="font-size:0.65rem;font-weight:800;color:rgba(0,240,255,0.7);text-transform:uppercase;letter-spacing:0.12em;margin-right:1.5rem;white-space:nowrap;font-family:var(--font-mono);">🌍 GLOBAL SAFETY IMPACT (2026 Benchmark)</div>
+    <div style="font-size:0.65rem;font-weight:800;color:rgba(0,240,255,0.7);text-transform:uppercase;letter-spacing:0.12em;margin-right:1.5rem;white-space:nowrap;font-family:var(--font-mono);">🌍 GLOBAL PATIENT SAFETY IMPACT (2026)</div>
     <div style="display:flex;align-items:center;gap:1.8rem;flex:1;">
       <div class="impact-stat-item" title="Open loops detected across 300-scenario benchmark">
         <div class="impact-stat-val" id="imp-loops" style="color:#f43f5e;">0</div>
-        <div class="impact-stat-lbl">Open Loops Detected</div>
+        <div class="impact-stat-lbl">Open Loops Closed</div>
       </div>
       <div class="impact-stat-divider"></div>
       <div class="impact-stat-item" title="Cumulative quality-adjusted life years saved">
         <div class="impact-stat-val" id="imp-qalys" style="color:#10b981;">0.0</div>
-        <div class="impact-stat-lbl">QALYs Saved</div>
+        <div class="impact-stat-lbl">Life-Years Gained</div>
       </div>
       <div class="impact-stat-divider"></div>
       <div class="impact-stat-item" title="Malpractice liability avoided via early loop closure">
@@ -148,17 +148,17 @@
       <div class="impact-stat-divider"></div>
       <div class="impact-stat-item" title="Mean 5-year survival advantage across all closed loops">
         <div class="impact-stat-val" id="imp-survival" style="color:#a78bfa;">+0%</div>
-        <div class="impact-stat-lbl">Mean Δ Survival</div>
+        <div class="impact-stat-lbl">Avg. Survival Gain</div>
       </div>
       <div class="impact-stat-divider"></div>
       <div class="impact-stat-item" title="Clinical obligation rules encoded (R001–R016)">
         <div class="impact-stat-val" id="imp-rules" style="color:#38bdf8;">0</div>
-        <div class="impact-stat-lbl">Obligation Rules</div>
+        <div class="impact-stat-lbl">Safety Rules</div>
       </div>
       <div class="impact-stat-divider"></div>
       <div class="impact-stat-item" title="Overall F1-Score on 300-scenario benchmark vs EMR">
         <div class="impact-stat-val" id="imp-f1" style="color:#34d399;">0.000</div>
-        <div class="impact-stat-lbl">Benchmark F1</div>
+        <div class="impact-stat-lbl">F1 Detection Score</div>
       </div>
       <div class="impact-stat-divider"></div>
       <div class="impact-stat-item" title="Area Under ROC Curve (ClinLoop AI vs. traditional EMR)">
@@ -166,7 +166,7 @@
         <div class="impact-stat-lbl">AUROC</div>
       </div>
     </div>
-    <div style="font-size:0.58rem;color:rgba(255,255,255,0.25);margin-left:1rem;white-space:nowrap;font-family:var(--font-mono);">GPU: RTX A4500 ● CLOCK: 24/7 ● FHIR R4: ACTIVE</div>
+    <div style="font-size:0.58rem;color:rgba(255,255,255,0.25);margin-left:1rem;white-space:nowrap;font-family:var(--font-mono);">ON-PREM GPU: RTX A4500 ● FHIR R4 ● 24/7</div>
   </div>
 
   <!-- 3-Column Full-Viewport Workstation Cockpit -->
@@ -184,7 +184,7 @@
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
-          <span id="triage-title">Clinical Triage Queue</span>
+          <span id="triage-title">Clinical Safety Surveillance Queue</span>
         </h2>
         <span id="triage-count" style="font-size: 0.7rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700;">N=5 Active</span>
       </div>
@@ -272,17 +272,17 @@
           <div class="guide-banner-icon">🏥</div>
           <div class="guide-banner-content">
             <div class="guide-banner-title" id="guide-title">
-              💡 ClinLoop AI는 어떤 시스템인가요? (System Purpose & Core Value)
+              💡 ClinLoop AI란 무엇인가요?
             </div>
             <div class="guide-banner-desc" id="guide-desc">
-              환자가 응급실이나 검진을 마친 뒤, EMR 컴퓨터 속에 방치되어 <strong>암 4기로 악화되는 "추적검사 누락(Closed-Loop Failure)"을 AI와 GPU로 실시간 자동 감지</strong>하고, <strong>의료진에게는 1-클릭 오더, 환자에게는 안심 알림톡</strong>을 보내 소중한 생명을 지키는 <strong>의료 안전망(Safety Net) 플랫폼</strong>입니다.
+              환자가 응급실·외래·검진을 마친 뒤, 전자의무기록(EMR) 속에 방치되어 <strong>암 4기 또는 패혈성 쇼크로 악화될 수 있는 "추적 누락"을 인공지능으로 실시간 탐지</strong>합니다. 담당 의료진에게는 <strong>원클릭 처방 오더</strong>를, 환자에게는 <strong>쉬운 말로 쓴 안심 연락문</strong>을 자동 발송하여 소중한 생명을 보호하는 <strong>병원 임상 안전망 플랫폼</strong>입니다.
             </div>
             <div class="guide-quick-instructions" id="guide-steps">
-              <span class="guide-step">① 좌측 환자 대기열에서 환자 선택</span>
+              <span class="guide-step">① 좌측 대기열에서 환자 선택</span>
               <span class="guide-arrow">➔</span>
-              <span class="guide-step">② 3대 임상 요약 및 5년 생존율(+75% 완치) 확인</span>
+              <span class="guide-step">② 임상 요약 및 5년 생존율 변화 확인</span>
               <span class="guide-arrow">➔</span>
-              <span class="guide-step">③ 하단 [1-클릭 오더] 또는 [알림톡 발송]으로 종결</span>
+              <span class="guide-step">③ [원클릭 처방] 또는 [환자 연락문 발송]으로 루프 종결</span>
             </div>
           </div>
         </div>
@@ -321,7 +321,7 @@
           <div class="summary-q-card">
             <div class="summary-q-header">
               <span class="q-icon">🔍</span>
-              <h3 class="q-title" id="q1-title">1. 무엇이 발견되었나요? (What was found?)</h3>
+              <h3 class="q-title" id="q1-title">1. 무엇이 발견되었나요?</h3>
             </div>
             <div class="q-body" id="summary-q1-finding">
               흉부 CT 촬영 결과, <strong>우상엽(RUL)에 7.8mm 크기의 침상형(Spiculated) 폐 결절</strong>이 우연히 발견되었습니다. 악성 종양(조기 폐암) 가능성이 높은 고위험 소견입니다.
@@ -331,7 +331,7 @@
           <div class="summary-q-card">
             <div class="summary-q-header">
               <span class="q-icon" style="color: var(--crimson-danger);">⚠️</span>
-              <h3 class="q-title" id="q2-title" style="color: var(--crimson-danger);">2. 왜 위험한 상황인가요? (The Unclosed Loop)</h3>
+              <h3 class="q-title" id="q2-title" style="color: var(--crimson-danger);">2. 왜 즉시 조치가 필요한가요?</h3>
             </div>
             <div class="q-body" id="summary-q2-problem">
               응급실에서 갈비뼈 골절 치료만 완료되고, <strong>폐 결절에 대한 외래 추적검사나 호흡기내과 진료 예약이 누락</strong>된 채 66일 동안 병원 컴퓨터 안에 방치되어 있었습니다.
@@ -341,7 +341,7 @@
           <div class="summary-q-card">
             <div class="summary-q-header">
               <span class="q-icon" style="color: var(--cyan-neon);">📋</span>
-              <h3 class="q-title" id="q3-title" style="color: var(--cyan-neon);">3. 권고되는 조치는 무엇인가요? (Action Plan)</h3>
+              <h3 class="q-title" id="q3-title" style="color: var(--cyan-neon);">3. 권고되는 임상 조치는 무엇인가요?</h3>
             </div>
             <div class="q-body" id="summary-q3-action">
               <strong>Fleischner Society 2017 가이드라인</strong>에 따라 90일 이내에 저선량 흉부 CT 재검 또는 조직검사를 시행하여 조기 폐암 여부를 확진해야 합니다.
@@ -355,34 +355,34 @@
           <div class="comparison-banner">
             <div>
               <div id="comp-title" style="font-size: 0.96rem; font-weight: 800; color: var(--text-main);">
-                ⚖️ 인과적 생존율 비교: 방치될 경우 vs 지금 조치할 경우
+                ⚖️ 방치 시 vs. 오늘 조치 시: 5년 생존율 인과 비교
               </div>
               <div id="comp-sub" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">
-                Judea Pearl 구조적 인과 모델(SCM) 기반 5년 기대 생존율 및 임상 가치 예측
+                Judea Pearl 구조적 인과 모델(SCM) 기반 장기 생존율 및 의료 가치 예측
               </div>
             </div>
-            <span id="summary-delta-badge" class="delta-highlight">+75.0% 생존율 압승</span>
+            <span id="summary-delta-badge" class="delta-highlight">+75.0% 생존 우위</span>
           </div>
 
           <div class="comparison-cards-row">
             <!-- Neglect Path (Red) -->
             <div class="comparison-card neg-card">
-              <div class="comp-badge comp-badge-danger" id="neg-card-badge">❌ 기존 EMR 방치 시 (Status Quo Neglect)</div>
-              <div class="comp-metric-label" id="neg-metric1-lbl">1년 내 전이성 폐암(Stage IV) 악화 위험</div>
+              <div class="comp-badge comp-badge-danger" id="neg-card-badge">❌ 현재 상태 방치 시 (기존 전자차트)</div>
+              <div class="comp-metric-label" id="neg-metric1-lbl">1년 이내 전이암(4기) 진행 위험</div>
               <div class="comp-metric-value danger" id="summary-neg-risk">42.1% (고위험 진행)</div>
               <div class="comp-metric-label" id="neg-metric2-lbl" style="margin-top: 0.6rem;">5년 기대 생존율</div>
               <div class="comp-metric-value danger" id="summary-neg-survival">15.0% (치명적 급락)</div>
-              <div class="comp-note" id="neg-card-note">🚨 치료 골든타임 상실 및 병원 의료소송 배상 위험 (약 3.5억 원)</div>
+              <div class="comp-note" id="neg-card-note">🚨 치료 적기 상실 · 의료 과실 배상 위험</div>
             </div>
 
             <!-- ClinLoop Path (Green) -->
             <div class="comparison-card pos-card">
-              <div class="comp-badge comp-badge-success" id="pos-card-badge">✨ ClinLoop 오늘 조치 시 (Closed-Loop Today)</div>
-              <div class="comp-metric-label" id="pos-metric1-lbl">조기 흉강경 절제술(VATS) 완치율</div>
+              <div class="comp-badge comp-badge-success" id="pos-card-badge">✨ ClinLoop 오늘 조치 시</div>
+              <div class="comp-metric-label" id="pos-metric1-lbl">조기 치료 완치율</div>
               <div class="comp-metric-value success" id="summary-pos-cure">94.8% (조기 완치)</div>
               <div class="comp-metric-label" id="neg-metric2-lbl" style="margin-top: 0.6rem;">5년 기대 생존율</div>
               <div class="comp-metric-value success" id="summary-pos-survival">90.0% (장기 생존)</div>
-              <div class="comp-note" id="pos-card-note">🎉 질보정수명 +11.2년 연장 • 건보 재정 6,850만 원 직접 절감</div>
+              <div class="comp-note" id="pos-card-note">🎉 질보정수명(QALY) 연장 · 건강보험 재정 절감</div>
             </div>
           </div>
         </div>
@@ -417,10 +417,10 @@
         <div class="summary-actions-container">
           <div style="margin-bottom: 0.8rem;">
             <h3 id="action-sec-title" style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin: 0;">
-              ⚡ 지금 즉시 취할 수 있는 2가지 해결 방법 (One-Click Actions)
+              ⚡ 지금 바로 할 수 있는 두 가지 조치
             </h3>
             <p id="action-sec-desc" style="font-size: 0.82rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
-              클릭 한 번으로 환자에게 안심 알림톡을 보내거나 담당 주치의에게 외래 진료를 오더하여 루프를 종결합니다.
+              버튼 하나로 환자에게 안심 연락문을 발송하거나 담당 주치의에게 추적 처방 오더를 전달하여 진료 루프를 종결합니다.
             </p>
           </div>
 
@@ -429,8 +429,8 @@
             <button class="summary-action-btn btn-outreach-highlight" id="summary-btn-kakao">
               <div class="btn-icon">📱</div>
               <div class="btn-text-block">
-                <div class="btn-main-label" id="summary-kakao-lbl">환자에게 안심 카카오톡 알림톡 발송</div>
-                <div class="btn-sub-label" id="summary-kakao-sub">환자가 겁먹지 않도록 쉬운 말로 설명하고, 1초 만에 예약 가능한 모바일 링크 전송</div>
+                <div class="btn-main-label" id="summary-kakao-lbl">환자에게 안심 연락문 발송 (카카오톡 · SMS)</div>
+                <div class="btn-sub-label" id="summary-kakao-sub">어려운 의학 용어를 쉬운 말로 바꿔 설명하고, 바로 예약 가능한 링크를 전송합니다.</div>
               </div>
               <div class="btn-arrow">▶</div>
             </button>
@@ -439,8 +439,8 @@
             <button class="summary-action-btn btn-order-highlight" id="summary-btn-order">
               <div class="btn-icon">🩺</div>
               <div class="btn-text-block">
-                <div class="btn-main-label" id="summary-order-btn-label">외래 추적검사 즉시 오더 및 루프 종결</div>
-                <div class="btn-sub-label" id="summary-order-sub">HL7 FHIR Task를 생성하여 EMR에 기록하고 안전 시계(Safety Clock)를 만족시킴</div>
+                <div class="btn-main-label" id="summary-order-btn-label">추적 처방 오더 발행 및 진료 루프 종결</div>
+                <div class="btn-sub-label" id="summary-order-sub">HL7 FHIR 형식으로 전자의무기록에 처방을 등록하고 임상 안전 시계를 해제합니다.</div>
               </div>
               <div class="btn-arrow">✓</div>
             </button>
