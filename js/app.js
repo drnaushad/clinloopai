@@ -1268,31 +1268,7 @@ class ClinLoopApp {
     if (dockBtnEn) dockBtnEn.addEventListener('click', () => { this.setLanguage('en'); this._playTelemetrySound(800, 'sine', 0.05); });
 
     
-    // Light / Dark Theme Toggle Button
-    const btnTheme = document.getElementById('btn-theme-toggle');
-    const themeText = document.getElementById('theme-btn-text');
-    if (btnTheme) {
-      const savedTheme = localStorage.getItem('clinloop_theme') || 'light';
-      if (savedTheme === 'dark') {
-        document.body.classList.add('dark-theme');
-        if (themeText) themeText.textContent = 'Dark Mode';
-      } else {
-        document.body.classList.remove('dark-theme');
-        if (themeText) themeText.textContent = 'Light Mode';
-      }
-
-      btnTheme.addEventListener('click', () => {
-        document.body.classList.toggle('dark-theme');
-        const isDark = document.body.classList.contains('dark-theme');
-        localStorage.setItem('clinloop_theme', isDark ? 'dark' : 'light');
-        if (themeText) {
-          themeText.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-        } else {
-          btnTheme.innerHTML = isDark ? '🌙 <span id="theme-btn-text">Dark Mode</span>' : '☀️ <span id="theme-btn-text">Light Mode</span>';
-        }
-      });
-    }
-
+    
     // Sound Toggle
     const soundToggle = document.getElementById('sound-toggle');
     if (soundToggle) {
