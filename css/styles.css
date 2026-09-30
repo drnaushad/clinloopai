@@ -228,6 +228,31 @@ body.dark-theme {
 }
 
 /* App Header (Full Width Cockpit Bar) */
+.prototype-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 34px;
+  padding: 0.35rem 1.5rem;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--amber-warning) 6%, var(--bg-surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--amber-warning) 24%, var(--border-subtle));
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.prototype-status-label {
+  flex: 0 0 auto;
+  color: var(--amber-warning);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.prototype-status-copy {
+  min-width: 0;
+}
+
 .app-header {
   height: 64px;
   border-bottom: 1px solid var(--border-subtle);
@@ -358,7 +383,7 @@ body.dark-theme .brand-title {
   gap: 1.1rem;
   padding: 1.1rem 1.5rem;
   min-height: 0; /* Important for flex/grid child overflow */
-  height: calc(100vh - 64px);
+  height: auto;
   width: 100%;
 }
 
@@ -379,6 +404,15 @@ body.dark-theme .brand-title {
     display: flex;
     flex-direction: column;
     height: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .prototype-status {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.5rem 1rem;
   }
 }
 
@@ -403,6 +437,36 @@ body.dark-theme .brand-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.clock-panel-header {
+  flex-wrap: wrap;
+  gap: 0.45rem 0.65rem;
+}
+
+.clock-panel-header .panel-title-sm {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.clock-panel-header .panel-title-sm span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.clock-panel-header .badge {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+@media (max-width: 480px) {
+  .clock-panel-header .panel-title-sm {
+    flex: 0 0 100%;
+  }
+
+  .clock-panel-header .badge {
+    margin-left: 0;
+  }
 }
 
 .panel-title-sm {

@@ -5,7 +5,8 @@
 
 const CLINLOOP_I18N = {
   ko: {
-    prototypeNotice: '프로토타입 시연 전용입니다. 사례와 결과는 예시이며 병원, 실시간 EHR, 메시징 서비스 또는 가이드라인 피드에 연결되어 있지 않습니다. 임상 조치는 전송되지 않습니다. 환자 진료에 사용하지 마십시오.',
+    prototypeLabel: '연구용 데모',
+    prototypeNotice: '합성 사례만 사용 · 실시간 EHR, 메시징, 가이드라인 연결 없음 · 환자 진료용 아님',
     brandSubtitle: '임상 후속조치 연구 프로토타입 · 합성 데모',
     hospitalText: '합성 사례 연구 프로토타입',
     pitchDeck: '📊 피치덱 (Pitch Deck)',
@@ -84,7 +85,8 @@ const CLINLOOP_I18N = {
     btnCancelApi: '닫기 (Close)'
   },
   en: {
-    prototypeNotice: 'Prototype demonstration only. Cases and outcomes are illustrative; this app is not connected to a hospital, live EHR, messaging service, or guideline feed. No clinical action is sent. Do not use for patient care.',
+    prototypeLabel: 'RESEARCH DEMO',
+    prototypeNotice: 'Synthetic cases only · No live EHR, messaging, or guideline connections · Not for patient care.',
     brandSubtitle: 'Clinical follow-up research prototype · synthetic demo',
     hospitalText: 'Research prototype · synthetic cases',
     pitchDeck: '📊 Pitch Deck',
@@ -1128,7 +1130,8 @@ class ClinLoopApp {
 
     setTxt('i18n-brand-sub', t.brandSubtitle);
     setTxt('badge-hospital-text', t.hospitalText);
-    setTxt('prototype-notice', t.prototypeNotice);
+    setTxt('prototype-notice-label', t.prototypeLabel);
+    setTxt('prototype-notice-copy', t.prototypeNotice);
     setTxt('pitch-deck-link', t.pitchDeck);
     setTxt('txt-nobility-btn', t.nobilityBtn);
     setTxt('txt-outreach-btn', t.outreachBtn);

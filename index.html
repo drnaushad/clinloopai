@@ -18,7 +18,7 @@
       });
     }
   </script>
-  <link rel="stylesheet" href="css/styles.css?v=20260921_apikey_v1">
+  <link rel="stylesheet" href="css/styles.css?v=20260930_clock_wrap_v1">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#00f0ff">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -174,8 +174,9 @@
     </div>
   </header>
 
-  <div id="prototype-notice" role="note" aria-label="Prototype safety notice" style="padding:0.65rem 1.25rem;background:#fff7ed;color:#7c2d12;border-bottom:1px solid #fdba74;font-size:0.85rem;font-weight:700;line-height:1.45;">
-    Prototype demonstration only. Cases and outcomes are illustrative; this app is not connected to a hospital, live EHR, messaging service, or guideline feed. No clinical action is sent. Do not use for patient care.
+  <div class="prototype-status" role="note" aria-label="Prototype safety notice">
+    <span class="prototype-status-label" id="prototype-notice-label">RESEARCH DEMO</span>
+    <span class="prototype-status-copy" id="prototype-notice-copy">Synthetic cases only · No live EHR, messaging, or guideline connections · Not for patient care.</span>
   </div>
 
   <!-- Synthetic sample counts; not patient-safety impact metrics. -->
@@ -801,7 +802,7 @@
       
       <!-- Safety Clock & Sigmoid Widget -->
       <div class="card-widget">
-        <div class="panel-header-compact">
+        <div class="panel-header-compact clock-panel-header">
           <h3 class="panel-title-sm" style="font-size: 0.95rem;">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
