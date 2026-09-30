@@ -1227,6 +1227,13 @@ class ClinLoopApp {
       if (dockBtnEn) dockBtnEn.classList.toggle('active', !isKo);
 
       localStorage.setItem('clinloop_lang', this.currentLang);
+
+    // Update Pitch Deck link based on language
+    const pitchLink = document.getElementById('pitch-deck-link');
+    if (pitchLink) {
+      pitchLink.href = this.currentLang === 'en' ? 'presentation_en.html' : 'presentation.html';
+    }
+
       this.applyI18nText(this.currentLang);
 
       this.outreachLang = this.currentLang;
