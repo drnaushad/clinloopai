@@ -77,6 +77,7 @@ class SafetyClockGauge {
   }
 
   drawDial() {
+    if (this.dialCanvas.style.display === 'none') return;
     const ctx = this.dialCtx;
     const width = this.dialCanvas.width;
     const height = this.dialCanvas.height;

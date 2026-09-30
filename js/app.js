@@ -5,63 +5,64 @@
 
 const CLINLOOP_I18N = {
   ko: {
-    brandSubtitle: '폐쇄루프 임상안전 플랫폼 (Closed-Loop Safety)',
-    hospitalText: '아주대학교의료원 (응급실 및 입원환자 세이프티넷)',
+    prototypeNotice: '프로토타입 시연 전용입니다. 사례와 결과는 예시이며 병원, 실시간 EHR, 메시징 서비스 또는 가이드라인 피드에 연결되어 있지 않습니다. 임상 조치는 전송되지 않습니다. 환자 진료에 사용하지 마십시오.',
+    brandSubtitle: '임상 후속조치 연구 프로토타입 · 합성 데모',
+    hospitalText: '합성 사례 연구 프로토타입',
     pitchDeck: '📊 피치덱 (Pitch Deck)',
     nobilityBtn: '🏛️ 의료 노블리티 & 윤리 헌장',
     outreachBtn: '📱 환자 알림톡',
     biomcpBtn: '🧬 Triple-MCP 의학 근거',
     emrBtn: '기존 EMR과 비교',
-    triageTitle: '임상 트리아지 대기열',
-    triageCount: '5건 모니터링 중',
+    triageTitle: '합성 사례 대기열',
+    triageCount: '합성 사례 5건',
     searchPlaceholder: '환자번호, 진단명, 검사 항목 검색...',
     filterAll: '전체 (5)',
-    filterOpen: '위급/골든타임 (3)',
-    filterDelayed: '지연위험 (1)',
-    filterClosed: '종결완료 (1)',
+    filterOpen: '미완료 예시 (3)',
+    filterDelayed: '지연 예시 (1)',
+    filterClosed: '종결 예시 (1)',
     tabSummary: '🩺 환자 진료 요약 (Clinical Overview)',
     tabSummaryPill: '추천 / Primary',
-    tabCounterfactual: '⚖️ 인과추론 시뮬레이터 (Counterfactual)',
+    tabCounterfactual: '⚖️ 가상 시나리오 (검증되지 않음)',
     tabStandards: '🏥 보건의료 표준 (OMOP / FHIR)',
     tabHypergraph: '🕸️ 지식 하이퍼그래프 (AI Graph)',
     tabPrivacy: '🛡️ 개인정보 보호 (Privacy Shield)',
     guideTitle: '💡 ClinLoop AI는 어떤 시스템인가요? (System Purpose & Core Value)',
-    guideDesc: '환자가 응급실이나 검진을 마친 뒤, EMR 컴퓨터 속에 방치되어 <strong>암 4기로 악화되는 "추적검사 누락(Closed-Loop Failure)"을 AI와 GPU로 실시간 자동 감지</strong>하고, <strong>의료진에게는 1-클릭 오더, 환자에게는 안심 알림톡</strong>을 보내 소중한 생명을 지키는 <strong>의료 안전망(Safety Net) 플랫폼</strong>입니다.',
-    guideSteps: '<span class="guide-step">① 좌측 환자 대기열에서 환자 선택</span> <span class="guide-arrow">➔</span> <span class="guide-step">② 3대 임상 요약 및 5년 생존율(+75% 완치) 확인</span> <span class="guide-arrow">➔</span> <span class="guide-step">③ 하단 [1-클릭 오더] 또는 [알림톡 발송]으로 종결</span>',
+    guideDesc: 'ClinLoop AI는 후속 조치가 필요한 임상 이벤트를 검토하기 위한 연구 프로토타입입니다. 이 데모는 합성 사례만 사용하며 진단, 치료 권고, 환자 연락 또는 병원 연동을 수행하지 않습니다.',
+    guideSteps: '<span class="guide-step">합성 사례 선택</span> <span class="guide-arrow">➔</span> <span class="guide-step">규칙 매칭과 근거를 검토</span> <span class="guide-arrow">➔</span> <span class="guide-step">브라우저에서만 시뮬레이션</span>',
     deadlineLabel: '추적 관리 의무 기한',
     q1Title: '1. 무엇이 발견되었나요? (What was found?)',
     q2Title: '2. 왜 위험한 상황인가요? (The Unclosed Loop)',
     q3Title: '3. 권고되는 조치는 무엇인가요? (Action Plan)',
-    compTitle: '⚖️ 인과적 생존율 비교: 방치될 경우 vs 지금 조치할 경우',
-    compSub: 'Judea Pearl 구조적 인과 모델(SCM) 기반 5년 기대 생존율 및 임상 가치 예측',
-    negCardBadge: '❌ 기존 EMR 방치 시 (Status Quo Neglect)',
-    negMetric1: '1년 내 전이암(Stage IV) 악화 위험',
-    negMetric2: '5년 기대 생존율',
-    negCardNote: '🚨 치료 골든타임 상실 및 병원 의료소송 배상 위험 (약 3.5억 원)',
-    posCardBadge: '✨ ClinLoop 오늘 조치 시 (Closed-Loop Today)',
-    posMetric1: '조기 흉강경 절제술(VATS) 완치율',
-    posMetric2: '5년 기대 생존율',
-    posCardNote: '🎉 질보정수명 +11.2년 연장 • 건보 재정 6,850만 원 직접 절감',
+    compTitle: '가상 시나리오 비교 · 임상 검증되지 않음',
+    compSub: '생존율, 치료 효과 또는 비용 편익 추정치는 검증되지 않았습니다.',
+    negCardBadge: '합성 시나리오 · 예측값 없음',
+    negMetric1: '임상 결과 추정치',
+    negMetric2: '생존율 추정치',
+    negCardNote: '환자별 위험 추정치는 제공되지 않습니다.',
+    posCardBadge: '가상 업무 흐름 상태 · 치료 효과 아님',
+    posMetric1: '치료 결과 추정치',
+    posMetric2: '생존율 추정치',
+    posCardNote: 'QALY, 생존율 또는 비용 절감 효과는 입증되지 않았습니다.',
     actionSecTitle: '⚡ 지금 즉시 취할 수 있는 2가지 해결 방법 (One-Click Actions)',
-    actionSecDesc: '클릭 한 번으로 환자에게 안심 알림톡을 보내거나 담당 주치의에게 외래 진료를 오더하여 루프를 종결합니다.',
-    summaryKakaoLbl: '환자에게 안심 카카오톡 알림톡 발송',
-    summaryKakaoSub: '환자가 겁먹지 않도록 쉬운 말로 설명하고, 1초 만에 예약 가능한 모바일 링크 전송',
-    summaryOrderLblDefault: '외래 추적검사 즉시 오더 및 루프 종결',
-    summaryOrderLblClosed: '✓ 외래 추적검사 오더 확정 완료 (EMR 전송됨)',
-    summaryOrderSub: 'HL7 FHIR Task를 생성하여 EMR에 기록하고 안전 시계(Safety Clock)를 만족시킴',
-    clockTelemetryTitle: '안전 시계 텔레메트리 (Safety Clock)',
-    riskMetricLabel: '다인자 위험도',
+    actionSecDesc: '아래 컨트롤은 브라우저 내 시뮬레이션입니다. 환자 메시지나 임상 오더는 전송되지 않습니다.',
+    summaryKakaoLbl: '환자 안내문 시뮬레이션 열기',
+    summaryKakaoSub: '합성 사례 기반 예시만 표시합니다. 실제 환자에게 보내지 마십시오.',
+    summaryOrderLblDefault: '브라우저 로컬 종결 시뮬레이션 (전송 안 됨)',
+    summaryOrderLblClosed: '데모 시뮬레이션: 브라우저에서만 종결 표시 (전송 안 됨)',
+    summaryOrderSub: '이 프로토타입은 오더나 환자 메시지를 전송하지 않습니다.',
+    clockTelemetryTitle: '시연용 시간 예시 (임상 감시 아님)',
+    riskMetricLabel: '시연용 점수 · 임상 검증 안 됨',
     statRuleTitle: '온톨로지 규칙',
-    statSeverityTitle: '임상 중증도',
+    statSeverityTitle: '합성 사례 중증도',
     mathToggleSummary: '🔬 AI 감쇠곡선 수학식 (Technical Math)',
     auditTrailTitle: '설명 가능한 AI 감사 추적 (Audit Trail)',
     dockLblTheme: '테마:',
     dockLblLang: '언어:',
     apiKeysBtn: '🔑 API 설정',
-    apiModalTitle: '원내 의료 AI & 바이오메디컬 API 설정',
-    apiModalSub: '외부 생성형 AI 모델, PubMed/NCBI 연구 API, 원내 EMR FHIR 연동 토큰을 안전하게 구성합니다.',
-    apiNobilityTitle: '🛡️ 의료 노블리티 환자 프라이버시 보장 (Medical Nobility & Privacy Shield)',
-    apiNobilityDesc: 'ClinLoop AI의 기본 연산은 <strong>원내 완벽 격리 NVIDIA RTX A4500 온프레미스 GPU</strong>에서 100% 로컬 처리됩니다. 외부 클라우드 API를 등록하더라도, 시스템은 <strong>HIPAA Safe Harbor 18개 개인식별정보(PHI) 완전 비식별화 필터</strong>를 거쳐 환자 익명성을 절대적으로 수호합니다.',
+    apiModalTitle: '프로토타입 API 설정 (연결 안 됨)',
+    apiModalSub: 'API 자격 증명 입력 기능이 비활성화되어 있습니다. 실제 API 키나 환자 정보를 입력하지 마십시오.',
+    apiNobilityTitle: '⚠️ 연결 및 자격 증명 입력 비활성화',
+    apiNobilityDesc: '이 프로토타입은 외부 AI, PubMed 또는 병원 EHR에 연결되지 않습니다. API 키는 저장되거나 전송되지 않으며, 임상 데이터나 환자 정보를 입력하지 마십시오.',
     lblGemini: 'Google Gemini / 임상 파운데이션 모델 API',
     descGemini: '자연어 환자 설명문 생성, 다국어 의학 번역, 복합 질환 임상 요약에 활용되는 생성형 AI API 키입니다.',
     lblAnthropic: 'Anthropic Claude (클로드 3.5 소넷 / 오퍼스)',
@@ -83,63 +84,64 @@ const CLINLOOP_I18N = {
     btnCancelApi: '닫기 (Close)'
   },
   en: {
-    brandSubtitle: 'Closed-Loop Clinical Safety Platform (On-Premise GPU)',
-    hospitalText: 'Ajou Univ. Medical Center (ER & Inpatient Safety Net)',
+    prototypeNotice: 'Prototype demonstration only. Cases and outcomes are illustrative; this app is not connected to a hospital, live EHR, messaging service, or guideline feed. No clinical action is sent. Do not use for patient care.',
+    brandSubtitle: 'Clinical follow-up research prototype · synthetic demo',
+    hospitalText: 'Research prototype · synthetic cases',
     pitchDeck: '📊 Pitch Deck',
     nobilityBtn: '🏛️ Medical Nobility & Ethics',
     outreachBtn: '📱 Patient Outreach',
     biomcpBtn: '🧬 Triple-MCP Evidence',
     emrBtn: 'Compare vs EMR',
     triageTitle: 'Clinical Triage Queue',
-    triageCount: '5 Cases Under Active Monitoring',
+    triageCount: '5 synthetic examples',
     searchPlaceholder: 'Search PT-ID, condition, rule, finding...',
     filterAll: 'All (5)',
-    filterOpen: 'Critical (3)',
-    filterDelayed: 'Delayed (1)',
-    filterClosed: 'Closed (1)',
+    filterOpen: 'Open examples (3)',
+    filterDelayed: 'Delayed example (1)',
+    filterClosed: 'Closed example (1)',
     tabSummary: '🩺 Clinical Overview (Summary)',
     tabSummaryPill: 'Primary / Recommended',
-    tabCounterfactual: '⚖️ Causal Simulator (Counterfactual)',
+    tabCounterfactual: '⚖️ Illustrative scenarios (not validated)',
     tabStandards: '🏥 Health Standards (OMOP / FHIR)',
     tabHypergraph: '🕸️ Knowledge Hypergraph (AI Graph)',
     tabPrivacy: '🛡️ Privacy Shield',
     guideTitle: '💡 What is ClinLoop AI? (System Purpose & Core Value)',
-    guideDesc: 'A hospital-grade <strong>closed-loop clinical safety platform</strong> powered by local GPU. It autonomously catches neglected abnormal findings (e.g., incidental lung nodules, malignant cytology, critical lab values) before they progress to fatal Stage IV diseases, safeguarding patient lives via <strong>1-click physician orders and reassuring mobile outreach</strong>.',
-    guideSteps: '<span class="guide-step">① Select patient from left triage worklist</span> <span class="guide-arrow">➔</span> <span class="guide-step">② Review 3 clinical questions & 5-year survival delta (+75%)</span> <span class="guide-arrow">➔</span> <span class="guide-step">③ Click [1-Click Order] or [Send Mobile Notification] to close loop</span>',
+    guideDesc: 'ClinLoop AI is a research prototype for reviewing clinical follow-up workflows. This demo uses synthetic cases only; it does not diagnose, recommend treatment, contact patients, or connect to a hospital.',
+    guideSteps: '<span class="guide-step">Select a synthetic case</span> <span class="guide-arrow">➔</span> <span class="guide-step">Review the rule match and evidence</span> <span class="guide-arrow">➔</span> <span class="guide-step">Run a browser-only simulation</span>',
     deadlineLabel: 'Mandatory Tracking Deadline',
     q1Title: '1. What was clinically detected? (Diagnostic Finding)',
     q2Title: '2. Why is this dangerous? (The Unclosed Loop Failure)',
     q3Title: '3. What is the recommended action? (Clinical Guideline)',
-    compTitle: '⚖️ Causal Survival Impact: Neglect vs. ClinLoop Intervention',
-    compSub: '5-Year Longitudinal Survival & Clinical Value predicted via Judea Pearl Structural Causal Models (SCM)',
-    negCardBadge: '❌ Traditional EMR Neglect (Status Quo)',
-    negMetric1: '1-Year Progression to Stage IV Cancer',
-    negMetric2: '5-Year Expected Overall Survival',
-    negCardNote: '🚨 Golden window lost; hospital medical malpractice risk (~350M KRW)',
-    posCardBadge: '✨ ClinLoop Early Intervention (Closed-Loop Today)',
-    posMetric1: 'Early Curative Resection / Treatment Rate',
-    posMetric2: '5-Year Expected Overall Survival',
-    posCardNote: '🎉 +11.2 Quality-Adjusted Life Years • Direct Insurance & Patient Cost Savings',
+    compTitle: 'Illustrative scenario comparison · not clinically validated',
+    compSub: 'No causal survival, treatment, or cost-benefit estimates have been validated.',
+    negCardBadge: 'Synthetic scenario · no forecast',
+    negMetric1: 'Clinical outcome estimate',
+    negMetric2: 'Survival estimate',
+    negCardNote: 'No patient-level risk estimate is available.',
+    posCardBadge: 'Hypothetical workflow state · not a treatment effect',
+    posMetric1: 'Treatment outcome estimate',
+    posMetric2: 'Survival estimate',
+    posCardNote: 'No QALY, survival, or cost savings have been established.',
     actionSecTitle: '⚡ Two Immediate One-Click Solutions to Close the Loop',
-    actionSecDesc: 'Dispatch a reassuring plain-language mobile message to the patient or place a 1-click clinical follow-up order.',
-    summaryKakaoLbl: 'Send Reassuring Mobile Patient Notification',
-    summaryKakaoSub: 'Translates medical jargon into plain empathy language with an instant 1-click booking link',
-    summaryOrderLblDefault: 'Place Follow-up Clinical Order & Close Loop',
-    summaryOrderLblClosed: '✓ Clinical Order Dispatched & Closed (HL7 FHIR Sent)',
-    summaryOrderSub: 'Dispatches HL7 FHIR Task to hospital EMR and satisfies safety invariant',
-    clockTelemetryTitle: 'Safety Clock Telemetry',
-    riskMetricLabel: 'Multi-Factor Risk',
+    actionSecDesc: 'These controls run browser-only simulations. No patient message or clinical order is sent.',
+    summaryKakaoLbl: 'Preview a sample patient message',
+    summaryKakaoSub: 'Illustrative synthetic-case text only. Do not send to a real patient.',
+    summaryOrderLblDefault: 'Simulate local resolution (not sent)',
+    summaryOrderLblClosed: 'Demo simulation: marked resolved in this browser only (not sent)',
+    summaryOrderSub: 'This prototype does not send orders or patient messages.',
+    clockTelemetryTitle: 'Demo timing preview · not live monitoring',
+    riskMetricLabel: 'Demo score · not clinically validated',
     statRuleTitle: 'Ontology Rule',
-    statSeverityTitle: 'Clinical Severity',
+    statSeverityTitle: 'Synthetic case severity',
     mathToggleSummary: '🔬 Exponential Hazard Sigmoid Formula (Math)',
     auditTrailTitle: 'Explainable AI Audit Trail',
     dockLblTheme: 'Theme:',
     dockLblLang: 'Language:',
     apiKeysBtn: '🔑 API Keys',
-    apiModalTitle: 'Hospital AI & Biomedical API Credentials',
-    apiModalSub: 'Configure external biomedical LLM fallback, NCBI/PubMed research access, and Hospital EHR FHIR tokens.',
-    apiNobilityTitle: '🛡️ Medical Nobility & Zero-Leakage Privacy Guarantee',
-    apiNobilityDesc: 'ClinLoop AI computations run 100% locally on the <strong>air-gapped on-premise NVIDIA RTX A4500 GPU</strong>. Even when external cloud APIs are enabled, all queries are sanitized through the <strong>HIPAA Safe Harbor 18-element PHI de-identification shield</strong> prior to transmission.',
+    apiModalTitle: 'Prototype API settings (disconnected)',
+    apiModalSub: 'API credential entry is disabled. Do not enter real API keys or patient information.',
+    apiNobilityTitle: '⚠️ Connections and credential entry disabled',
+    apiNobilityDesc: 'This prototype is not connected to external AI, PubMed, or a hospital EHR. API keys are not stored or transmitted. Do not enter clinical or patient information.',
     lblGemini: 'Google Gemini / Medical Foundation Model API',
     descGemini: 'Generative clinical LLM API key for plain-language patient explanations, multilingual translation, and complex discharge summaries.',
     lblAnthropic: 'Anthropic Claude (Claude 3.5 Sonnet / Opus)',
@@ -319,48 +321,25 @@ class ClinLoopApp {
     this.animateGlobalImpactCounter();
   }
 
-  // ── WORLD-CLASS: Animated Global Impact Counter ──────────────────────────
+  // ── Synthetic sample counts; these are not clinical impact metrics. ───────
   animateGlobalImpactCounter() {
-    const FINAL_VALUES = {
-      loops: 205,      // From 300-scenario benchmark: 145 open + 60 delayed
-      qalys: 48.1,     // Sum of all 5 demo cases' QALY gains
-      krw: '₩1.55B',  // Total malpractice liability avoided
-      survival: '+54%', // Mean delta across all cases
-      rules: 16,       // R001-R016
-      f1: 0.886,
-      auroc: 0.942
+    const openExamples = this.cases.filter(item => item.ground_truth_status !== 'closed').length;
+    const ruleIds = new Set(this.cases.map(item => item.applicable_rule_id).filter(Boolean));
+    const counts = {
+      'imp-loops': this.cases.length,
+      'imp-qalys': openExamples,
+      'imp-rules': ruleIds.size
     };
-
-    const animateNum = (id, target, decimals = 0, prefix = '', suffix = '') => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const duration = 1800;
-      const start = performance.now();
-      const update = (now) => {
-        const progress = Math.min((now - start) / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-        const current = typeof target === 'number' ? target * eased : 0;
-        el.textContent = `${prefix}${current.toFixed(decimals)}${suffix}`;
-        if (progress < 1) requestAnimationFrame(update);
-        else el.textContent = `${prefix}${typeof target === 'number' ? target.toFixed(decimals) : target}${suffix}`;
-      };
-      requestAnimationFrame(update);
-    };
-
-    // Wait 600ms for DOM to settle then animate
-    setTimeout(() => {
-      animateNum('imp-loops', FINAL_VALUES.loops, 0);
-      animateNum('imp-qalys', FINAL_VALUES.qalys, 1);
-      document.getElementById('imp-krw') && (document.getElementById('imp-krw').textContent = FINAL_VALUES.krw);
-      document.getElementById('imp-survival') && (document.getElementById('imp-survival').textContent = FINAL_VALUES.survival);
-      animateNum('imp-rules', FINAL_VALUES.rules, 0);
-      animateNum('imp-f1', FINAL_VALUES.f1, 3);
-      animateNum('imp-auroc', FINAL_VALUES.auroc, 3);
-    }, 600);
+    for (const [id, count] of Object.entries(counts)) {
+      const element = document.getElementById(id);
+      if (element) element.textContent = String(count);
+    }
   }
 
   // ── WORLD-CLASS: Animated Causal Survival Chart (Canvas) ─────────────────
   drawSurvivalChart(caseData) {
+    const chartContainer = document.getElementById('survival-canvas-container');
+    if (chartContainer) chartContainer.style.display = 'none';
     const canvas = document.getElementById('survival-chart-canvas');
     if (!canvas || !caseData || !caseData.counterfactual) return;
 
@@ -511,27 +490,11 @@ class ClinLoopApp {
     const btnRunBenchmark = document.getElementById('btn-run-gpu-benchmark');
 
     this.fetchGpuTelemetry = async () => {
-      try {
-        const resp = await fetch('http://localhost:8124/api/v1/gpu/telemetry');
-        if (!resp.ok) return;
-        const data = await resp.json();
-        
-        const hudLabel = document.getElementById('gpu-hud-label');
-        if (hudLabel) {
-          hudLabel.textContent = `⚡ GPU: RTX A4500 (20GB) • ${data.average_latency_ms || 1.1}ms`;
-        }
-
-        const devEl = document.getElementById('gpu-val-device');
-        const vramTotalEl = document.getElementById('gpu-val-vram-total');
-        const vramAllocEl = document.getElementById('gpu-val-vram-alloc');
-        const latEl = document.getElementById('gpu-val-lat');
-
-        if (devEl) devEl.textContent = data.device_name || 'NVIDIA RTX A4500';
-        if (vramTotalEl) vramTotalEl.textContent = `${data.vram_total_gb || 19.58} GB GDDR6`;
-        if (vramAllocEl) vramAllocEl.textContent = `${data.vram_allocated_mb || 15.0} MB`;
-        if (latEl) latEl.textContent = `${data.average_latency_ms || 1.1} ms`;
-      } catch (e) {
-        // Fallback for standalone demo mode
+      const hudLabel = document.getElementById('gpu-hud-label');
+      if (hudLabel) hudLabel.textContent = 'GPU: Not connected (demo)';
+      for (const id of ['gpu-val-device', 'gpu-val-vram-total', 'gpu-val-vram-alloc', 'gpu-val-lat']) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = 'Not connected (demo)';
       }
     };
 
@@ -556,35 +519,8 @@ class ClinLoopApp {
     }
 
     if (btnRunBenchmark) {
-      btnRunBenchmark.addEventListener('click', async () => {
-        btnRunBenchmark.textContent = '⏳ CUDA 텐서 연산 중...';
-        btnRunBenchmark.disabled = true;
-
-        try {
-          const resp = await fetch('http://localhost:8124/api/v1/gpu/benchmark?batch_size=1000', { method: 'POST' });
-          const res = await resp.json();
-
-          const resultBox = document.getElementById('gpu-benchmark-result');
-          const timeEl = document.getElementById('bench-time');
-          const tputEl = document.getElementById('bench-throughput');
-          const violEl = document.getElementById('bench-violations');
-          const vramEl = document.getElementById('bench-vram');
-
-          if (resultBox) resultBox.style.display = 'block';
-          if (timeEl) timeEl.textContent = `${res.total_time_ms} ms`;
-          if (tputEl) tputEl.textContent = `${res.trajectories_per_sec.toLocaleString()} / sec`;
-          if (violEl) violEl.textContent = `${res.violations_detected} 건 감지`;
-          if (vramEl) vramEl.textContent = `${res.vram_allocated_mb} MB`;
-
-          this._playTelemetrySound(880, 'sine', 0.15);
-          this.fetchGpuTelemetry();
-        } catch (e) {
-          console.error('Benchmark failed', e);
-        } finally {
-          btnRunBenchmark.textContent = '⚡ 벤치마크 다시 실행 (Run GPU Test)';
-          btnRunBenchmark.disabled = false;
-        }
-      });
+      btnRunBenchmark.disabled = true;
+      btnRunBenchmark.textContent = 'GPU benchmark unavailable in demo';
     }
 
     // Action button
@@ -823,44 +759,16 @@ class ClinLoopApp {
       });
 
       if (activeModelBadge) {
-        if (engine === 'anthropic') {
-          activeModelBadge.textContent = '🧠 Anthropic Claude 3.5 Sonnet';
-          activeModelBadge.style.color = '#c084fc';
-        } else if (engine === 'openai') {
-          activeModelBadge.textContent = '⚡ OpenAI Astra / o1 Realtime';
-          activeModelBadge.style.color = '#38bdf8';
-        } else if (engine === 'gemini') {
-          activeModelBadge.textContent = '🌐 Google Gemini 2.5 Flash';
-          activeModelBadge.style.color = 'var(--emerald-safe)';
-        } else {
-          activeModelBadge.textContent = '🔒 Local RTX A4500 (Air-Gapped)';
-          activeModelBadge.style.color = 'var(--amber-warning)';
-        }
+        activeModelBadge.textContent = 'Demo template · no model connected';
+        activeModelBadge.style.color = 'var(--text-muted)';
       }
-
-      if (apiStatusPill) {
-        if (engine === 'anthropic') {
-          apiStatusPill.textContent = 'CLAUDE 3.5';
-          apiStatusPill.style.background = '#7c3aed';
-        } else if (engine === 'openai') {
-          apiStatusPill.textContent = 'OPENAI ASTRA';
-          apiStatusPill.style.background = '#0284c7';
-        } else if (engine === 'gemini') {
-          apiStatusPill.textContent = 'GEMINI 2.5';
-          apiStatusPill.style.background = '#059669';
-        } else {
-          apiStatusPill.textContent = 'ON-PREM GPU';
-          apiStatusPill.style.background = '#d97706';
-        }
-      }
+      if (apiStatusPill) apiStatusPill.textContent = 'DEMO';
 
       // Sync outreach simulator engine buttons if open
       const outreachBtns = document.querySelectorAll('.btn-outreach-engine');
       outreachBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.engine === engine));
       const outreachPill = document.getElementById('outreach-model-pill');
-      if (outreachPill) {
-        outreachPill.textContent = (engine === 'anthropic') ? '🧠 Claude 3.5 Active' : (engine === 'openai') ? '⚡ OpenAI Astra Active' : (engine === 'gemini') ? '🌐 Gemini 2.5 Active' : '🔒 Local GPU Active';
-      }
+      if (outreachPill) outreachPill.textContent = 'Demo template · no AI connected';
 
       if (this.updateOutreachModal) this.updateOutreachModal();
     };
@@ -911,46 +819,17 @@ class ClinLoopApp {
     const apiStatusPill = document.getElementById('api-status-pill');
 
     const loadSavedKeys = () => {
-      try {
-        const saved = JSON.parse(localStorage.getItem('clinloop_api_keys') || '{}');
-        if (inputGemini) inputGemini.value = saved.gemini || '';
-        if (inputAnthropic) inputAnthropic.value = saved.anthropic || '';
-        if (inputOpenAI) inputOpenAI.value = saved.openai || '';
-        if (inputNcbi) inputNcbi.value = saved.ncbi || '';
-        if (inputFhir) inputFhir.value = saved.fhir || '';
-
-        const badgeGemini = document.getElementById('badge-gemini-status');
-        const badgeAnthropic = document.getElementById('badge-anthropic-status');
-        const badgeOpenAI = document.getElementById('badge-openai-status');
-        const badgeNcbi = document.getElementById('badge-ncbi-status');
-        const badgeFhir = document.getElementById('badge-fhir-status');
-
-        if (saved.gemini) {
-          if (badgeGemini) { badgeGemini.textContent = '✓ Gemini Active'; badgeGemini.style.color = 'var(--emerald-safe)'; }
+      localStorage.removeItem('clinloop_api_keys');
+      for (const input of [inputGemini, inputAnthropic, inputOpenAI, inputNcbi, inputFhir]) {
+        if (input) {
+          input.value = '';
+          input.disabled = true;
         }
-        if (saved.anthropic) {
-          if (badgeAnthropic) { badgeAnthropic.textContent = '✓ Claude 3.5 Ready'; badgeAnthropic.style.color = 'var(--emerald-safe)'; }
-        }
-        if (saved.openai) {
-          if (badgeOpenAI) { badgeOpenAI.textContent = '✓ Astra / o1 Ready'; badgeOpenAI.style.color = 'var(--emerald-safe)'; }
-        }
-        if (saved.ncbi) {
-          if (badgeNcbi) { badgeNcbi.textContent = '✓ 10 req/s Authenticated'; badgeNcbi.style.color = 'var(--emerald-safe)'; }
-        }
-        if (saved.fhir) {
-          if (badgeFhir) { badgeFhir.textContent = '✓ Live EHR OAuth Connected'; badgeFhir.style.color = 'var(--emerald-safe)'; }
-        }
-
-        if (apiStatusPill) {
-          if (saved.gemini || saved.anthropic || saved.openai || saved.ncbi || saved.fhir) {
-            apiStatusPill.textContent = 'API HYBRID';
-            apiStatusPill.style.background = '#059669';
-          } else {
-            apiStatusPill.textContent = 'ON-PREM GPU';
-            apiStatusPill.style.background = '#7c3aed';
-          }
-        }
-      } catch (e) {}
+      }
+      for (const button of [btnTestGemini, btnTestAnthropic, btnTestOpenAI, btnTestNcbi, btnTestFhir, btnSaveApiKeys, btnResetApiKeys]) {
+        if (button) button.disabled = true;
+      }
+      if (apiStatusPill) apiStatusPill.textContent = 'DEMO';
     };
 
     loadSavedKeys();
@@ -1004,45 +883,12 @@ class ClinLoopApp {
     }
 
     // Ping Test helper
-    const testKeyConnection = async (provider, inputEl, feedbackEl, btnEl) => {
-      const keyVal = inputEl.value.trim();
-      if (!keyVal) {
-        feedbackEl.className = 'api-feedback-msg error';
-        feedbackEl.textContent = (this.currentLang === 'en') ? '⚠ Please enter a key to test connection.' : '⚠ 테스트할 API 키를 입력해 주세요.';
-        return;
-      }
-
-      btnEl.classList.add('testing');
-      btnEl.textContent = (this.currentLang === 'en') ? '⏳ Testing...' : '⏳ 테스트 중...';
-      feedbackEl.style.display = 'none';
-
-      try {
-        const resp = await fetch('http://localhost:8124/api/v1/config/test-api-key', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ provider: provider, api_key: keyVal })
-        });
-        const res = await resp.json();
-        
-        feedbackEl.className = 'api-feedback-msg success';
-        feedbackEl.textContent = (this.currentLang === 'en')
-          ? ('✓ Connected successfully! Latency: ' + res.latency_ms + 'ms • ' + res.provider)
-          : ('✓ 성공적으로 연결되었습니다! 지연시간: ' + res.latency_ms + 'ms • ' + res.provider);
-        this._playTelemetrySound(880, 'sine', 0.12);
-      } catch (e) {
-        setTimeout(() => {
-          feedbackEl.className = 'api-feedback-msg success';
-          feedbackEl.textContent = (this.currentLang === 'en')
-            ? '✓ Connected (On-Premise Gateway)! Latency: 32.4ms'
-            : '✓ 성공적으로 연결되었습니다 (원내 게이트웨이 검증 완료)! 지연시간: 32.4ms';
-          this._playTelemetrySound(880, 'sine', 0.12);
-        }, 300);
-      } finally {
-        setTimeout(() => {
-          btnEl.classList.remove('testing');
-          btnEl.textContent = (this.currentLang === 'en') ? '⚡ Test Connection' : '⚡ 연결 테스트 (Ping)';
-        }, 350);
-      }
+    const testKeyConnection = (provider, inputEl, feedbackEl, btnEl) => {
+      inputEl.value = '';
+      feedbackEl.className = 'api-feedback-msg error';
+      feedbackEl.textContent = this.currentLang === 'en'
+        ? 'API testing is disabled in this prototype.'
+        : '프로토타입에서 API 연결 테스트는 비활성화되어 있습니다.';
     };
 
     if (btnTestGemini && inputGemini && feedGemini) {
@@ -1090,27 +936,9 @@ class ClinLoopApp {
           fhir: inputFhir ? inputFhir.value.trim() : ''
         };
 
-        localStorage.setItem('clinloop_api_keys', JSON.stringify(keys));
-
-        try {
-          await fetch('http://localhost:8124/api/v1/config/api-keys', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              gemini_key: keys.gemini,
-              anthropic_key: keys.anthropic,
-              openai_key: keys.openai,
-              ncbi_key: keys.ncbi,
-              fhir_token: keys.fhir,
-              active_mode: (keys.gemini || keys.anthropic || keys.openai || keys.ncbi || keys.fhir) ? 'cloud_hybrid' : 'on_prem_gpu'
-            })
-          });
-        } catch (e) {}
-
         loadSavedKeys();
         if (apiModal) apiModal.classList.remove('open');
-        this._playTelemetrySound(1046.5, 'sine', 0.18);
-        alert((this.currentLang === 'en') ? '✓ Hospital API Credentials securely saved and activated!' : '✓ 원내 의료 AI 및 API 설정이 안전하게 저장되고 적용되었습니다!');
+        alert((this.currentLang === 'en') ? 'API credentials are disabled in this prototype.' : '프로토타입에서 API 자격 증명은 비활성화되어 있습니다.');
       });
     }
 
@@ -1128,18 +956,15 @@ class ClinLoopApp {
         const badgeOpenAI = document.getElementById('badge-openai-status');
         const badgeNcbi = document.getElementById('badge-ncbi-status');
         const badgeFhir = document.getElementById('badge-fhir-status');
-        if (badgeGemini) { badgeGemini.textContent = 'On-Premise Local Active'; badgeGemini.style.color = 'var(--emerald-safe)'; }
-        if (badgeAnthropic) { badgeAnthropic.textContent = 'On-Premise Local Active'; badgeAnthropic.style.color = 'var(--text-muted)'; }
-        if (badgeOpenAI) { badgeOpenAI.textContent = 'On-Premise Local Active'; badgeOpenAI.style.color = 'var(--text-muted)'; }
-        if (badgeNcbi) { badgeNcbi.textContent = 'Active (3 req/s limit)'; badgeNcbi.style.color = 'var(--cyan-neon)'; }
-        if (badgeFhir) { badgeFhir.textContent = 'Local Mock Active'; badgeFhir.style.color = 'var(--text-muted)'; }
+        if (badgeGemini) badgeGemini.textContent = 'Not connected (demo)';
+        if (badgeAnthropic) badgeAnthropic.textContent = 'Not connected (demo)';
+        if (badgeOpenAI) badgeOpenAI.textContent = 'Not connected (demo)';
+        if (badgeNcbi) badgeNcbi.textContent = 'Not connected (demo)';
+        if (badgeFhir) badgeFhir.textContent = 'Not connected (demo)';
 
         if (apiStatusPill) {
-          apiStatusPill.textContent = 'ON-PREM GPU';
-          apiStatusPill.style.background = '#7c3aed';
+          apiStatusPill.textContent = 'DEMO';
         }
-
-        this._playTelemetrySound(440, 'sine', 0.1);
       });
     }
 
@@ -1149,7 +974,7 @@ class ClinLoopApp {
     if (btnSummaryKakao) {
       btnSummaryKakao.addEventListener('click', () => {
         const caseName = this.currentCase?.scenario_name || this.currentCase?.scenario_id || 'UNKNOWN';
-        this.addAuditEntry('kakao', 'PATIENT MSG', `KakaoTalk empathy notification dispatched · Case: ${caseName}`, true);
+        this.addAuditEntry('simulation', 'DEMO ONLY', `Sample patient message preview opened; nothing was sent · Case: ${caseName}`, true);
         this.updateOutreachModal();
         const m = document.getElementById('outreach-modal');
         if (m) m.classList.add('open');
@@ -1160,7 +985,7 @@ class ClinLoopApp {
     if (btnSummaryOrder) {
       btnSummaryOrder.addEventListener('click', () => {
         const caseName = this.currentCase?.scenario_name || this.currentCase?.scenario_id || 'UNKNOWN';
-        this.addAuditEntry('order', 'FHIR ORDER', `HL7 FHIR Task dispatched to EMR · Loop closed · Case: ${caseName}`, true);
+        this.addAuditEntry('simulation', 'DEMO ONLY', `Case marked resolved in this browser; no order was sent · Case: ${caseName}`, true);
         if (!this.currentCase) return;
         this.closedOverrides.add(this.currentCase.scenario_id);
         this.selectCase(this.currentCase.scenario_id);
@@ -1303,6 +1128,7 @@ class ClinLoopApp {
 
     setTxt('i18n-brand-sub', t.brandSubtitle);
     setTxt('badge-hospital-text', t.hospitalText);
+    setTxt('prototype-notice', t.prototypeNotice);
     setTxt('pitch-deck-link', t.pitchDeck);
     setTxt('txt-nobility-btn', t.nobilityBtn);
     setTxt('txt-outreach-btn', t.outreachBtn);
@@ -1461,11 +1287,11 @@ class ClinLoopApp {
       
       let statusText = '';
       if (isClosed) {
-        statusText = isKo ? '✅ 추적완료' : '✅ Closed';
+        statusText = isKo ? '✅ 데모 종결' : '✅ Demo closed';
       } else if (c.ground_truth_status === 'delayed') {
-        statusText = isKo ? '⏳ 지연위험' : '⏳ Delayed';
+        statusText = isKo ? '🧪 데모 지연 사례' : '🧪 Demo delayed case';
       } else {
-        statusText = isKo ? `🚨 D-${c.golden_days || 24}일` : `🚨 D-${c.golden_days || 24}d`;
+        statusText = isKo ? '🧪 데모 사례' : '🧪 Demo case';
       }
 
       const ptName = isKo
@@ -1533,7 +1359,7 @@ class ClinLoopApp {
     // Update delta pill in mode tab
     const pillDelta = document.getElementById('tab-pill-delta');
     if (pillDelta && selected.counterfactual) {
-      pillDelta.textContent = `${selected.counterfactual.delta_5yr_survival} Survival`;
+      pillDelta.textContent = 'Not validated';
     }
 
     // Update Counterfactual & Standards views
@@ -1547,6 +1373,12 @@ class ClinLoopApp {
 
   updateDetailsPanel(scenario, isClosed) {
     const isKo = (this.currentLang !== 'en');
+    const riskValue = document.getElementById('risk-num-val');
+    if (riskValue) riskValue.textContent = isKo ? '미검증' : 'N/A';
+    for (const id of ['safety-gauge-canvas', 'sigmoid-canvas']) {
+      const canvas = document.getElementById(id);
+      if (canvas) canvas.style.display = 'none';
+    }
     document.getElementById('case-display-title').textContent = isKo ? (scenario.title_kr || scenario.scenario_name) : scenario.scenario_name;
     document.getElementById('case-display-desc').textContent = scenario.clinical_narrative;
 
@@ -1560,15 +1392,17 @@ class ClinLoopApp {
 
     if (isClosed) {
       actionBox.classList.add('resolved');
-      actionTitle.textContent = isKo ? '✓ 임상 관리 의무 종결 완료' : '✓ Clinical Obligation Fulfilled';
-      actionDesc.textContent = isKo ? '모든 필수 진단 보고서, 환자 알림톡, 외래 추적검사가 시공간 하이퍼그래프 상에서 안전하게 검증되었습니다.' : 'All mandatory diagnostic reports, notifications, and follow-ups have been verified across the temporal hypergraph.';
-      actionBtn.textContent = isKo ? '루프 안전 종결됨' : 'Loop Closed & Verified';
+      actionTitle.textContent = isKo ? '데모 상태: 이 브라우저에서 종결 표시됨' : 'Demo state: marked resolved in this browser';
+      actionDesc.textContent = isKo ? '시뮬레이션 상태이며 임상 조치, 오더 또는 환자 메시지는 전송되지 않았습니다.' : 'Simulation state only. No clinical action, order, or patient message was sent.';
+      actionBtn.textContent = isKo ? '데모 시뮬레이션 종결됨' : 'Demo simulation marked resolved';
       actionBtn.classList.add('resolved');
     } else {
       actionBox.classList.remove('resolved');
-      actionTitle.textContent = isKo ? '⚠ 필수 임상조치 누락/지연' : '⚠ Mandatory Action Overdue / Missing';
-      actionDesc.textContent = isKo ? (scenario.action_kr || scenario.missing_followup) : (scenario.missing_followup || 'Immediate follow-up required to close open trajectory.');
-      actionBtn.textContent = isKo ? '⚡ 진료루프 즉시 종결 시뮬레이션 (오더/통보)' : '⚡ Simulate Close Loop (Order/Notify)';
+      actionTitle.textContent = isKo ? '합성 사례: 후속조치 규칙 매칭' : 'Synthetic case: follow-up rule match';
+      actionDesc.textContent = isKo
+        ? `시연 데이터의 예시 항목: ${scenario.missing_followup || '후속조치'}. 실제 환자 우선순위나 임상 권고가 아닙니다.`
+        : `Illustrative sample gap: ${scenario.missing_followup || 'follow-up'}. This is not a patient-specific priority or clinical recommendation.`;
+      actionBtn.textContent = isKo ? '⚡ 데모 상태를 브라우저에서 종결 표시' : '⚡ Demo: mark resolved locally';
       actionBtn.classList.remove('resolved');
     }
 
@@ -1589,18 +1423,18 @@ class ClinLoopApp {
       },
       {
         num: '02',
-        title: `Matched Rule: ${scenario.applicable_rule_id} (BioMCP Grounded)`,
-        sub: scenario.biomcp_evidence ? `${scenario.biomcp_evidence.guideline_org.split('(')[0].trim()} • PMID: ${scenario.biomcp_evidence.pmid}` : 'Safety Clock Deadline Engine Activated'
+        title: `Demo rule match: ${scenario.applicable_rule_id}`,
+        sub: scenario.biomcp_evidence ? `Illustrative citation: ${scenario.biomcp_evidence.guideline_org.split('(')[0].trim()} • PMID: ${scenario.biomcp_evidence.pmid}` : 'Static sample metadata; not a live evidence lookup'
       },
       {
         num: '03',
         title: isClosed ? 'Verification: Closed in Graph' : `Identified Gap: ${scenario.missing_followup}`,
-        sub: isClosed ? 'Status: 0.00 Risk (Loop Assured)' : 'Status: ACTIVE CLINICAL HAZARD'
+        sub: isClosed ? 'Synthetic sample state only; no clinical closure verified' : 'Synthetic sample label; not a clinical hazard determination'
       },
       {
         num: '04',
-        title: isClosed ? 'EHR Writeback: HL7 FHIR Task Closed' : 'Action Engine: Clinical Alert Dispatched',
-        sub: isClosed ? 'Audit Log Synced to Quality Board' : 'Attending & Triage Escalation Active'
+        title: isClosed ? 'Demo state: marked resolved locally' : 'Demo action: no alert dispatched',
+        sub: 'No EHR writeback, messaging, or clinician escalation is connected'
       }
     ];
 
@@ -2056,23 +1890,9 @@ class ClinLoopApp {
 
     const deadlineDateEl = document.getElementById('summary-deadline-date');
     if (deadlineDateEl) {
-      // Dynamically compute deadline from trigger event + rule deadline_days
-      let deadlineStr = '';
-      try {
-        const triggerEvt = c.events && c.events[0];
-        if (triggerEvt && triggerEvt.timestamp) {
-          // Find applicable rule deadline from biomcp_evidence
-          const deadlineDays = (c.biomcp_evidence && c.biomcp_evidence.time_window_days)
-            ? c.biomcp_evidence.time_window_days
-            : (c.golden_days || 30);
-          const triggerDate = new Date(triggerEvt.timestamp);
-          const deadlineDate = new Date(triggerDate.getTime() + deadlineDays * 86400000);
-          deadlineStr = deadlineDate.toISOString().split('T')[0];
-        }
-      } catch (_) {}
       deadlineDateEl.textContent = isKo
-        ? `안전 마감일자: ${deadlineStr || '확인 필요'}`
-        : `Safety Deadline: ${deadlineStr || 'TBD'}`;
+        ? '합성 사례 날짜 · 실시간 임상 마감 아님'
+        : 'Synthetic scenario date · not a live clinical deadline';
     }
     const timerText = document.getElementById('summary-timer-text');
     const badge = document.getElementById('summary-urgency-badge');
@@ -2081,26 +1901,26 @@ class ClinLoopApp {
     if (isClosed) {
       if (badge) {
         badge.className = 'badge-pill badge-safe';
-        badge.textContent = isKo ? '✓ 진료루프 종결 완료 (외래 예약 확정)' : '✓ Loop Verified Closed (Follow-up Confirmed)';
+        badge.textContent = isKo ? '데모 종결 상태 (브라우저에만 저장)' : 'Demo resolved state (browser only)';
       }
       if (timerText) {
-        timerText.textContent = isKo ? '✓ 안전 종결됨' : '✓ Safely Resolved';
+        timerText.textContent = isKo ? '시뮬레이션 종결' : 'Simulation resolved';
         timerText.style.color = 'var(--emerald-safe)';
       }
       if (orderBtnLabel) {
-        orderBtnLabel.textContent = isKo ? '✓ 외래 추적검사 오더 확정 완료 (EMR 전송됨)' : '✓ Clinical Order Dispatched & Closed (HL7 FHIR Sent)';
+        orderBtnLabel.textContent = isKo ? '데모 시뮬레이션: 브라우저에서만 종결 표시 (전송 안 됨)' : 'Demo simulation: marked resolved in this browser only (not sent)';
       }
     } else {
       if (badge) {
         badge.className = 'badge-pill badge-urgent';
-        badge.textContent = isKo ? `🚨 골든타임 임박 (${prof.deadline})` : `🚨 Urgent Golden Window (${prof.deadline})`;
+        badge.textContent = isKo ? '합성 데모 사례 · 임상 우선순위 아님' : 'Synthetic demo case · not a clinical priority';
       }
       if (timerText) {
-        timerText.textContent = isKo ? `⏳ ${prof.deadline.split('(')[0].trim()}` : `⏳ ${prof.deadline.split('(')[0].trim()}`;
-        timerText.style.color = 'var(--crimson-danger)';
+        timerText.textContent = isKo ? '시연용 시간 정보' : 'Illustrative timing only';
+        timerText.style.color = 'var(--text-muted)';
       }
       if (orderBtnLabel) {
-        orderBtnLabel.textContent = isKo ? '외래 추적검사 즉시 오더 및 루프 종결' : 'Place Follow-up Clinical Order & Close Loop';
+        orderBtnLabel.textContent = isKo ? '브라우저 로컬 종결 시뮬레이션 (전송 안 됨)' : 'Simulate local resolution (not sent)';
       }
     }
 
@@ -2110,12 +1930,13 @@ class ClinLoopApp {
     const posSurvEl = document.getElementById('summary-pos-survival');
     const deltaEl = document.getElementById('summary-delta-badge');
 
-    if (negRiskEl) negRiskEl.textContent = prof.negRisk;
-    if (negSurvEl) negSurvEl.textContent = prof.negSurvival;
-    if (posCureEl) posCureEl.textContent = prof.posCure;
-    if (posSurvEl) posSurvEl.textContent = prof.posSurvival;
+    const outcomePlaceholder = isKo ? '임상 검증되지 않음' : 'Not clinically validated';
+    if (negRiskEl) negRiskEl.textContent = outcomePlaceholder;
+    if (negSurvEl) negSurvEl.textContent = outcomePlaceholder;
+    if (posCureEl) posCureEl.textContent = outcomePlaceholder;
+    if (posSurvEl) posSurvEl.textContent = outcomePlaceholder;
     if (deltaEl) {
-      deltaEl.textContent = isKo ? `${prof.delta} 생존율 압승` : `${prof.delta} Survival Advantage`;
+      deltaEl.textContent = outcomePlaceholder;
     }
   }
 
@@ -2131,28 +1952,24 @@ class ClinLoopApp {
     if (ptSummary) ptSummary.textContent = `${c.patient_id} (${c.patient_age}y / ${c.patient_sex}) — ${c.scenario_name}`;
 
     const deltaEl = document.getElementById('cf-survival-delta');
-    if (deltaEl) deltaEl.textContent = cf.delta_5yr_survival;
+    if (deltaEl) deltaEl.textContent = 'Not clinically validated';
 
     const subEl = document.getElementById('cf-survival-sub');
-    if (subEl && cf.neglected_path && cf.intervened_path) {
-      const negFinal = cf.neglected_path[cf.neglected_path.length - 1].survival;
-      const intFinal = cf.intervened_path[cf.intervened_path.length - 1].survival;
-      subEl.textContent = intFinal + " Intervened vs " + negFinal + " Neglected";
-    }
+    if (subEl) subEl.textContent = 'No validated clinical outcome model is available.';
 
     const qalyEl = document.getElementById('cf-qaly-gain');
-    if (qalyEl) qalyEl.textContent = `+${cf.qaly_gain} QALYs`;
+    if (qalyEl) qalyEl.textContent = 'Not established';
 
     const liabEl = document.getElementById('cf-liability-avoided');
-    if (liabEl) liabEl.textContent = cf.liability_avoided_krw;
+    if (liabEl) liabEl.textContent = 'Not estimated';
 
     const guideEl = document.getElementById('cf-guideline-grade');
     if (guideEl && c.biomcp_evidence) {
-      guideEl.textContent = c.biomcp_evidence.guideline_org.split('(')[0].trim();
+      guideEl.textContent = 'Static sample citation · not a live evidence lookup';
     }
 
     const evText = document.getElementById('cf-evidence-text');
-    if (evText) evText.textContent = cf.evidence_rationale;
+    if (evText) evText.textContent = 'Illustrative scenario content only; no causal effect is established.';
 
     // Render neglected steps
     const negContainer = document.getElementById('cf-neglected-steps');
@@ -2170,8 +1987,8 @@ class ClinLoopApp {
             </div>
             <div class="cf-step-desc">${step.desc}</div>
             <div class="cf-step-meta">
-              <span>5-Yr Survival: <strong style="color: var(--crimson-danger);">${step.survival}</strong></span>
-              <span>Hazard Rate: ${step.hazard}</span>
+              <span>Illustrative scenario only</span>
+              <span>Survival and hazard estimates not validated</span>
             </div>
           </div>
         `;
@@ -2195,8 +2012,8 @@ class ClinLoopApp {
             </div>
             <div class="cf-step-desc">${step.desc}</div>
             <div class="cf-step-meta">
-              <span>5-Yr Survival: <strong style="color: var(--emerald-safe);">${step.survival}</strong></span>
-              <span>Hazard Rate: ${step.hazard}</span>
+              <span>Illustrative scenario only</span>
+              <span>Survival and hazard estimates not validated</span>
             </div>
           </div>
         `;
@@ -2319,80 +2136,32 @@ class ClinLoopApp {
   updateOutreachModal() {
     if (!this.currentCase) return;
     const c = this.currentCase;
-    const outreach = c.patient_outreach || {};
-    const isClosed = (c.ground_truth_status === 'closed') || this.closedOverrides.has(c.scenario_id);
+    const isEnglish = this.outreachLang === 'en';
+    const message = isEnglish
+      ? 'Synthetic demonstration text only. This is not a clinical instruction or a message to send. A qualified clinician must review the actual record and decide any patient communication through approved channels.'
+      : '합성 데이터 시연용 문구입니다. 임상 지시나 실제 환자에게 보낼 메시지가 아닙니다. 담당 의료진이 실제 기록을 검토하고 승인된 절차로 환자 연락 여부를 결정해야 합니다.';
 
-    const titleEl = document.getElementById('kakao-outreach-title');
-    const jargonEl = document.getElementById('kakao-jargon-text');
-    const bodyEl = document.getElementById('kakao-outreach-body');
-    const deptEl = document.getElementById('kakao-dept-slot');
-    const btnLabel = document.getElementById('kakao-btn-label');
-    const btnBook = document.getElementById('btn-kakao-book');
+    const setText = (id, value) => {
+      const element = document.getElementById(id);
+      if (element) element.textContent = value;
+    };
+    setText('kakao-outreach-title', isEnglish ? `Synthetic demo message · ${c.scenario_id}` : `합성 데모 안내문 · ${c.scenario_id}`);
+    setText('kakao-jargon-text', isEnglish ? 'Synthetic case selected' : '합성 사례 선택됨');
+    setText('kakao-outreach-body', message);
+    setText('kakao-dept-slot', isEnglish ? 'No appointment reserved' : '예약된 일정 없음');
+    setText('kakao-btn-label', isEnglish ? 'Simulate local workflow (not booked)' : '로컬 시뮬레이션 (예약되지 않음)');
+    setText('outreach-fhir-id', isEnglish ? 'Not connected · no message request sent' : '연결 안 됨 · 메시지 요청 전송 안 됨');
+    setText('outreach-model-pill', isEnglish ? 'Demo template · no AI connected' : '데모 템플릿 · AI 연결 안 됨');
+    setText('outreach-status-tag', isEnglish ? 'No message sent · no appointment booked' : '메시지 전송 안 됨 · 예약 안 됨');
+
+    const bookingButton = document.getElementById('btn-kakao-book');
+    if (bookingButton) bookingButton.classList.remove('confirmed');
     const toast = document.getElementById('kakao-booked-toast');
-    const fhirId = document.getElementById('outreach-fhir-id');
-    const statusTag = document.getElementById('outreach-status-tag');
-
-    if (fhirId) fhirId.textContent = outreach.fhir_communication_request_id || `CommunicationRequest/COMM-REQ-${c.scenario_id}`;
-
-    const engine = this.activeEngine || 'local';
-    const outreachPill = document.getElementById('outreach-model-pill');
-    if (outreachPill) {
-      outreachPill.textContent = (engine === 'anthropic') ? '🧠 Claude 3.5 Active' : (engine === 'openai') ? '⚡ OpenAI Astra Active' : (engine === 'gemini') ? '🌐 Gemini 2.5 Active' : '🔒 Local GPU Active';
-    }
-
-    if (this.outreachLang === 'en') {
-      if (titleEl) titleEl.textContent = `[Ajou Hospital] Important Clinical Follow-up Notice`;
-      if (jargonEl) jargonEl.textContent = outreach.clinical_jargon || c.scenario_name;
-      
-      if (engine === 'anthropic') {
-        if (bodyEl) bodyEl.textContent = `Dear ${c.patient_id}, Dr. Park's clinical team reviewed your recent diagnostic screening. While unexpected test results can feel concerning, this finding was caught at an early stage where curative intervention is over 98% effective. We have reserved a private consultation slot on March 25 so we can answer all your questions. Please tap below to confirm.`;
-      } else if (engine === 'openai') {
-        if (bodyEl) bodyEl.textContent = `Hi ${c.patient_id}, Ajou Hospital Care Navigator reaching out. Your health is our highest priority—we have confirmed your direct follow-up slot with Dr. Park for March 25. You can tap below to confirm in 1 click, or tap the voice icon to speak directly with our real-time interactive AI Care Navigator.`;
-      } else if (engine === 'gemini') {
-        if (bodyEl) bodyEl.textContent = `Dear ${c.patient_id}, diagnostic report follow-up notice: 1) Initial finding: ${c.scenario_name}. 2) Early clinical action ensures optimal health outcome. 3) Recommended step: Outpatient specialist evaluation within guideline window. Tap below to confirm.`;
-      } else {
-        if (bodyEl) bodyEl.textContent = `Dear ${c.patient_id}, your recent diagnostic test results require an expedited specialist review within recommended guidelines to ensure optimal health. Please confirm your reserved appointment slot with one click below.`;
-      }
-
-      if (deptEl) deptEl.textContent = outreach.appointment_slot_suggested || 'Outpatient Clinic';
-      if (btnLabel) btnLabel.textContent = `📅 1-Click Confirm Booking (${outreach.appointment_slot_suggested ? outreach.appointment_slot_suggested.split('(')[0].trim() : 'Next Available'})`;
-    } else {
-      if (titleEl) titleEl.textContent = outreach.plain_language_title || `[아주대병원] ${c.scenario_name} 추적진료 안내`;
-      if (jargonEl) jargonEl.textContent = outreach.clinical_jargon || c.scenario_name;
-
-      if (engine === 'anthropic') {
-        if (bodyEl) bodyEl.textContent = `[아주대병원 안심 진료 안내] 김미영님, 지난 세포검사에서 전문의의 세심한 확인(질확대경검사)이 권고되는 초기 단계 변화가 발견되었습니다. 지금 단계는 98% 이상 안전하게 치료 가능한 가장 안전한 시기이오니 불안해하지 마시고, 편안한 시간에 전문의 상담을 받으실 수 있도록 1초 간편 예약을 준비했습니다.`;
-      } else if (engine === 'openai') {
-        if (bodyEl) bodyEl.textContent = `[아주대병원 실시간 케어 내비게이터] 김미영님, 아주대병원 안심 진료팀입니다. 조기 완치율 98%의 골든타임을 지켜드리고자 박 교수님 진료석을 우선 배정해 두었습니다. 아래 버튼을 눌러 예약을 확정하시거나, 실시간 음성 케어 내비게이터와 언제든 바로 상담하실 수 있습니다.`;
-      } else if (engine === 'gemini') {
-        if (bodyEl) bodyEl.textContent = `[아주대병원 정밀 추적진료] 김미영님, 검사 결과 요약: 1) 자궁경부 세포검사상 정밀상담 필요. 2) 조기 확인 시 98% 이상 안전 완치 가능. 3) 30일 이내 외래 진료 권고. 아래 1초 예약 버튼으로 일정을 확정해 주세요.`;
-      } else {
-        if (bodyEl) bodyEl.textContent = outreach.plain_language_body || c.clinical_narrative;
-      }
-
-      if (deptEl) deptEl.textContent = outreach.appointment_slot_suggested || '전문 외래 클리닉';
-      if (btnLabel) btnLabel.textContent = outreach.action_button_label || `📅 1초 간편 예약하기`;
-    }
-
-    if (isClosed) {
-      if (btnBook) {
-        btnBook.classList.add('confirmed');
-        btnLabel.textContent = this.outreachLang === 'en' ? '✓ Appointment Confirmed & EMR Synced' : '✓ 예약 확정 완료 (EMR 자동 전송됨)';
-      }
-      if (toast) toast.style.display = 'block';
-      if (statusTag) {
-        statusTag.textContent = 'Verified Closed (EMR Synced)';
-        statusTag.style.color = 'var(--emerald-safe)';
-      }
-    } else {
-      if (btnBook) {
-        btnBook.classList.remove('confirmed');
-      }
-      if (toast) toast.style.display = 'none';
-      if (statusTag) {
-        statusTag.textContent = 'Pending Patient Action';
-        statusTag.style.color = 'var(--amber-warning)';
-      }
+    if (toast) {
+      toast.textContent = isEnglish
+        ? 'Simulation only. No booking or EHR update occurred.'
+        : '시뮬레이션 전용입니다. 예약이나 EHR 업데이트는 발생하지 않았습니다.';
+      toast.style.display = 'none';
     }
   }
 
@@ -2410,7 +2179,7 @@ class ClinLoopApp {
     const entry = document.createElement('div');
     entry.className = `audit-entry audit-entry-${type}`;
     const ts = new Date().toISOString().slice(11,19) + ' UTC';
-    const engineIcons = { system:'🔒 ON-PREM GPU', kakao:'📱 PATIENT MSG', order:'📋 FHIR ORDER', model:'🤖 MODEL SWITCH', warning:'⚠️ ALERT' };
+    const engineIcons = { system:'DEMO', kakao:'DEMO PREVIEW', order:'DEMO ACTION', model:'DEMO', warning:'DEMO ALERT', simulation:'DEMO ONLY' };
     entry.innerHTML = `
       <span class="audit-ts">${ts}</span>
       <span class="audit-engine">${engineIcons[type] || engine}</span>

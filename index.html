@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClinLoop AI | 진료 폐쇄루프 안전 감시 플랫폼 — Closed-Loop Clinical Safety Surveillance</title>
-  <meta name="description" content="ClinLoop AI — 신경기호 AI 기반 진료 폐쇄루프 안전 감시 플랫폼. Prevents diagnostic delays, missed follow-ups, and patient harm through autonomous closed-loop clinical safety monitoring.">
+  <title>ClinLoop AI | Clinical Safety Prototype</title>
+  <meta name="description" content="Offline ClinLoop AI prototype with synthetic cases for research and workflow demonstration only. Not for patient care.">
     <script>
     // Force immediate purge of stale service workers and caches
     if ('serviceWorker' in navigator) {
@@ -117,11 +117,11 @@
     <div class="header-badges">
       <button id="btn-gpu-hud" class="badge badge-gpu" style="cursor: pointer; background: rgba(5, 150, 105, 0.12); border-color: rgba(5, 150, 105, 0.35); color: var(--emerald-safe); font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;" title="NVIDIA RTX A4500 (20GB) GPU Acceleration Active">
         <span class="pulse-dot" style="background: var(--emerald-safe); box-shadow: 0 0 8px var(--emerald-safe);"></span>
-        <span id="gpu-hud-label">⚡ GPU: RTX A4500 (20GB) • 1.1ms</span>
+        <span id="gpu-hud-label">⚡ GPU: Demo telemetry</span>
       </button>
       <span class="badge" id="badge-hospital" style="border-color: rgba(2, 132, 199, 0.25); color: var(--text-muted); display: inline-flex; align-items: center; gap: 0.4rem;">
         <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--emerald-safe);"></span>
-        <span id="badge-hospital-text">Ajou University Hospital — Safety Net: ED · Outpatient · Inpatient</span>
+        <span id="badge-hospital-text">Research prototype · synthetic cases</span>
       </span>
     </div>
 
@@ -133,10 +133,10 @@
         📊 Pitch Deck
       </a>
             <!-- 🫀 Live Closed-Loop Counter (Noble Standard) -->
-      <div id="lives-counter-pill" style="display:flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(6,182,212,0.1));border:1px solid rgba(16,185,129,0.35);border-radius:20px;padding:0.25rem 0.75rem;cursor:default;" title="Patients protected by ClinLoop AI closed-loop safety net">
+      <div id="lives-counter-pill" style="display:flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(6,182,212,0.1));border:1px solid rgba(16,185,129,0.35);border-radius:20px;padding:0.25rem 0.75rem;cursor:default;" title="Synthetic examples resolved locally in this browser">
         <span>🫀</span>
         <div style="line-height:1.1;">
-          <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;" id="lives-counter-label">Lives Protected</div>
+          <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;" id="lives-counter-label">Demo cases resolved</div>
           <div style="display:flex;align-items:baseline;gap:0.3rem;">
             <span id="lives-protected-count" style="font-family:var(--font-mono);font-size:0.95rem;font-weight:900;color:#10b981;">0</span>
             <span style="font-size:0.6rem;color:var(--text-dim);">/ 5</span>
@@ -157,11 +157,11 @@
           <path d="M2 12h20"/>
         </svg>
         <span id="txt-biomcp-btn">🧬 BioMCP Evidence</span>
-        <span class="biomcp-status-pill">LIVE MCP</span>
+        <span class="biomcp-status-pill">DEMO</span>
       </button>
-      <button id="btn-api-keys" class="btn-secondary btn-api-highlight" title="Configure AI, PubMed & Hospital API Keys">
+      <button id="btn-api-keys" class="btn-secondary btn-api-highlight" title="API settings are a prototype interface; no clinical service is connected">
         <span id="txt-api-btn">🔑 API Keys</span>
-        <span class="api-status-pill" id="api-status-pill">ON-PREM GPU</span>
+        <span class="api-status-pill" id="api-status-pill">DEMO</span>
       </button>
       <button id="sound-toggle" class="btn-secondary" title="Toggle audio telemetry">🔊 Audio: On</button>
       <button id="btn-emr-comparison" class="btn-secondary">
@@ -174,47 +174,36 @@
     </div>
   </header>
 
-  <!-- ✨ WORLD-CLASS: Global Clinical Safety Impact Banner -->
+  <div id="prototype-notice" role="note" aria-label="Prototype safety notice" style="padding:0.65rem 1.25rem;background:#fff7ed;color:#7c2d12;border-bottom:1px solid #fdba74;font-size:0.85rem;font-weight:700;line-height:1.45;">
+    Prototype demonstration only. Cases and outcomes are illustrative; this app is not connected to a hospital, live EHR, messaging service, or guideline feed. No clinical action is sent. Do not use for patient care.
+  </div>
+
+  <!-- Synthetic sample counts; not patient-safety impact metrics. -->
   <div id="global-impact-bar" style="background: linear-gradient(135deg, #0f2027 0%, #1a3a3a 50%, #0f2027 100%); border-bottom: 1px solid rgba(0, 240, 255, 0.18); padding: 0.5rem 1.5rem; display: flex; align-items: center; gap: 0; overflow: hidden; position: relative;">
     <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(90deg,transparent,transparent 48px,rgba(0,240,255,0.03) 48px,rgba(0,240,255,0.03) 49px);pointer-events:none;"></div>
-    <div style="font-size:0.65rem;font-weight:800;color:rgba(0,240,255,0.7);text-transform:uppercase;letter-spacing:0.12em;margin-right:1.5rem;white-space:nowrap;font-family:var(--font-mono);">🌍 GLOBAL PATIENT SAFETY IMPACT (2026)</div>
+    <div style="font-size:0.65rem;font-weight:800;color:rgba(0,240,255,0.7);text-transform:uppercase;letter-spacing:0.12em;margin-right:1.5rem;white-space:nowrap;font-family:var(--font-mono);">SYNTHETIC DEMO DATA</div>
     <div style="display:flex;align-items:center;gap:1.8rem;flex:1;">
-      <div class="impact-stat-item" title="Open loops detected across 300-scenario benchmark">
+      <div class="impact-stat-item" title="Number of records in the loaded synthetic sample">
         <div class="impact-stat-val" id="imp-loops" style="color:#f43f5e;">0</div>
-        <div class="impact-stat-lbl">Open Loops Closed</div>
+        <div class="impact-stat-lbl">Examples loaded</div>
       </div>
       <div class="impact-stat-divider"></div>
-      <div class="impact-stat-item" title="Cumulative quality-adjusted life years saved">
+      <div class="impact-stat-item" title="Open examples in the loaded synthetic sample">
         <div class="impact-stat-val" id="imp-qalys" style="color:#10b981;">0.0</div>
-        <div class="impact-stat-lbl">Life-Years Gained</div>
-      </div>
-      <div class="impact-stat-divider"></div>
-      <div class="impact-stat-item" title="Malpractice liability avoided via early loop closure">
-        <div class="impact-stat-val" id="imp-krw" style="color:#f59e0b;">₩0</div>
-        <div class="impact-stat-lbl">Liability Avoided</div>
-      </div>
-      <div class="impact-stat-divider"></div>
-      <div class="impact-stat-item" title="Mean 5-year survival advantage across all closed loops">
-        <div class="impact-stat-val" id="imp-survival" style="color:#a78bfa;">+0%</div>
-        <div class="impact-stat-lbl">Avg. Survival Gain</div>
+        <div class="impact-stat-lbl">Open examples</div>
       </div>
       <div class="impact-stat-divider"></div>
       <div class="impact-stat-item" title="Clinical obligation rules encoded (R001–R016)">
         <div class="impact-stat-val" id="imp-rules" style="color:#38bdf8;">0</div>
-        <div class="impact-stat-lbl">Safety Rules</div>
+        <div class="impact-stat-lbl">Rule IDs represented</div>
       </div>
       <div class="impact-stat-divider"></div>
-      <div class="impact-stat-item" title="Overall F1-Score on 300-scenario benchmark vs EMR">
-        <div class="impact-stat-val" id="imp-f1" style="color:#34d399;">0.000</div>
-        <div class="impact-stat-lbl">F1 Detection Score</div>
-      </div>
-      <div class="impact-stat-divider"></div>
-      <div class="impact-stat-item" title="Area Under ROC Curve (ClinLoop AI vs. traditional EMR)">
-        <div class="impact-stat-val" id="imp-auroc" style="color:#60a5fa;">0.000</div>
-        <div class="impact-stat-lbl">AUROC</div>
+      <div class="impact-stat-item" title="No external clinical system is connected">
+        <div class="impact-stat-val" style="color:#fbbf24;">None</div>
+        <div class="impact-stat-lbl">Live connections</div>
       </div>
     </div>
-    <div style="font-size:0.58rem;color:rgba(255,255,255,0.25);margin-left:1rem;white-space:nowrap;font-family:var(--font-mono);">ON-PREM GPU: RTX A4500 ● FHIR R4 ● 24/7</div>
+    <div style="font-size:0.58rem;color:rgba(255,255,255,0.65);margin-left:1rem;white-space:nowrap;font-family:var(--font-mono);">LOCAL UI SIMULATION</div>
   </div>
 
   <!-- 3-Column Full-Viewport Workstation Cockpit -->
@@ -232,9 +221,9 @@
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
-          <span id="triage-title">Clinical Safety Surveillance Queue</span>
+          <span id="triage-title">Synthetic Example Queue</span>
         </h2>
-        <span id="triage-count" style="font-size: 0.7rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700;">N=5 Active</span>
+        <span id="triage-count" style="font-size: 0.7rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700;">5 synthetic examples</span>
       </div>
 
       <!-- Search Input -->
@@ -249,9 +238,9 @@
       <!-- Filter Pills -->
       <div class="filter-pills-row">
         <button class="filter-btn active" data-filter="all" id="filter-btn-all">All (5)</button>
-        <button class="filter-btn" data-filter="open" id="filter-btn-open">Critical (3)</button>
-        <button class="filter-btn" data-filter="delayed" id="filter-btn-delayed">Delayed (1)</button>
-        <button class="filter-btn" data-filter="closed" id="filter-btn-closed">Closed (1)</button>
+        <button class="filter-btn" data-filter="open" id="filter-btn-open">Open examples (3)</button>
+        <button class="filter-btn" data-filter="delayed" id="filter-btn-delayed">Delayed example (1)</button>
+        <button class="filter-btn" data-filter="closed" id="filter-btn-closed">Closed example (1)</button>
       </div>
 
       <!-- Vertical Scrollable Case Queue -->
@@ -283,7 +272,7 @@
             <path d="M18 20V10M12 20V4M6 20v-6"/>
           </svg>
           <span id="tab-txt-counterfactual">⚖️ 인과추론 시뮬레이터 (Counterfactual)</span>
-          <span class="tab-pill tab-pill-success" id="tab-pill-delta">+75% Survival</span>
+          <span class="tab-pill" id="tab-pill-delta">Not validated</span>
         </button>
 
         <button class="stage-tab-btn" id="tab-btn-standards" data-view="standards">
@@ -308,7 +297,7 @@
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
           <span id="tab-txt-privacy">🛡️ Privacy Shield</span>
-          <span class="tab-pill" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: rgba(16,185,129,0.3);">8 Layers Active</span>
+          <span class="tab-pill">Prototype only</span>
         </button>
       </div>
       
@@ -685,9 +674,9 @@
               </p>
             </div>
             <div class="standards-badges">
-              <span class="standard-badge standard-badge-omop">OMOP-CDM v5.4 Native</span>
-              <span class="standard-badge standard-badge-fhir">HL7 FHIR R4 Validated</span>
-              <span class="standard-badge standard-badge-mtl">MTL Formal Safety Invariant</span>
+              <span class="standard-badge standard-badge-omop">Example OMOP mapping</span>
+              <span class="standard-badge standard-badge-fhir">FHIR-shaped sample</span>
+              <span class="standard-badge standard-badge-mtl">Timing-rule demo</span>
             </div>
           </div>
 
@@ -738,7 +727,7 @@
 
               <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: var(--text-muted);">
                 <span>Resource Type: <strong id="fhir-res-type" style="color: var(--cyan-neon);">DiagnosticReport</strong></span>
-                <span id="fhir-profile-tag" style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--emerald-safe);">HL7 Standard Validated ✓</span>
+                <span id="fhir-profile-tag" style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);">Example JSON · not validated</span>
               </div>
 
               <pre class="fhir-code-viewer" id="fhir-raw-json" style="max-height: 250px;"></pre>
@@ -774,31 +763,31 @@
       <!-- Benchmark KPI Strip across Bottom -->
       <div class="kpi-ribbon-compact">
         <div class="kpi-card-compact">
-          <span class="kpi-label">High-Risk Sensitivity</span>
+          <span class="kpi-label">External clinical validation</span>
           <div class="kpi-val-row">
-            <span class="kpi-number">85.4%</span>
-            <span class="kpi-delta">+59.5% vs EMR</span>
+            <span class="kpi-number">Not performed</span>
+            <span class="kpi-delta">Synthetic data only</span>
           </div>
         </div>
         <div class="kpi-card-compact">
-          <span class="kpi-label">F1-Score Detection</span>
+          <span class="kpi-label">Prospective clinical study</span>
           <div class="kpi-val-row">
-            <span class="kpi-number">0.886</span>
-            <span class="kpi-delta">+0.518 vs EMR</span>
+            <span class="kpi-number">Not performed</span>
+            <span class="kpi-delta">No patient outcomes measured</span>
           </div>
         </div>
         <div class="kpi-card-compact">
-          <span class="kpi-label">Alert Fatigue Burden</span>
+          <span class="kpi-label">Clinical outcome benefit</span>
           <div class="kpi-val-row">
-            <span class="kpi-number">5.0</span>
-            <span class="kpi-delta">-50% Alerts/100pt</span>
+            <span class="kpi-number">Not established</span>
+            <span class="kpi-delta">No causal effect shown</span>
           </div>
         </div>
         <div class="kpi-card-compact">
-          <span class="kpi-label">Loop Closure Target</span>
+          <span class="kpi-label">Live clinical integration</span>
           <div class="kpi-val-row">
-            <span class="kpi-number">94.2%</span>
-            <span class="kpi-delta" style="color: var(--cyan-neon);">CLCR Rate</span>
+            <span class="kpi-number">None</span>
+            <span class="kpi-delta" style="color: var(--cyan-neon);">Prototype only</span>
           </div>
         </div>
       </div>
@@ -818,17 +807,17 @@
               <circle cx="12" cy="12" r="10"/>
               <polyline points="12 6 12 12 16 14"/>
             </svg>
-            <span id="clock-telemetry-title">Safety Clock Telemetry</span>
+            <span id="clock-telemetry-title">Demo timing preview · not live monitoring</span>
           </h3>
           <span class="badge" style="font-size: 0.62rem;">Sigmoid Decay</span>
         </div>
 
         <!-- Dial Gauge -->
         <div class="clock-display">
-          <canvas id="safety-gauge-canvas" width="220" height="125" class="clock-gauge-canvas"></canvas>
+          <canvas id="safety-gauge-canvas" width="220" height="125" class="clock-gauge-canvas" style="display: none;"></canvas>
           <div class="clock-metric">
-            <div class="risk-number" id="risk-num-val">0.85</div>
-            <div class="risk-label" id="risk-metric-label">Multi-Factor Risk</div>
+            <div class="risk-number" id="risk-num-val" style="display: none;">N/A</div>
+            <div class="risk-label" id="risk-metric-label">Demo score · not clinically validated</div>
           </div>
         </div>
 
@@ -839,7 +828,7 @@
             <span class="stat-val" id="stat-rule-id">R003</span>
           </div>
           <div class="stat-item">
-            <span class="stat-title" id="stat-severity-title">Clinical Severity</span>
+            <span class="stat-title" id="stat-severity-title">Synthetic case severity</span>
             <span class="stat-val" id="stat-severity" style="color: var(--crimson-danger);">CRITICAL</span>
           </div>
         </div>
@@ -853,7 +842,7 @@
           <div class="sigmoid-container">
             <div class="sigmoid-header">
               <span>R(t) = S · [1 / (1 + e^(-8.0 · Δt))]</span>
-              <span style="color: var(--cyan-neon);">Live Tracer ●</span>
+              <span style="color: var(--text-muted);">Static formula preview · not live</span>
             </div>
             <canvas id="sigmoid-canvas" width="280" height="80"></canvas>
           </div>
@@ -874,7 +863,7 @@
           Loading obligation...
         </p>
         <button class="btn-close-loop" id="btn-close-action">
-          ⚡ Simulate Close Loop (Order/Notify)
+          ⚡ Demo: mark resolved locally
         </button>
       </div>
 
@@ -917,27 +906,27 @@
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
             <polyline points="22 4 12 14.01 9 11.01"/>
           </svg>
-          Confirm Clinical Action
+          Demo Action Preview
         </h3>
         <button id="btn-cancel-order" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
       </div>
 
       <div class="modal-inner-box" style=" display: flex; flex-direction: column; gap: 0.5rem;">
-        <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Target Patient</div>
+        <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Synthetic case</div>
         <div id="modal-pt-name" style="font-weight: 700; color: var(--cyan-neon); font-size: 0.92rem;"></div>
 
-        <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-top: 0.35rem;">Action to Dispatch</div>
+        <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-top: 0.35rem;">Local demo state change</div>
         <div id="modal-order-desc" style="font-size: 0.85rem; color: var(--text-main); line-height: 1.4; font-weight: 600;"></div>
       </div>
 
       <p style="font-size: 0.78rem; color: var(--text-muted);">
-        Simulates dispatching the required clinical order into the hospital EMR, closing the open loop and eliminating malpractice hazard.
+        This only marks the synthetic case as resolved in this browser. No order, patient message, or EHR update is sent.
       </p>
 
       <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
         <button class="btn-secondary" onclick="document.getElementById('order-modal').classList.remove('open')">Cancel</button>
         <button class="btn-close-loop" id="btn-confirm-order" style="padding: 0.55rem 1.25rem; font-size: 0.85rem;">
-          Confirm & Close Loop
+          Run Local Simulation
         </button>
       </div>
     </div>
@@ -948,7 +937,7 @@
     <div class="comparison-modal">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: var(--cyan-neon);">
-          Clinical Reality Check: Traditional EMR vs. ClinLoop AI
+          Prototype comparison · not clinically validated
         </h2>
         <button id="btn-close-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
       </div>
@@ -973,7 +962,7 @@
             </li>
             <li>
               <span>⚠️</span>
-              <span><strong>Alarming Failure Rate:</strong> In empirical benchmarks, traditional EMR baseline catches only <strong>25.9%</strong> of open loops.</span>
+              <span><strong>Prototype limitation:</strong> This demo has no validated comparison against a hospital EMR.</span>
             </li>
             <li>
               <span>⚠️</span>
@@ -993,15 +982,15 @@
             </li>
             <li>
               <span>⭐</span>
-              <span><strong>Proactive Safety Clock:</strong> Calculates exponential urgency curves as deadlines approach, eliminating human recall dependency.</span>
+              <span><strong>Prototype clock:</strong> Illustrative rule timing only; it does not monitor live deadlines or replace clinician follow-up.</span>
             </li>
             <li>
               <span>⭐</span>
-              <span><strong>Superior Precision:</strong> <strong>85.4% sensitivity</strong> and <strong>88.6% F1-Score</strong> with 50% fewer false alerts (reduces clinician alert fatigue).</span>
+              <span><strong>Clinical validation:</strong> Not performed. No sensitivity, F1, or alert-fatigue benefit has been established.</span>
             </li>
             <li>
               <span>⭐</span>
-              <span><strong>Auditable Trail:</strong> Every flag includes formal guideline justification, time remaining, and 1-click clinical order execution.</span>
+              <span><strong>Demo audit:</strong> Displays static sample metadata and local simulation events; no order is executed.</span>
             </li>
           </ul>
         </div>
@@ -1029,7 +1018,7 @@
               <span class="badge badge-live" style="font-size: 0.62rem; padding: 0.15rem 0.55rem;">MCP v1.2 Protocol</span>
             </h2>
             <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
-              Active Servers: <span style="font-family: var(--font-mono); color: var(--cyan-neon);">3 MCP Servers Connected</span> • Dynamic Literature Grounding
+              Prototype only: <span style="font-family: var(--font-mono); color: var(--cyan-neon);">No MCP servers connected</span> • Static sample metadata
             </p>
           </div>
         </div>
@@ -1045,7 +1034,7 @@
               <span class="pulse-dot-cyan"></span>
               MCP Tool Execution (JSON-RPC 2.0)
             </span>
-            <span id="biomcp-latency-tag" class="biomcp-tag-cyan">Latency: 38ms</span>
+            <span id="biomcp-latency-tag" class="biomcp-tag-cyan">Not connected (demo)</span>
           </div>
 
           <div class="biomcp-stream-box">
@@ -1057,15 +1046,15 @@
           </div>
 
           <div class="biomcp-security-bar">
-            <span style="color: var(--emerald-safe);">✓ Cryptographically Signed Token</span>
-            <span>Grounding: PubMed / OpenFDA / NCCN</span>
+            <span style="color: var(--text-muted);">No token signing in demo</span>
+            <span>Static sample citations · no live lookup</span>
           </div>
         </div>
 
         <!-- Right: Authoritative Guideline Dossier -->
         <div class="biomcp-column">
           <div class="biomcp-col-header">
-            <span>Authoritative Clinical Evidence Dossier</span>
+            <span>Illustrative Evidence Metadata</span>
             <span id="biomcp-evidence-grade" class="biomcp-grade-badge">Grade 1A</span>
           </div>
 
@@ -1114,8 +1103,8 @@
           <div style="margin-top: 1rem; border-top: 1px solid var(--border-subtle); padding-top: 0.8rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
               <span style="font-size: 1rem;">🏥</span>
-              <strong style="color: #38bdf8; font-size: 0.85rem;">EHR MCP Server (Epic / Cerner)</strong>
-              <span class="badge badge-live" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">READY</span>
+              <strong style="color: #38bdf8; font-size: 0.85rem;">Future EHR integration</strong>
+              <span class="badge" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">NOT CONNECTED</span>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
               <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 6px; padding: 0.45rem 0.6rem;">
@@ -1132,8 +1121,8 @@
           <div style="margin-top: 0.8rem; border-top: 1px solid var(--border-subtle); padding-top: 0.8rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
               <span style="font-size: 1rem;">🩻</span>
-              <strong style="color: #f59e0b; font-size: 0.85rem;">PACS MCP Server (Radiology / DICOM)</strong>
-              <span class="badge badge-live" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">READY</span>
+              <strong style="color: #f59e0b; font-size: 0.85rem;">Future PACS integration</strong>
+              <span class="badge" style="font-size: 0.55rem; padding: 0.1rem 0.4rem;">NOT CONNECTED</span>
             </div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 0.4rem;">
               <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 6px; padding: 0.45rem 0.6rem;">
@@ -1446,15 +1435,15 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div class="phone-chat-header">
               <div class="phone-chat-avatar">AJ</div>
               <div class="phone-chat-name">
-                <span>아주대학교병원 안전진료센터</span>
-                <span style="font-size: 0.65rem; background: #003087; color: #fff; padding: 0.1rem 0.35rem; border-radius: 3px;">공식 알림톡</span>
+                <span>ClinLoop synthetic demo</span>
+                <span style="font-size: 0.65rem; background: #64748b; color: #fff; padding: 0.1rem 0.35rem; border-radius: 3px;">Not sent</span>
               </div>
             </div>
 
             <div class="phone-message-area">
               <div class="kakao-card">
                 <div class="kakao-card-top">
-                  <span>[아주대학교병원 진료안내]</span>
+                  <span>합성 사례 안내문 미리보기</span>
                   <span id="kakao-date-pill" style="font-family: var(--font-mono); font-size: 0.68rem;">2026.03.20</span>
                 </div>
 
@@ -1471,21 +1460,21 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
                   </div>
 
                   <div id="kakao-outreach-body" style="font-size: 0.78rem; line-height: 1.5; color: #334155;">
-                    김미영님, 지난 검사에서 전문의 상담 및 정밀검사가 필요한 변화가 발견되었습니다. 조기에 확인하시면 98% 이상 안전하게 치료 가능한 단계이오니 예약을 권고드립니다.
+                    합성 사례 안내문 미리보기입니다. 실제 환자에게 발송되지 않으며 임상 조언이 아닙니다.
                   </div>
 
                   <div style="background: #f1f5f9; padding: 0.5rem 0.7rem; border-radius: 6px; font-size: 0.72rem; color: #475569;">
-                    📍 권장 진료과: <strong id="kakao-dept-slot" style="color: #0f172a;">산부인과 (박교수)</strong>
+                    📍 예약 상태: <strong id="kakao-dept-slot" style="color: #0f172a;">예약된 일정 없음</strong>
                   </div>
                 </div>
 
                 <button class="kakao-booking-btn" id="btn-kakao-book">
-                  <span id="kakao-btn-label">📅 1초 간편 예약하기 (3월 25일 오전 10:00 박교수)</span>
+                  <span id="kakao-btn-label">시뮬레이션 (예약되지 않음)</span>
                 </button>
               </div>
 
               <div id="kakao-booked-toast" style="display: none; background: #05df72; color: #022c16; padding: 0.65rem 0.85rem; border-radius: 8px; font-size: 0.74rem; font-weight: 700; text-align: center; box-shadow: 0 4px 12px rgba(5, 223, 114, 0.3);">
-                ✓ 외래 예약 확정 완료! (HL7 FHIR Appointment 생성 및 EMR 전송됨)
+                시뮬레이션 전용입니다. 예약이나 EHR 업데이트는 발생하지 않았습니다.
               </div>
             </div>
           </div>
@@ -1494,18 +1483,18 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <div class="outreach-meta-panel">
           <div style="background: rgba(13, 20, 38, 0.7); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem;">
             <div style="font-size: 0.72rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700; text-transform: uppercase;">
-              Dual-Loop Principle #2: Patient Empathy Architecture
+              Synthetic demo · no patient delivery
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.05rem; color: var(--text-main); margin: 0.35rem 0;">
-              Solving the 40% Patient Non-Adherence Crisis
+              Patient messaging is not enabled
             </h3>
             <p style="font-size: 0.78rem; color: #94a3b8; line-height: 1.5; margin: 0;">
-              Over 40% of critical diagnostic follow-ups fail because patients are sent cold, terrifying, unintelligible medical jargon or generic automated letters. ClinLoop employs specialized medical health-literacy agents to translate dangerous findings into reassuring, clear, actionable steps with instantaneous 1-click booking.
+              This offline prototype displays synthetic text only. It does not measure adherence, generate a patient-specific message, contact patients, or book appointments.
             </p>
           </div>
 
           <div style="background: rgba(4, 8, 16, 0.6); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
-            <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-main);">HL7 FHIR CommunicationRequest Metadata</div>
+            <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-main);">Sample metadata · not sent</div>
             <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--cyan-neon);" id="outreach-fhir-id">
               CommunicationRequest/COMM-REQ-0062-ASCCP
             </div>
@@ -1535,7 +1524,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           </div>
 
           <div style="font-size: 0.72rem; color: #64748b; line-height: 1.4;">
-            💡 <em>Simulate clicking "1초 간편 예약하기" on the phone screen above to watch ClinLoop close the clinical loop and satisfy the safety invariant in real-time.</em>
+            💡 <em>No booking or clinical workflow changes occur when this demo button is clicked.</em>
           </div>
         </div>
       </div>
@@ -1567,12 +1556,12 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div style="font-size: 0.72rem; color: #fbbf24; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">
             Pillar 3 • Health Economics
           </div>
-          <h4 style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.6rem;">QALY 증분 및 건보 재정 절감</h4>
+          <h4 style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.6rem;">건강경제성 평가 상태</h4>
           <div style="font-size: 0.76rem; color: #94a3b8; line-height: 1.5; display: flex; flex-direction: column; gap: 0.4rem;">
-            <div><strong style="color: #e2e8f0;">질보정수명 증분:</strong> 조기 악성종양 발견 환자 1인당 <span style="color: #34d399; font-weight: 700;">+2.84 QALY</span></div>
-            <div><strong style="color: #e2e8f0;">비용-효과비 (ICER):</strong> <span style="color: #38bdf8; font-weight: 700;">-4,200/QALY</span> (비용 절감 + 수명 연장의 절대 우월 대안)</div>
-            <div><strong style="color: #e2e8f0;">건보 급여비 절감:</strong> 조기 폐암(Stage IA) 수술 vs 말기 면역치료 시 <span style="color: #fbbf24; font-weight: 700;">인당 6,850만 원</span> 절감</div>
-            <div><strong style="color: #e2e8f0;">의료소송 방어:</strong> 병원당 연간 5~10건의 지연진단 소송(건당 2.5억) 90% 이상 예방</div>
+            <div><strong style="color: #e2e8f0;">QALY 효과:</strong> 임상 데이터로 평가되지 않음</div>
+            <div><strong style="color: #e2e8f0;">비용-효과비 (ICER):</strong> 분석되지 않음</div>
+            <div><strong style="color: #e2e8f0;">건강보험 비용 절감:</strong> 입증되지 않음</div>
+            <div><strong style="color: #e2e8f0;">의료소송 감소:</strong> 평가되지 않음</div>
           </div>
         </div>
 
@@ -1604,12 +1593,12 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <!-- Phase 1 -->
           <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.9rem;">
             <div style="font-size: 0.7rem; font-family: var(--font-mono); color: #34d399; font-weight: 800;">PHASE 1 • LOCAL PROOF</div>
-            <div style="font-size: 0.88rem; font-weight: 700; color: #fff; margin: 0.3rem 0;">The Nobel Test (Pragmatic RCT)</div>
+            <div style="font-size: 0.88rem; font-weight: 700; color: #fff; margin: 0.3rem 0;">Proposed prospective clinical evaluation</div>
             <ul style="font-size: 0.73rem; color: #94a3b8; line-height: 1.5; padding-left: 1rem; margin: 0;">
-              <li><strong>Pre-Registered Trial:</strong> Protocol pre-registered on ClinicalTrials.gov at Ajou Hospital.</li>
-              <li><strong>3-Arm Isolation:</strong> (1) Standard Care, (2) AI-Physician Only, (3) Full Dual-Loop.</li>
-              <li><strong>Endpoints:</strong> Time-to-action, 5-year survival delta, and Maslach Burnout Inventory.</li>
-              <li><strong>Commitment to Truth:</strong> Guaranteed publication of positive or negative results in tier-1 journal.</li>
+              <li><strong>Registration:</strong> Required before any prospective enrollment; not yet registered.</li>
+              <li><strong>Potential design:</strong> Compare standard workflow with clinician-reviewed decision support.</li>
+              <li><strong>Candidate endpoints:</strong> Follow-up completion, time-to-action, workload, and safety events.</li>
+              <li><strong>Reporting plan:</strong> Publish results only after independent review and applicable approvals.</li>
             </ul>
           </div>
 
@@ -1741,11 +1730,11 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div style="font-size: 1.6rem; background: rgba(5, 150, 105, 0.15); border: 1px solid rgba(5, 150, 105, 0.4); border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">⚡</div>
           <div>
             <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-              NVIDIA RTX A4500 GPU Acceleration & On-Premise Privacy HUD
-              <span class="badge badge-live" style="font-size: 0.65rem;">CUDA 13.2 ACTIVE</span>
+              GPU telemetry · demo only
+              <span class="badge" style="font-size: 0.65rem;">NOT CONNECTED</span>
             </h2>
             <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
-              Hospital-Grade Local Hardware Acceleration • Zero-Cloud Patient Data Egress (100% HIPAA/PIPA Compliant)
+              No GPU, privacy, or compliance telemetry is connected to this prototype.
             </p>
           </div>
         </div>
@@ -1756,23 +1745,23 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.85rem; margin-top: 1rem;">
         <div class="modal-inner-box">
           <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">GPU Model</div>
-          <div style="font-size: 1.05rem; font-weight: 800; color: var(--emerald-safe); margin-top: 0.25rem;" id="gpu-val-device">NVIDIA RTX A4500</div>
-          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">Ampere Architecture (5888 Cores)</div>
+          <div style="font-size: 1.05rem; font-weight: 800; color: var(--emerald-safe); margin-top: 0.25rem;" id="gpu-val-device">Not connected (demo)</div>
+          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">No hardware telemetry available</div>
         </div>
         <div class="modal-inner-box">
           <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total VRAM</div>
-          <div style="font-size: 1.05rem; font-weight: 800; color: var(--cyan-neon); margin-top: 0.25rem;" id="gpu-val-vram-total">19.58 GB GDDR6</div>
-          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">With ECC Hardware Protection</div>
+          <div style="font-size: 1.05rem; font-weight: 800; color: var(--cyan-neon); margin-top: 0.25rem;" id="gpu-val-vram-total">Not connected (demo)</div>
+          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">No hardware telemetry available</div>
         </div>
         <div class="modal-inner-box">
           <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Allocated VRAM</div>
-          <div style="font-size: 1.05rem; font-weight: 800; color: var(--violet-neuro); margin-top: 0.25rem;" id="gpu-val-vram-alloc">15.0 MB</div>
-          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">Ultra-Lean Memory Footprint</div>
+          <div style="font-size: 1.05rem; font-weight: 800; color: var(--violet-neuro); margin-top: 0.25rem;" id="gpu-val-vram-alloc">Not connected (demo)</div>
+          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">No hardware telemetry available</div>
         </div>
         <div class="modal-inner-box">
           <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Inference Latency</div>
-          <div style="font-size: 1.05rem; font-weight: 800; color: var(--amber-warning); margin-top: 0.25rem;" id="gpu-val-lat">0.85 ms</div>
-          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">Sub-Millisecond Real-Time</div>
+          <div style="font-size: 1.05rem; font-weight: 800; color: var(--amber-warning); margin-top: 0.25rem;" id="gpu-val-lat">Not connected (demo)</div>
+          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">No latency measurement available</div>
         </div>
       </div>
 
@@ -1780,14 +1769,13 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
       
 
 
-      <!-- Nobility Feature Box: 100% On-Premise Privacy -->
+      <!-- Prototype limitation notice -->
       <div style="background: rgba(5, 150, 105, 0.08); border: 1.5px solid rgba(5, 150, 105, 0.25); border-radius: 10px; padding: 1.1rem; margin-top: 1rem;">
         <div style="font-size: 0.82rem; font-weight: 800; color: var(--emerald-safe); display: flex; align-items: center; gap: 0.4rem;">
-          🔒 의료 노블리티 (Medical Nobility): 원내 완벽 격리 온프레미스 GPU 구동 (Zero-Cloud Data Egress)
+          Prototype limitation
         </div>
         <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; margin: 0.4rem 0 0 0;">
-          기존 상용 클라우드 LLM(ChatGPT, Claude 등)은 환자의 민감 진단명, 의무기록 텍스트, 환자 식별정보(PHI)를 외부 데이터센터로 전송해야 하므로 <strong>의료법 및 개인정보보호법상 중대한 유출 위험</strong>이 존재합니다.<br>
-          반면 <strong>ClinLoop AI는 아주대학교의료원 원내 전산실의 워크스테이션 GPU(NVIDIA RTX A4500)</strong>에서 모든 추론과 Metric Temporal Logic(MTL) 검증을 100% 로컬 처리하여 <strong>단 1바이트의 환자 데이터도 외부망으로 나가지 않는 절대적 환자 프라이버시</strong>를 보장합니다.
+          This static prototype has no connected GPU, AI provider, hospital system, or privacy certification. Do not enter protected or patient-identifiable information.
         </p>
       </div>
 
@@ -1796,14 +1784,14 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
           <div>
             <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-main);">
-              🚀 1,000건 대규모 병렬 인과추론 실시간 벤치마크 (Live CUDA Tensor Benchmark)
+              GPU benchmark unavailable in this prototype
             </div>
             <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.15rem;">
-              PyTorch CUDA 스트림을 가동하여 1,000명의 환자 궤적에 대한 Metric Temporal Logic 안전 불변식을 병렬 검증합니다.
+              No GPU benchmark is executed by this static demo.
             </div>
           </div>
           <button id="btn-run-gpu-benchmark" class="btn-close-loop" style="padding: 0.5rem 1.1rem; font-size: 0.82rem;">
-            ⚡ 벤치마크 즉시 가동 (Run GPU Test)
+            GPU benchmark unavailable in demo
           </button>
         </div>
 
@@ -1854,13 +1842,13 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <button id="btn-close-api-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
       </div>
 
-      <!-- Security & Medical Nobility Reassurance Banner -->
+      <!-- Prototype credential safety notice -->
       <div style="margin-top: 1rem; background: rgba(5, 150, 105, 0.08); border: 1px solid rgba(5, 150, 105, 0.3); border-radius: 8px; padding: 0.85rem 1rem; font-size: 0.78rem; line-height: 1.55;">
         <div style="font-weight: 800; color: var(--emerald-safe); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;" id="modal-api-nobility-title">
-          🛡️ 의료 노블리티 환자 프라이버시 보장 (Medical Nobility & Privacy Shield)
+          ⚠️ 연결 및 자격 증명 입력 비활성화
         </div>
         <div style="color: var(--text-muted);" id="modal-api-nobility-desc">
-          ClinLoop AI의 기본 연산은 <strong>원내 완벽 격리 NVIDIA RTX A4500 온프레미스 GPU</strong>에서 100% 로컬 처리됩니다. 외부 클라우드 API를 등록하더라도, 시스템은 <strong>HIPAA Safe Harbor 18개 개인식별정보(PHI) 완전 비식별화 필터</strong>를 거쳐 환자 익명성을 절대적으로 수호합니다.
+          이 프로토타입은 외부 AI, PubMed 또는 병원 EHR에 연결되지 않습니다. API 자격 증명 입력이 비활성화되어 있습니다. 실제 API 키나 환자 정보를 입력하지 마십시오.
         </div>
       </div>
 
@@ -1921,7 +1909,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div class="api-key-title">
               <span>🧠</span> <span id="lbl-gemini-title">Google Gemini / Medical Foundation Model API</span>
             </div>
-            <span class="badge" id="badge-gemini-status" style="font-size: 0.65rem; color: var(--emerald-safe); border-color: rgba(5, 150, 105, 0.3);">On-Premise Local Active</span>
+            <span class="badge" id="badge-gemini-status" style="font-size: 0.65rem; color: var(--emerald-safe); border-color: rgba(5, 150, 105, 0.3);">Not connected (demo)</span>
           </div>
           <div class="api-key-desc" id="desc-gemini-key">
             자연어 환자 설명문 생성, 다국어 의학 번역, 복합 질환 임상 요약에 활용되는 생성형 AI API 키입니다.
@@ -1942,7 +1930,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div class="api-key-title">
               <span>🧠</span> <span id="lbl-anthropic-title">Anthropic Claude (Claude 3.5 Sonnet / Opus)</span>
             </div>
-            <span class="badge" id="badge-anthropic-status" style="font-size: 0.65rem; color: #a78bfa; border-color: rgba(167, 139, 250, 0.3);">On-Premise Local Active</span>
+            <span class="badge" id="badge-anthropic-status" style="font-size: 0.65rem; color: #a78bfa; border-color: rgba(167, 139, 250, 0.3);">Not connected (demo)</span>
           </div>
           <div class="api-key-desc" id="desc-anthropic-key">
             최고 수준의 임상 의학 추론, 의료 윤리 안전 정렬 및 복합 다빈도 질환 퇴원 요약에 특화된 Anthropic 최상위 모델 API 키입니다.
@@ -1962,7 +1950,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div class="api-key-title">
               <span>⚡</span> <span id="lbl-openai-title">OpenAI (Project Astra / o1 / GPT-4o Realtime)</span>
             </div>
-            <span class="badge" id="badge-openai-status" style="font-size: 0.65rem; color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">On-Premise Local Active</span>
+            <span class="badge" id="badge-openai-status" style="font-size: 0.65rem; color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">Not connected (demo)</span>
           </div>
           <div class="api-key-desc" id="desc-openai-key">
             심층 임상 감별진단 추론(o1) 및 실시간 음성/영상 다중모달 환자 공감 소통(Astra / GPT-4o Realtime)에 활용되는 API 키입니다.
@@ -1982,7 +1970,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div class="api-key-title">
               <span>📚</span> <span id="lbl-ncbi-title">NCBI / PubMed / BioMCP E-Utilities API</span>
             </div>
-            <span class="badge" id="badge-ncbi-status" style="font-size: 0.65rem; color: var(--cyan-neon); border-color: rgba(0, 240, 255, 0.3);">Active (3 req/s limit)</span>
+            <span class="badge" id="badge-ncbi-status" style="font-size: 0.65rem; color: var(--cyan-neon); border-color: rgba(0, 240, 255, 0.3);">Not connected (demo)</span>
           </div>
           <div class="api-key-desc" id="desc-ncbi-key">
             NCBI API 키를 등록하면 초당 10회 고속 검색이 활성화되어 최신 의학 가이드라인 및 논문 원문을 지연 없이 검증합니다.
@@ -2002,7 +1990,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div class="api-key-title">
               <span>🏥</span> <span id="lbl-fhir-title">Hospital EHR / SMART on FHIR OAuth Token</span>
             </div>
-            <span class="badge" id="badge-fhir-status" style="font-size: 0.65rem; color: var(--text-muted); border-color: var(--border-card);">Local Mock Active</span>
+            <span class="badge" id="badge-fhir-status" style="font-size: 0.65rem; color: var(--text-muted); border-color: var(--border-card);">Not connected (demo)</span>
           </div>
           <div class="api-key-desc" id="desc-fhir-key">
             원내 전자의무기록(EMR/EHR) 시스템(Epic, Cerner, 아주대 OCS)과 실시간 양방향 오더 연동을 위한 FHIR R4 토큰입니다.
