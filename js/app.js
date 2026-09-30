@@ -1240,7 +1240,7 @@ class ClinLoopApp {
 
       this.renderCaseTabs();
       this.updateSummaryView();
-    this.updateLivesCounter();
+      this.updateLivesCounter();
 
       if (this.currentCase) {
         const isOverridden = this.closedOverrides.has(this.currentCase.scenario_id);
@@ -1298,8 +1298,11 @@ class ClinLoopApp {
         document.body.classList.toggle('dark-theme');
         const isDark = document.body.classList.contains('dark-theme');
         localStorage.setItem('clinloop_theme', isDark ? 'dark' : 'light');
-        if (themeText) themeText.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-        btnTheme.innerHTML = isDark ? '🌙 <span id="theme-btn-text">Dark Mode</span>' : '☀️ <span id="theme-btn-text">Light Mode</span>';
+        if (themeText) {
+          themeText.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+        } else {
+          btnTheme.innerHTML = isDark ? '🌙 <span id="theme-btn-text">Dark Mode</span>' : '☀️ <span id="theme-btn-text">Light Mode</span>';
+        }
       });
     }
 
