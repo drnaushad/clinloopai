@@ -24,7 +24,58 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <style>
+    .cockpit-clock-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      backdrop-filter: blur(8px);
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      letter-spacing: 0.05em;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: default;
+    }
+    .cockpit-clock-badge:hover {
+      border-color: #0d9488;
+      box-shadow: 0 4px 16px rgba(13, 148, 136, 0.15);
+      transform: translateY(-1px);
+    }
+    .live-indicator {
+      width: 6px;
+      height: 6px;
+      background-color: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse-live 2s infinite;
+    }
+    body.dark-theme .cockpit-clock-badge {
+      background: rgba(15, 23, 42, 0.85);
+      border-color: rgba(0, 240, 255, 0.3);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.1), inset 0 0 5px rgba(0, 240, 255, 0.05);
+      color: #e2e8f0;
+    }
+    body.dark-theme .cockpit-clock-badge:hover {
+      border-color: rgba(0, 240, 255, 0.6);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.25), inset 0 0 8px rgba(0, 240, 255, 0.15);
+      color: #fff;
+    }
+    @keyframes pulse-live {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.4); opacity: 1; box-shadow: 0 0 12px #10b981; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+  </style>
 </head>
+
 <body>
 
   <!-- Full-Width Cockpit Header -->
@@ -75,8 +126,8 @@
     </div>
 
     <div class="header-actions">
-      <div id="live-cockpit-clock" class="cockpit-clock-badge">
-        2026-09-17 19:00:00 KST
+            <div id="live-cockpit-clock" class="cockpit-clock-badge">
+        <span class="live-indicator"></span> <span>2026-09-17 19:00:00 KST</span>
       </div>
       <a href="presentation.html" target="_blank" class="btn-secondary" id="pitch-deck-link" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; color: #38bdf8;" title="Open Pitch Deck">
         📊 Pitch Deck
