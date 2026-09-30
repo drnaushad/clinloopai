@@ -5,9 +5,9 @@
 
 const CLINLOOP_I18N = {
   ko: {
-    prototypeLabel: '연구용 데모',
+    prototypeLabel: '연구 프로토타입',
     prototypeNotice: '합성 사례만 사용 · 실시간 EHR, 메시징, 가이드라인 연결 없음 · 환자 진료용 아님',
-    brandSubtitle: '임상 후속조치 연구 프로토타입 · 합성 데모',
+    brandSubtitle: '임상 후속조치 연구 프로토타입 · 합성 데이터',
     hospitalText: '합성 사례 연구 프로토타입',
     pitchDeck: '📊 피치덱 (Pitch Deck)',
     nobilityBtn: '🏛️ 의료 노블리티 & 윤리 헌장',
@@ -28,7 +28,7 @@ const CLINLOOP_I18N = {
     tabHypergraph: '🕸️ 지식 하이퍼그래프 (AI Graph)',
     tabPrivacy: '🛡️ 개인정보 보호 (Privacy Shield)',
     guideTitle: '💡 ClinLoop AI는 어떤 시스템인가요? (System Purpose & Core Value)',
-    guideDesc: 'ClinLoop AI는 후속 조치가 필요한 임상 이벤트를 검토하기 위한 연구 프로토타입입니다. 이 데모는 합성 사례만 사용하며 진단, 치료 권고, 환자 연락 또는 병원 연동을 수행하지 않습니다.',
+    guideDesc: 'ClinLoop AI는 후속 조치 업무 흐름을 검토하기 위한 연구 프로토타입입니다. 이 화면은 합성 사례만 사용하며 진단, 치료 권고, 환자 연락 또는 병원 연동을 수행하지 않습니다.',
     guideSteps: '<span class="guide-step">합성 사례 선택</span> <span class="guide-arrow">➔</span> <span class="guide-step">규칙 매칭과 근거를 검토</span> <span class="guide-arrow">➔</span> <span class="guide-step">브라우저에서만 시뮬레이션</span>',
     deadlineLabel: '추적 관리 의무 기한',
     q1Title: '1. 무엇이 발견되었나요? (What was found?)',
@@ -49,10 +49,10 @@ const CLINLOOP_I18N = {
     summaryKakaoLbl: '환자 안내문 시뮬레이션 열기',
     summaryKakaoSub: '합성 사례 기반 예시만 표시합니다. 실제 환자에게 보내지 마십시오.',
     summaryOrderLblDefault: '브라우저 로컬 종결 시뮬레이션 (전송 안 됨)',
-    summaryOrderLblClosed: '데모 시뮬레이션: 브라우저에서만 종결 표시 (전송 안 됨)',
+    summaryOrderLblClosed: '브라우저에서만 상태 변경 (전송 안 됨)',
     summaryOrderSub: '이 프로토타입은 오더나 환자 메시지를 전송하지 않습니다.',
-    clockTelemetryTitle: '시연용 시간 예시 (임상 감시 아님)',
-    riskMetricLabel: '시연용 점수 · 임상 검증 안 됨',
+    clockTelemetryTitle: '시간 모델 예시 · 실시간 감시 아님',
+    riskMetricLabel: '연구용 점수 · 임상 검증 안 됨',
     statRuleTitle: '온톨로지 규칙',
     statSeverityTitle: '합성 사례 중증도',
     mathToggleSummary: '🔬 AI 감쇠곡선 수학식 (Technical Math)',
@@ -81,13 +81,13 @@ const CLINLOOP_I18N = {
     descEngineAnthropic: '최고 임상 추론 & 의료 윤리 정렬',
     descEngineOpenai: '실시간 다중모달 & 심층 CoT 추론',
     descEngineGemini: '초고속 다국어 건강 문해력 요약',
-    descEngineLocal: '100% 원내 로컬 GPU 격리 (Default)',
+    descEngineLocal: '연결 안 됨 · 연구용 표시',
     btnCancelApi: '닫기 (Close)'
   },
   en: {
-    prototypeLabel: 'RESEARCH DEMO',
+    prototypeLabel: 'RESEARCH PROTOTYPE',
     prototypeNotice: 'Synthetic cases only · No live EHR, messaging, or guideline connections · Not for patient care.',
-    brandSubtitle: 'Clinical follow-up research prototype · synthetic demo',
+    brandSubtitle: 'Clinical follow-up research prototype · synthetic data',
     hospitalText: 'Research prototype · synthetic cases',
     pitchDeck: '📊 Pitch Deck',
     nobilityBtn: '🏛️ Medical Nobility & Ethics',
@@ -108,7 +108,7 @@ const CLINLOOP_I18N = {
     tabHypergraph: '🕸️ Knowledge Hypergraph (AI Graph)',
     tabPrivacy: '🛡️ Privacy Shield',
     guideTitle: '💡 What is ClinLoop AI? (System Purpose & Core Value)',
-    guideDesc: 'ClinLoop AI is a research prototype for reviewing clinical follow-up workflows. This demo uses synthetic cases only; it does not diagnose, recommend treatment, contact patients, or connect to a hospital.',
+    guideDesc: 'ClinLoop AI is a research prototype for reviewing clinical follow-up workflows. This interface uses synthetic cases only; it does not diagnose, recommend treatment, contact patients, or connect to a hospital.',
     guideSteps: '<span class="guide-step">Select a synthetic case</span> <span class="guide-arrow">➔</span> <span class="guide-step">Review the rule match and evidence</span> <span class="guide-arrow">➔</span> <span class="guide-step">Run a browser-only simulation</span>',
     deadlineLabel: 'Mandatory Tracking Deadline',
     q1Title: '1. What was clinically detected? (Diagnostic Finding)',
@@ -129,10 +129,10 @@ const CLINLOOP_I18N = {
     summaryKakaoLbl: 'Preview a sample patient message',
     summaryKakaoSub: 'Illustrative synthetic-case text only. Do not send to a real patient.',
     summaryOrderLblDefault: 'Simulate local resolution (not sent)',
-    summaryOrderLblClosed: 'Demo simulation: marked resolved in this browser only (not sent)',
+    summaryOrderLblClosed: 'State changed in this browser only (not sent)',
     summaryOrderSub: 'This prototype does not send orders or patient messages.',
-    clockTelemetryTitle: 'Demo timing preview · not live monitoring',
-    riskMetricLabel: 'Demo score · not clinically validated',
+    clockTelemetryTitle: 'Research timing preview · not live monitoring',
+    riskMetricLabel: 'Research score · not clinically validated',
     statRuleTitle: 'Ontology Rule',
     statSeverityTitle: 'Synthetic case severity',
     mathToggleSummary: '🔬 Exponential Hazard Sigmoid Formula (Math)',
@@ -161,7 +161,7 @@ const CLINLOOP_I18N = {
     descEngineAnthropic: 'State-of-the-Art Reasoning & Ethics',
     descEngineOpenai: 'Real-time Multimodal & Deep CoT',
     descEngineGemini: 'High-speed Multilingual Summarization',
-    descEngineLocal: '100% Air-Gapped Local GPU (Default)',
+    descEngineLocal: 'Not connected · research display only',
     btnCancelApi: 'Close'
   }
 };
@@ -226,7 +226,7 @@ async function testLocalLLM() {
       if (badge) badge.innerHTML = `<span style="color:#10b981">✅ ${data.model} (direct Ollama) · ${Math.round(latency/1000)}s · On-Premise ✓</span>`;
     } catch (e2) {
       if (badge) badge.innerHTML = `<span style="color:#f59e0b">⚠️ Backend offline. DeepSeek-R1 runs on port 8124 / Ollama port 11434</span>`;
-      if (output) { output.textContent = '[Demo mode: real output when backend is running]\n\n안심하세요. 검진에서 발견된 소견은 전문의가 지속적으로 모니터링하고 있습니다. 다음 단계 검사를 위해 24일 내로 방문 예약을 도와드리겠습니다.'; output.style.display = 'block'; }
+      if (output) { output.textContent = '[Offline prototype: no patient communication was generated.]'; output.style.display = 'block'; }
     }
   }
   btn.textContent = '▶ Test Local LLM Now';
@@ -493,10 +493,10 @@ class ClinLoopApp {
 
     this.fetchGpuTelemetry = async () => {
       const hudLabel = document.getElementById('gpu-hud-label');
-      if (hudLabel) hudLabel.textContent = 'GPU: Not connected (demo)';
+      if (hudLabel) hudLabel.textContent = 'GPU: Not connected';
       for (const id of ['gpu-val-device', 'gpu-val-vram-total', 'gpu-val-vram-alloc', 'gpu-val-lat']) {
         const element = document.getElementById(id);
-        if (element) element.textContent = 'Not connected (demo)';
+        if (element) element.textContent = 'Not connected';
       }
     };
 
@@ -522,7 +522,7 @@ class ClinLoopApp {
 
     if (btnRunBenchmark) {
       btnRunBenchmark.disabled = true;
-      btnRunBenchmark.textContent = 'GPU benchmark unavailable in demo';
+      btnRunBenchmark.textContent = 'GPU benchmark unavailable in this environment';
     }
 
     // Action button
@@ -761,16 +761,16 @@ class ClinLoopApp {
       });
 
       if (activeModelBadge) {
-        activeModelBadge.textContent = 'Demo template · no model connected';
+        activeModelBadge.textContent = 'Research template · no model connected';
         activeModelBadge.style.color = 'var(--text-muted)';
       }
-      if (apiStatusPill) apiStatusPill.textContent = 'DEMO';
+      if (apiStatusPill) apiStatusPill.textContent = 'NOT CONNECTED';
 
       // Sync outreach simulator engine buttons if open
       const outreachBtns = document.querySelectorAll('.btn-outreach-engine');
       outreachBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.engine === engine));
       const outreachPill = document.getElementById('outreach-model-pill');
-      if (outreachPill) outreachPill.textContent = 'Demo template · no AI connected';
+      if (outreachPill) outreachPill.textContent = 'Research template · no AI connected';
 
       if (this.updateOutreachModal) this.updateOutreachModal();
     };
@@ -831,7 +831,7 @@ class ClinLoopApp {
       for (const button of [btnTestGemini, btnTestAnthropic, btnTestOpenAI, btnTestNcbi, btnTestFhir, btnSaveApiKeys, btnResetApiKeys]) {
         if (button) button.disabled = true;
       }
-      if (apiStatusPill) apiStatusPill.textContent = 'DEMO';
+      if (apiStatusPill) apiStatusPill.textContent = 'NOT CONNECTED';
     };
 
     loadSavedKeys();
@@ -958,14 +958,14 @@ class ClinLoopApp {
         const badgeOpenAI = document.getElementById('badge-openai-status');
         const badgeNcbi = document.getElementById('badge-ncbi-status');
         const badgeFhir = document.getElementById('badge-fhir-status');
-        if (badgeGemini) badgeGemini.textContent = 'Not connected (demo)';
-        if (badgeAnthropic) badgeAnthropic.textContent = 'Not connected (demo)';
-        if (badgeOpenAI) badgeOpenAI.textContent = 'Not connected (demo)';
-        if (badgeNcbi) badgeNcbi.textContent = 'Not connected (demo)';
-        if (badgeFhir) badgeFhir.textContent = 'Not connected (demo)';
+        if (badgeGemini) badgeGemini.textContent = 'Not connected';
+        if (badgeAnthropic) badgeAnthropic.textContent = 'Not connected';
+        if (badgeOpenAI) badgeOpenAI.textContent = 'Not connected';
+        if (badgeNcbi) badgeNcbi.textContent = 'Not connected';
+        if (badgeFhir) badgeFhir.textContent = 'Not connected';
 
         if (apiStatusPill) {
-          apiStatusPill.textContent = 'DEMO';
+          apiStatusPill.textContent = 'NOT CONNECTED';
         }
       });
     }
@@ -976,7 +976,7 @@ class ClinLoopApp {
     if (btnSummaryKakao) {
       btnSummaryKakao.addEventListener('click', () => {
         const caseName = this.currentCase?.scenario_name || this.currentCase?.scenario_id || 'UNKNOWN';
-        this.addAuditEntry('simulation', 'DEMO ONLY', `Sample patient message preview opened; nothing was sent · Case: ${caseName}`, true);
+        this.addAuditEntry('simulation', 'RESEARCH PREVIEW', `Sample patient message preview opened; nothing was sent · Case: ${caseName}`, true);
         this.updateOutreachModal();
         const m = document.getElementById('outreach-modal');
         if (m) m.classList.add('open');
@@ -987,7 +987,7 @@ class ClinLoopApp {
     if (btnSummaryOrder) {
       btnSummaryOrder.addEventListener('click', () => {
         const caseName = this.currentCase?.scenario_name || this.currentCase?.scenario_id || 'UNKNOWN';
-        this.addAuditEntry('simulation', 'DEMO ONLY', `Case marked resolved in this browser; no order was sent · Case: ${caseName}`, true);
+        this.addAuditEntry('simulation', 'LOCAL SIMULATION', `Case marked resolved in this browser; no order was sent · Case: ${caseName}`, true);
         if (!this.currentCase) return;
         this.closedOverrides.add(this.currentCase.scenario_id);
         this.selectCase(this.currentCase.scenario_id);
@@ -1290,11 +1290,11 @@ class ClinLoopApp {
       
       let statusText = '';
       if (isClosed) {
-        statusText = isKo ? '✅ 데모 종결' : '✅ Demo closed';
+        statusText = isKo ? '✅ 연구 예시 종결' : '✅ Sample closed';
       } else if (c.ground_truth_status === 'delayed') {
-        statusText = isKo ? '🧪 데모 지연 사례' : '🧪 Demo delayed case';
+        statusText = isKo ? '🧪 연구용 지연 예시' : '🧪 Delayed sample';
       } else {
-        statusText = isKo ? '🧪 데모 사례' : '🧪 Demo case';
+        statusText = isKo ? '🧪 연구용 사례' : '🧪 Research sample';
       }
 
       const ptName = isKo
@@ -1395,9 +1395,9 @@ class ClinLoopApp {
 
     if (isClosed) {
       actionBox.classList.add('resolved');
-      actionTitle.textContent = isKo ? '데모 상태: 이 브라우저에서 종결 표시됨' : 'Demo state: marked resolved in this browser';
+      actionTitle.textContent = isKo ? '연구 예시: 이 브라우저에서 상태 변경' : 'Research sample: state changed in this browser';
       actionDesc.textContent = isKo ? '시뮬레이션 상태이며 임상 조치, 오더 또는 환자 메시지는 전송되지 않았습니다.' : 'Simulation state only. No clinical action, order, or patient message was sent.';
-      actionBtn.textContent = isKo ? '데모 시뮬레이션 종결됨' : 'Demo simulation marked resolved';
+      actionBtn.textContent = isKo ? '로컬 상태 변경 완료' : 'Local state change complete';
       actionBtn.classList.add('resolved');
     } else {
       actionBox.classList.remove('resolved');
@@ -1405,7 +1405,7 @@ class ClinLoopApp {
       actionDesc.textContent = isKo
         ? `시연 데이터의 예시 항목: ${scenario.missing_followup || '후속조치'}. 실제 환자 우선순위나 임상 권고가 아닙니다.`
         : `Illustrative sample gap: ${scenario.missing_followup || 'follow-up'}. This is not a patient-specific priority or clinical recommendation.`;
-      actionBtn.textContent = isKo ? '⚡ 데모 상태를 브라우저에서 종결 표시' : '⚡ Demo: mark resolved locally';
+      actionBtn.textContent = isKo ? '⚡ 브라우저에서 예시 상태 변경' : '⚡ Change sample state locally';
       actionBtn.classList.remove('resolved');
     }
 
@@ -1426,7 +1426,7 @@ class ClinLoopApp {
       },
       {
         num: '02',
-        title: `Demo rule match: ${scenario.applicable_rule_id}`,
+        title: `Research rule example: ${scenario.applicable_rule_id}`,
         sub: scenario.biomcp_evidence ? `Illustrative citation: ${scenario.biomcp_evidence.guideline_org.split('(')[0].trim()} • PMID: ${scenario.biomcp_evidence.pmid}` : 'Static sample metadata; not a live evidence lookup'
       },
       {
@@ -1436,7 +1436,7 @@ class ClinLoopApp {
       },
       {
         num: '04',
-        title: isClosed ? 'Demo state: marked resolved locally' : 'Demo action: no alert dispatched',
+        title: isClosed ? 'Local sample state changed' : 'No alert was dispatched',
         sub: 'No EHR writeback, messaging, or clinician escalation is connected'
       }
     ];
@@ -1904,19 +1904,19 @@ class ClinLoopApp {
     if (isClosed) {
       if (badge) {
         badge.className = 'badge-pill badge-safe';
-        badge.textContent = isKo ? '데모 종결 상태 (브라우저에만 저장)' : 'Demo resolved state (browser only)';
+        badge.textContent = isKo ? '연구 예시 상태 (브라우저에만 저장)' : 'Sample state (browser only)';
       }
       if (timerText) {
         timerText.textContent = isKo ? '시뮬레이션 종결' : 'Simulation resolved';
         timerText.style.color = 'var(--emerald-safe)';
       }
       if (orderBtnLabel) {
-        orderBtnLabel.textContent = isKo ? '데모 시뮬레이션: 브라우저에서만 종결 표시 (전송 안 됨)' : 'Demo simulation: marked resolved in this browser only (not sent)';
+        orderBtnLabel.textContent = isKo ? '브라우저에서만 상태 변경 (전송 안 됨)' : 'State changed in this browser only (not sent)';
       }
     } else {
       if (badge) {
         badge.className = 'badge-pill badge-urgent';
-        badge.textContent = isKo ? '합성 데모 사례 · 임상 우선순위 아님' : 'Synthetic demo case · not a clinical priority';
+        badge.textContent = isKo ? '합성 연구 사례 · 임상 우선순위 아님' : 'Synthetic research sample · not a clinical priority';
       }
       if (timerText) {
         timerText.textContent = isKo ? '시연용 시간 정보' : 'Illustrative timing only';
@@ -2141,20 +2141,20 @@ class ClinLoopApp {
     const c = this.currentCase;
     const isEnglish = this.outreachLang === 'en';
     const message = isEnglish
-      ? 'Synthetic demonstration text only. This is not a clinical instruction or a message to send. A qualified clinician must review the actual record and decide any patient communication through approved channels.'
+      ? 'Synthetic research text only. This is not a clinical instruction or a message to send. A qualified clinician must review the actual record and decide any patient communication through approved channels.'
       : '합성 데이터 시연용 문구입니다. 임상 지시나 실제 환자에게 보낼 메시지가 아닙니다. 담당 의료진이 실제 기록을 검토하고 승인된 절차로 환자 연락 여부를 결정해야 합니다.';
 
     const setText = (id, value) => {
       const element = document.getElementById(id);
       if (element) element.textContent = value;
     };
-    setText('kakao-outreach-title', isEnglish ? `Synthetic demo message · ${c.scenario_id}` : `합성 데모 안내문 · ${c.scenario_id}`);
+    setText('kakao-outreach-title', isEnglish ? `Synthetic sample message · ${c.scenario_id}` : `합성 사례 안내문 · ${c.scenario_id}`);
     setText('kakao-jargon-text', isEnglish ? 'Synthetic case selected' : '합성 사례 선택됨');
     setText('kakao-outreach-body', message);
     setText('kakao-dept-slot', isEnglish ? 'No appointment reserved' : '예약된 일정 없음');
     setText('kakao-btn-label', isEnglish ? 'Simulate local workflow (not booked)' : '로컬 시뮬레이션 (예약되지 않음)');
     setText('outreach-fhir-id', isEnglish ? 'Not connected · no message request sent' : '연결 안 됨 · 메시지 요청 전송 안 됨');
-    setText('outreach-model-pill', isEnglish ? 'Demo template · no AI connected' : '데모 템플릿 · AI 연결 안 됨');
+    setText('outreach-model-pill', isEnglish ? 'Research template · no AI connected' : '연구용 템플릿 · AI 연결 안 됨');
     setText('outreach-status-tag', isEnglish ? 'No message sent · no appointment booked' : '메시지 전송 안 됨 · 예약 안 됨');
 
     const bookingButton = document.getElementById('btn-kakao-book');
@@ -2182,7 +2182,7 @@ class ClinLoopApp {
     const entry = document.createElement('div');
     entry.className = `audit-entry audit-entry-${type}`;
     const ts = new Date().toISOString().slice(11,19) + ' UTC';
-    const engineIcons = { system:'DEMO', kakao:'DEMO PREVIEW', order:'DEMO ACTION', model:'DEMO', warning:'DEMO ALERT', simulation:'DEMO ONLY' };
+    const engineIcons = { system:'RESEARCH', kakao:'MESSAGE PREVIEW', order:'LOCAL SIMULATION', model:'RESEARCH', warning:'STATUS', simulation:'LOCAL ONLY' };
     entry.innerHTML = `
       <span class="audit-ts">${ts}</span>
       <span class="audit-engine">${engineIcons[type] || engine}</span>
