@@ -1261,26 +1261,6 @@ class ClinLoopApp {
     if (dockBtnEn) dockBtnEn.addEventListener('click', () => { this.setLanguage('en'); this._playTelemetrySound(800, 'sine', 0.05); });
 
     
-    // Summary View One-Click Action Buttons
-    const btnSummaryKakao = document.getElementById('summary-btn-kakao');
-    if (btnSummaryKakao) {
-      btnSummaryKakao.addEventListener('click', () => {
-        this.updateOutreachModal();
-        const m = document.getElementById('outreach-modal');
-        if (m) m.classList.add('open');
-      });
-    }
-
-    const btnSummaryOrder = document.getElementById('summary-btn-order');
-    if (btnSummaryOrder) {
-      btnSummaryOrder.addEventListener('click', () => {
-        if (!this.currentCase) return;
-        this.closedOverrides.add(this.currentCase.scenario_id);
-        this.selectCase(this.currentCase.scenario_id);
-        this._playTelemetrySound(880, 'sine', 0.15);
-      });
-    }
-
     // Light / Dark Theme Toggle Button
     const btnTheme = document.getElementById('btn-theme-toggle');
     const themeText = document.getElementById('theme-btn-text');
