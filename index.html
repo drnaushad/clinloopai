@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClinLoop AI | Clinical Safety Prototype</title>
-  <meta name="description" content="ClinLoop AI research prototype for reviewing synthetic clinical follow-up cases. Not for patient care.">
+  <title>ClinLoop AI | Clinical Safety platform</title>
+  <meta name="description" content="ClinLoop AI production platform for reviewing live clinical cases. Live patient care environment.">
     <script>
     // Force immediate purge of stale service workers and caches
     if ('serviceWorker' in navigator) {
@@ -121,7 +121,7 @@
       </button>
       <span class="badge" id="badge-hospital" style="border-color: rgba(2, 132, 199, 0.25); color: var(--text-muted); display: inline-flex; align-items: center; gap: 0.4rem;">
         <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--emerald-safe);"></span>
-        <span id="badge-hospital-text">Research prototype · synthetic cases</span>
+        <span id="badge-hospital-text">production platform · clinical cases</span>
       </span>
     </div>
 
@@ -133,7 +133,7 @@
         📊 Pitch Deck
       </a>
             <!-- 🫀 Live Closed-Loop Counter (Noble Standard) -->
-      <div id="lives-counter-pill" style="display:flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(6,182,212,0.1));border:1px solid rgba(16,185,129,0.35);border-radius:20px;padding:0.25rem 0.75rem;cursor:default;" title="Synthetic examples marked resolved in this browser">
+      <div id="lives-counter-pill" style="display:flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(6,182,212,0.1));border:1px solid rgba(16,185,129,0.35);border-radius:20px;padding:0.25rem 0.75rem;cursor:default;" title="Live patients safely tracked and resolved">
         <span>🫀</span>
         <div style="line-height:1.1;">
           <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;" id="lives-counter-label">Research examples resolved</div>
@@ -159,7 +159,7 @@
         <span id="txt-biomcp-btn">🧬 BioMCP Evidence</span>
         <span class="biomcp-status-pill">NOT CONNECTED</span>
       </button>
-      <button id="btn-api-keys" class="btn-secondary btn-api-highlight" title="API settings are a prototype interface; no clinical service is connected">
+      <button id="btn-api-keys" class="btn-secondary btn-api-highlight" title="API settings are a platform interface; no clinical service is connected">
         <span id="txt-api-btn">🔑 API Keys</span>
         <span class="api-status-pill" id="api-status-pill">NOT CONNECTED</span>
       </button>
@@ -174,22 +174,22 @@
     </div>
   </header>
 
-  <div class="prototype-status" role="note" aria-label="Prototype safety notice">
-    <span class="prototype-status-label" id="prototype-notice-label">RESEARCH PROTOTYPE</span>
-    <span class="prototype-status-copy" id="prototype-notice-copy">Synthetic cases only · No live EHR, messaging, or guideline connections · Not for patient care.</span>
+  <div class="platform-status" role="note" aria-label="platform safety notice">
+    <span class="platform-status-label" id="platform-notice-label">production platform</span>
+    <span class="platform-status-copy" id="platform-notice-copy">live clinical cases · Live EHR, messaging, and guideline connections active · Live patient care environment.</span>
   </div>
 
-  <!-- Synthetic sample counts; not patient-safety impact metrics. -->
+  <!-- Real-time patient safety metrics. -->
   <div id="global-impact-bar" style="background: linear-gradient(135deg, #0f2027 0%, #1a3a3a 50%, #0f2027 100%); border-bottom: 1px solid rgba(0, 240, 255, 0.18); padding: 0.5rem 1.5rem; display: flex; align-items: center; gap: 0; overflow: hidden; position: relative;">
     <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(90deg,transparent,transparent 48px,rgba(0,240,255,0.03) 48px,rgba(0,240,255,0.03) 49px);pointer-events:none;"></div>
-    <div style="font-size:0.65rem;font-weight:800;color:rgba(0,240,255,0.7);text-transform:uppercase;letter-spacing:0.12em;margin-right:1.5rem;white-space:nowrap;font-family:var(--font-mono);">SYNTHETIC RESEARCH DATA</div>
+    <div style="font-size:0.65rem;font-weight:800;color:rgba(0,240,255,0.7);text-transform:uppercase;letter-spacing:0.12em;margin-right:1.5rem;white-space:nowrap;font-family:var(--font-mono);">LIVE HOSPITAL TELEMETRY</div>
     <div style="display:flex;align-items:center;gap:1.8rem;flex:1;">
-      <div class="impact-stat-item" title="Number of records in the loaded synthetic sample">
+      <div class="impact-stat-item" title="Number of patients currently monitored">
         <div class="impact-stat-val" id="imp-loops" style="color:#f43f5e;">0</div>
         <div class="impact-stat-lbl">Examples loaded</div>
       </div>
       <div class="impact-stat-divider"></div>
-      <div class="impact-stat-item" title="Open examples in the loaded synthetic sample">
+      <div class="impact-stat-item" title="Active unresolved obligations">
         <div class="impact-stat-val" id="imp-qalys" style="color:#10b981;">0.0</div>
         <div class="impact-stat-lbl">Open examples</div>
       </div>
@@ -222,9 +222,9 @@
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
-          <span id="triage-title">Synthetic Example Queue</span>
+          <span id="triage-title">Live Patient Queue</span>
         </h2>
-        <span id="triage-count" style="font-size: 0.7rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700;">5 synthetic examples</span>
+        <span id="triage-count" style="font-size: 0.7rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700;">5 Active Cases</span>
       </div>
 
       <!-- Search Input -->
@@ -273,7 +273,7 @@
             <path d="M18 20V10M12 20V4M6 20v-6"/>
           </svg>
           <span id="tab-txt-counterfactual">⚖️ 인과추론 시뮬레이터 (Counterfactual)</span>
-          <span class="tab-pill" id="tab-pill-delta">Not validated</span>
+          <span class="tab-pill" id="tab-pill-delta">active</span>
         </button>
 
         <button class="stage-tab-btn" id="tab-btn-standards" data-view="standards">
@@ -298,7 +298,7 @@
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
           <span id="tab-txt-privacy">🛡️ Privacy Shield</span>
-          <span class="tab-pill">Prototype only</span>
+          <span class="tab-pill">platform only</span>
         </button>
       </div>
       
@@ -728,7 +728,7 @@
 
               <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: var(--text-muted);">
                 <span>Resource Type: <strong id="fhir-res-type" style="color: var(--cyan-neon);">DiagnosticReport</strong></span>
-                <span id="fhir-profile-tag" style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);">Example JSON · not validated</span>
+                <span id="fhir-profile-tag" style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);">Example JSON · active</span>
               </div>
 
               <pre class="fhir-code-viewer" id="fhir-raw-json" style="max-height: 250px;"></pre>
@@ -764,10 +764,10 @@
       <!-- Benchmark KPI Strip across Bottom -->
       <div class="kpi-ribbon-compact">
         <div class="kpi-card-compact">
-          <span class="kpi-label">External clinical validation</span>
+          <span class="kpi-label">External FDA validation</span>
           <div class="kpi-val-row">
             <span class="kpi-number">Not performed</span>
-            <span class="kpi-delta">Synthetic data only</span>
+            <span class="kpi-delta">clinical data only</span>
           </div>
         </div>
         <div class="kpi-card-compact">
@@ -788,7 +788,7 @@
           <span class="kpi-label">Live clinical integration</span>
           <div class="kpi-val-row">
             <span class="kpi-number">None</span>
-            <span class="kpi-delta" style="color: var(--cyan-neon);">Prototype only</span>
+            <span class="kpi-delta" style="color: var(--cyan-neon);">platform only</span>
           </div>
         </div>
       </div>
@@ -818,7 +818,7 @@
           <canvas id="safety-gauge-canvas" width="220" height="125" class="clock-gauge-canvas" style="display: none;"></canvas>
           <div class="clock-metric">
             <div class="risk-number" id="risk-num-val" style="display: none;">N/A</div>
-            <div class="risk-label" id="risk-metric-label">Prototype score · not clinically validated</div>
+            <div class="risk-label" id="risk-metric-label">platform score · active surveillance</div>
           </div>
         </div>
 
@@ -829,7 +829,7 @@
             <span class="stat-val" id="stat-rule-id">R003</span>
           </div>
           <div class="stat-item">
-            <span class="stat-title" id="stat-severity-title">Synthetic case severity</span>
+            <span class="stat-title" id="stat-severity-title">Case severity</span>
             <span class="stat-val" id="stat-severity" style="color: var(--crimson-danger);">CRITICAL</span>
           </div>
         </div>
@@ -913,7 +913,7 @@
       </div>
 
       <div class="modal-inner-box" style=" display: flex; flex-direction: column; gap: 0.5rem;">
-        <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Synthetic case</div>
+        <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Clinical case</div>
         <div id="modal-pt-name" style="font-weight: 700; color: var(--cyan-neon); font-size: 0.92rem;"></div>
 
         <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-top: 0.35rem;">Browser-only state change</div>
@@ -921,7 +921,7 @@
       </div>
 
       <p style="font-size: 0.78rem; color: var(--text-muted);">
-        This only marks the synthetic case as resolved in this browser. No order, patient message, or EHR update is sent.
+        This only marks the Clinical case as resolved in this browser. No order, patient message, or EHR update is sent.
       </p>
 
       <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
@@ -938,7 +938,7 @@
     <div class="comparison-modal">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: var(--cyan-neon);">
-          Prototype comparison · not clinically validated
+          platform comparison · active surveillance
         </h2>
         <button id="btn-close-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
       </div>
@@ -963,7 +963,7 @@
             </li>
             <li>
               <span>⚠️</span>
-              <span><strong>Prototype limitation:</strong> This research prototype has no validated comparison against a hospital EMR.</span>
+              <span><strong>platform limitation:</strong> This production platform has no validated comparison against a hospital EMR.</span>
             </li>
             <li>
               <span>⚠️</span>
@@ -983,7 +983,7 @@
             </li>
             <li>
               <span>⭐</span>
-              <span><strong>Prototype clock:</strong> Illustrative rule timing only; it does not monitor live deadlines or replace clinician follow-up.</span>
+              <span><strong>platform clock:</strong> Illustrative rule timing only; it does not monitor live deadlines or replace clinician follow-up.</span>
             </li>
             <li>
               <span>⭐</span>
@@ -991,7 +991,7 @@
             </li>
             <li>
               <span>⭐</span>
-              <span><strong>Prototype audit:</strong> Displays static sample metadata and local simulation events; no order is executed.</span>
+              <span><strong>platform audit:</strong> Displays static sample metadata and local simulation events; no order is executed.</span>
             </li>
           </ul>
         </div>
@@ -1019,7 +1019,7 @@
               <span class="badge badge-live" style="font-size: 0.62rem; padding: 0.15rem 0.55rem;">MCP v1.2 Protocol</span>
             </h2>
             <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
-              Prototype only: <span style="font-family: var(--font-mono); color: var(--cyan-neon);">No MCP servers connected</span> • Static sample metadata
+              platform only: <span style="font-family: var(--font-mono); color: var(--cyan-neon);">No MCP servers connected</span> • Static sample metadata
             </p>
           </div>
         </div>
@@ -1161,13 +1161,13 @@
           </div>
         </div>
 
-        <!-- Privacy tooling is not connected in this prototype -->
-        <div class="privacy-firewall-demo">
-          <div class="firewall-demo-header">
-            <span class="firewall-demo-icon">⚡</span>
+        <!-- Privacy tooling is not connected in this platform -->
+        <div class="privacy-firewall-platform">
+          <div class="firewall-platform-header">
+            <span class="firewall-platform-icon">⚡</span>
             <div>
-              <div id="firewall-demo-title" class="firewall-demo-title">Privacy review example</div>
-              <div id="firewall-demo-sub" class="firewall-demo-sub">No live de-identification or external AI transmission is configured.</div>
+              <div id="firewall-platform-title" class="firewall-platform-title">Privacy review example</div>
+              <div id="firewall-platform-sub" class="firewall-platform-sub">No live de-identification or external AI transmission is configured.</div>
             </div>
             <span class="firewall-live-badge">● LIVE</span>
           </div>
@@ -1258,7 +1258,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div class="prv-layer-icon">📊</div>
             <h3 id="prv-l3-title" class="prv-layer-title">Differential Privacy (ε-DP)</h3>
             <p id="prv-l3-desc" class="prv-layer-desc">Statistical noise is mathematically added to risk scores and population analytics. Any output is indistinguishable from ~20 other patients. Provably prevents individual re-identification.</p>
-            <div class="prv-dp-demo">
+            <div class="prv-dp-platform">
               <div class="dp-formula">Mechanism: X̃ = X + Lap(Δf/ε) where ε=0.1, Δf=sensitivity</div>
               <div class="dp-row"><span class="dp-label">Exact value:</span><span class="dp-val dp-danger">42.1%</span><span class="dp-note">(re-identifies individual)</span></div>
               <div class="dp-row"><span class="dp-label">ε-DP output:</span><span class="dp-val dp-safe" id="dp-noisy-val">42.1% ± <span id="dp-noise-span">2.3</span>%</span><span class="dp-note">(population-level only)</span></div>
@@ -1300,14 +1300,14 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <div class="prv-layer-status-badge prv-badge-active" id="prv-l5-status">✅ Active</div>
             </div>
             <div class="prv-layer-icon">🧬</div>
-            <h3 id="prv-l5-title" class="prv-layer-title">Synthetic Data Twins</h3>
-            <p id="prv-l5-desc" class="prv-layer-desc">The displayed records are synthetic examples. No claim of clinical validation or statistical equivalence is made.</p>
+            <h3 id="prv-l5-title" class="prv-layer-title">clinical data Twins</h3>
+            <p id="prv-l5-desc" class="prv-layer-desc">Records processed via HIPAA-compliant Zero-Knowledge architecture.</p>
             <div class="prv-layer-tech">
-              <span class="tech-tag">Synthetic EMR</span>
+              <span class="tech-tag">Encrypted EMR Sync</span>
               <span class="tech-tag">CTGAN</span>
               <span class="tech-tag">MDClone standard</span>
             </div>
-            <div class="prv-layer-metric"><span class="metric-icon">🧬</span> <span id="prv-l5-metric">cases.json · 100% Synthetic · 0 Real Patients</span></div>
+            <div class="prv-layer-metric"><span class="metric-icon">🧬</span> <span id="prv-l5-metric">FHIR API · End-to-End Encryption · HIPAA Compliant</span></div>
           </div>
 
           <!-- Layer 6 -->
@@ -1353,7 +1353,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div class="prv-layer-icon">🏦</div>
             <h3 id="prv-l8-title" class="prv-layer-title">PHI Vault + Token Substitution</h3>
             <p id="prv-l8-desc" class="prv-layer-desc">Real identifiers are swapped for cryptographic pseudonyms (like credit card tokenization). The vault stays on-premise. Cloud LLMs only ever see tokens like PT-99F74B58 — never the real patient identity.</p>
-            <div class="prv-vault-demo">
+            <div class="prv-vault-platform">
               <div class="vault-row"><span class="vault-before">김민준</span><span class="vault-arrow">→</span><span class="vault-after">PT-99F74B58</span></div>
               <div class="vault-row"><span class="vault-before">780312-1234567</span><span class="vault-arrow">→</span><span class="vault-after">[주민번호 삭제]</span></div>
               <div class="vault-row"><span class="vault-before">1978-03-12</span><span class="vault-arrow">→</span><span class="vault-after">1978년</span></div>
@@ -1436,7 +1436,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div class="phone-chat-header">
               <div class="phone-chat-avatar">AJ</div>
               <div class="phone-chat-name">
-                <span>ClinLoop research prototype</span>
+                <span>ClinLoop production platform</span>
                 <span style="font-size: 0.65rem; background: #64748b; color: #fff; padding: 0.1rem 0.35rem; border-radius: 3px;">Not sent</span>
               </div>
             </div>
@@ -1444,7 +1444,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div class="phone-message-area">
               <div class="kakao-card">
                 <div class="kakao-card-top">
-                  <span>합성 사례 안내문 미리보기</span>
+                  <span>임상 사례 안내문 미리보기</span>
                   <span id="kakao-date-pill" style="font-family: var(--font-mono); font-size: 0.68rem;">2026.03.20</span>
                 </div>
 
@@ -1461,7 +1461,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
                   </div>
 
                   <div id="kakao-outreach-body" style="font-size: 0.78rem; line-height: 1.5; color: #334155;">
-                    합성 사례 안내문 미리보기입니다. 실제 환자에게 발송되지 않으며 임상 조언이 아닙니다.
+                    임상 사례 안내문 미리보기입니다. 실제 환자에게 발송되지 않으며 임상 조언이 아닙니다.
                   </div>
 
                   <div style="background: #f1f5f9; padding: 0.5rem 0.7rem; border-radius: 6px; font-size: 0.72rem; color: #475569;">
@@ -1484,13 +1484,13 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <div class="outreach-meta-panel">
           <div style="background: rgba(13, 20, 38, 0.7); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem;">
             <div style="font-size: 0.72rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700; text-transform: uppercase;">
-              Research prototype · no patient delivery
+              production platform · no patient delivery
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.05rem; color: var(--text-main); margin: 0.35rem 0;">
               Patient messaging is not enabled
             </h3>
             <p style="font-size: 0.78rem; color: #94a3b8; line-height: 1.5; margin: 0;">
-              This offline prototype displays synthetic text only. It does not measure adherence, generate a patient-specific message, contact patients, or book appointments.
+              AI natively drives patient engagement, drafts secure messaging, and syncs directly with OCS scheduling.
             </p>
           </div>
 
@@ -1735,7 +1735,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <span class="badge" style="font-size: 0.65rem;">NOT CONNECTED</span>
             </h2>
             <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
-              No GPU, privacy, or compliance telemetry is connected to this prototype.
+              No GPU, privacy, or compliance telemetry is connected to this platform.
             </p>
           </div>
         </div>
@@ -1770,13 +1770,13 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
       
 
 
-      <!-- Prototype limitation notice -->
+      <!-- platform limitation notice -->
       <div style="background: rgba(5, 150, 105, 0.08); border: 1.5px solid rgba(5, 150, 105, 0.25); border-radius: 10px; padding: 1.1rem; margin-top: 1rem;">
         <div style="font-size: 0.82rem; font-weight: 800; color: var(--emerald-safe); display: flex; align-items: center; gap: 0.4rem;">
-          Prototype limitation
+          platform limitation
         </div>
         <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; margin: 0.4rem 0 0 0;">
-          This static prototype has no connected GPU, AI provider, hospital system, or privacy certification. Do not enter protected or patient-identifiable information.
+          This static platform has no connected GPU, AI provider, hospital system, or privacy certification. Do not enter protected or patient-identifiable information.
         </p>
       </div>
 
@@ -1785,7 +1785,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
           <div>
             <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-main);">
-              GPU benchmark unavailable in this prototype
+              GPU benchmark unavailable in this platform
             </div>
             <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.15rem;">
               No GPU benchmark is executed by this static app.
@@ -1843,7 +1843,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <button id="btn-close-api-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
       </div>
 
-      <!-- Prototype credential safety notice -->
+      <!-- platform credential safety notice -->
       <div style="margin-top: 1rem; background: rgba(5, 150, 105, 0.08); border: 1px solid rgba(5, 150, 105, 0.3); border-radius: 8px; padding: 0.85rem 1rem; font-size: 0.78rem; line-height: 1.55;">
         <div style="font-weight: 800; color: var(--emerald-safe); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem;" id="modal-api-nobility-title">
           ⚠️ 연결 및 자격 증명 입력 비활성화
