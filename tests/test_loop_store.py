@@ -52,6 +52,14 @@ class TestLoopStoreWorkflow(unittest.TestCase):
         self.assertEqual(counts["resolved_by_engine"], 1)
         self.assertEqual(self.store.worklist(), [])
 
+    def test_late_followup_resolves_task_but_counts_as_missed(self):
+        late = _events(with_colonoscopy=True)
+        late[1]["timestamp"] = "2026-08-20T09:00:00"     # 111 days after FIT: past the 90-day window
+        counts = _ingest(self.store, late)
+        self.assertEqual(counts["resolved_by_engine"], 1)
+        self.assertEqual(self.store.worklist(), [])
+        self.assertEqual(self.store.open_loop_rate(now=EVAL)["groups"]["all"]["missed"], 1)
+
     def test_cancelled_followup_reopens_resolved_loop(self):
         _ingest(self.store, _events(with_colonoscopy=True))
         _ingest(self.store, _events(with_colonoscopy=True, colonoscopy_status="cancelled"))

@@ -32,7 +32,12 @@ from typing import Any, Dict, Iterable, List, Optional
 from .clinical_ontology import LoopStatus
 from .safety_clock import utc_now
 
+# Engine statuses that count as a missed loop for the quality measure
 ACTIVE_ENGINE_STATUSES = (LoopStatus.OPEN.value, LoopStatus.DELAYED.value, LoopStatus.ABSTAIN.value)
+# Engine statuses that need someone to act. A DELAYED loop's follow-up did
+# happen, only late: it counts as a miss, but it is not a task any more.
+ACTION_NEEDED_STATUSES = (LoopStatus.OPEN.value, LoopStatus.ABSTAIN.value)
+FOLLOWUP_FOUND_STATUSES = (LoopStatus.CLOSED.value, LoopStatus.DELAYED.value)
 ACTIVE_WORKFLOW_STATES = ("new", "acknowledged")
 
 DEFER_REASONS = {
@@ -84,6 +89,22 @@ CREATE TABLE IF NOT EXISTS loops (
 );
 CREATE INDEX IF NOT EXISTS idx_loops_patient ON loops(patient_id);
 CREATE INDEX IF NOT EXISTS idx_loops_owner ON loops(owner);
+CREATE TABLE IF NOT EXISTS ingest_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT NOT NULL,
+    source TEXT NOT NULL,
+    actor TEXT,
+    ok INTEGER NOT NULL,
+    patients INTEGER DEFAULT 0,
+    events INTEGER DEFAULT 0,
+    warnings INTEGER DEFAULT 0,
+    error TEXT
+);
+CREATE TABLE IF NOT EXISTS sync_state (
+    source TEXT PRIMARY KEY,
+    cursor TEXT,
+    updated_at TEXT
+);
 CREATE TABLE IF NOT EXISTS audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts TEXT NOT NULL,
@@ -116,10 +137,11 @@ class LoopStore:
             self._db.commit()
 
     # ── audit ────────────────────────────────────────────────────────────────
-    def _audit(self, actor: str, role: str, action: str, key: Optional[str], detail: Dict) -> None:
+    def _audit(self, actor: str, role: str, action: str, key: Optional[str], detail: Dict,
+               at: Optional[datetime] = None) -> None:
         row = self._db.execute("SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1").fetchone()
         prev = row["hash"] if row else "GENESIS"
-        ts = utc_now().isoformat()
+        ts = (at or utc_now()).isoformat()
         body = json.dumps({"ts": ts, "actor": actor, "role": role, "action": action,
                            "loop_key": key, "detail": detail, "prev": prev},
                           sort_keys=True, ensure_ascii=False, default=str)
@@ -179,7 +201,7 @@ class LoopStore:
                     "last_seen": now, "updated_at": now,
                 }
                 if existing is None:
-                    workflow = "new" if d.loop_status in ACTIVE_ENGINE_STATUSES else "resolved_by_engine"
+                    workflow = "new" if d.loop_status in ACTION_NEEDED_STATUSES else "resolved_by_engine"
                     self._db.execute(
                         f"INSERT INTO loops (loop_key, patient_id, rule_id, workflow_state, owner, strata, first_seen, "
                         f"{', '.join(fields)}) VALUES (?,?,?,?,?,?,?,{', '.join('?' * len(fields))})",
@@ -191,13 +213,14 @@ class LoopStore:
                                     {"rule_id": d.rule_id, "engine_status": d.loop_status, "deadline": d.deadline})
                     continue
 
-                if (d.loop_status == LoopStatus.CLOSED.value
+                if (d.loop_status in FOLLOWUP_FOUND_STATUSES
                         and existing["workflow_state"] in ACTIVE_WORKFLOW_STATES + ("deferred",)):
                     fields["workflow_state"] = "resolved_by_engine"
                     counts["resolved_by_engine"] += 1
                     self._audit(actor, "system", "loop_resolved_by_record", key,
-                                {"evidence": "required follow-up found in the record"})
-                elif (d.loop_status in ACTIVE_ENGINE_STATUSES
+                                {"evidence": "required follow-up found in the record",
+                                 "on_time": d.loop_status == LoopStatus.CLOSED.value})
+                elif (d.loop_status in ACTION_NEEDED_STATUSES
                       and existing["workflow_state"] == "resolved_by_engine"):
                     # The record changed (e.g. a follow-up was cancelled): reopen
                     fields["workflow_state"] = "new"
@@ -321,6 +344,78 @@ class LoopStore:
                 escalated.append({"loop_key": loop["loop_key"], "level": level, "to": ESCALATION_CHAIN[level]})
             self._db.commit()
         return escalated
+
+    # ── data feed: ingest runs, sync cursor, silence alarm ───────────────────
+    def record_ingest(self, source: str, actor: str, ok: bool, patients: int = 0, events: int = 0,
+                      warnings: int = 0, error: Optional[str] = None, now: Optional[datetime] = None) -> None:
+        with self._lock:
+            self._db.execute(
+                "INSERT INTO ingest_runs (ts, source, actor, ok, patients, events, warnings, error) "
+                "VALUES (?,?,?,?,?,?,?,?)",
+                ((now or utc_now()).isoformat(), source, actor, int(ok), patients, events, warnings, error))
+            if not ok:
+                self._audit(actor, "system", "ingest_failed", None, {"source": source, "error": error})
+            self._db.commit()
+
+    def get_cursor(self, source: str) -> Optional[str]:
+        with self._lock:
+            r = self._db.execute("SELECT cursor FROM sync_state WHERE source=?", (source,)).fetchone()
+        return r["cursor"] if r else None
+
+    def set_cursor(self, source: str, cursor: str) -> None:
+        with self._lock:
+            self._db.execute("INSERT INTO sync_state (source, cursor, updated_at) VALUES (?,?,?) "
+                             "ON CONFLICT(source) DO UPDATE SET cursor=excluded.cursor, updated_at=excluded.updated_at",
+                             (source, cursor, utc_now().isoformat()))
+            self._db.commit()
+
+    def feed_status(self, max_silence_hours: float = 24.0, now: Optional[datetime] = None) -> Dict:
+        """
+        Is data still arriving? A safety net fed by a dead interface shows an
+        empty, reassuring worklist, which is worse than no safety net.
+          NEVER    no data has ever been ingested
+          FAILING  the last 3 ingest attempts all failed
+          STALE    no successful ingest within max_silence_hours
+          OK       otherwise
+        """
+        now = now or utc_now()
+        with self._lock:
+            last_ok = self._db.execute("SELECT * FROM ingest_runs WHERE ok=1 ORDER BY id DESC LIMIT 1").fetchone()
+            recent = [dict(r) for r in self._db.execute("SELECT * FROM ingest_runs ORDER BY id DESC LIMIT 3")]
+        hours = None
+        if last_ok:
+            hours = round((now - datetime.fromisoformat(last_ok["ts"])).total_seconds() / 3600, 2)
+        if not recent:
+            status = "NEVER"
+        elif len(recent) == 3 and not any(r["ok"] for r in recent):
+            status = "FAILING"
+        elif hours is None or hours > max_silence_hours:
+            status = "STALE"
+        else:
+            status = "OK"
+        return {
+            "status": status,
+            "last_success": last_ok["ts"] if last_ok else None,
+            "hours_since_success": hours,
+            "max_silence_hours": max_silence_hours,
+            "recent_runs": recent,
+        }
+
+    def check_feed(self, max_silence_hours: float = 24.0, now: Optional[datetime] = None) -> Optional[Dict]:
+        """Raise (audit) a feed alarm when the feed is stale or failing; at most once per silence window."""
+        now = now or utc_now()
+        status = self.feed_status(max_silence_hours, now)
+        if status["status"] not in ("STALE", "FAILING"):
+            return None
+        with self._lock:
+            last = self._db.execute("SELECT ts FROM audit_log WHERE action='feed_alarm' ORDER BY id DESC LIMIT 1").fetchone()
+            if last and now - datetime.fromisoformat(last["ts"]) < timedelta(hours=max_silence_hours):
+                return None
+            detail = {"status": status["status"], "last_success": status["last_success"],
+                      "hours_since_success": status["hours_since_success"]}
+            self._audit("watchdog", "system", "feed_alarm", None, detail, at=now)
+            self._db.commit()
+        return detail
 
     # ── quality measure ──────────────────────────────────────────────────────
     def open_loop_rate(self, now: Optional[datetime] = None, stratify_by: Optional[str] = None) -> Dict:

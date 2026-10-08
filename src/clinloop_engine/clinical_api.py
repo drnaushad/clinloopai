@@ -99,12 +99,15 @@ def ingest_fhir(bundle: Dict[str, Any] = Body(..., description="FHIR R4 Bundle")
     detections = []
     for pid, events in events_by_patient.items():
         detections.extend(detector.process_patient("fhir-ingest", pid, events))
-    counts = get_store().upsert_detections(detections, strata=strata, actor=user.name)
+    store = get_store()
+    counts = store.upsert_detections(detections, strata=strata, actor=user.name)
+    store.record_ingest("manual-upload", user.name, ok=True, patients=len(events_by_patient),
+                        events=sum(len(v) for v in events_by_patient.values()), warnings=len(warnings))
     return {
         "patients": len(events_by_patient),
         "events": sum(len(v) for v in events_by_patient.values()),
         "loops": counts,
-        "active_loops": sum(1 for d in detections if d.loop_status != "closed"),
+        "active_loops": sum(1 for d in detections if d.loop_status in ("open", "needs_human_review")),
         "warnings": warnings,
     }
 
@@ -168,6 +171,26 @@ def escalate_now(user: User = Depends(require_role("admin"))):
     return {"escalated": get_store().escalate_overdue(actor=user.name)}
 
 
+def _max_silence_hours() -> float:
+    return float(os.environ.get("CLINLOOP_FEED_MAX_SILENCE_HOURS", "24"))
+
+
+@router.get("/feed/status", tags=["Clinical Pilot"])
+def feed_status(user: User = Depends(require_role("viewer"))):
+    """Is clinical data still arriving? STALE / FAILING / NEVER mean the worklist cannot be trusted."""
+    return get_store().feed_status(_max_silence_hours())
+
+
+@router.post("/fhir/sync", tags=["Clinical Pilot"])
+def sync_now(user: User = Depends(require_role("admin"))):
+    """Run one sync from the configured FHIR server (CLINLOOP_FHIR_BASE)."""
+    from .fhir_sync import client_from_env, sync_once
+    client = client_from_env()
+    if client is None:
+        raise HTTPException(503, "No FHIR server configured (set CLINLOOP_FHIR_BASE)")
+    return sync_once(get_store(), client)
+
+
 @router.get("/audit/verify", tags=["Clinical Pilot"])
 def verify_audit(user: User = Depends(require_role("admin"))):
     ok = get_store().verify_audit_chain()
@@ -175,12 +198,16 @@ def verify_audit(user: User = Depends(require_role("admin"))):
 
 
 async def escalation_loop(interval_seconds: int = 60):
-    """Background escalation of unacknowledged overdue loops."""
+    """Background escalation of unacknowledged overdue loops, and the feed-silence alarm."""
     while True:
         try:
             escalated = get_store().escalate_overdue()
             if escalated:
                 logger.warning("Escalated %d overdue loops", len(escalated))
+            alarm = get_store().check_feed(_max_silence_hours())
+            if alarm:
+                logger.critical("CLINICAL DATA FEED %s: last success %s. The worklist may be incomplete.",
+                                alarm["status"], alarm["last_success"])
         except Exception as e:  # never let the safety loop die silently
             logger.error("Escalation loop error: %s", e)
         await asyncio.sleep(interval_seconds)

@@ -36,14 +36,16 @@ from contextlib import asynccontextmanager
 from src.clinloop_engine.biomcp_server import handle_call_tool as handle_biomcp
 from src.clinloop_engine.ehr_mcp_server import handle_call_tool as handle_ehr
 from src.clinloop_engine.pacs_mcp_server import handle_call_tool as handle_pacs
-from src.clinloop_engine.clinical_api import router as clinical_router, escalation_loop
+from src.clinloop_engine.clinical_api import router as clinical_router, escalation_loop, get_store
+from src.clinloop_engine.fhir_sync import sync_loop
 
 # Initialize FastAPI App
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     # Background safety tasks: the Safety Clock watchdog over the demo cases,
     # and escalation of unacknowledged overdue loops in the pilot registry
-    tasks = [asyncio.create_task(safety_clock_loop()), asyncio.create_task(escalation_loop())]
+    tasks = [asyncio.create_task(safety_clock_loop()), asyncio.create_task(escalation_loop()),
+             asyncio.create_task(sync_loop(get_store))]   # no-op unless CLINLOOP_FHIR_BASE is set
     yield
     for t in tasks:
         t.cancel()

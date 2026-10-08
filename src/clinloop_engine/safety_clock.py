@@ -71,7 +71,8 @@ def scan_for_violations(evaluation_time: Optional[datetime] = None):
     cases = load_cases()
     now = evaluation_time or utc_now()
     detector = ClinLoopDetector(evaluation_time=now)
-    active = (LoopStatus.OPEN.value, LoopStatus.DELAYED.value, LoopStatus.ABSTAIN.value)
+    # DELAYED loops were completed late: a quality event, not something to escalate now
+    active = (LoopStatus.OPEN.value, LoopStatus.ABSTAIN.value)
 
     new_escalations = []
     monitored = 0
