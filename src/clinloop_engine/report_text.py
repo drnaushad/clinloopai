@@ -22,8 +22,9 @@ NEGATION_TRIGGER = re.compile(
 # Negation after the finding: "pneumothorax has resolved", "carcinoma is not identified", "결절 없음"
 NEGATION_AFTER = re.compile(
     r"^[^.;]{0,25}?(\b(?:is|are|was|were)\s+(?:not|no\s+longer)\s+(?:seen|identified|present|demonstrated|"
-    r"visualized|evident|appreciated)\b|\bno\s+longer\b|\b(?:has|have)\s+resolved\b|\b(?:excluded|ruled out)\b"
-    r"|없|음성|아님|배제|않|안\s*(?:함|됨|보임))",
+    r"visualized|evident|appreciated)\b|\bno\s+longer\b|\b(?:has|have)\s+resolved\b|\b(?:excluded|ruled out)\b)"
+    # Korean negation closes its own clause: "낭성 병변, 주췌관 확장이나 고형 성분 없음" negates the solid part only
+    r"|^[^.;,]{0,25}?(?:없|음성|아님|배제|않|안\s*(?:함|됨|보임))",
     re.IGNORECASE,
 )
 # "No change", "no significant interval change": a statement about change, not absence

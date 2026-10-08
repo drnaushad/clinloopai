@@ -1,0 +1,252 @@
+[
+ {
+  "rule_id": "R003",
+  "name": "Incidental Lung Nodule → Fleischner Follow-up CT",
+  "description": "Incidental lung nodule needing follow-up under Fleischner 2017 (by size, solid / part-solid / ground-glass, single / multiple, risk, and stepped follow-up of a known nodule)",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 180.0,
+  "evidence_note": "Deadline from the Fleischner 2017 table (upper bound of the interval): solid 6–8 mm 12 months, >8 mm 3 months, multiple 3–6 months, ground-glass ≥6 mm 12 months, part-solid ≥6 mm 3–6 months; stepped follow-up for a stable nodule; unknown risk managed as high risk. Lung nodules only, not screening LDCT (Lung-RADS). Age <35, known cancer or immunocompromise → human review. Tissue sampling also closes the loop.",
+  "references": [
+   "Fleischner Society 2017 Guidelines",
+   "Lacson R et al. JACR 2020"
+  ]
+ },
+ {
+  "rule_id": "R009",
+  "name": "Abnormal Pathology → Notification + Referral",
+  "description": "Abnormal pathology results require patient notification and specialist referral",
+  "trigger_event": "pathology_result",
+  "deadline_days_default": 5.0,
+  "evidence_note": "",
+  "references": [
+   "Singh H et al. BMJ Qual Saf 2014"
+  ]
+ },
+ {
+  "rule_id": "R018",
+  "name": "Mammography BI-RADS 4/5 → Tissue Diagnosis",
+  "description": "Suspicious (BI-RADS 4) or highly suggestive (BI-RADS 5) findings require biopsy",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 30.0,
+  "evidence_note": "BI-RADS mandates tissue diagnosis; the 30-day window is a quality target.",
+  "references": [
+   "ACR BI-RADS Atlas, 5th ed. (2013)"
+  ]
+ },
+ {
+  "rule_id": "R019",
+  "name": "Lung-RADS 4A → 3-Month LDCT",
+  "description": "Lung-RADS category 4A on screening LDCT requires 3-month LDCT (or PET/CT)",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 90.0,
+  "evidence_note": "Scheduled interval plus a grace period (25%, 7–30 days), as for R030–R033.",
+  "references": [
+   "ACR Lung-RADS v2022"
+  ]
+ },
+ {
+  "rule_id": "R020",
+  "name": "Lung-RADS 4B/4X → Diagnostic Work-up",
+  "description": "Lung-RADS 4B/4X requires diagnostic CT, PET/CT, tissue sampling or referral",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 30.0,
+  "evidence_note": "Lung-RADS gives no explicit interval for 4B/4X; 30 days is a proposed target.",
+  "references": [
+   "ACR Lung-RADS v2022"
+  ]
+ },
+ {
+  "rule_id": "R030",
+  "name": "Radiologist-Recommended CT",
+  "description": "Follow-up CT recommended in the radiology report, within the stated interval",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 90.0,
+  "evidence_note": "Interval from the report plus a grace period (25%, 7–30 days). The follow-up study must cover the body region the recommendation names (an abdominal CT covers the adrenals; a head CT does not).",
+  "references": [
+   "ACR Actionable Reporting Work Group, JACR 2014;11:552-558"
+  ]
+ },
+ {
+  "rule_id": "R031",
+  "name": "Radiologist-Recommended MRI",
+  "description": "Follow-up MRI recommended in the radiology report, within the stated interval",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 90.0,
+  "evidence_note": "Interval from the report plus a grace period (25%, 7–30 days). The follow-up study must cover the body region the recommendation names (an abdominal CT covers the adrenals; a head CT does not).",
+  "references": [
+   "ACR Actionable Reporting Work Group, JACR 2014;11:552-558"
+  ]
+ },
+ {
+  "rule_id": "R032",
+  "name": "Radiologist-Recommended Ultrasound",
+  "description": "Follow-up ultrasound recommended in the radiology report, within the stated interval",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 90.0,
+  "evidence_note": "Interval from the report plus a grace period (25%, 7–30 days). The follow-up study must cover the body region the recommendation names (an abdominal CT covers the adrenals; a head CT does not).",
+  "references": [
+   "ACR Actionable Reporting Work Group, JACR 2014;11:552-558"
+  ]
+ },
+ {
+  "rule_id": "R033",
+  "name": "Radiologist-Recommended Radiograph",
+  "description": "Follow-up radiograph (e.g. chest X-ray to document resolution) recommended in the report",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 90.0,
+  "evidence_note": "Interval from the report plus a grace period. A recommendation without an interval uses a 30-day default. The follow-up radiograph must cover the same body region.",
+  "references": [
+   "ACR Actionable Reporting Work Group, JACR 2014;11:552-558",
+   "BTS Guidelines for community-acquired pneumonia in adults (2009): repeat CXR ~6 weeks"
+  ]
+ },
+ {
+  "rule_id": "R034",
+  "name": "Lung-RADS 3 → 6-Month LDCT",
+  "description": "Lung-RADS category 3 on screening LDCT requires 6-month LDCT",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 182.6,
+  "evidence_note": "Scheduled interval plus a grace period (25%, 7–30 days).",
+  "references": [
+   "ACR Lung-RADS v2022"
+  ]
+ },
+ {
+  "rule_id": "R035",
+  "name": "Critical Imaging Finding → Documented Clinician Communication ≤1 Hour",
+  "description": "An emergent imaging finding (e.g. acute PE, aortic dissection, intracranial haemorrhage, pneumothorax, free air) must be communicated directly to a responsible clinician",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 0.041666666666666664,
+  "evidence_note": "Closed by a documented communication: a FHIR Communication, or a statement in the report itself ('discussed with Dr …', 'communicated to …'). Institutions set the window and the list of critical findings.",
+  "references": [
+   "ACR Practice Parameter for Communication of Diagnostic Imaging Findings (2020)",
+   "The Joint Commission NPSG.02.03.01"
+  ]
+ },
+ {
+  "rule_id": "R036",
+  "name": "Radiologist-Recommended Tissue Sampling → Biopsy/FNA",
+  "description": "Biopsy or fine-needle aspiration recommended in the radiology report (e.g. TI-RADS, renal or liver mass)",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 30.0,
+  "evidence_note": "30 days is a proposed target. Not applied when BI-RADS, Lung-RADS or the lung-nodule rule already governs the same finding.",
+  "references": [
+   "ACR Actionable Reporting Work Group, JACR 2014;11:552-558",
+   "ACR TI-RADS, JACR 2017;14:587-595"
+  ]
+ },
+ {
+  "rule_id": "R037",
+  "name": "Incidental Adrenal Nodule → Adrenal CT/MRI",
+  "description": "Indeterminate adrenal nodule 1–4 cm needs adrenal protocol CT or MRI (12 months for 1–2 cm)",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 395.25,
+  "evidence_note": "1–2 cm: 12 months + grace; 2–4 cm: characterise (90 days, proposed). Benign features (adenoma ≤10 HU, myelolipoma, stable ≥1 year) are excluded. Follow-up must cover the adrenals.",
+  "references": [
+   "ACR Incidental Findings: adrenal (Mayo-Smith WW et al. JACR 2017;14:1038-1044)"
+  ]
+ },
+ {
+  "rule_id": "R038",
+  "name": "Adrenal Mass ≥4 cm (or Nodule with Known Cancer) → Specialist Work-up",
+  "description": "Adrenal mass ≥4 cm, or adrenal nodule ≥1 cm in a patient with cancer, needs referral, PET/CT or biopsy",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 30.0,
+  "evidence_note": "30 days is a proposed target. Biochemical (hormonal) evaluation is also advised and is not tracked.",
+  "references": [
+   "ACR Incidental Findings: adrenal (Mayo-Smith WW et al. JACR 2017;14:1038-1044)"
+  ]
+ },
+ {
+  "rule_id": "R039",
+  "name": "Suspicious Renal Mass → Urology Referral",
+  "description": "Solid enhancing renal mass or Bosniak III/IV cyst needs urology referral or biopsy",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 30.0,
+  "evidence_note": "30 days is a proposed target.",
+  "references": [
+   "ACR Incidental Findings: renal (Herts BR et al. JACR 2018;15:264-273)",
+   "Silverman SG et al. Bosniak v2019. Radiology 2019;292:475-488"
+  ]
+ },
+ {
+  "rule_id": "R040",
+  "name": "Indeterminate Renal Lesion / Bosniak IIF → Renal CT/MRI",
+  "description": "Indeterminate renal lesion ≥1 cm or Bosniak IIF cyst needs renal mass protocol CT or MRI",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 90.0,
+  "evidence_note": "Bosniak IIF: 6 months + grace; indeterminate ≥1 cm: 90 days (proposed). Simple cysts, Bosniak I–II, angiomyolipoma and lesions too small to characterise are excluded.",
+  "references": [
+   "ACR Incidental Findings: renal (Herts BR et al. JACR 2018;15:264-273)",
+   "Silverman SG et al. Bosniak v2019. Radiology 2019;292:475-488"
+  ]
+ },
+ {
+  "rule_id": "R041",
+  "name": "Incidental Pancreatic Cyst → MRI/MRCP Surveillance",
+  "description": "Incidental pancreatic cyst needs MRI/MRCP surveillance at a size-based interval",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 395.25,
+  "evidence_note": "<1.5 cm: 2 years; 1.5–2.5 cm: 1 year; >2.5 cm: 6 months or EUS-FNA (each + grace). ACR also adjusts by age (≥80) and growth: specialist review required.",
+  "references": [
+   "ACR Incidental Findings: pancreatic cysts (Megibow AJ et al. JACR 2017;14:911-923)"
+  ]
+ },
+ {
+  "rule_id": "R042",
+  "name": "Pancreatic Cyst with Worrisome Features → EUS / Specialist",
+  "description": "Pancreatic cyst with main duct ≥7 mm, mural nodule or solid component needs EUS or pancreas specialist",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 30.0,
+  "evidence_note": "30 days is a proposed target.",
+  "references": [
+   "ACR Incidental Findings: pancreatic cysts (Megibow AJ et al. JACR 2017;14:911-923)"
+  ]
+ },
+ {
+  "rule_id": "R043",
+  "name": "Incidental Thyroid Nodule on CT/MRI/PET → Thyroid Ultrasound",
+  "description": "Thyroid nodule ≥1.5 cm (≥1 cm under 35), with suspicious features, or FDG-avid needs thyroid ultrasound",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 90.0,
+  "evidence_note": "90 days is a proposed target. Age unknown → the 1 cm threshold is used. On thyroid ultrasound, ACR TI-RADS criteria apply instead (R036 FNA, R032 follow-up).",
+  "references": [
+   "ACR Incidental Findings: thyroid (Hoang JK et al. JACR 2015;12:143-150)"
+  ]
+ },
+ {
+  "rule_id": "R044",
+  "name": "Abdominal Aortic Aneurysm → Surveillance Imaging",
+  "description": "Incidental abdominal aortic dilatation ≥2.5 cm needs surveillance imaging at a diameter-based interval",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 365.25,
+  "evidence_note": "2.5–2.9 cm 5 years; 3.0–3.4 cm 3 years; 3.5–3.9 cm 2 years; 4.0–4.4 cm 1 year; ≥4.5 cm 6 months (each + grace).",
+  "references": [
+   "ACR Incidental Findings: vascular (Khosa F et al. JACR 2013;10:789-794)",
+   "Chaikof EL et al. SVS AAA guidelines. J Vasc Surg 2018;67:2-77"
+  ]
+ },
+ {
+  "rule_id": "R045",
+  "name": "Abdominal Aortic Aneurysm at Repair Threshold → Vascular Surgery",
+  "description": "AAA ≥5.5 cm (≥5.0 cm in women) needs vascular surgery referral",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 14.0,
+  "evidence_note": "14 days is a proposed target; a symptomatic or ruptured aneurysm is a critical finding (R035).",
+  "references": [
+   "Chaikof EL et al. SVS AAA guidelines. J Vasc Surg 2018;67:2-77",
+   "ACR Incidental Findings: vascular (Khosa F et al. JACR 2013)"
+  ]
+ },
+ {
+  "rule_id": "R046",
+  "name": "Growing or Suspicious Lung Nodule → Work-up",
+  "description": "Lung nodule that grew, or persistent part-solid nodule with solid component ≥6 mm, needs PET/CT, tissue sampling or specialist referral",
+  "trigger_event": "radiology_report",
+  "deadline_days_default": 30.0,
+  "evidence_note": "Growth = report says so, or ≥2 mm larger than the patient's previous report. 30 days is a proposed target.",
+  "references": [
+   "Fleischner Society 2017 (MacMahon H et al. Radiology 2017;284:228-243)"
+  ]
+ }
+]
