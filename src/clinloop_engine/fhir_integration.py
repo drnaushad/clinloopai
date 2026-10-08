@@ -1,9 +1,8 @@
 import uuid
-from datetime import datetime, timezone, timezone
-import datetime as dt_module
+from datetime import datetime, timezone
 
 def fhir_create_task(obligation_id: str, patient_id: str, action_desc: str, deadline_str: str) -> dict:
-    """Wraps an obligation into a FHIR-STU-3 Task resource."""
+    """Wraps an obligation into a FHIR R4 Task resource."""
     return {
         "resourceType": "Task",
         "id": f"task-{uuid.uuid4()}",
@@ -23,7 +22,7 @@ def fhir_create_task(obligation_id: str, patient_id: str, action_desc: str, dead
                 "value": obligation_id
             }
         ],
-        "authoredOn": datetime.now(timezone.utc).isoformat() + "Z"
+        "authoredOn": datetime.now(timezone.utc).isoformat()
     }
 
 def fhir_create_observation(patient_id: str, finding_code: str, value_str: str) -> dict:
@@ -44,7 +43,7 @@ def fhir_create_observation(patient_id: str, finding_code: str, value_str: str) 
             ]
         },
         "valueString": value_str,
-        "issued": datetime.now(timezone.utc).isoformat() + "Z"
+        "issued": datetime.now(timezone.utc).isoformat()
     }
 
 def fhir_add_provenance_extension(resource: dict, hash_value: str) -> dict:

@@ -15,6 +15,7 @@ simultaneously involves:
   - The time constraint
 """
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Set, Tuple
@@ -24,7 +25,9 @@ import numpy as np
 from .clinical_ontology import (
     EventType, Severity, LoopStatus, ObligationRule,
     OBLIGATION_RULES, get_rules_for_event, get_severity_score,
+    get_deadline_days, is_fulfilling_status, format_window,
 )
+from .safety_clock import normalize_timestamp, utc_now
 
 
 @dataclass
@@ -61,36 +64,59 @@ class TemporalHyperedge:
     expected_followup_types: List[str]     # EventType values
     actual_followup_nodes: List[ClinicalNode] = field(default_factory=list)
     deadline: Optional[datetime] = None
+    deadline_days: float = 0.0
     status: str = "open"                   # open | closed | delayed | abstain
     risk_score: float = 0.0
     evidence_chain: List[str] = field(default_factory=list)
+    evaluation_time: Optional[datetime] = None
+
+    @property
+    def _now(self) -> datetime:
+        return self.evaluation_time or utc_now()
+
+    @property
+    def satisfied_at(self) -> Optional[datetime]:
+        """
+        When the obligation was fulfilled, or None if it is still unmet.
+
+        Honors the rule's followup_logic: with "all" (the default) every
+        required follow-up type must occur and the loop closes at the latest
+        of them; with "any" the earliest qualifying follow-up closes it.
+        """
+        first_by_type: Dict[str, datetime] = {}
+        for n in self.actual_followup_nodes:
+            if n.event_type not in first_by_type or n.timestamp < first_by_type[n.event_type]:
+                first_by_type[n.event_type] = n.timestamp
+        times = [first_by_type[ft] for ft in self.expected_followup_types if ft in first_by_type]
+        if self.obligation_rule.followup_logic == "any":
+            return min(times) if times else None
+        if len(times) < len(self.expected_followup_types):
+            return None
+        return max(times)
 
     @property
     def is_complete(self) -> bool:
-        """Check if all required follow-ups have been fulfilled."""
-        fulfilled_types = {n.event_type for n in self.actual_followup_nodes}
-        # At least one of the required followups must be present
-        return any(ft in fulfilled_types for ft in self.expected_followup_types)
+        """Check if the required follow-ups have been fulfilled (per followup_logic)."""
+        return self.satisfied_at is not None
 
     @property
     def is_overdue(self) -> bool:
-        """Check if the deadline has passed."""
+        """Check if the deadline has passed at the evaluation time."""
         if self.deadline is None:
             return False
-        # Use the last known event time or current evaluation time
-        return datetime.now() > self.deadline
+        return self._now > self.deadline
 
     @property
     def days_elapsed(self) -> float:
         """Days since the trigger event."""
-        return (datetime.now() - self.trigger_node.timestamp).total_seconds() / 86400
+        return (self._now - self.trigger_node.timestamp).total_seconds() / 86400
 
     @property
     def days_until_deadline(self) -> float:
         """Days remaining until deadline (negative if overdue)."""
         if self.deadline is None:
             return float('inf')
-        return (self.deadline - datetime.now()).total_seconds() / 86400
+        return (self.deadline - self._now).total_seconds() / 86400
 
 
 class DynamicTemporalHypergraph:
@@ -106,7 +132,7 @@ class DynamicTemporalHypergraph:
         self.nodes: Dict[str, ClinicalNode] = {}
         self.hyperedges: Dict[str, TemporalHyperedge] = {}
         self.graph = nx.DiGraph()  # Internal graph for visualization/traversal
-        self.evaluation_time = evaluation_time or datetime.now()
+        self.evaluation_time = normalize_timestamp(evaluation_time) if evaluation_time else utc_now()
         self._edge_counter = 0
 
     def _next_edge_id(self) -> str:
@@ -114,16 +140,8 @@ class DynamicTemporalHypergraph:
         return f"HE-{self._edge_counter:04d}"
 
     def _parse_timestamp(self, ts) -> datetime:
-        """Parse various timestamp formats."""
-        if isinstance(ts, datetime):
-            return ts
-        if isinstance(ts, str):
-            # Handle ISO format
-            try:
-                return datetime.fromisoformat(ts)
-            except ValueError:
-                return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
-        return ts
+        """Parse a timestamp onto the engine's naive-UTC time base."""
+        return normalize_timestamp(ts)
 
     def build_from_patient_trajectory(self, events: List[Dict]) -> None:
         """
@@ -193,10 +211,13 @@ class DynamicTemporalHypergraph:
                 pass
 
         # 3. Discharge diagnosis conditions (R014, R016)
-        primary_dx = details.get("primary_diagnosis", "")
-        if "mi" in primary_dx.lower() or "myocardial_infarction" in primary_dx.lower():
+        # Match whole tokens: a substring test for "mi" would also fire on
+        # "anemia", "hypokalemia" or "septicemia".
+        primary_dx = str(details.get("primary_diagnosis", "")).lower()
+        dx_tokens = set(re.split(r"[^a-z0-9]+", primary_dx))
+        if dx_tokens & {"mi", "stemi", "nstemi", "ami"} or "myocardial_infarction" in primary_dx:
             return "post_mi_discharge"
-        if "heart_failure" in primary_dx.lower() or "hf_new" in primary_dx.lower():
+        if "heart_failure" in primary_dx or "hf_new" in dx_tokens:
             return "new_heart_failure"
 
         # 4. Culture results — bacteremia (R015)
@@ -210,12 +231,73 @@ class DynamicTemporalHypergraph:
 
         # 5. Standard flag fallback
         flag = details.get("flag", "")
-        if flag in ("ABNORMAL", "HIGH", "CRITICAL"):
+        if flag in ("ABNORMAL", "HIGH", "LOW", "CRITICAL", "PANIC"):
             return "abnormal"
         if flag == "NORMAL":
             return "normal"
 
         return ""
+
+    def _infer_conditions(self, node: "ClinicalNode") -> List[str]:
+        """
+        All trigger conditions an event satisfies.
+
+        One result can carry several obligations at once: a panic potassium
+        is both "abnormal" (notify, follow up) and "critical_value" (call a
+        clinician within the hour). Additional conditions come from
+        structured fields, so FHIR ingestion can set them reliably.
+        """
+        details = node.details
+        conditions = [self._infer_condition(node)]
+        flag = str(details.get("flag", "")).upper()
+        is_abnormal = conditions[0] not in ("", "normal") or flag in (
+            "ABNORMAL", "HIGH", "LOW", "CRITICAL", "PANIC")
+
+        if flag in ("CRITICAL", "PANIC") or details.get("critical") is True:
+            conditions.append("critical_value")
+        if details.get("resulted_after_discharge") is True and is_abnormal:
+            conditions.append("abnormal_post_discharge")
+
+        test = str(details.get("test", "")).strip().lower()
+        result = str(details.get("result", "")).strip().lower()
+        if test in ("fit", "fecal_immunochemical_test", "fobt") and result in ("positive", "detected"):
+            conditions.append("positive_fit")
+
+        birads = str(details.get("birads", "")).strip().upper()
+        if birads[:1] in ("4", "5"):
+            conditions.append("birads_4_5")
+
+        lung_rads = str(details.get("lung_rads", "")).strip().upper()
+        if lung_rads == "4A":
+            conditions.append("lung_rads_4a")
+        elif lung_rads in ("4B", "4X"):
+            conditions.append("lung_rads_4b_4x")
+
+        modality = str(details.get("recommended_modality", "")).lower()
+        if modality in ("ct", "mri", "ultrasound") and details.get("recommended_interval_days"):
+            conditions.append(f"radiologist_rec_{modality}")
+
+        if details.get("hcc_risk") is True:
+            conditions.append("hcc_risk")
+        if details.get("hcc_surveillance") is True:
+            conditions.append("hcc_surveillance")
+
+        # Discharge diagnoses (whole-token matching, as for MI above)
+        dx = str(details.get("primary_diagnosis", "")).lower()
+        if dx:
+            tokens = set(re.split(r"[^a-z0-9]+", dx))
+            if "heart_failure" in dx or tokens & {"chf", "hfref", "hfpef"}:
+                conditions.append("heart_failure_discharge")
+            if tokens & {"preeclampsia", "eclampsia", "hellp"} or "gestational_hypertension" in dx \
+                    or "hypertensive_disorder_of_pregnancy" in dx:
+                conditions.append("hypertensive_disorder_pregnancy")
+            if "gestational_diabetes" in dx or tokens & {"gdm"}:
+                conditions.append("gestational_diabetes_delivery")
+            if ("self_harm" in dx or "suicid" in dx or "intentional_overdose" in dx
+                    or "intentional_self" in dx or details.get("psychiatric_admission") is True):
+                conditions.append("mental_health_discharge")
+
+        return [c for c in dict.fromkeys(conditions) if c]
 
     def _build_obligation_hyperedges(self, nodes_list: List[ClinicalNode]) -> None:
         """
@@ -227,15 +309,17 @@ class DynamicTemporalHypergraph:
             if event_enum is None:
                 continue
 
-            # Infer the trigger condition using the enriched helper
-            condition = self._infer_condition(node)
-
-            # Find matching obligation rules
-            matching_rules = get_rules_for_event(event_enum, condition)
+            # Infer every trigger condition and collect their rules (once each)
+            matching_rules: List[ObligationRule] = []
+            for condition in self._infer_conditions(node):
+                for rule in get_rules_for_event(event_enum, condition):
+                    if rule not in matching_rules:
+                        matching_rules.append(rule)
 
             for rule in matching_rules:
                 # Check if follow-up nodes exist
-                deadline = node.timestamp + timedelta(days=rule.deadline_days)
+                deadline_days = get_deadline_days(rule, node.details)
+                deadline = node.timestamp + timedelta(days=deadline_days)
                 followup_nodes = self._find_followup_nodes(
                     node, rule.required_followups, deadline, nodes_list
                 )
@@ -248,21 +332,18 @@ class DynamicTemporalHypergraph:
                     expected_followup_types=[ft.value for ft in rule.required_followups],
                     actual_followup_nodes=followup_nodes,
                     deadline=deadline,
+                    deadline_days=deadline_days,
+                    evaluation_time=self.evaluation_time,
                 )
 
-                # Determine status
-                if hyperedge.is_complete:
-                    # Check if any followup was after deadline
-                    late_followups = [
-                        fn for fn in followup_nodes
-                        if fn.timestamp > deadline
-                    ]
-                    if late_followups:
-                        hyperedge.status = LoopStatus.DELAYED.value
-                    else:
-                        hyperedge.status = LoopStatus.CLOSED.value
-                else:
+                # Determine status: closed on time, closed late, or still open
+                satisfied_at = hyperedge.satisfied_at
+                if satisfied_at is None:
                     hyperedge.status = LoopStatus.OPEN.value
+                elif satisfied_at > deadline:
+                    hyperedge.status = LoopStatus.DELAYED.value
+                else:
+                    hyperedge.status = LoopStatus.CLOSED.value
 
                 # Build evidence chain
                 hyperedge.evidence_chain = [
@@ -270,10 +351,23 @@ class DynamicTemporalHypergraph:
                     f"(details: {node.details})",
                     f"Rule: {rule.name} [{rule.rule_id}]",
                     f"Required: {[ft.value for ft in rule.required_followups]}",
-                    f"Deadline: {deadline.isoformat()} ({rule.deadline_days} days)",
+                    f"Deadline: {deadline.isoformat()} ({format_window(deadline_days)})",
                     f"Found follow-ups: {[fn.event_type for fn in followup_nodes]}",
                     f"Status: {hyperedge.status}",
                 ]
+                # Surface follow-ups that exist but did not happen: "CT was
+                # cancelled" is more actionable than "no CT".
+                required_values = {ft.value for ft in rule.required_followups}
+                not_done = [
+                    f"{n.event_type} [{n.status}] on {n.timestamp.date().isoformat()}"
+                    for n in nodes_list
+                    if n.event_type in required_values and n.timestamp > node.timestamp
+                    and not is_fulfilling_status(n.status)
+                ]
+                if not_done:
+                    hyperedge.evidence_chain.append(
+                        f"Not counted as follow-up (did not take place): {not_done}"
+                    )
 
                 self.hyperedges[edge_id] = hyperedge
 
@@ -284,12 +378,21 @@ class DynamicTemporalHypergraph:
         deadline: datetime,
         all_nodes: List[ClinicalNode],
     ) -> List[ClinicalNode]:
-        """Find follow-up nodes that match the required types after the trigger."""
+        """
+        Find follow-up nodes that match the required types after the trigger.
+
+        Excludes follow-ups that did not actually happen (cancelled, no-show,
+        merely scheduled) and events dated after the evaluation time.
+        """
         followups = []
         required_values = {ft.value for ft in required_types}
 
         for node in all_nodes:
             if node.timestamp <= trigger.timestamp:
+                continue
+            if node.timestamp > self.evaluation_time:
+                continue
+            if not is_fulfilling_status(node.status):
                 continue
             if node.patient_id != trigger.patient_id:
                 continue

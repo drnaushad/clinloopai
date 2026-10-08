@@ -1,12 +1,42 @@
-
 import asyncio
 import logging
 import json
+import math
 import os
-from datetime import datetime
-from typing import Dict, Any, List
+from datetime import datetime, timezone
+from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger("clinloop.safety_clock")
+
+
+def utc_now() -> datetime:
+    """Current time as a naive UTC datetime (the engine's internal time base)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def normalize_timestamp(ts: Any) -> datetime:
+    """
+    Parse a timestamp into a naive UTC datetime.
+
+    EMR/FHIR feeds mix timezone-aware ("2026-03-01T09:00:00+09:00", "...Z")
+    and naive values. Comparing the two raises TypeError, so every timestamp
+    entering the engine is converted to one time base: aware values are
+    converted to UTC, naive values are assumed to already be UTC.
+    """
+    if isinstance(ts, str):
+        text = ts.strip()
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        try:
+            ts = datetime.fromisoformat(text)
+        except ValueError:
+            ts = datetime.strptime(text, "%Y-%m-%d %H:%M:%S")
+    if not isinstance(ts, datetime):
+        raise TypeError(f"Unsupported timestamp: {ts!r}")
+    if ts.tzinfo is not None:
+        ts = ts.astimezone(timezone.utc).replace(tzinfo=None)
+    return ts
+
 
 # Global state for the watchdog
 class SafetyClockState:
@@ -14,75 +44,75 @@ class SafetyClockState:
     last_scan_time = None
     active_cases_monitored = 0
     escalations = []
-    
+
 clock_state = SafetyClockState()
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), "../../demo/data/cases.json")
+DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "cases.json")
 
 def load_cases() -> List[Dict[str, Any]]:
     if os.path.exists(DATA_PATH):
         with open(DATA_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
+    logger.error(f"Safety Clock data source missing: {DATA_PATH}")
     return []
 
-def parse_iso_date(date_str: str) -> datetime:
-    # Handle ISO format with or without timezone
-    if 'T' in date_str:
-        return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-    return datetime.now()
+def scan_for_violations(evaluation_time: Optional[datetime] = None):
+    """
+    Run the full ClinLoop detection engine over every monitored case and
+    escalate each obligation whose guideline deadline has been violated.
 
-def scan_for_violations():
+    Uses the same rules, deadlines and clock as the detector, so the watchdog
+    and the worklist can never disagree about what is overdue.
     """
-    Scans all open cases and checks if their elapsed time violates BioMCP safety guidelines.
-    """
+    # Imported here: loop_detector depends on this module.
+    from .loop_detector import ClinLoopDetector
+    from .clinical_ontology import LoopStatus
+
     cases = load_cases()
-    open_cases = [c for c in cases if c.get("ground_truth_status") == "open"]
-    
-    clock_state.active_cases_monitored = len(open_cases)
+    now = evaluation_time or utc_now()
+    detector = ClinLoopDetector(evaluation_time=now)
+    # DELAYED loops were completed late: a quality event, not something to escalate now
+    active = (LoopStatus.OPEN.value, LoopStatus.ABSTAIN.value)
+
     new_escalations = []
-    
-    # Simulate current time for the demo context (Sept 2026)
-    current_simulated_time = datetime.fromisoformat("2026-09-22T00:00:00+09:00")
-    
-    for case in open_cases:
-        events = case.get("events", [])
-        if not events:
+    monitored = 0
+    for case in cases:
+        try:
+            detections = detector.process_patient(
+                case.get("scenario_id", ""), case.get("patient_id", ""),
+                case.get("events", []), case.get("scenario_category", ""),
+            )
+        except Exception as e:  # one malformed case must not blind the watchdog
+            logger.error(f"Safety Clock could not evaluate {case.get('scenario_id')}: {e}")
+            new_escalations.append({
+                "scenario_id": case.get("scenario_id"),
+                "patient_id": case.get("patient_id"),
+                "violation": f"Case could not be evaluated ({type(e).__name__}); manual review required",
+                "escalation_level": "DATA_ERROR",
+                "timestamp": now.isoformat(),
+            })
             continue
-            
-        # Get the timestamp of the first critical event
-        critical_event = events[0]
-        event_time_str = critical_event.get("timestamp")
-        
-        if event_time_str:
-            event_time = parse_iso_date(event_time_str)
-            # Remove tzinfo for simple delta calculation
-            event_time = event_time.replace(tzinfo=None)
-            sim_time = current_simulated_time.replace(tzinfo=None)
-            
-            elapsed_days = (sim_time - event_time).days
-            
-            # Simple heuristic for time window based on BioMCP rules
-            # E.g. HSIL colposcopy -> 30 days
-            # Lung nodule CT -> 180 days
-            time_window_limit = 30 # Default safe fallback
-            
-            if "HSIL" in case.get("clinical_narrative", ""):
-                time_window_limit = 30
-            elif "nodule" in case.get("clinical_narrative", "").lower():
-                time_window_limit = 180
-                
-            if elapsed_days > time_window_limit:
-                new_escalations.append({
-                    "scenario_id": case.get("scenario_id"),
-                    "patient_id": case.get("patient_id"),
-                    "violation": f"Exceeded BioMCP limit: {elapsed_days} days elapsed (Limit: {time_window_limit} days)",
-                    "escalation_level": "CRITICAL_MALPRACTICE_RISK",
-                    "timestamp": datetime.now().isoformat()
-                })
-                
+
+        open_dets = [d for d in detections if d.loop_status in active]
+        if open_dets:
+            monitored += 1
+        for det in open_dets:
+            if det.clock_state != ClockState.BLACK.value:
+                continue
+            new_escalations.append({
+                "scenario_id": det.scenario_id,
+                "patient_id": det.patient_id,
+                "rule_id": det.rule_id,
+                "violation": f"{det.rule_name}: deadline {det.deadline} exceeded. {det.missing_step}",
+                "escalation_level": det.severity.upper(),
+                "timestamp": now.isoformat(),
+            })
+
+    clock_state.active_cases_monitored = monitored
     clock_state.escalations = new_escalations
-    clock_state.last_scan_time = datetime.now().isoformat()
-    logger.info(f"Safety Clock Scan Complete. Monitored {len(open_cases)} cases. Detected {len(new_escalations)} violations.")
+    clock_state.last_scan_time = now.isoformat()
+    logger.info(f"Safety Clock Scan Complete. Monitored {monitored} cases with open obligations. "
+                f"Detected {len(new_escalations)} violations.")
 
 async def safety_clock_loop():
     """
@@ -134,11 +164,10 @@ class SafetyClock:
         self.steepness = steepness
         self.threshold = threshold
 
-    def evaluate(self, obligation_id: str, rule_id: str, trigger_time: datetime, deadline_days: float, evaluation_time: datetime = None) -> SafetyClockReading:
-        import math
-        if evaluation_time is None:
-            evaluation_time = datetime.now()
-        
+    def evaluate(self, obligation_id: str, rule_id: str, trigger_time: datetime, deadline_days: float, evaluation_time: Optional[datetime] = None) -> SafetyClockReading:
+        evaluation_time = normalize_timestamp(evaluation_time) if evaluation_time is not None else utc_now()
+        trigger_time = normalize_timestamp(trigger_time)
+
         elapsed_days = (evaluation_time - trigger_time).total_seconds() / 86400.0
         
         # Sigmoid urgency decay

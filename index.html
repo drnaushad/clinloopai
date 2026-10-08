@@ -151,6 +151,7 @@
         <span id="txt-biomcp-btn">🧬 BioMCP Evidence</span>
         <span class="biomcp-status-pill" style="color: #059669; border-color: rgba(5,150,105,0.4);">MCP ONLINE</span>
       </button>
+      <a href="worklist.html" class="btn-secondary" style="text-decoration:none;" title="Pilot worklist: ranked open loops with acknowledge, defer and close actions">🩺 Clinician Worklist</a>
       <button id="btn-api-keys" class="btn-secondary btn-api-highlight" title="Active MCP Connections to LLMs, GPU, PubMed, European PMC, and Epic FHIR">
         <span id="txt-api-btn">🔑 API Keys</span>
         <span class="api-status-pill" id="api-status-pill" style="color: #059669; border-color: rgba(5,150,105,0.4);">API ONLINE</span>
@@ -356,7 +357,7 @@
               <h3 class="q-title" id="q3-title" style="color: var(--cyan-neon);">3. 권고되는 임상 조치는 무엇인가요?</h3>
             </div>
             <div class="q-body" id="summary-q3-action">
-              <strong>Fleischner Society 2017 가이드라인</strong>에 따라 90일 이내에 저선량 흉부 CT 재검 또는 조직검사를 시행하여 조기 폐암 여부를 확진해야 합니다.
+              <strong>Fleischner Society 2017 가이드라인</strong>에 따라 6–8mm 고형 결절은 6–12개월 내 흉부 CT로 추적해야 합니다. 침상형(Spiculated) 등 고위험 형태는 더 이른 추적을 고려합니다.
             </div>
           </div>
 
@@ -370,10 +371,10 @@
                 ⚖️ 방치 시 vs. 오늘 조치 시: 5년 생존율 인과 비교
               </div>
               <div id="comp-sub" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">
-                Judea Pearl 구조적 인과 모델(SCM) 기반 장기 생존율 및 의료 가치 예측
+                생존율, 치료 효과 또는 비용 편익 추정치는 검증되지 않았습니다.
               </div>
             </div>
-            <span id="summary-delta-badge" class="delta-highlight">+75.0% 생존 우위</span>
+            <span id="summary-delta-badge" class="delta-highlight">활성 모니터링 중</span>
           </div>
 
           <div class="comparison-cards-row">
@@ -404,7 +405,7 @@
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.7rem;">
             <div>
               <div style="font-size:0.82rem;font-weight:800;color:var(--text-main);">📈 5-Year Causal Survival Trajectory (Animated)</div>
-              <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.1rem;">Judea Pearl SCM — Neglect Path vs. ClinLoop Intervention Path</div>
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.1rem;">Illustrative scenario — Neglect Path vs. ClinLoop Intervention Path (not clinically validated)</div>
             </div>
             <div style="font-size:0.68rem;color:var(--text-dim);font-family:var(--font-mono);" id="chart-case-label">SC-0004 • RUL 7.8mm Nodule</div>
           </div>
@@ -584,7 +585,7 @@
           <!-- Causal Diagram (SCM: do-calculus) -->
           <div style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:10px; padding:1.5rem; margin-bottom:1.5rem;">
             <div style="font-size:0.8rem; font-weight:700; color:var(--violet-neuro); margin-bottom:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">
-              Judea Pearl Causal Model — Intervention: do(FollowUp=True)
+              Illustrative counterfactual — Intervention: do(FollowUp=True)
             </div>
             <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-main); line-height:1.4;">
               <pre style="margin:0; text-align:center;">

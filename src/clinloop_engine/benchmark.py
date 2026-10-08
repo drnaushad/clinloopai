@@ -8,7 +8,8 @@ Stratifies performance by risk severity.
 
 import json
 import os
-from typing import Dict, List, Tuple
+from datetime import datetime
+from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc, precision_recall_curve
@@ -16,10 +17,16 @@ from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, r
 from .loop_detector import ClinLoopDetector
 from .baselines import EMRInboxBaseline, LLMBaseline
 
+# Fixed evaluation clock, after the last synthetic event (Nov 2026). Using the
+# wall clock would make AUROC/PR-AUC change depending on the day it is run.
+BENCHMARK_EVALUATION_TIME = datetime(2027, 1, 1)
+
+
 class BenchmarkSuite:
-    def __init__(self, scenarios: List[Dict]):
+    def __init__(self, scenarios: List[Dict], evaluation_time: Optional[datetime] = None):
         self.scenarios = [s.to_dict() if hasattr(s, "to_dict") else s for s in scenarios]
-        self.clinloop = ClinLoopDetector()
+        self.evaluation_time = evaluation_time or BENCHMARK_EVALUATION_TIME
+        self.clinloop = ClinLoopDetector(evaluation_time=self.evaluation_time)
         self.emr_baseline = EMRInboxBaseline()
         self.llm_baseline = LLMBaseline(hallucination_rate=0.14)
         self.results = {}
@@ -132,6 +139,7 @@ class BenchmarkSuite:
             "overall": metrics,
             "stratified": stratified,
             "n_samples": len(self.scenarios),
+            "evaluation_time": self.evaluation_time.isoformat(),
             "abstention_rate": sum(p["predicted_abstain"] for p in clinloop_preds) / len(clinloop_preds)
         }
         

@@ -41,6 +41,18 @@ class EventType(Enum):
     HBA1C_RECHECK = "hba1c_recheck"
     ECHOCARDIOGRAM = "echocardiogram"
     SEPSIS_BUNDLE_COMPLETION = "sepsis_bundle_completion"
+    COLONOSCOPY = "colonoscopy"
+    BREAST_BIOPSY = "breast_biopsy"
+    CRITICAL_VALUE_NOTIFICATION = "critical_value_notification"
+    DIAGNOSIS = "diagnosis"                       # active problem-list entry (FHIR Condition)
+    BP_CHECK = "bp_check"
+    POSTPARTUM_GLUCOSE_TEST = "postpartum_glucose_test"
+    HCV_RNA_TEST = "hcv_rna_test"
+    LIVER_IMAGING = "liver_imaging"               # ultrasound (or multiphase CT/MRI) of the liver
+    MENTAL_HEALTH_FOLLOWUP = "mental_health_followup"
+    IMAGING_CT = "imaging_ct"                     # any completed CT study
+    IMAGING_MRI = "imaging_mri"                   # any completed MRI study
+    IMAGING_ULTRASOUND = "imaging_ultrasound"     # any completed ultrasound study
 
 
 # ── Severity Classification ─────────────────────────────────────────────────
@@ -100,6 +112,13 @@ class ObligationRule:
     ltl_formula: str                 # formal LTL expression
     references: List[str] = field(default_factory=list)
     followup_logic: str = "all"      # "all" (conjunction) or "any" (disjunction)
+    # No rule may drive alerts in a real deployment until a named specialist
+    # has signed it off (see docs/LIFE_SAVING_ROADMAP.md §3.1, §6).
+    review_status: str = "pending_specialist_review"
+    evidence_note: str = ""          # caveats on the deadline, shown to reviewers
+    # False for loops a clinician must handle personally (e.g. after self-harm):
+    # ClinLoop never drafts a patient message for them.
+    patient_outreach: bool = True
 
 
 # ── Complete Rule Set ────────────────────────────────────────────────────────
@@ -315,7 +334,358 @@ OBLIGATION_RULES: List[ObligationRule] = [
         ltl_formula="□(DISCHARGE[heart_failure_new] → ◇_{≤30d} ECHOCARDIOGRAM)",
         references=["ACC/AHA 2022 Heart Failure Guidelines", "PMID: 35379503"],
     ),
+
+    # ── Wave 1: highest-yield loops (docs/LIFE_SAVING_ROADMAP.md §2) ─────────
+    ObligationRule(
+        rule_id="R017",
+        name="Positive FIT → Diagnostic Colonoscopy",
+        description="A positive fecal immunochemical test requires diagnostic colonoscopy",
+        trigger_event=EventType.LAB_RESULT,
+        trigger_condition="positive_fit",
+        required_followups=[EventType.COLONOSCOPY],
+        deadline_days=90.0,
+        severity=Severity.HIGH,
+        clinical_domain="cancer_screening",
+        ltl_formula="□(LAB_RESULT[FIT+] → ◇_{≤90d} COLONOSCOPY)",
+        references=["Corley DA et al. JAMA 2017;317:1631-1641",
+                    "Korean National Cancer Screening Program (FIT from age 50)"],
+        evidence_note=("Risk of advanced-stage cancer rises with longer FIT+-to-colonoscopy "
+                       "intervals; programme targets are often shorter than 90 days."),
+    ),
+    ObligationRule(
+        rule_id="R018",
+        name="Mammography BI-RADS 4/5 → Tissue Diagnosis",
+        description="Suspicious (BI-RADS 4) or highly suggestive (BI-RADS 5) findings require biopsy",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="birads_4_5",
+        required_followups=[EventType.BREAST_BIOPSY],
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="cancer_screening",
+        ltl_formula="□(RADIOLOGY_REPORT[BI-RADS 4/5] → ◇_{≤30d} BREAST_BIOPSY)",
+        references=["ACR BI-RADS Atlas, 5th ed. (2013)"],
+        evidence_note="BI-RADS mandates tissue diagnosis; the 30-day window is a quality target.",
+    ),
+    ObligationRule(
+        rule_id="R019",
+        name="Lung-RADS 4A → 3-Month LDCT",
+        description="Lung-RADS category 4A on screening LDCT requires 3-month LDCT (or PET/CT)",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="lung_rads_4a",
+        required_followups=[EventType.FOLLOWUP_CT],
+        deadline_days=90.0,
+        severity=Severity.HIGH,
+        clinical_domain="cancer_screening",
+        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 4A] → ◇_{≤90d} FOLLOWUP_CT)",
+        references=["ACR Lung-RADS v2022"],
+    ),
+    ObligationRule(
+        rule_id="R020",
+        name="Lung-RADS 4B/4X → Diagnostic Work-up",
+        description="Lung-RADS 4B/4X requires diagnostic CT, PET/CT, tissue sampling or referral",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="lung_rads_4b_4x",
+        required_followups=[EventType.FOLLOWUP_CT, EventType.BIOPSY_ORDER,
+                            EventType.SPECIALIST_REFERRAL],
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="cancer_screening",
+        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 4B/4X] → ◇_{≤30d} (CT ∨ BIOPSY ∨ REFERRAL))",
+        references=["ACR Lung-RADS v2022"],
+        followup_logic="any",
+        evidence_note="Lung-RADS gives no explicit interval for 4B/4X; 30 days is a proposed target.",
+    ),
+    ObligationRule(
+        rule_id="R021",
+        name="Abnormal Result After Discharge → Clinician Review",
+        description="An abnormal result finalised after the patient left hospital must be reviewed by a responsible clinician",
+        trigger_event=EventType.LAB_RESULT,
+        trigger_condition="abnormal_post_discharge",
+        required_followups=[EventType.PROVIDER_REVIEW],
+        deadline_days=3.0,
+        severity=Severity.HIGH,
+        clinical_domain="transitions_of_care",
+        ltl_formula="□(LAB_RESULT[abnormal ∧ after_discharge] → ◇_{≤3d} PROVIDER_REVIEW)",
+        references=["Roy CL et al. Ann Intern Med 2005;143:121-128"],
+    ),
+    ObligationRule(
+        rule_id="R022",
+        name="Critical Value → Documented Clinician Notification ≤1 Hour",
+        description="A critical (panic) result must be communicated to a responsible clinician and documented",
+        trigger_event=EventType.LAB_RESULT,
+        trigger_condition="critical_value",
+        required_followups=[EventType.CRITICAL_VALUE_NOTIFICATION],
+        deadline_days=1.0 / 24.0,
+        severity=Severity.CRITICAL,
+        clinical_domain="laboratory",
+        ltl_formula="□(LAB_RESULT[critical] → ◇_{≤1h} CRITICAL_VALUE_NOTIFICATION)",
+        references=["CLSI GP47 Management of Critical- and Significant-Risk Results",
+                    "The Joint Commission NPSG.02.03.01"],
+        evidence_note="Institutions set the exact window; 1 hour is a common upper limit.",
+        patient_outreach=False,
+    ),
+
+    # ── Wave 2 (docs/LIFE_SAVING_ROADMAP.md §2) ──────────────────────────────
+    ObligationRule(
+        rule_id="R023",
+        name="Heart Failure Discharge → Clinic Visit ≤7 Days",
+        description="Patients discharged after heart failure hospitalisation need an early follow-up visit",
+        trigger_event=EventType.DISCHARGE,
+        trigger_condition="heart_failure_discharge",
+        required_followups=[EventType.FOLLOWUP_APPOINTMENT],
+        deadline_days=7.0,
+        severity=Severity.HIGH,
+        clinical_domain="cardiology",
+        ltl_formula="□(DISCHARGE[heart_failure] → ◇_{≤7d} FOLLOWUP_APPOINTMENT)",
+        references=["Heidenreich PA et al. 2022 AHA/ACC/HFSA Heart Failure Guideline. Circulation 2022"],
+    ),
+    ObligationRule(
+        rule_id="R024",
+        name="Hypertensive Disorder of Pregnancy → Postpartum BP Check",
+        description="Postpartum blood pressure evaluation: within 72 hours if severe, otherwise within 7–10 days",
+        trigger_event=EventType.DISCHARGE,
+        trigger_condition="hypertensive_disorder_pregnancy",
+        required_followups=[EventType.BP_CHECK],
+        deadline_days=10.0,
+        severity=Severity.HIGH,
+        clinical_domain="maternal",
+        ltl_formula="□(DISCHARGE[HDP] → ◇_{≤10d (≤72h if severe)} BP_CHECK)",
+        references=["ACOG Committee Opinion No. 736: Optimizing Postpartum Care (2018)"],
+    ),
+    ObligationRule(
+        rule_id="R025",
+        name="Gestational Diabetes → Postpartum Glucose Test (4–12 Weeks)",
+        description="Women with gestational diabetes need a 75 g OGTT 4–12 weeks after delivery",
+        trigger_event=EventType.DISCHARGE,
+        trigger_condition="gestational_diabetes_delivery",
+        required_followups=[EventType.POSTPARTUM_GLUCOSE_TEST],
+        deadline_days=84.0,
+        severity=Severity.MODERATE,
+        clinical_domain="maternal",
+        ltl_formula="□(DISCHARGE[GDM delivery] → ◇_{≤12w} POSTPARTUM_GLUCOSE_TEST)",
+        references=["ADA Standards of Care in Diabetes 2024, Section 15", "ACOG Practice Bulletin No. 190"],
+    ),
+    ObligationRule(
+        rule_id="R026",
+        name="HCV Antibody Positive → HCV RNA Test",
+        description="A reactive hepatitis C antibody needs an RNA test to establish current infection",
+        trigger_event=EventType.LAB_RESULT,
+        trigger_condition="hcv_antibody_positive",
+        required_followups=[EventType.HCV_RNA_TEST],
+        deadline_days=30.0,
+        severity=Severity.MODERATE,
+        clinical_domain="infectious_disease",
+        ltl_formula="□(LAB_RESULT[HCV Ab+] → ◇_{≤30d} HCV_RNA_TEST)",
+        references=["CDC Recommendations for Hepatitis C Screening Among Adults, MMWR 2020;69(RR-2)"],
+        evidence_note="CDC recommends reflex RNA testing on the same specimen; 30 days is a proposed outer limit.",
+    ),
+    ObligationRule(
+        rule_id="R027",
+        name="HCC Risk (Chronic HBV / Cirrhosis) → Liver Surveillance Imaging",
+        description="Patients at high risk of hepatocellular carcinoma need liver ultrasound every 6 months",
+        trigger_event=EventType.DIAGNOSIS,
+        trigger_condition="hcc_risk",
+        required_followups=[EventType.LIVER_IMAGING],
+        deadline_days=213.0,
+        severity=Severity.HIGH,
+        clinical_domain="hepatology",
+        ltl_formula="□(DIAGNOSIS[HBV ∨ cirrhosis] → ◇_{≤6m} LIVER_IMAGING)",
+        references=["KASL-NCC 2022 HCC Practice Guideline", "AASLD 2023 HCC Practice Guidance"],
+        evidence_note="6-month interval plus 1 month scheduling tolerance.",
+    ),
+    ObligationRule(
+        rule_id="R028",
+        name="HCC Surveillance Imaging → Next Imaging in 6 Months",
+        description="Each surveillance ultrasound in a high-risk patient starts the next 6-month interval",
+        trigger_event=EventType.LIVER_IMAGING,
+        trigger_condition="hcc_surveillance",
+        required_followups=[EventType.LIVER_IMAGING],
+        deadline_days=213.0,
+        severity=Severity.HIGH,
+        clinical_domain="hepatology",
+        ltl_formula="□(LIVER_IMAGING[surveillance] → ◇_{≤6m} LIVER_IMAGING)",
+        references=["KASL-NCC 2022 HCC Practice Guideline", "AASLD 2023 HCC Practice Guidance"],
+        evidence_note="6-month interval plus 1 month scheduling tolerance.",
+    ),
+    ObligationRule(
+        rule_id="R029",
+        name="Self-Harm or Psychiatric Discharge → Mental-Health Follow-up ≤7 Days",
+        description="After an ED visit for self-harm or a psychiatric admission, follow-up within 7 days",
+        trigger_event=EventType.DISCHARGE,
+        trigger_condition="mental_health_discharge",
+        required_followups=[EventType.MENTAL_HEALTH_FOLLOWUP],
+        deadline_days=7.0,
+        severity=Severity.CRITICAL,
+        clinical_domain="mental_health",
+        ltl_formula="□(DISCHARGE[self_harm ∨ psychiatric] → ◇_{≤7d} MENTAL_HEALTH_FOLLOWUP)",
+        references=["NCQA HEDIS FUH / FUM 7-day follow-up measures"],
+        evidence_note=("Deploy only with psychiatry co-design and crisis protocols. Clinician-handled: "
+                       "ClinLoop never contacts the patient for this rule."),
+        patient_outreach=False,
+    ),
+
+    # ── Radiologist-recommended follow-up (deadline taken from the report) ───
+    ObligationRule(
+        rule_id="R030",
+        name="Radiologist-Recommended CT",
+        description="Follow-up CT recommended in the radiology report, within the stated interval",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="radiologist_rec_ct",
+        required_followups=[EventType.IMAGING_CT],
+        deadline_days=90.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend CT in T] → ◇_{≤T+grace} IMAGING_CT)",
+        references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
+        evidence_note="Interval from the report plus a grace period (25%, 7–30 days). Matches modality, not body region.",
+    ),
+    ObligationRule(
+        rule_id="R031",
+        name="Radiologist-Recommended MRI",
+        description="Follow-up MRI recommended in the radiology report, within the stated interval",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="radiologist_rec_mri",
+        required_followups=[EventType.IMAGING_MRI],
+        deadline_days=90.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend MRI in T] → ◇_{≤T+grace} IMAGING_MRI)",
+        references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
+        evidence_note="Interval from the report plus a grace period (25%, 7–30 days). Matches modality, not body region.",
+    ),
+    ObligationRule(
+        rule_id="R032",
+        name="Radiologist-Recommended Ultrasound",
+        description="Follow-up ultrasound recommended in the radiology report, within the stated interval",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="radiologist_rec_ultrasound",
+        required_followups=[EventType.IMAGING_ULTRASOUND],
+        deadline_days=90.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend US in T] → ◇_{≤T+grace} IMAGING_ULTRASOUND)",
+        references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
+        evidence_note="Interval from the report plus a grace period (25%, 7–30 days). Matches modality, not body region.",
+    ),
 ]
+
+
+# ── Korean rule names (clinician-facing UI) ──────────────────────────────────
+
+RULE_NAMES_KO: Dict[str, str] = {
+    "R001": "이상 검사결과 → 환자 통보",
+    "R002": "이상 검사결과 → 추적 외래",
+    "R003": "우연 폐결절 ≥6mm → 추적 CT",
+    "R004": "PSA 상승 → 비뇨의학과 의뢰/조직검사",
+    "R005": "자궁경부 세포검사 이상 → 질확대경 의뢰",
+    "R006": "퇴원 후 배양 양성 → 환자 연락",
+    "R007": "와파린 용량 변경 → INR 재검",
+    "R008": "전문의 의뢰 → 의뢰 진료",
+    "R009": "병리 이상 → 환자 통보 + 전문의 의뢰",
+    "R010": "약물 변경 → 모니터링 검사",
+    "R011": "정상 검사결과 → 주치의 확인",
+    "R012": "갑상선기능 이상 → 재검",
+    "R013": "당화혈색소 ≥9% → 3개월 내 재검",
+    "R014": "급성심근경색 퇴원 → 14일 내 심장내과 외래",
+    "R015": "균혈증 → 48시간 내 혈액배양 재검",
+    "R016": "신규 심부전 → 심초음파",
+    "R017": "분변잠혈(FIT) 양성 → 대장내시경",
+    "R018": "유방촬영 BI-RADS 4/5 → 조직검사",
+    "R019": "Lung-RADS 4A → 3개월 저선량 CT",
+    "R020": "Lung-RADS 4B/4X → 정밀검사",
+    "R021": "퇴원 후 이상 결과 → 의료진 확인",
+    "R022": "위험(패닉) 수치 → 1시간 내 의료진 보고",
+    "R023": "심부전 퇴원 → 7일 내 외래",
+    "R024": "임신성 고혈압 질환 → 산후 혈압 측정",
+    "R025": "임신성 당뇨 → 산후 4–12주 당부하검사",
+    "R026": "C형간염 항체 양성 → HCV RNA 검사",
+    "R027": "간암 고위험(만성 B형간염·간경변) → 감시 영상검사",
+    "R028": "간암 감시 영상 → 6개월 후 재검",
+    "R029": "자해·정신과 퇴원 → 7일 내 정신건강 추적",
+    "R030": "영상의학과 권고 → 추적 CT",
+    "R031": "영상의학과 권고 → 추적 MRI",
+    "R032": "영상의학과 권고 → 추적 초음파",
+}
+assert set(RULE_NAMES_KO) == {r.rule_id for r in OBLIGATION_RULES}, "every rule needs a Korean name"
+
+
+# ── Finding-specific deadlines ──────────────────────────────────────────────
+#
+# Some rules need a deadline that depends on the trigger's details.
+#
+# R003: Fleischner 2017 recommends CT at 6–12 months for a solid 6–8 mm
+#       nodule, but CT at ~3 months, PET/CT or tissue sampling for >8 mm.
+#       The 180-day window would let a 12 mm nodule wait six months.
+# R010: the generic 14-day lab window is wrong for drugs whose recheck
+#       interval differs; low-harm monitoring labs use the guideline's
+#       upper bound so a loop is only violated once the window has passed.
+
+FLEISCHNER_LARGE_NODULE_MM = 8.0
+FLEISCHNER_LARGE_NODULE_DAYS = 90.0
+
+MONITORING_WINDOW_DAYS: Dict[str, float] = {
+    "levothyroxine": 56.0,  # TSH 6–8 weeks after dose change (ATA 2014)
+    "lithium": 7.0,         # Serum lithium ~1 week after dose change (NICE CG185)
+}
+
+
+def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
+    """Deadline for one triggered obligation, applying finding/drug-specific windows."""
+    if rule.rule_id == "R003":
+        try:
+            if float(details.get("nodule_size_mm", 0)) > FLEISCHNER_LARGE_NODULE_MM:
+                return FLEISCHNER_LARGE_NODULE_DAYS
+        except (TypeError, ValueError):
+            pass
+    if rule.rule_id == "R010":
+        drug = str(details.get("drug", "")).strip().lower()
+        if drug in MONITORING_WINDOW_DAYS:
+            return MONITORING_WINDOW_DAYS[drug]
+    if rule.rule_id == "R024" and details.get("severe_hypertension") is True:
+        return 3.0   # severe hypertension: BP check within 72 hours (ACOG CO 736)
+    if rule.rule_id in RADIOLOGIST_REC_RULES:
+        try:
+            interval = float(details["recommended_interval_days"])
+            return interval + radiology_grace_days(interval)
+        except (KeyError, TypeError, ValueError):
+            pass
+    return rule.deadline_days
+
+
+RADIOLOGIST_REC_RULES = {"R030", "R031", "R032"}
+
+
+def radiology_grace_days(interval_days: float) -> float:
+    """Scheduling tolerance after a radiologist's stated interval: 25%, at least 7 and at most 30 days."""
+    return min(30.0, max(7.0, 0.25 * interval_days))
+
+
+# ── Follow-up event statuses ────────────────────────────────────────────────
+#
+# A follow-up only closes a loop if it actually happened. A cancelled CT, a
+# no-show visit or a booked-but-not-yet-attended appointment leaves the
+# patient exactly as exposed as no follow-up at all ("click ≠ closure").
+
+NON_FULFILLING_STATUSES = frozenset({
+    "cancelled", "canceled", "no_show", "no-show", "noshow",
+    "entered-in-error", "entered_in_error", "not-done", "not_done",
+    "revoked", "declined", "refused", "failed", "rejected",
+    "scheduled", "booked", "planned", "proposed", "pending", "draft",
+})
+
+
+def is_fulfilling_status(status: Optional[str]) -> bool:
+    """True if an event with this status counts as a completed follow-up."""
+    return str(status or "completed").strip().lower() not in NON_FULFILLING_STATUSES
+
+
+def format_window(days: float) -> str:
+    """Human-readable deadline window: '1 hour', '3 days', '6 months'-style."""
+    if days < 1.0:
+        hours = round(days * 24)
+        return f"{hours} hour{'s' if hours != 1 else ''}"
+    whole = int(days) if float(days).is_integer() else round(days, 1)
+    return f"{whole} day{'s' if whole != 1 else ''}"
 
 
 def get_rule_by_id(rule_id: str) -> Optional[ObligationRule]:

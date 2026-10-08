@@ -14,7 +14,7 @@ The envelope carries:
 import uuid
 import hashlib
 from dataclasses import dataclass, asdict, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 
 
@@ -38,7 +38,7 @@ class AgentExecutionContext:
     allowed_tools: List[str] = field(default_factory=list)
     autonomy_level: str = "A1"  # e.g. A1 = PROPOSE / ROUTE, A2 = DRAFT, etc.
     capability_grant_ids: List[str] = field(default_factory=list)
-    started_at: datetime = field(default_factory=datetime.utcnow)
+    started_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     # Runtime audit fields – populated after execution
     inputs_hash: Optional[str] = None
     outputs_hash: Optional[str] = None
@@ -56,7 +56,7 @@ class AgentExecutionContext:
         self.outputs_hash = _hash_obj(outputs)
 
     def finish(self) -> None:
-        self.execution_time_seconds = (datetime.utcnow() - self.started_at).total_seconds()
+        self.execution_time_seconds = (datetime.now(timezone.utc) - self.started_at).total_seconds()
 
     def to_dict(self) -> Dict[str, Any]:
         d = asdict(self)

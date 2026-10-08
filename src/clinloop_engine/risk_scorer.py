@@ -91,6 +91,13 @@ class RiskScorer:
             "R014": 0.20,  # Post-MI follow-up: high urgency ensures moderate compliance
             "R015": 0.12,  # Bacteremia repeat culture: inpatient protocol-driven, low miss rate
             "R016": 0.35,  # New HF echocardiogram: outpatient scheduling delays common
+            # Wave 1 placeholders until estimated from local data
+            "R017": 0.40,  # FIT+ colonoscopy completion is often incomplete
+            "R018": 0.15,
+            "R019": 0.30,
+            "R020": 0.20,
+            "R021": 0.40,  # Post-discharge results frequently unacknowledged
+            "R022": 0.10,
         }
 
         # Actionability scores (does a clear next step exist?)
@@ -111,6 +118,12 @@ class RiskScorer:
             "R014": 0.95,  # Clear: schedule cardiology outpatient visit
             "R015": 0.95,  # Clear: order repeat blood culture (inpatient protocol)
             "R016": 0.90,  # Clear: order echocardiogram
+            "R017": 0.90,  # Clear: book colonoscopy
+            "R018": 0.90,  # Clear: order biopsy
+            "R019": 0.90,  # Clear: order 3-month LDCT
+            "R020": 0.85,  # Clear but multi-option work-up
+            "R021": 0.90,  # Clear: review and act on result
+            "R022": 0.95,  # Clear: call the responsible clinician
         }
 
     def compute_uncertainty(self, event_details: Dict, n_events: int) -> float:
@@ -169,7 +182,12 @@ class RiskScorer:
         uncertainty_score = self.compute_uncertainty(event_details, n_events)
 
         # Factor 4: Failure Probability
-        failure_prob = self._failure_priors.get(rule_id, 0.25)
+        # The prior estimates how often this kind of loop is missed. Once the
+        # deadline has passed with the loop still open, the miss is observed,
+        # not estimated, so the probability is 1.
+        failure_prior = self._failure_priors.get(rule_id, 0.25)
+        failure_observed = is_open and clock_reading.clock_state == ClockState.BLACK
+        failure_prob = 1.0 if failure_observed else failure_prior
 
         # Factor 5: Actionability
         actionability = self._actionability.get(rule_id, 0.75)
@@ -192,7 +210,16 @@ class RiskScorer:
         normalized = min(1.0, composite / 0.5)  # 0.5 is roughly max expected composite
 
         # Abstention decision
-        should_abstain = uncertainty_score > self.abstention_threshold and is_open
+        # Sparse data may justify asking a human, but never at the cost of
+        # urgency: once a deadline is violated, or the obligation is CRITICAL,
+        # the loop is escalated as a definite alert (with a data-quality note)
+        # instead of being softened into "insufficient data".
+        sparse_data = uncertainty_score > self.abstention_threshold and is_open
+        must_escalate = (
+            clock_reading.clock_state == ClockState.BLACK
+            or severity == Severity.CRITICAL
+        )
+        should_abstain = sparse_data and not must_escalate
         abstain_reason = ""
         if should_abstain:
             abstain_reason = (
@@ -221,12 +248,19 @@ class RiskScorer:
             f"Severity: {severity.value} (score: {severity_score:.2f})",
             f"Time Risk: {time_risk_score:.3f} (clock: {clock_reading.clock_state.value})",
             f"Uncertainty: {uncertainty_score:.3f}",
-            f"Historical Failure Rate: {failure_prob:.2f}",
+            (f"Failure: observed (deadline passed; prior {failure_prior:.2f})" if failure_observed
+             else f"Historical Failure Rate: {failure_prob:.2f}"),
             f"Actionability: {actionability:.2f}",
             f"Composite Risk: {composite:.4f} → Normalized: {normalized:.3f}",
         ]
         if should_abstain:
             explanation.append(f"⚠ ABSTENTION: {abstain_reason}")
+        elif sparse_data:
+            explanation.append(
+                f"⚠ Sparse record (uncertainty {uncertainty_score:.2f}): verify the chart, "
+                f"but the alert is escalated because the obligation is "
+                f"{'past its deadline' if clock_reading.clock_state == ClockState.BLACK else 'critical'}."
+            )
 
         return RiskAssessment(
             obligation_id=obligation_id,

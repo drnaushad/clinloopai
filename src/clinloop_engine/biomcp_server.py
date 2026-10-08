@@ -87,6 +87,19 @@ def handle_call_tool(name, args):
 
     elif name == "biomcp_query_fleischner":
         size = float(args.get("nodule_size_mm", 0))
+        if size > 8.0:
+            return {
+                "status": "grounded",
+                "guideline_org": "Fleischner Society International Consensus",
+                "guideline_title": "Guidelines for Management of Incidental Pulmonary Nodules Detected on CT Images",
+                "citation": "Radiology. 2017 Jul;284(1):228-243.",
+                "pmid": "28240562",
+                "doi": "10.1148/radiol.2017161659",
+                "mandated_action": "Consider CT at 3 months, PET/CT, or tissue sampling (solid nodule >8 mm)",
+                "time_window_days": 90,
+                "derived_t_crit": 90,
+                "derived_k_factor": 6.5
+            }
         if size >= 6.0:
             return {
                 "status": "grounded",
@@ -96,7 +109,7 @@ def handle_call_tool(name, args):
                 "pmid": "28240562",
                 "doi": "10.1148/radiol.2017161659",
                 "evidence_grade": "Grade 1B (Strong Recommendation, Moderate-Quality Evidence)",
-                "mandated_action": "Thin-Slice Follow-up CT Chest (3 to 6 months)",
+                "mandated_action": "Thin-Slice Follow-up CT Chest (6 to 12 months; solid nodule 6-8 mm)",
                 "time_window_days": 180,
                 "legal_liability": "Critical Malpractice Risk (Stage I to Stage IV Lung Cancer Progression)",
                 "derived_t_crit": 180,
