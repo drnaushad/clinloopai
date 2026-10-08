@@ -1,7 +1,7 @@
-# Imaging in ClinLoop: PACS, imaging AI, outside reports and DICOM analysis
+# Imaging in ClinLoop: PACS, imaging AI, outside reports, DICOM and CT analysis
 
-ClinLoop tracks follow-up. It does not diagnose. Images matter for follow-up in four ways, and
-ClinLoop now covers each of them.
+ClinLoop tracks follow-up. It does not diagnose. Images matter for follow-up in the ways below, and
+ClinLoop covers each of them.
 
 | Capability | What it answers | How |
 |---|---|---|
@@ -9,6 +9,9 @@ ClinLoop now covers each of them.
 | **Imaging AI as second reader** | "The AI saw a nodule. Did the radiologist address it?" | Compares each positive AI finding with the report for the same study. If the report never mentions it, a radiologist-review loop opens (R047). |
 | **Outside reports** | "The patient brought a CT report from another hospital." | Reads PDF text, or runs OCR (Tesseract, Korean and English) on scans and photos. A person checks and corrects the text. The report then goes through the same report-reading logic. |
 | **DICOM analysis** | "Is this image safe to file, and does an imaging model flag anything?" | Header safety checks, a study record, and the hospital's imaging models. Any finding is only a request for a second look. |
+| **CT organ measurement** | "The aorta measures 3.4 cm, but the report never mentions it." | A whole CT series is segmented by TotalSegmentator. ClinLoop measures the aorta and the spleen against cited limits (section 5). |
+| **Vision-language model** | "Describe this image, and say which findings from the list it shows." | MedGemma or a similar model on the hospital's own server: findings from a fixed list only (section 6). |
+| **Patient knowledge graph** | "What has happened to this patient, and what is still missing?" | Every event the engine read, and every obligation between them, on one time axis (section 7). |
 
 All four become standard FHIR R4 resources, and so share ingestion, rules, governance, audit and
 the worklist:
@@ -158,14 +161,129 @@ for sites without DICOMweb.
 
 **Storage:** pixel data is never stored. A preview is returned to the reviewer only.
 
+Approved vendor products: see [`VENDOR_IMAGING_AI.md`](VENDOR_IMAGING_AI.md) and the placeholder
+template [`imaging_models.example.json`](imaging_models.example.json).
+
+## 5. CT organ measurement (3-D, research use)
+
+`imaging.html` → *CT organ measurement*, or `POST /api/v1/imaging/ct-organs`, takes one CT series:
+a `.zip` of its DICOM files, or a NIfTI volume.
+
+**Reading the series:**
+- The slices are sorted by position (not by file order) and converted to Hounsfield units.
+- A zip with more than one patient's images is refused. If the zip holds several series, the
+  largest is used and a note says so.
+- A series that is not CT, has fewer than 20 slices, or has duplicate slice positions is refused.
+- A NIfTI volume has no PatientID, so its measurements are shown but never filed.
+
+**Segmentation.** TotalSegmentator 2 (Wasserthal J et al., *Radiology: AI* 2023; Apache-2.0)
+segments 117 structures.
+- It is research use only and not a medical device.
+- By default the 3 mm model runs, which takes about 20 s on a CPU. `CLINLOOP_CT_SEG_FAST=0` runs
+  the 1.5 mm model, which is more precise but takes minutes.
+- Each CT runs in its own short-lived process, with a time limit (`CLINLOOP_CT_SEG_TIMEOUT`,
+  default 900 s). nnU-Net's internal multiprocessing hung on the second CT when called inside the
+  web server; this was found in the live run and is why.
+- TotalSegmentator's default usage statistics, sent to its authors' server, are switched off
+  before every run.
+
+**Measurements (explicit, cited limits):**
+
+| Measurement | How | Flagged when |
+|---|---|---|
+| Aorta | Short-axis diameter of every axial cross-section, from an ellipse fit. Oblique cuts (long axis > 1.6 × short axis, e.g. the arch) are skipped. A slice is thoracic if it contains lung or heart. | Abdominal ≥ 3.0 cm (SVS 2018 definition of AAA); thoracic ≥ 4.0 cm (ACR incidental-findings white paper) |
+| Spleen | Craniocaudal length | > 13 cm, and only if the whole spleen is inside the scan |
+| Every organ shown | Volume (ml), length, and whether it is fully in the scan | Not flagged |
+
+- A value within one voxel of its limit is marked *borderline*.
+- An organ cut off by the edge of the scan is never sized.
+- Abdominal and thoracic dilatation on one CT make one finding, so one review.
+
+**What happens to a flagged measurement.** It becomes an imaging-AI Observation with the
+measurement as a component (never as a probability), compared with the report of the same CT
+(R047).
+- These count as addressing it: "AAA", "aneurysm", "ectatic", "normal caliber abdominal aorta",
+  "the aorta measures 2.9 cm", "대동맥류".
+- "No acute abnormality" does not address it.
+- Because TotalSegmentator is research use, R047 opens only with `CLINLOOP_IMAGING_RESEARCH_AI=1`.
+
+**What it deliberately does not do.**
+- The organs a CT covers are listed, but a measurement never closes a loop. A chest CT that happens
+  to include the adrenals does not close an adrenal follow-up; that stays a radiologist's call.
+- No diagnosis is made, and nothing is sent to the patient.
+
+**Install:**
+- Docker: `docker build --build-arg WITH_CT_SEGMENTATION=1`, which bakes the 3 mm weights into the
+  image.
+- Or `pip install TotalSegmentator`, with the weights in `TOTALSEG_WEIGHTS_PATH`.
+- Then set `CLINLOOP_IMAGING_MODELS=totalseg`.
+
+## 6. Vision-language model (research use)
+
+Add `vlm` to `CLINLOOP_IMAGING_MODELS`. It runs on any modality, one image at a time, on the
+*DICOM image analysis* panel.
+
+```
+CLINLOOP_VLM_URL=http://ollama:11434        # the hospital's own Ollama, or an OpenAI-compatible server (vLLM, llama.cpp)
+CLINLOOP_VLM_MODEL=medgemma-4b-it           # whatever name the server gives the model
+CLINLOOP_VLM_API=ollama | openai            # default: ollama for port 11434
+CLINLOOP_VLM_REGULATORY=…                   # default "Research use only — not a medical device"
+```
+
+**Safeguards against the known failure modes of generative models:**
+- **Images stay inside the hospital.** The image goes only to a server whose address is private or
+  localhost. A public URL is refused, unless `CLINLOOP_VLM_ALLOW_REMOTE=1`.
+- **Fixed vocabulary.** The model must answer with findings from ClinLoop's fixed list. Any other
+  label ("lung cancer stage IV") is dropped.
+- **Body region must fit.** A finding for another body region, such as a pneumothorax on a head CT,
+  is dropped.
+- **Bad answers file nothing.** An unreadable answer files no findings. A confidence outside 0–1 is
+  ignored.
+- **Free text is not filed.** The free-text description is shown to the reviewer, marked as
+  unverified AI text, and never stored in the record.
+- **Research use.** Findings open review loops only with `CLINLOOP_IMAGING_RESEARCH_AI=1`.
+
+**Not yet run on real weights.** The adapter is tested against a stand-in server that speaks the
+Ollama and OpenAI formats. MedGemma's weights could not be downloaded in the build environment
+(Hugging Face and ollama.com are blocked there), so the model itself has not been run here.
+
+## 7. Patient knowledge graph
+
+`patient.html?patient=<id>`, or `GET /api/v1/patients/{id}/graph` (viewer role), is reachable from
+each worklist loop.
+
+**Nodes:**
+- Every clinical event the engine read for the patient, placed in lanes on a time axis: diagnoses
+  and risk factors, lab values and pathology, orders and referrals, medications, appointments and
+  communication, imaging studies and procedures, radiology reports, and imaging AI.
+- Every active Condition is now read as a diagnosis node. Only HCC-risk diagnoses carry an
+  obligation of their own (R027).
+
+**Hyperedges (obligations).** Each runs from the event that created the obligation to the
+follow-up(s) that fulfilled it.
+- When the follow-up is missing, the hyperedge runs to a dashed "missing" node at its deadline,
+  in the lane where the follow-up should appear: for example "CT · adrenal" by 2026-04-29.
+- Colour shows the status: closed on time, closed late, or open.
+- Each hyperedge carries the evidence chain and the loop's worklist state.
+
+**Edges:**
+- *same study*: the study, its report and its AI findings;
+- *same record*: several facts read from one FHIR resource;
+- *derived from*: an R047 review created from an AI finding.
+
+The graph comes from the same temporal hypergraph that opens the loops, so what is drawn is
+exactly what the engine decided.
+
 ### What ClinLoop does *not* do
 
 - **It does not diagnose.** No model output is shown as a diagnosis, sent to a patient, or used to
   close a loop.
-- **No built-in model for CT, MRI or ultrasound.** Those need an approved vendor product (section 4,
-  vendor models). Building one would need its own validation and MFDS approval.
-- **No 3-D volume analysis.** One DICOM file is analysed at a time; for multi-frame files, the
-  middle frame.
+- **No approved CT, MRI or ultrasound model is built in.**
+  - CT measurement and the vision-language model are research use.
+  - Findings that should open loops in routine care need an approved vendor product (section 4).
+  - Building one would need its own validation and MFDS approval.
+- **2-D analysis reads one image.** One DICOM file is analysed at a time; for multi-frame files,
+  the middle frame. 3-D analysis is CT only (section 5).
 
 ## Live run (synthetic patients, 2026-10-08)
 
@@ -184,6 +302,32 @@ for sites without DICOMweb.
   2026-04-03 were found.
   - A person corrected "2.4 07" to "2.4 cm" and confirmed. Filing opened the radiologist's
     "3개월 후 추적 CT 권고" as R030 (adrenal region).
+
+## Live run: CT, vision-language model and graph (synthetic patient CT-DEMO-01, 2026-10-08)
+
+**CT, real model, real code.**
+- TotalSegmentator 2.18 (3 mm) on TotalSegmentator's own public sample CT, run on CPU through the
+  API:
+  - liver 1062 ml, spleen 260 ml, kidneys 99 and 108 ml;
+  - abdominal aorta 2.2 cm: no finding.
+- The same CT entered as NIfTI and as a DICOM series gave an identical volume and orientation.
+- **Aneurysm phantom.** A 4.4 cm aorta was painted into the lower slices of the same CT.
+  - It was measured at **3.3 cm**, which is above the 3.0 cm limit and marked borderline. The
+    phantom has soft-tissue density, so the model segmented only part of it.
+  - This under-measurement is why a measurement only ever asks for a review and never closes or
+    rules anything out.
+- The patient's report said "No acute intra-abdominal abnormality. Liver unremarkable", so an R047
+  review opened.
+- Three CTs in a row took 21–24 s each (after the subprocess fix described in section 5).
+
+**Vision-language model (stand-in server).**
+- The request reached the local server with the image and the fixed vocabulary.
+- An invented label ("brain tumour") was dropped.
+- The description was shown and not filed.
+
+**Graph.** The demo patient showed 26 events and 10 obligations on `patient.html`: 5 open (R003
+overdue: the follow-up CT was a no-show) and 5 closed. It was checked in Chromium at 1280 px and at
+390 px wide, with no horizontal page scroll.
 
 ## Independent review
 

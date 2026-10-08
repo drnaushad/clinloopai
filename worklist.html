@@ -133,6 +133,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     <nav>
       <button type="button" id="btn-lang" aria-label="Language">English</button>
       <a href="imaging.html" data-i18n="imagingLink"></a>
+      <a href="patient.html" data-i18n="graphLink"></a>
       <a href="governance.html" data-i18n="signoffLink"></a>
       <a href="./" data-i18n="cockpit"></a>
     </nav>
@@ -208,7 +209,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   const T = {
     ko: {
       title: '작업 목록', subtitle: '미완결 진료 루프를 위험도 순으로 보여줍니다. 조치하거나, 사유와 함께 보류하거나, 근거와 함께 종결하세요.',
-      cockpit: '← 콕핏', signoffLink: '규칙 승인', imagingLink: '영상·외부 판독지', prototype: '연구용 프로토타입입니다. 전문의가 승인하지 않은 규칙(“미승인 규칙” 표시)은 실제 진료에 사용하지 마십시오.',
+      cockpit: '← 콕핏', signoffLink: '규칙 승인', imagingLink: '영상·외부 판독지', graphLink: '환자 그래프', prototype: '연구용 프로토타입입니다. 전문의가 승인하지 않은 규칙(“미승인 규칙” 표시)은 실제 진료에 사용하지 마십시오.',
       gov: (g, shadow) => `전문의 승인 규칙 ${g.rules_approved}/${g.rules_total} · 위급 소견 목록: ${({approved: '승인됨', not_approved: '미승인', changed_since_approval: '승인 후 변경됨'})[g.critical_findings_list]} · `
         + (g.enforce_signoff ? `섀도 모드: 미승인 규칙의 루프 ${shadow}건은 표시되지 않습니다` : '섀도 모드 꺼짐 (파일럿)'),
       unsigned: '미승인 규칙', loadRadiology: '합성 영상 판독 예제 불러오기',
@@ -222,7 +223,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       feed: { OK: (h) => `데이터 수신 정상 · 마지막 수신 ${h}시간 전`, STALE: (h) => `⚠ 데이터 수신 중단: 마지막 정상 수신 ${h ?? '–'}시간 전. 작업 목록이 불완전할 수 있습니다.`,
               FAILING: () => '⚠ 데이터 연동 실패: 최근 3회 수신이 모두 실패했습니다. 작업 목록이 불완전할 수 있습니다.',
               NEVER: () => '⚠ 아직 수신된 임상 데이터가 없습니다.' },
-      patient: '환자', rule: '규칙', deadline: '기한', owner: '담당', risk: '위험도', unassigned: '미지정',
+      patient: '환자', graph: '환자 지식 그래프', rule: '규칙', deadline: '기한', owner: '담당', risk: '위험도', unassigned: '미지정',
       pastDeadline: '기한 초과', escalatedTo: '에스컬레이션 →',
       states: { new: '신규', acknowledged: '확인함', deferred: '보류', closed_by_clinician: '의료진 종결', resolved_by_engine: '기록상 완료' },
       severity: { critical: '위급', high: '높음', moderate: '중간', low: '낮음' },
@@ -247,7 +248,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     },
     en: {
       title: 'Worklist', subtitle: 'Open clinical loops, most dangerous first. Act, defer with a reason, or close with evidence.',
-      cockpit: '← Cockpit', signoffLink: 'Rule sign-off', imagingLink: 'Imaging', prototype: 'Research prototype. Do not use a rule for patient care until a specialist has signed it off (marked “unsigned rule”).',
+      cockpit: '← Cockpit', signoffLink: 'Rule sign-off', imagingLink: 'Imaging', graphLink: 'Patient graph', prototype: 'Research prototype. Do not use a rule for patient care until a specialist has signed it off (marked “unsigned rule”).',
       gov: (g, shadow) => `Rules signed off by a specialist: ${g.rules_approved}/${g.rules_total} · Critical-finding list: ${g.critical_findings_list.replace(/_/g, ' ')} · `
         + (g.enforce_signoff ? `Shadow mode: ${shadow} loop(s) from unsigned rules are hidden` : 'Shadow mode off (pilot)'),
       unsigned: 'unsigned rule', loadRadiology: 'Load synthetic radiology example',
@@ -261,7 +262,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       feed: { OK: (h) => `Data feed OK · last received ${h} h ago`, STALE: (h) => `⚠ Data feed silent: last successful update ${h ?? '–'} h ago. The worklist may be incomplete.`,
               FAILING: () => '⚠ Data feed failing: the last 3 updates all failed. The worklist may be incomplete.',
               NEVER: () => '⚠ No clinical data has been received yet.' },
-      patient: 'Patient', rule: 'Rule', deadline: 'Deadline', owner: 'Owner', risk: 'Risk', unassigned: 'unassigned',
+      patient: 'Patient', graph: 'Patient knowledge graph', rule: 'Rule', deadline: 'Deadline', owner: 'Owner', risk: 'Risk', unassigned: 'unassigned',
       pastDeadline: 'PAST DEADLINE', escalatedTo: 'escalated →',
       states: { new: 'new', acknowledged: 'acknowledged', deferred: 'deferred', closed_by_clinician: 'closed by clinician', resolved_by_engine: 'done in record' },
       severity: { critical: 'critical', high: 'high', moderate: 'moderate', low: 'low' },
@@ -383,7 +384,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         ${l.escalation_level > 0 ? `<span class="chip high">${esc(t().escalatedTo)} ${esc(l.escalated_to.replace(/_/g, ' '))}</span>` : ''}
       </div>
       <div class="meta">
-        <span>${esc(t().patient)} <b>${esc(l.patient_id)}</b></span>
+        <span>${esc(t().patient)} <a href="patient.html?patient=${encodeURIComponent(l.patient_id)}" title="${esc(t().graph)}"><b>${esc(l.patient_id)}</b></a></span>
         <span>${esc(t().rule)} <b>${esc(l.rule_id)}</b></span>
         <span>${esc(t().deadline)} <b>${esc(fmtDate(l.deadline))}</b></span>
         <span>${esc(t().owner)} <b>${esc(l.owner === 'unassigned' ? t().unassigned : l.owner)}</b></span>

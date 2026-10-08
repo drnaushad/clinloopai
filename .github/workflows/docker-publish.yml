@@ -89,7 +89,10 @@ jobs:
           curl -fsS http://127.0.0.1:8124/imaging.html | grep -q "ClinLoop"
           curl -fsS http://127.0.0.1:8124/api/v1/imaging/models | grep -q "Tesseract kor+eng"
           docker exec smoke tesseract --list-langs | grep -q kor
-          docker exec smoke python -c "import pydicom, pdfplumber, pytesseract"
+          docker exec smoke python -c "import pydicom, pdfplumber, pytesseract, nibabel"
+          curl -fsS http://127.0.0.1:8124/patient.html | grep -q "ClinLoop"
+          curl -fsS http://127.0.0.1:8124/api/v1/patients/SYN-001/graph \
+            -H "Authorization: Bearer smoke-admin-token-0123456789" | grep -q '"hyperedges"'
           # Source code and the database are not served
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8124/src/clinloop_engine/api.py)" = "404"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8124/clinloop.db)" = "404"

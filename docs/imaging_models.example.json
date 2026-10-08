@@ -1,0 +1,54 @@
+[
+  {
+    "name": "<Chest X-ray AI product name>",
+    "version": "<version as on the approval certificate>",
+    "url": "http://<ai-gateway.hospital.local>/<cxr-endpoint>",
+    "token_env": "CXR_AI_TOKEN",
+    "modalities": ["CR", "DX"],
+    "body_regions": ["chest"],
+    "regulatory": "MFDS approved (Class II), certificate no. <number>",
+    "intended_use": "Frontal chest radiographs, adults: second reader for nodule, consolidation, pneumothorax, pleural effusion",
+    "threshold": 0.15,
+    "timeout": 60,
+    "label_map": {
+      "<vendor label for nodule>": "Nodule",
+      "<vendor label for consolidation>": "Consolidation",
+      "<vendor label for pneumothorax>": "Pneumothorax",
+      "<vendor label for pleural effusion>": "Pleural effusion"
+    }
+  },
+  {
+    "name": "<Mammography AI product name>",
+    "version": "<version>",
+    "url": "http://<ai-gateway.hospital.local>/<mammo-endpoint>",
+    "token_env": "MAMMO_AI_TOKEN",
+    "modalities": ["MG"],
+    "body_regions": ["breast"],
+    "regulatory": "MFDS approved (Class III), certificate no. <number>",
+    "intended_use": "Screening mammography: abnormality score as a second reader",
+    "threshold": 0.10,
+    "label_map": {"<vendor abnormality score label>": "Malignancy score"}
+  },
+  {
+    "name": "<Brain CT haemorrhage triage product name>",
+    "version": "<version>",
+    "url": "http://<ai-gateway.hospital.local>/<ich-endpoint>",
+    "token_env": "ICH_AI_TOKEN",
+    "modalities": ["CT"],
+    "body_regions": ["head"],
+    "regulatory": "MFDS approved (Class III), certificate no. <number>",
+    "intended_use": "Non-contrast head CT: intracranial haemorrhage triage",
+    "label_map": {"<vendor label for haemorrhage>": "Intracranial haemorrhage"}
+  },
+  {
+    "name": "<Chest CT nodule product name>",
+    "version": "<version>",
+    "url": "http://<ai-gateway.hospital.local>/<ct-nodule-endpoint>",
+    "token_env": "CT_NODULE_AI_TOKEN",
+    "modalities": ["CT"],
+    "body_regions": ["chest"],
+    "regulatory": "MFDS approved (Class II), certificate no. <number>",
+    "intended_use": "Chest CT: lung nodule detection",
+    "label_map": {"<vendor label for nodule>": "Nodule"}
+  }
+]

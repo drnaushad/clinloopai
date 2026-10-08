@@ -151,11 +151,20 @@ AI_FINDINGS: Dict[str, Dict[str, Any]] = {
     "cardiomegaly": {"labels": r"cardiomegaly|enlarged cardiomediastinum|심비대", "en": "Cardiomegaly", "ko": "심비대",
                      "report": r"cardiomegal\w*|heart size|cardiac (?:silhouette|enlargement)|cardiomediastin\w*|심비대|심장\s*크기",
                      "regions": ["chest"]},
+    # CT measurements (ct_organs): addressed only by wording about the aorta's size or the spleen
+    "aortic_aneurysm": {"labels": r"aortic aneurysm|aortic dilat\w*|aneurysm|\bAAA\b|대동맥류|대동맥\s*확장",
+                        "en": "Aortic aneurysm / dilatation", "ko": "대동맥류·대동맥 확장",
+                        "report": r"aneurysm\w*|\bAAA\b|ectas\w*|ectatic|aort\w*[^.]{0,40}?(?:dilat\w*|diameter|calib(?:er|re)|"
+                                  r"enlarg\w*|normal|unremarkable|\d(?:\.\d)?\s*cm)|(?:dilat\w*|calib(?:er|re)|normal|enlarg\w*)\s+"
+                                  r"(?:[a-z\-]+\s+){0,2}aort\w*|대동맥류|대동맥[^.]{0,20}?(?:확장|직경|정상)",
+                        "regions": ["abdomen", "chest"]},
+    "splenomegaly": {"labels": r"splenomegaly|enlarged spleen|비장\s*비대|비종대", "en": "Splenomegaly", "ko": "비장비대",
+                     "report": r"splenomegal\w*|spleen|splenic size|비장|비종대", "regions": ["abdomen"]},
     "atelectasis": {"labels": r"atelectasis|무기폐", "en": "Atelectasis", "ko": "무기폐",
                     "report": r"atelecta\w*|(?:lobar|lobe|lung|segmental)\s+collapse|무기폐", "regions": ["chest"]},
     # No default region: a fracture is compared only with the report of the same study or body region
     "fracture": {"labels": r"fracture|골절", "en": "Fracture", "ko": "골절", "report": r"fractur\w*|골절", "regions": []},
-    "pneumoperitoneum": {"labels": r"pneumoperitoneum|free air|기복증", "en": "Free intraperitoneal air", "ko": "기복증",
+    "pneumoperitoneum": {"labels": r"pneumoperitoneum|free (?:intraperitoneal )?air|기복증", "en": "Free intraperitoneal air", "ko": "기복증",
                          "report": r"pneumoperitoneum|free (?:intraperitoneal )?air|기복증|유리\s*공기", "regions": ["abdomen"],
                          "critical": True},
     "intracranial_hemorrhage": {"labels": r"intracranial h(?:a)?emorrhage|\bich\b|h(?:a)?emorrhage|뇌출혈|두개내\s*출혈",
@@ -165,7 +174,7 @@ AI_FINDINGS: Dict[str, Dict[str, Any]] = {
                                           r"intraventricular|parenchymal)\s+h(?:a)?ematoma|\bich\b|bleed\w*|뇌출혈|두개내\s*출혈|"
                                           r"경막(?:하|외)\s*혈종|지주막하\s*출혈", "regions": ["head"],
                                 "critical": True},
-    "breast_malignancy": {"labels": r"malignan\w*|abnormality score|cancer|악성", "en": "Suspicious breast lesion",
+    "breast_malignancy": {"labels": r"malignan\w*|abnormality score|cancer|breast lesion|악성", "en": "Suspicious breast lesion",
                           "ko": "유방 악성 의심 병변",
                           "report": r"bi-?rads|\bmass\b|calcification\w*|asymmetr\w*|distortion|lesion|종괴|석회화|병변",
                           "regions": ["breast"]},

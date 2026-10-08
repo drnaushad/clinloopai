@@ -135,6 +135,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 .qa { padding: 8px 10px; border-radius: 8px; font-size: .85rem; margin: 4px 0; }
 .qa.critical { background: var(--critical); color: #fff; font-weight: 600; }
 .qa.warning { background: var(--moderate-soft); }
+.qa.info { background: var(--accent-soft); }
 .bar { height: 8px; border-radius: 4px; background: var(--border); position: relative; overflow: hidden; min-width: 80px; }
 .bar span { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
 .bar span.pos { background: var(--critical); }
@@ -218,6 +219,17 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         <div id="dicom-result" class="result"></div>
       </section>
     </div>
+
+    <section class="card pane" aria-labelledby="h-ct" style="margin-top:16px;">
+      <h2 id="h-ct" data-i18n="ctTitle"></h2>
+      <p class="sub" data-i18n="ctHelp"></p>
+      <form id="ct-form" class="row2" style="align-items:end;">
+        <div><label for="ct-file" data-i18n="ctFile"></label><input id="ct-file" type="file" accept=".zip,.nii,.gz,application/zip" required></div>
+        <div><button class="primary" type="submit" data-i18n="measure"></button></div>
+      </form>
+      <div id="ct-result" class="result"></div>
+    </section>
+    <p class="sub" style="margin-top:12px;"><a href="patient.html" data-i18n="graphLink"></a></p>
   </div>
 
   <footer data-i18n="footer"></footer>
@@ -244,6 +256,13 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       filed: '환자 기록에 등록했습니다.', refused: '등록하지 않았습니다: 위의 위급 점검 항목을 확인하세요.',
       loops: (n) => `재평가 결과 진행 중 루프 ${n}건`, noLoops: '진행 중 루프 없음', open: '작업 목록에서 보기',
       kv: { modality: '검사 종류', body_part: '부위', regions: '포함 부위', study_description: '검사 설명', study_date: '검사일', view_position: '촬영 방향', image_type: '영상 유형', manufacturer: '제조사', rows: '해상도' },
+      ctTitle: 'CT 장기 측정 (3차원)', ctHelp: 'CT 시리즈 1개(DICOM 파일들을 묶은 .zip, 또는 NIfTI). TotalSegmentator(연구용)가 장기를 분할하고, ClinLoop이 대동맥 최대 단축 직경과 비장 길이를 근거 있는 기준으로 측정합니다. 이상 측정값은 판독문에 없을 때 영상의학과 재검토 요청만 만듭니다. NIfTI는 환자 ID가 없어 등록되지 않습니다.',
+      ctFile: 'CT 시리즈 (.zip 또는 .nii.gz)', measure: '측정', organ: '장기', volume: '부피 (ml)', length: '두미 길이 (cm)', complete: '전체 포함', cutOff: '잘림',
+      aorta: (m) => `대동맥 최대 단축 직경: 복부 ${m.abdominal_max_cm ?? '–'} cm (기준 3.0) · 흉부 ${m.thoracic_max_cm ?? '–'} cm (기준 4.0) · 정밀도 ±${m.precision_cm} cm`,
+      spleen: (m) => `비장 두미 길이 ${m.craniocaudal_cm} cm (기준 13)${m.complete ? '' : ' · 스캔 범위 밖으로 잘림: 크기 판정 안 함'}`,
+      ctFindings: '측정 소견 (재검토 요청)', noCtFindings: '기준을 넘는 측정값 없음', borderline: '경계값', covered: (r) => `스캔에 포함된 부위: ${r.join(', ')} (정보 제공용, 루프를 닫지 않음)`,
+      vlmText: 'AI 생성 설명 (검증되지 않음, 저장되지 않음)', dropped: (n) => `어휘 밖이거나 부위가 맞지 않아 제외한 응답 ${n}개`, unparsed: '모델 응답을 해석할 수 없어 소견을 등록하지 않았습니다.',
+      graphLink: '환자 지식 그래프 보기 →',
       needPatient: '환자 ID를 입력하세요.', working: '처리 중…', footer: 'ClinLoop AI · AI는 다시 보도록 요청할 뿐, 판단은 영상의학과 전문의가 합니다.',
     },
     en: {
@@ -262,6 +281,13 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       filed: 'Filed to the patient record.', refused: 'Not filed: see the critical check above.',
       loops: (n) => `After re-evaluation: ${n} active loop(s)`, noLoops: 'No active loops', open: 'Open the worklist',
       kv: { modality: 'Modality', body_part: 'Body part', regions: 'Regions covered', study_description: 'Description', study_date: 'Study date', view_position: 'View', image_type: 'Image type', manufacturer: 'Manufacturer', rows: 'Matrix' },
+      ctTitle: 'CT organ measurement (3-D)', ctHelp: 'One CT series (a .zip of its DICOM files, or NIfTI). TotalSegmentator (research use) segments the organs; ClinLoop measures the aorta\'s maximum short-axis diameter and the spleen\'s length against cited thresholds. An abnormal measurement the report does not address only asks a radiologist to look again. NIfTI has no patient ID, so it is never filed.',
+      ctFile: 'CT series (.zip or .nii.gz)', measure: 'Measure', organ: 'Organ', volume: 'Volume (ml)', length: 'Craniocaudal (cm)', complete: 'Fully in scan', cutOff: 'cut off',
+      aorta: (m) => `Aorta, maximum short-axis diameter: abdominal ${m.abdominal_max_cm ?? '–'} cm (limit 3.0) · thoracic ${m.thoracic_max_cm ?? '–'} cm (limit 4.0) · precision ±${m.precision_cm} cm`,
+      spleen: (m) => `Spleen craniocaudal length ${m.craniocaudal_cm} cm (limit 13)${m.complete ? '' : ' · cut off by the scan: not sized'}`,
+      ctFindings: 'Measurement findings (review requests)', noCtFindings: 'No measurement above its limit', borderline: 'borderline', covered: (r) => `Regions in the scan: ${r.join(', ')} (information only: closes no loop)`,
+      vlmText: 'AI-generated description (unverified, not stored)', dropped: (n) => `${n} answer(s) dropped: outside the vocabulary or the wrong body region`, unparsed: 'The model\'s answer could not be read: no findings were filed.',
+      graphLink: 'Open the patient knowledge graph →',
       needPatient: 'Enter a patient ID.', working: 'Working…', footer: 'ClinLoop AI · The AI asks for a second look; the radiologist decides.',
     },
   };
@@ -342,8 +368,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         <td><div class="bar"><span class="${f.positive ? 'pos' : ''}" style="width:${s == null ? 0 : Math.round(s * 100)}%"></span></div></td>
         <td class="num">${s == null ? '–' : s.toFixed(2)}</td></tr>`;
     }).join('');
-    return `<div class="model">${head}<p class="sub" style="margin:4px 0;">${esc(m.intended_use || '')} · ${esc(t().threshold(m.threshold))}</p>
-      <table class="find-table"><tbody>${rows}</tbody></table></div>`;
+    const vlm = m.description_note !== undefined ? `
+      ${m.description ? `<p class="sub" style="margin:6px 0 2px;"><b>${esc(t().vlmText)}</b></p><div class="evidence">${esc(m.description)}</div>` : ''}
+      ${m.unparsed ? `<div class="qa warning">${esc(t().unparsed)}</div>` : ''}
+      ${(m.dropped || []).length ? `<p class="sub">${esc(t().dropped(m.dropped.length))}</p>` : ''}` : '';
+    return `<div class="model">${head}<p class="sub" style="margin:4px 0;">${esc(m.intended_use || '')}${m.threshold != null ? ` · ${esc(t().threshold(m.threshold))}` : ''}</p>
+      <table class="find-table"><tbody>${rows}</tbody></table>${vlm}</div>`;
   }
   $('dicom-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -366,6 +396,32 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         <h3 class="sub" style="margin:10px 0 4px;"><b>${esc(t().header)}</b></h3><dl class="kv">${kv}</dl>
         <h3 class="sub" style="margin:10px 0 4px;"><b>${esc(t().qa)}</b></h3>${qa}
         <h3 class="sub" style="margin:10px 0 4px;"><b>${esc(t().models)}</b></h3>${r.models.length ? r.models.map(modelHtml).join('') : `<p class="sub">${esc(t().noModels)}</p>`}
+        <div class="qa" style="margin-top:10px;background:${r.filed ? 'var(--ok-soft)' : 'var(--critical)'};${r.filed ? '' : 'color:#fff;'}">${esc(r.filed ? t().filed : t().refused)}</div>
+        ${loopsHtml(r.active)}`;
+      setStatus('');
+    } catch (err) { setStatus(err.message, true); }
+  });
+
+  // ── CT series ──
+  $('ct-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const file = $('ct-file').files[0];
+      const pid = patient();
+      setStatus(t().working);
+      const r = await api('/api/v1/imaging/ct-organs', { method: 'POST', body: JSON.stringify({ patient_id: pid, filename: file.name, content_base64: await readB64(file) }) });
+      const qa = r.qa.map((q) => `<div class="qa ${esc(q.level)}">${esc(q.message)}</div>`).join('');
+      const ms = r.measurements || {};
+      const organs = r.organs.map((o) => `<tr><td>${esc(o.organ.replace(/_/g, ' '))}</td><td class="num">${esc(o.volume_ml)}</td><td class="num">${esc(o.craniocaudal_cm)}</td><td>${o.complete ? '✓' : esc(t().cutOff)}</td></tr>`).join('');
+      const finds = r.findings.length ? r.findings.map((f) => `<div class="qa warning"><b>${esc(f.label)}</b>${f.borderline ? ` <span class="chip moderate">${esc(t().borderline)}</span>` : ''}</div>`).join('')
+        : `<div class="qa" style="background:var(--ok-soft);">${esc(t().noCtFindings)}</div>`;
+      $('ct-result').innerHTML = `${modelHtml({ ...r.model, ran: true, findings: [] }).replace('<table class="find-table"><tbody></tbody></table>', '')}
+        ${qa}
+        <h3 class="sub" style="margin:10px 0 4px;"><b>${esc(t().ctFindings)}</b></h3>${finds}
+        ${ms.aorta ? `<p class="sub" style="margin:8px 0 2px;">${esc(t().aorta(ms.aorta))}</p>` : ''}
+        ${ms.spleen ? `<p class="sub" style="margin:2px 0;">${esc(t().spleen(ms.spleen))}</p>` : ''}
+        <p class="sub" style="margin:2px 0 8px;">${esc(t().covered(r.covered_regions))}</p>
+        <table class="find-table"><thead><tr><th>${esc(t().organ)}</th><th>${esc(t().volume)}</th><th>${esc(t().length)}</th><th>${esc(t().complete)}</th></tr></thead><tbody>${organs}</tbody></table>
         <div class="qa" style="margin-top:10px;background:${r.filed ? 'var(--ok-soft)' : 'var(--critical)'};${r.filed ? '' : 'color:#fff;'}">${esc(r.filed ? t().filed : t().refused)}</div>
         ${loopsHtml(r.active)}`;
       setStatus('');

@@ -15,6 +15,10 @@ What it does with one DICOM file:
      the radiologist's report does not address opens a review loop (R047).
 
 Models (CLINLOOP_IMAGING_MODELS, comma-separated):
+  * vlm     a medical vision-language model (e.g. MedGemma) on an on-premise
+            Ollama/OpenAI-compatible server: a draft description plus findings
+            from a fixed vocabulary, any modality. RESEARCH USE.
+  * totalseg  CT series organ measurement (ct_organs.py, its own endpoint)
   * txrv    TorchXRayVision DenseNet-121 (Cohen et al., MIDL 2022), chest
             radiographs, 18 findings. RESEARCH USE ONLY: not a medical device.
             Needs `pip install torchxrayvision` and its weights (downloaded once).
@@ -312,11 +316,160 @@ class HTTPImagingModel(ImagingModel):
         return out
 
 
+class VisionLanguageModel(ImagingModel):
+    """
+    A medical vision-language model (e.g. Google MedGemma) served ON PREMISE by
+    Ollama or any OpenAI-compatible server (vLLM, llama.cpp, TGI).
+
+    Safeguards against a generative model's known failure modes:
+      * it may only answer with findings from ClinLoop's fixed vocabulary; any
+        other label is dropped, and a finding for another body region (a
+        "pneumothorax" on a head CT) is dropped;
+      * its free-text description is shown to the reviewer, marked as
+        unverified AI text, and never stored in the record;
+      * the image goes only to a server on the hospital network (private
+        address or localhost), never to the internet;
+      * research use: findings open review loops only with CLINLOOP_IMAGING_RESEARCH_AI=1.
+
+      CLINLOOP_VLM_URL        http://localhost:11434 (Ollama) or http://vlm.hospital.local:8000 (OpenAI-compatible)
+      CLINLOOP_VLM_API        ollama | openai (default: ollama for port 11434, else openai)
+      CLINLOOP_VLM_MODEL      e.g. medgemma-4b-it
+      CLINLOOP_VLM_REGULATORY default "Research use only — not a medical device"
+    """
+    modalities = ["CR", "DX", "DR", "CT", "MR", "US", "MG", "PT", "NM", "XA", "RF"]
+    threshold = 0.5
+
+    def __init__(self):
+        self.url = (os.environ.get("CLINLOOP_VLM_URL") or "").rstrip("/")
+        self.model = os.environ.get("CLINLOOP_VLM_MODEL") or "medgemma-4b-it"
+        self.api = (os.environ.get("CLINLOOP_VLM_API") or ("ollama" if ":11434" in self.url else "openai")).lower()
+        self.name = f"Vision-language model ({self.model})"
+        self.version = self.model
+        self.regulatory = os.environ.get("CLINLOOP_VLM_REGULATORY") or "Research use only — not a medical device"
+        self.intended_use = ("One image (any modality): a draft description and findings from a fixed list, "
+                             "for radiologist review only")
+        self.timeout = float(os.environ.get("CLINLOOP_VLM_TIMEOUT", "120"))
+
+    def available(self) -> Optional[str]:
+        if not self.url:
+            return "not configured (CLINLOOP_VLM_URL)"
+        if not _on_premise(self.url) and os.environ.get("CLINLOOP_VLM_ALLOW_REMOTE") != "1":
+            return "refused: CLINLOOP_VLM_URL is not on the hospital network (images never leave it)"
+        return None
+
+    def vocabulary(self) -> Dict[str, str]:
+        from .imaging_fhir import AI_FINDINGS
+        return {k: v["en"] for k, v in AI_FINDINGS.items() if v.get("track", True) is not False}
+
+    def prompt(self, summary: Dict[str, Any]) -> str:
+        vocab = "\n".join(f"- {k}: {en}" for k, en in self.vocabulary().items())
+        return (
+            f"You are assisting a radiologist. This is one image from a {summary.get('modality') or 'medical'} study"
+            f" ({summary.get('body_part') or 'body part not stated'}; {summary.get('study_description') or ''}).\n"
+            "Describe the visible findings in 2-4 short sentences. Then list which of these findings are present, "
+            "using ONLY these keys:\n" + vocab + "\n"
+            'Answer with JSON only: {"description": "...", "findings": [{"key": "<key>", "present": true, '
+            '"confidence": 0.0-1.0}]}. If unsure, say present false. Do not diagnose beyond the image.')
+
+    def _call(self, prompt: str, png_b64: str) -> str:
+        import requests
+        if self.api == "ollama":
+            body = {"model": self.model, "stream": False, "format": "json", "options": {"temperature": 0},
+                    "messages": [{"role": "user", "content": prompt, "images": [png_b64]}]}
+            r = requests.post(f"{self.url}/api/chat", json=body, timeout=self.timeout)
+            if r.status_code != 200:
+                raise ImagingError(f"{self.name}: HTTP {r.status_code}")
+            return ((r.json() or {}).get("message") or {}).get("content") or ""
+        body = {"model": self.model, "temperature": 0, "max_tokens": 600,
+                "messages": [{"role": "user", "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{png_b64}"}}]}]}
+        headers = {}
+        if os.environ.get("CLINLOOP_VLM_TOKEN"):
+            headers["Authorization"] = f"Bearer {os.environ['CLINLOOP_VLM_TOKEN']}"
+        r = requests.post(f"{self.url}/v1/chat/completions", json=body, headers=headers, timeout=self.timeout)
+        if r.status_code != 200:
+            raise ImagingError(f"{self.name}: HTTP {r.status_code}")
+        return (((r.json() or {}).get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+
+    def predict(self, ds, img, content):
+        from .imaging_fhir import AI_FINDINGS
+        summary = dicom_summary(ds)
+        png = preview_png(img, size=896).split(",", 1)[1]        # the windowed image a radiologist would see
+        text = self._call(self.prompt(summary), png)
+        parsed = _json_object(text)
+        vocab = self.vocabulary()
+        regions = set(summary["regions"])
+        findings, dropped = [], []
+        for f in parsed.get("findings") or []:
+            if not isinstance(f, dict):
+                continue
+            key = str(f.get("key") or f.get("label") or "").strip().lower()
+            if key not in vocab:
+                dropped.append(f"'{key}' is not in the vocabulary")
+                continue
+            spec_regions = set(AI_FINDINGS[key].get("regions") or [])
+            if regions and spec_regions and not spec_regions & regions:
+                dropped.append(f"'{key}' does not fit a {summary.get('body_part') or 'study of this'} region")
+                continue
+            present = f.get("present")
+            if isinstance(present, str):
+                present = present.strip().lower() in ("true", "yes", "1", "present")
+            try:
+                conf = float(f["confidence"]) if f.get("confidence") is not None else None
+            except (TypeError, ValueError):
+                conf = None
+            if conf is not None and not 0 <= conf <= 1:
+                conf = None
+            findings.append({"label": AI_FINDINGS[key]["en"], "score": conf, "positive": bool(present), "finding_key": key})
+        description = str(parsed.get("description") or "").strip()[:1500]
+        return {"findings": findings, "description": description, "dropped": dropped,
+                "unparsed": not parsed}
+
+
+def _json_object(text: str) -> Dict[str, Any]:
+    """The first JSON object in a model's answer (tolerates ```json fences and prose around it)."""
+    text = text or ""
+    start = text.find("{")
+    while start != -1:
+        depth = 0
+        for i in range(start, len(text)):
+            if text[i] == "{":
+                depth += 1
+            elif text[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        obj = json.loads(text[start:i + 1])
+                        return obj if isinstance(obj, dict) else {}
+                    except ValueError:
+                        break
+        start = text.find("{", start + 1)
+    return {}
+
+
+def _on_premise(url: str) -> bool:
+    """True if every address the URL's host resolves to is private, loopback or link-local."""
+    import ipaddress
+    import socket
+    from urllib.parse import urlparse
+    host = urlparse(url).hostname
+    if not host:
+        return False
+    try:
+        addrs = {a[4][0] for a in socket.getaddrinfo(host, None)}
+    except OSError:
+        return False
+    return bool(addrs) and all(ipaddress.ip_address(a.split("%")[0]).is_private for a in addrs)
+
+
 def registered_models() -> List[ImagingModel]:
     models: List[ImagingModel] = []
     names = [n.strip().lower() for n in os.environ.get("CLINLOOP_IMAGING_MODELS", "").split(",") if n.strip()]
     if "txrv" in names:
         models.append(TorchXRayVisionModel())
+    if "vlm" in names:
+        models.append(VisionLanguageModel())
     path = os.environ.get("CLINLOOP_IMAGING_MODELS_CONFIG")
     if path:
         try:
@@ -364,6 +517,12 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
             continue
         try:
             raw = model.predict(ds, img, content)
+            extra: Dict[str, Any] = {}
+            if isinstance(raw, dict):           # a vision-language model: findings plus a draft description
+                extra = {"description": raw.get("description") or "", "dropped": raw.get("dropped") or [],
+                         "unparsed": bool(raw.get("unparsed")),
+                         "description_note": "AI-generated text, unverified: shown for review, not stored"}
+                raw = raw.get("findings") or []
         except Exception as e:
             logger.warning("Imaging model %s failed: %s", model.name, e)
             model_results.append({**info, "ran": False, "reason": f"failed: {type(e).__name__}", "findings": []})
@@ -381,7 +540,7 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
                 positive = positive.strip().lower() in ("true", "1", "yes", "positive", "pos")
             if positive is None and isinstance(score, (int, float)):
                 positive = score >= model.threshold
-            key = ai_finding_key(f["label"], summary["regions"])
+            key = f.get("finding_key") or ai_finding_key(f["label"], summary["regions"])
             findings.append({"label": f["label"], "score": score, "positive": bool(positive), "finding_key": key})
             k = key or f["label"]
             if positive and (k not in by_key or (score or 0) > (by_key[k]["score"] or 0)):
@@ -393,7 +552,7 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
                 study_ref, when, body_part=summary["body_part"] or None, source="imaging-ai",
                 finding_key=k, study_uid=summary["study_uid"]))
         findings.sort(key=lambda x: -(x["score"] if isinstance(x["score"], float) else 0))
-        model_results.append({**info, "ran": True, "findings": findings})
+        model_results.append({**info, "ran": True, "findings": findings, **extra})
 
     critical = [c for c in qa if c["level"] == "critical"]
     return {

@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClinLoop Patient Graph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --border-strong: #cbd5e1;
+  --text: #0f172a; --muted: #475569; --dim: #64748b;
+  --accent: #0284c7; --accent-soft: rgba(2,132,199,.10);
+  --critical: #be123c; --critical-soft: rgba(225,29,72,.10);
+  --high: #c2410c; --high-soft: rgba(234,88,12,.10);
+  --moderate: #a16207; --moderate-soft: rgba(202,138,4,.12);
+  --low: #475569; --low-soft: rgba(71,85,105,.10);
+  --ok: #047857; --ok-soft: rgba(5,150,105,.10);
+  --radius: 12px; --shadow: 0 4px 14px rgba(15,23,42,.06);
+  --font-head: 'Outfit', 'Noto Sans KR', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+    --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+    --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+    --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+    --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+    --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+    --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+    --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+  --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+  --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+  --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+  --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+  --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+  --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+  --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 64px; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; }
+header nav { display: flex; gap: 12px; align-items: center; }
+h1 { font: 800 1.6rem/1.2 var(--font-head); margin: 0; letter-spacing: -.01em; }
+h1 span { color: var(--accent); }
+.sub { color: var(--muted); margin: 4px 0 0; }
+a { color: var(--accent); font-weight: 600; }
+.banner { margin: 16px 0; padding: 10px 14px; border-radius: var(--radius); background: var(--moderate-soft);
+  border: 1px solid var(--border); font-size: .9rem; }
+.feed { margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius); font-size: .9rem; font-weight: 600;
+  border: 1px solid var(--border); }
+.feed.ok { background: var(--ok-soft); color: var(--ok); font-weight: 500; }
+.feed.alarm { background: var(--critical); color: #fff; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.connect { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 10px; padding: 14px; align-items: end; }
+label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+input, select, textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; }
+textarea { min-height: 72px; resize: vertical; }
+button { font: 600 .88rem var(--font-body); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { color: var(--critical); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+.status-line { padding: 0 14px 12px; font-size: .85rem; color: var(--muted); min-height: 1.4em; }
+.status-line.error { color: var(--critical); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+.kpi { padding: 12px 14px; }
+.kpi .v { font: 700 1.6rem/1.1 var(--font-head); font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: .8rem; color: var(--muted); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 12px; }
+.toolbar .spacer { flex: 1; }
+.check { display: flex; gap: 6px; align-items: center; margin: 0; color: var(--text); font-weight: 500; font-size: .88rem; }
+.check input { width: auto; }
+.loop { padding: 14px; margin-bottom: 10px; border-left: 4px solid var(--low); }
+.loop.critical { border-left-color: var(--critical); }
+.loop.high { border-left-color: var(--high); }
+.loop.moderate { border-left-color: var(--moderate); }
+.loop-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.loop-title { font-weight: 700; flex: 1 1 260px; }
+.chip { font: 600 .72rem var(--font-mono); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.critical { background: var(--critical-soft); color: var(--critical); }
+.chip.high { background: var(--high-soft); color: var(--high); }
+.chip.moderate { background: var(--moderate-soft); color: var(--moderate); }
+.chip.low, .chip.neutral { background: var(--low-soft); color: var(--low); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.overdue { background: var(--critical); color: #fff; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: .85rem; margin: 6px 0; }
+.meta b { color: var(--text); font-weight: 600; }
+.missing { font-weight: 600; margin: 4px 0; }
+.action { color: var(--muted); font-size: .9rem; }
+details { margin-top: 8px; }
+summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
+.evidence { font: .78rem/1.5 var(--font-mono); color: var(--muted); background: var(--bg); padding: 10px; margin-top: 6px;
+  border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.form { display: none; gap: 8px; margin-top: 10px; padding: 12px; border-radius: 8px; background: var(--bg); }
+.form.open { display: grid; }
+.form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.msg { border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 8px; background: var(--surface); }
+.msg-text { white-space: pre-wrap; margin: 6px 0; }
+.empty { text-align: center; color: var(--muted); padding: 40px 16px; }
+.rate-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.rate-table th, .rate-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.rate-table td.num, .rate-table th.num { font-variant-numeric: tabular-nums; text-align: right; }
+footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
+@media (max-width: 720px) {
+  .connect { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .form .row { grid-template-columns: 1fr; }
+}
+</style>
+<style>
+.pane { padding: 16px; }
+.pane h2 { font: 700 1.1rem var(--font-head); margin: 0 0 4px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
+.graph-wrap { overflow-x: auto; margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+svg { display: block; font-family: var(--font-body); }
+svg .lane-label { font: 600 11px var(--font-body); fill: var(--muted); }
+svg .tick { font: 10px var(--font-mono); fill: var(--dim); }
+svg .grid { stroke: var(--border); }
+svg .now { stroke: var(--accent); stroke-dasharray: 4 3; }
+svg .node { cursor: pointer; stroke: var(--surface); stroke-width: 2; }
+svg .node.derived { stroke: var(--text); stroke-dasharray: 2 2; }
+svg .node.sel, svg .ghost.sel { stroke: var(--text); stroke-width: 3; }
+svg .ghost { fill: var(--surface); stroke-width: 2; stroke-dasharray: 4 3; cursor: pointer; }
+svg .rel { stroke: var(--border-strong); stroke-width: 1; fill: none; }
+svg .ob { fill: none; stroke-width: 2.2; cursor: pointer; }
+svg .ob.closed { stroke: var(--ok); }
+svg .ob.delayed { stroke: var(--moderate); }
+svg .ob.open { stroke: var(--critical); stroke-dasharray: 6 4; }
+svg .ob.abstain, svg .ob.needs_human_review { stroke: var(--high); stroke-dasharray: 6 4; }
+svg .ob-label { font: 700 10px var(--font-mono); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); margin-top: 10px; }
+.legend i { display: inline-block; width: 18px; height: 0; border-top: 2.5px solid; vertical-align: middle; margin-right: 4px; }
+.legend b { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin-right: 4px; }
+.detail { margin-top: 12px; padding: 14px; }
+.ob-table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.ob-table th, .ob-table td { overflow-wrap: anywhere; text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.ob-table tr { cursor: pointer; }
+.ob-table tr:hover td { background: var(--accent-soft); }
+@media (max-width: 720px) { .row3 { grid-template-columns: 1fr; } }
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>ClinLoop <span data-i18n="title"></span></h1>
+      <p class="sub" data-i18n="subtitle"></p>
+    </div>
+    <nav>
+      <button type="button" id="btn-lang" aria-label="Language">English</button>
+      <a href="imaging.html" data-i18n="imaging"></a>
+      <a href="worklist.html" data-i18n="worklist"></a>
+    </nav>
+  </header>
+
+  <section class="card" aria-label="Connection" style="margin-top:16px;">
+    <form class="connect" id="connect-form">
+      <div><label for="api-base" data-i18n="api"></label><input id="api-base" type="url" placeholder="http://localhost:8124" required></div>
+      <div><label for="token" data-i18n="token"></label><input id="token" type="password" autocomplete="off" required></div>
+      <button class="primary" type="submit" data-i18n="signin"></button>
+    </form>
+    <div class="status-line" id="status" aria-live="polite"></div>
+  </section>
+
+  <div id="app" hidden>
+    <section class="card pane" style="margin-top:16px;">
+      <form id="graph-form" class="row3">
+        <div><label for="patient" data-i18n="patient"></label><input id="patient" placeholder="RP-18" autocomplete="off" required></div>
+        <div><label for="when" data-i18n="when"></label><input id="when" type="datetime-local"></div>
+        <button class="primary" type="submit" data-i18n="load"></button>
+      </form>
+      <div id="stats" class="kpis" hidden></div>
+      <div class="graph-wrap" id="graph-wrap" hidden><svg id="graph" role="img" aria-labelledby="graph-desc"><desc id="graph-desc"></desc></svg></div>
+      <div class="legend" id="legend" hidden></div>
+    </section>
+    <section class="card detail" id="detail" hidden aria-live="polite"></section>
+    <section class="card pane" id="obligations" hidden style="margin-top:12px;"></section>
+  </div>
+  <footer data-i18n="footer"></footer>
+</div>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const T = {
+    ko: {
+      title: '환자 지식 그래프', subtitle: '엔진이 읽은 모든 임상 사건(진단·검사 수치·오더·약물·예약·영상·판독·영상 AI)과 그 사이의 진료 의무를 시간축 위에 보여줍니다.',
+      imaging: '영상 →', worklist: '작업 목록 →', api: 'ClinLoop API', token: '접근 토큰', signin: '로그인', patient: '환자 ID',
+      when: '평가 시점 (선택, 기본: 지금)', load: '그래프 보기', working: '불러오는 중…',
+      events: '임상 사건', obligations: '진료 의무', open: '열림', closed: '종결', delayed: '지연 종결', relations: '연결',
+      legendClosed: '기한 내 종결', legendDelayed: '기한 후 종결', legendOpen: '열림 — 누락된 후속 조치(점선 원: 기한)', legendRel: '같은 검사·같은 기록', legendNow: '평가 시점', legendDerived: 'AI 재검토(파생)',
+      detailTrigger: '발생 사건', detailFollow: '이행된 후속 조치', detailMissing: '누락된 후속 조치', detailDeadline: '기한', detailEvidence: '근거', detailWorklist: '작업 목록 상태',
+      none: '없음', anyOf: '다음 중 하나', allOf: '모두 필요', source: '원본 기록', obTable: '진료 의무 목록', rule: '규칙', status: '상태', deadline: '기한',
+      overdue: '기한 초과', notInWorklist: '작업 목록에 없음 (환자를 평가하면 생성됩니다)', openWorklist: '작업 목록에서 열기',
+      empty: '이 환자에 대해 읽은 임상 사건이 없습니다.', future: '평가 시점 이후', derived: 'ClinLoop이 다른 사건에서 도출',
+      desc: (n, o) => `임상 사건 ${n}개와 진료 의무 ${o}개의 시간축 그래프`,
+      footer: 'ClinLoop AI · 그래프는 엔진이 루프를 여닫는 데 쓴 것과 같은 데이터입니다. 진단이 아니라 후속 조치 추적입니다.',
+    },
+    en: {
+      title: 'Patient knowledge graph', subtitle: 'Every clinical event the engine read (diagnoses, lab values, orders, medications, appointments, imaging, reports, imaging AI) and the clinical obligations between them, on one time axis.',
+      imaging: 'Imaging →', worklist: 'Worklist →', api: 'ClinLoop API', token: 'Access token', signin: 'Sign in', patient: 'Patient ID',
+      when: 'Evaluate at (optional, default: now)', load: 'Show graph', working: 'Loading…',
+      events: 'Clinical events', obligations: 'Obligations', open: 'Open', closed: 'Closed', delayed: 'Closed late', relations: 'Links',
+      legendClosed: 'Closed on time', legendDelayed: 'Closed late', legendOpen: 'Open — missing follow-up (dashed circle: deadline)', legendRel: 'Same study / same record', legendNow: 'Evaluation time', legendDerived: 'AI review (derived)',
+      detailTrigger: 'Triggering event', detailFollow: 'Follow-ups done', detailMissing: 'Missing follow-up', detailDeadline: 'Deadline', detailEvidence: 'Evidence', detailWorklist: 'Worklist state',
+      none: 'none', anyOf: 'any one of', allOf: 'all required', source: 'Source record', obTable: 'Obligations', rule: 'Rule', status: 'Status', deadline: 'Deadline',
+      overdue: 'overdue', notInWorklist: 'not in the worklist (created when the patient is evaluated)', openWorklist: 'Open in worklist',
+      empty: 'No clinical events were read for this patient.', future: 'after the evaluation time', derived: 'derived by ClinLoop from another event',
+      desc: (n, o) => `Time-axis graph of ${n} clinical events and ${o} obligations`,
+      footer: 'ClinLoop AI · The graph is the same data the engine used to open and close loops. Follow-up tracking, not diagnosis.',
+    },
+  };
+  const LANE_COLOR = { diagnoses: '#7c3aed', labs: '#0891b2', orders: '#ca8a04', medications: '#db2777', appointments: '#64748b', imaging: '#0284c7', reports: '#059669', ai: '#ea580c' };
+  const store = { get(k, s = sessionStorage) { try { return s.getItem(k) || ''; } catch { return ''; } },
+                  set(k, v, s = sessionStorage) { try { s.setItem(k, v); } catch {} } };
+  let lang = store.get('clinloop_lang', localStorage) || ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');
+  const t = () => T[lang];
+  const state = { base: '', token: '', graph: null, sel: null };
+  const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+  $('api-base').value = store.get('clinloop_api') || window.CLINLOOP_API_BASE || (isLocal ? 'http://localhost:8124' : '');
+  $('token').value = store.get('clinloop_token');
+  const params = new URLSearchParams(location.search);
+  if (params.get('patient')) $('patient').value = params.get('patient');
+  if (params.get('at')) $('when').value = params.get('at').slice(0, 16);
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    $('btn-lang').textContent = lang === 'ko' ? 'English' : '한국어';
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t()[el.dataset.i18n]; });
+    if (state.graph) render();
+  }
+  function setStatus(msg, isError = false) { $('status').textContent = msg; $('status').classList.toggle('error', isError); }
+  async function api(path) {
+    const res = await fetch(state.base + path, { headers: { 'Authorization': `Bearer ${state.token}` } });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.detail || `HTTP ${res.status}`);
+    return body;
+  }
+  const day = (iso) => (iso || '').slice(0, 10);
+  const statusWord = (s) => t()[s] || s;
+
+  // ── Layout: lanes (rows) × time (x) ──
+  function layout(g) {
+    const W = Math.max(760, $('graph-wrap').clientWidth - 2), left = 170, right = 40, laneH = 54, top = 30;
+    const lanes = g.lanes.filter((l) => g.nodes.some((n) => n.lane === l.id) || g.hyperedges.some((h) => h.expected.some((e) => e.lane === l.id)));
+    const laneY = Object.fromEntries(lanes.map((l, i) => [l.id, top + i * laneH + laneH / 2]));
+    // Long-standing diagnoses would squeeze the timeline: the axis starts at the first other event,
+    // and older diagnoses sit at its left edge (their date is in the tooltip and the detail panel)
+    const care = g.nodes.filter((n) => n.lane !== 'diagnoses');
+    const times = (care.length ? care : g.nodes).map((n) => +new Date(n.time)).concat(g.hyperedges.map((h) => +new Date(h.deadline)).filter(Boolean), [+new Date(g.evaluation_time)]);
+    let t0 = Math.min(...times), t1 = Math.max(...times);
+    const pad = Math.max((t1 - t0) * 0.04, 86400000);
+    t0 -= pad; t1 += pad;
+    const x = (ms) => left + (W - left - right) * (Math.max(ms, t0) - t0) / (t1 - t0);
+    // Events at nearly the same time in one lane are spread vertically
+    const pos = {}, buckets = {};
+    g.nodes.forEach((n) => {
+      const px = x(+new Date(n.time)), key = `${n.lane}:${Math.round(px / 14)}`;
+      const k = buckets[key] = (buckets[key] || 0) + 1;
+      pos[n.id] = { x: px, y: laneY[n.lane] + ((k - 1) % 3 - 1) * 13 * (k > 1 ? 1 : 0) + (k > 3 ? 6 : 0) };
+    });
+    return { W, H: top + lanes.length * laneH + 34, left, top, laneH, lanes, laneY, x, t0, t1, pos };
+  }
+  function ticks(t0, t1) {
+    const out = [], span = t1 - t0, d = new Date(t0);
+    const monthly = span > 60 * 86400000;
+    d.setUTCHours(0, 0, 0, 0);
+    if (monthly) d.setUTCDate(1);
+    while (+d <= t1) {
+      if (+d >= t0) out.push(new Date(d));
+      if (monthly) d.setUTCMonth(d.getUTCMonth() + (span > 3 * 365 * 86400000 ? 6 : span > 365 * 86400000 ? 2 : 1));
+      else d.setUTCDate(d.getUTCDate() + Math.ceil(span / 86400000 / 8));
+    }
+    return out;
+  }
+
+  function render() {
+    const g = state.graph, svg = $('graph');
+    const L = layout(g);
+    const nodeById = Object.fromEntries(g.nodes.map((n) => [n.id, n]));
+    const parts = [];
+    svg.setAttribute('width', L.W); svg.setAttribute('height', L.H); svg.setAttribute('viewBox', `0 0 ${L.W} ${L.H}`);
+    $('graph-desc').textContent = t().desc(g.nodes.length, g.hyperedges.length);
+    L.lanes.forEach((l, i) => {
+      const y = L.top + i * L.laneH;
+      parts.push(`<line class="grid" x1="0" x2="${L.W}" y1="${y}" y2="${y}"/>`);
+      parts.push(`<circle cx="12" cy="${y + L.laneH / 2}" r="5" fill="${LANE_COLOR[l.id]}"/><text class="lane-label" x="22" y="${y + L.laneH / 2 + 4}">${esc(l[lang])}</text>`);
+    });
+    ticks(L.t0, L.t1).forEach((d) => {
+      const px = L.x(+d);
+      parts.push(`<line class="grid" x1="${px}" x2="${px}" y1="${L.top}" y2="${L.H - 26}"/><text class="tick" x="${px}" y="${L.H - 10}" text-anchor="middle">${d.toISOString().slice(0, 7 + (L.t1 - L.t0 < 60 * 86400000 ? 3 : 0))}</text>`);
+    });
+    const nowX = L.x(+new Date(g.evaluation_time));
+    parts.push(`<line class="now" x1="${nowX}" x2="${nowX}" y1="${L.top - 14}" y2="${L.H - 26}"/><text class="tick" x="${nowX + 4}" y="${L.top - 4}" style="fill:var(--accent)">${esc(day(g.evaluation_time))}</text>`);
+    g.edges.forEach((e) => {
+      const a = L.pos[e.source], b = L.pos[e.target];
+      if (a && b) parts.push(`<path class="rel" d="M${a.x},${a.y} L${b.x},${b.y}"/>`);
+    });
+    // Obligations: trigger → follow-up(s), or → the missing follow-up at its deadline
+    const labelSlots = [];
+    g.hyperedges.forEach((h, i) => {
+      const a = L.pos[h.trigger];
+      if (!a) return;
+      const cls = `ob ${h.status}`, sel = state.sel === `h:${h.id}`;
+      const curve = (b) => `M${a.x},${a.y} C${(a.x + b.x) / 2},${a.y - 30 - (i % 4) * 8} ${(a.x + b.x) / 2},${b.y - 30 - (i % 4) * 8} ${b.x},${b.y}`;
+      h.followups.forEach((f) => { const b = L.pos[f]; if (b) parts.push(`<path class="${cls}" data-h="${esc(h.id)}" d="${curve(b)}" ${sel ? 'stroke-width="4"' : ''}><title>${esc(h.rule_id)} ${esc(h.rule_name)}</title></path>`); });
+      const dx = h.deadline ? L.x(+new Date(h.deadline)) : nowX;
+      h.expected.forEach((e, j) => {
+        const b = { x: dx, y: L.laneY[e.lane] + (j - (h.expected.length - 1) / 2) * 12 };
+        const col = h.status === 'open' ? 'var(--critical)' : h.status === 'delayed' ? 'var(--moderate)' : 'var(--high)';
+        parts.push(`<path class="${cls}" data-h="${esc(h.id)}" d="${curve(b)}" ${sel ? 'stroke-width="4"' : ''}><title>${esc(h.rule_id)} ${esc(h.rule_name)}</title></path>`);
+        parts.push(`<circle class="ghost${sel ? ' sel' : ''}" data-h="${esc(h.id)}" cx="${b.x}" cy="${b.y}" r="8" stroke="${col}"><title>${esc(t().detailMissing)}: ${esc(e.label)} · ${esc(t().detailDeadline)} ${esc(day(h.deadline))}</title></circle>`);
+        if (j === 0) {
+          let ly = b.y - 9;                                   // no label on top of another
+          while (labelSlots.some((p) => Math.abs(p.x - b.x) < 36 && Math.abs(p.y - ly) < 10)) ly += 11;
+          labelSlots.push({ x: b.x, y: ly });
+          parts.push(`<text class="ob-label" x="${b.x + 11}" y="${ly}" fill="${col}">${esc(h.rule_id)}</text>`);
+        }
+      });
+    });
+    g.nodes.forEach((n) => {
+      const p = L.pos[n.id], sel = state.sel === `n:${n.id}`;
+      parts.push(`<circle class="node${n.derived ? ' derived' : ''}${sel ? ' sel' : ''}" data-n="${esc(n.id)}" cx="${p.x}" cy="${p.y}" r="${n.lane === 'reports' || n.lane === 'ai' ? 7 : 6}"
+        fill="${n.future ? 'var(--surface)' : LANE_COLOR[n.lane]}" ${n.future ? `stroke="${LANE_COLOR[n.lane]}"` : ''}><title>${esc(day(n.time))} · ${esc(n.label)}</title></circle>`);
+    });
+    svg.innerHTML = `<desc id="graph-desc">${esc(t().desc(g.nodes.length, g.hyperedges.length))}</desc>` + parts.join('');
+    svg.querySelectorAll('[data-n]').forEach((el) => el.addEventListener('click', () => select(`n:${el.dataset.n}`)));
+    svg.querySelectorAll('[data-h]').forEach((el) => el.addEventListener('click', () => select(`h:${el.dataset.h}`)));
+
+    const st = g.stats.status || {};
+    $('stats').innerHTML = [[g.stats.events, t().events], [g.stats.obligations, t().obligations], [st.open || 0, t().open], [(st.closed || 0) + (st.delayed || 0), `${t().closed} / ${t().delayed}`]]
+      .map(([v, l]) => `<div class="card kpi"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join('');
+    $('legend').innerHTML = `<span><i style="border-color:var(--ok)"></i>${esc(t().legendClosed)}</span><span><i style="border-color:var(--moderate)"></i>${esc(t().legendDelayed)}</span>
+      <span><i style="border-color:var(--critical);border-top-style:dashed"></i>${esc(t().legendOpen)}</span><span><i style="border-color:var(--border-strong);border-top-width:1px"></i>${esc(t().legendRel)}</span>
+      <span><i style="border-color:var(--accent);border-top-style:dashed"></i>${esc(t().legendNow)}</span>`;
+    const rows = g.hyperedges.slice().sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || String(a.deadline).localeCompare(String(b.deadline)));
+    $('obligations').innerHTML = `<h2>${esc(t().obTable)}</h2><div style="overflow-x:auto;"><table class="ob-table"><thead><tr><th>${esc(t().rule)}</th><th>${esc(t().status)}</th><th>${esc(t().deadline)}</th><th>${esc(t().detailMissing)}</th></tr></thead><tbody>
+      ${rows.map((h) => `<tr data-h="${esc(h.id)}" tabindex="0"><td><b>${esc(h.rule_id)}</b> ${esc(h.rule_name)}</td>
+        <td><span class="chip ${h.status === 'open' ? 'critical' : h.status === 'delayed' ? 'moderate' : 'ok'}">${esc(statusWord(h.status))}</span>${h.overdue ? ` <span class="chip overdue">${esc(t().overdue)}</span>` : ''}</td>
+        <td>${esc(day(h.deadline))}</td><td>${esc(h.expected.map((e) => e.label).join(h.followup_logic === 'any' ? ' / ' : ', ') || '–')}</td></tr>`).join('')}</tbody></table></div>`;
+    $('obligations').querySelectorAll('tr[data-h]').forEach((el) => {
+      el.addEventListener('click', () => select(`h:${el.dataset.h}`));
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter') select(`h:${el.dataset.h}`); });
+    });
+    [$('stats'), $('graph-wrap'), $('legend'), $('obligations')].forEach((el) => { el.hidden = false; });
+    if (state.sel) showDetail(); else $('detail').hidden = true;
+  }
+
+  function select(key) { state.sel = key; render(); $('detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  function showDetail() {
+    const g = state.graph, nodeById = Object.fromEntries(g.nodes.map((n) => [n.id, n]));
+    let html = '';
+    if (state.sel.startsWith('n:')) {
+      const n = nodeById[state.sel.slice(2)];
+      if (!n) return;
+      const related = g.hyperedges.filter((h) => h.trigger === n.id || h.followups.includes(n.id));
+      html = `<h2 style="margin:0 0 6px;font:700 1.05rem var(--font-head);">${esc(n.label)}</h2>
+        <div class="meta"><span><b>${esc(day(n.time))}</b></span><span>${esc(n.type)}</span><span>${esc(n.status)}</span>${n.source ? `<span>${esc(t().source)}: <b>${esc(n.source)}</b></span>` : ''}</div>
+        ${n.derived ? `<p class="sub">${esc(t().derived)}</p>` : ''}${n.future ? `<p class="sub">${esc(t().future)}</p>` : ''}
+        ${n.detail ? `<div class="evidence">${esc(n.detail)}</div>` : ''}
+        ${related.length ? `<p class="sub" style="margin-top:8px;">${related.map((h) => `<a href="#" data-h="${esc(h.id)}">${esc(h.rule_id)} · ${esc(h.rule_name)} (${esc(statusWord(h.status))})</a>`).join('<br>')}</p>` : ''}`;
+    } else {
+      const h = g.hyperedges.find((x) => x.id === state.sel.slice(2));
+      if (!h) return;
+      const tr = nodeById[h.trigger];
+      const wl = h.worklist ? `${esc(h.worklist.state)} · ${esc(h.worklist.owner)} · <a href="worklist.html">${esc(t().openWorklist)}</a>` : esc(t().notInWorklist);
+      html = `<h2 style="margin:0 0 6px;font:700 1.05rem var(--font-head);">${esc(h.rule_id)} · ${esc(h.rule_name)}</h2>
+        <div class="meta"><span><span class="chip ${h.status === 'open' ? 'critical' : h.status === 'delayed' ? 'moderate' : 'ok'}">${esc(statusWord(h.status))}</span>${h.overdue ? ` <span class="chip overdue">${esc(t().overdue)}</span>` : ''}</span>
+          <span>${esc(t().detailDeadline)} <b>${esc(day(h.deadline))}</b></span><span>${esc(h.severity)}</span></div>
+        <dl class="kv" style="display:grid;grid-template-columns:170px 1fr;gap:4px 10px;font-size:.88rem;">
+          <dt>${esc(t().detailTrigger)}</dt><dd>${tr ? `<a href="#" data-n="${esc(tr.id)}">${esc(day(tr.time))} · ${esc(tr.label)}</a>` : esc(h.trigger)}</dd>
+          <dt>${esc(t().detailFollow)}</dt><dd>${h.followups.map((f) => nodeById[f] ? `<a href="#" data-n="${esc(f)}">${esc(day(nodeById[f].time))} · ${esc(nodeById[f].label)}</a>` : esc(f)).join('<br>') || esc(t().none)}</dd>
+          <dt>${esc(t().detailMissing)}</dt><dd>${h.expected.length ? `${esc(h.followup_logic === 'any' ? t().anyOf : t().allOf)}: ${esc(h.expected.map((e) => e.label).join(', '))}` : esc(t().none)}</dd>
+          <dt>${esc(t().detailWorklist)}</dt><dd>${wl}</dd>
+        </dl>
+        <details open><summary>${esc(t().detailEvidence)}</summary><div class="evidence">${esc(h.evidence.map((l) => l.replace(/ \(details: \{.*\}\)$/, '')).join('\n'))}</div></details>`;
+    }
+    $('detail').innerHTML = html;
+    $('detail').hidden = false;
+    $('detail').querySelectorAll('a[data-n]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); select(`n:${a.dataset.n}`); }));
+    $('detail').querySelectorAll('a[data-h]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); select(`h:${a.dataset.h}`); }));
+  }
+
+  async function load() {
+    const pid = $('patient').value.trim();
+    if (!pid) return;
+    setStatus(t().working);
+    try {
+      const when = $('when').value ? `?evaluation_time=${encodeURIComponent($('when').value + ':00')}` : '';
+      state.graph = await api(`/api/v1/patients/${encodeURIComponent(pid)}/graph${when}`);
+      state.sel = null;
+      history.replaceState(null, '', `?patient=${encodeURIComponent(pid)}${$('when').value ? `&at=${encodeURIComponent($('when').value)}` : ''}`);
+      if (!state.graph.nodes.length) {
+        [$('stats'), $('graph-wrap'), $('legend'), $('obligations'), $('detail')].forEach((el) => { el.hidden = true; });
+        setStatus(t().empty);
+        return;
+      }
+      render();
+      setStatus((state.graph.warnings || []).join(' · '));
+    } catch (err) { setStatus(err.message, true); }
+  }
+  $('graph-form').addEventListener('submit', (e) => { e.preventDefault(); load(); });
+  $('connect-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    state.base = $('api-base').value.replace(/\/+$/, '');
+    state.token = $('token').value.trim();
+    try {
+      const me = await api('/api/v1/me');
+      store.set('clinloop_api', state.base); store.set('clinloop_token', state.token);
+      $('app').hidden = false;
+      setStatus(`${me.user} (${me.role})`);
+      if ($('patient').value) load();
+    } catch (err) { $('app').hidden = true; setStatus(err.message, true); }
+  });
+  let resizeTimer;
+  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (state.graph && !$('graph-wrap').hidden) render(); }, 150); });
+  $('btn-lang').addEventListener('click', () => { lang = lang === 'ko' ? 'en' : 'ko'; store.set('clinloop_lang', lang, localStorage); applyLang(); });
+  applyLang();
+  if ($('api-base').value && $('token').value) $('connect-form').requestSubmit();
+})();
+</script>
+</body>
+</html>
