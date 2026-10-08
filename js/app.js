@@ -5,87 +5,6 @@
 
 const CLINLOOP_I18N = {
 
-  hi: {
-    platformLabel: 'अनुसंधान प्रोटोटाइप',
-    platformNotice: 'लाइव नैदानिक मामलों का सिमुलेशन · यह मॉक मैसेजिंग है',
-    brandSubtitle: 'क्लीनिकल फॉलो-अप अनुसंधान प्रोटोटाइप · सिंथेटिक डेटा',
-    hospitalText: 'अनुसंधान प्रोटोटाइप · सिंथेटिक मामले',
-    pitchDeck: '📊 पिच डेक (Pitch Deck)',
-    nobilityBtn: '🏛️ चिकित्सा नोबिलिटी और नैतिकता',
-    outreachBtn: '📱 रोगी संपर्क',
-    biomcpBtn: '🧬 ट्रिपल-MCP साक्ष्य',
-    emrBtn: 'EMR से तुलना',
-    triageTitle: 'नैदानिक ट्राइएज कतार',
-    triageCount: '5 लाइव मामले',
-    searchPlaceholder: 'मरीज आईडी, स्थिति, नियम खोजें...',
-    filterAll: 'सभी (5)',
-    filterOpen: 'खुले मामले (3)',
-    filterDelayed: 'विलंबित मामले (1)',
-    filterClosed: 'बंद मामले (1)',
-    tabSummary: '🩺 रोगी नैदानिक सारांश (Clinical Overview)',
-    tabSummaryPill: 'प्राथमिक (Primary)',
-    tabCounterfactual: '⚖️ प्रति-तथ्यात्मक (सत्यापित नहीं)',
-    tabStandards: '🏥 स्वास्थ्य देखभाल मानक (OMOP / FHIR)',
-    tabHypergraph: '🕸️ ज्ञान हाइपरग्राफ (AI Graph)',
-    tabPrivacy: '🛡️ गोपनीयता (Privacy Shield)',
-    guideTitle: '💡 ClinLoop AI क्या है? (System Purpose)',
-    guideDesc: 'ClinLoop AI क्लीनिकल सेफ्टी और फॉलो-अप के लिए एक प्रोटोटाइप है। यह कोई वास्तविक चिकित्सा निदान नहीं देता है।',
-    guideSteps: '<span class="guide-step">मरीज चुनें</span> <span class="guide-arrow">➔</span> <span class="guide-step">नियम और प्रमाण जांचें</span> <span class="guide-arrow">➔</span> <span class="guide-step">सिमुलेशन देखें</span>',
-    deadlineLabel: 'ट्रैकिंग समय सीमा',
-    q1Title: '1. क्या पाया गया? (What was found?)',
-    q2Title: '2. यह एक जोखिम क्यों है? (The Unclosed Loop)',
-    q3Title: '3. क्या कार्रवाई आवश्यक है? (Action Plan)',
-    compTitle: 'वर्चुअल परिदृश्य तुलना · लाइव निगरानी',
-    compSub: 'प्रदान किए गए अनुमान नैदानिक रूप से मान्य नहीं हैं।',
-    negCardBadge: 'सिंथेटिक परिदृश्य · कोई पूर्वानुमान नहीं',
-    negMetric1: 'नैदानिक परिणाम',
-    negMetric2: 'अस्तित्व दर का अनुमान',
-    negCardNote: 'मरीज़-विशिष्ट जोखिम अनुमान प्रदान नहीं किए जाते हैं।',
-    posCardBadge: 'वर्चुअल वर्कफ़्लो स्थिति · उपचार प्रभाव नहीं',
-    posMetric1: 'उपचार परिणाम',
-    posMetric2: 'अस्तित्व दर का अनुमान',
-    posCardNote: 'अस्तित्व दर में सुधार चिकित्सकीय रूप से सिद्ध नहीं हैं।',
-    actionSecTitle: '⚡ एक-क्लिक समाधान (One-Click Actions)',
-    actionSecDesc: 'नीचे दिए गए नियंत्रण केवल ब्राउज़र-आधारित सिमुलेशन हैं। कोई वास्तविक संदेश नहीं भेजा जाएगा।',
-    summaryKakaoLbl: 'मरीज आउटरीच सिम्युलेटर खोलें',
-    summaryKakaoSub: 'केवल प्रोटोटाइप सिमुलेशन। वास्तविक मरीजों को संदेश न भेजें।',
-    summaryOrderLblDefault: 'ब्राउज़र स्थानीय बंद लूप (EMR पर नहीं भेजा गया)',
-    summaryOrderLblClosed: 'स्थिति बदल दी गई (ब्राउज़र में)',
-    summaryOrderSub: 'यह बटन कोई वास्तविक नैदानिक आदेश नहीं भेजता है।',
-    clockTelemetryTitle: 'सिम्युलेटेड समय · लाइव मॉनिटरिंग नहीं',
-    riskMetricLabel: 'अनुसंधान स्कोर · मान्य नहीं',
-    statRuleTitle: 'नियम ऑन्टोलॉजी',
-    statSeverityTitle: 'केस गंभीरता',
-    mathToggleSummary: '🔬 AI क्षय सूत्र (Technical Math)',
-    auditTrailTitle: 'ऑडिट ट्रेल (Explainable AI)',
-    dockLblTheme: 'थीम:',
-    dockLblLang: 'भाषा:',
-    apiKeysBtn: '🔑 API सेटिंग्स',
-    apiModalTitle: 'प्रोटोटाइप API सेटिंग्स (डिस्कनेक्टेड)',
-    apiModalSub: 'API कुंजी इनपुट अक्षम है। वास्तविक कुंजी दर्ज न करें।',
-    apiNobilityTitle: '⚠️ लाइव कनेक्शन अक्षम',
-    apiNobilityDesc: 'यह प्रोटोटाइप बाहरी EHR या AI से कनेक्ट नहीं होता है। डेटा निजी है।',
-    lblGemini: 'Google Gemini / Clinical Foundation Model API',
-    descGemini: 'नेचुरल लैंग्वेज जनरेशन और बहुभाषी चिकित्सा अनुवाद के लिए।',
-    lblAnthropic: 'Anthropic Claude 3.5',
-    descAnthropic: 'सर्वश्रेष्ठ क्लिनिकल रीजनिंग और चिकित्सा नैतिकता के लिए।',
-    lblOpenAI: 'OpenAI (o1 / GPT-4o)',
-    descOpenAI: 'मल्टीमोडल मरीज संचार के लिए।',
-    lblNcbi: 'NCBI / PubMed / Europe PMC / ClinVar via BioMCP API',
-    descNcbi: 'मेडिकल गाइडलाइन सत्यापन के लिए।',
-    lblFhir: 'अस्पताल EMR / SMART on FHIR OAuth',
-    descFhir: 'FHIR R4 टोकन लाइव ऑर्डर सिंकिंग के लिए।',
-    txtTestPing: 'कनेक्शन जांचें (Verify)',
-    txtResetKeys: 'कुंजी रीसेट करें (GPU पर लौटें)',
-    txtSaveKeys: 'सेटिंग्स सहेजें (Save Keys)',
-    lblActiveEngine: '🤖 सक्रिय AI इंजन चुनें:',
-    descEngineAnthropic: 'क्लिनिकल रीजनिंग',
-    descEngineOpenai: 'मल्टीमोडल रीजनिंग',
-    descEngineGemini: 'बहुभाषी साक्षरता',
-    descEngineLocal: 'डिस्कनेक्टेड · केवल अनुसंधान',
-    btnCancelApi: 'बंद करें (Close)'
-  },
-
   ko: {
     platformLabel: '의료기기(SaMD) 시판 전 임상 실증 PoC',
     platformNotice: '임상 사례만 사용 · 실시간 EHR, 메시징, 가이드라인 연결 없음 · 환자 진료용 아님',
@@ -349,7 +268,7 @@ class ClinLoopApp {
     this.searchQuery = '';
     this.currentScrubDays = 35;
     this.currentView = 'hypergraph';
-    this.currentLang = localStorage.getItem('clinloop_lang') || 'en';
+    this.currentLang = localStorage.getItem('clinloop_lang') === 'ko' ? 'ko' : 'en';
     this.outreachLang = this.currentLang;
     this.activeEngine = localStorage.getItem('clinloop_active_engine') || 'local';
   }
@@ -1042,7 +961,6 @@ class ClinLoopApp {
         const _gKey = inputGemini ? inputGemini.value.trim() : '';
         if (_aKey || _oKey || _gKey) {
           const isKo = (this.currentLang === 'ko');
-          const isHi = (this.currentLang === 'hi');
           const baaMsg = isKo
             ? '⚖️ HIPAA BAA 규정 준수 확인 필요\n\n클라우드 API 키 저장 전 반드시 확인하십시오:\n\n✅ 해당 클라우드 제공업체(Anthropic/OpenAI/Google)와 HIPAA 업무위탁계약(BAA)이 체결되었음\n\n✅ 한국 개인정보보호법 제17조에 따른 환자 동의(외부 AI 서비스 이용)가 문서화됨\n\n✅ ClinLoop AI PHI 비식별화 필터가 상시 활성화 상태임\n\n온프레미스 GPU는 언제든지 무위험 기본 엔진으로 즉시 복귀 가능합니다.\n\n확인을 클릭하여 BAA 준수 사실을 인정하고 키를 저장합니다.'
             : '⚖️ HIPAA BAA Compliance Confirmation Required\n\nBefore saving cloud API keys, please confirm:\n\n✅ A HIPAA Business Associate Agreement has been signed with this cloud provider (Anthropic / OpenAI / Google)\n\n✅ Korean PIPA Article 17 patient consent for external AI services is documented\n\n✅ ClinLoop AI PHI De-identification Filter will remain ACTIVE at all times\n\nThe On-Premise GPU remains the zero-risk sovereign default engine at all times.\n\nClick OK to confirm BAA compliance and save keys.';
@@ -1168,23 +1086,18 @@ class ClinLoopApp {
     
     const btnHeaderLangKo = document.getElementById('lang-opt-ko');
     const btnHeaderLangEn = document.getElementById('lang-opt-en');
-    const btnHeaderLangHi = document.getElementById('lang-opt-hi');
     const dockBtnKo = document.getElementById('dock-btn-ko');
     const dockBtnEn = document.getElementById('dock-btn-en');
-    const dockBtnHi = document.getElementById('dock-btn-hi');
 
     this.setLanguage = (lang) => {
-      this.currentLang = (lang === 'en') ? 'en' : (lang === 'hi' ? 'hi' : 'ko');
+      this.currentLang = (lang === 'en') ? 'en' : 'ko';
       const isKo = (this.currentLang === 'ko');
-      const isHi = (this.currentLang === 'hi');
       const isEn = (this.currentLang === 'en');
 
       if (btnHeaderLangKo) btnHeaderLangKo.classList.toggle('active', isKo);
       if (btnHeaderLangEn) btnHeaderLangEn.classList.toggle('active', isEn);
-      if (btnHeaderLangHi) btnHeaderLangHi.classList.toggle('active', isHi);
       if (dockBtnKo) dockBtnKo.classList.toggle('active', isKo);
       if (dockBtnEn) dockBtnEn.classList.toggle('active', isEn);
-      if (dockBtnHi) dockBtnHi.classList.toggle('active', isHi);
 
       localStorage.setItem('clinloop_lang', this.currentLang);
 
@@ -1217,12 +1130,13 @@ class ClinLoopApp {
     };
 
     const initialLang = (typeof urlParams !== 'undefined' ? urlParams.get('lang') : new URLSearchParams(window.location.search).get('lang')) || localStorage.getItem('clinloop_lang') || 'en';
-    this.setLanguage(initialLang);
+    // Only Korean and English are supported; anything else (e.g. an old 'hi') falls back to English
+    const startLang = ['ko', 'en'].includes(initialLang) ? initialLang : 'en';
+    this.setLanguage(startLang);
 
     
     if (btnHeaderLangKo) btnHeaderLangKo.addEventListener('click', () => { this.setLanguage('ko'); this._playTelemetrySound(800, 'sine', 0.05); });
     if (btnHeaderLangEn) btnHeaderLangEn.addEventListener('click', () => { this.setLanguage('en'); this._playTelemetrySound(800, 'sine', 0.05); });
-    if (btnHeaderLangHi) btnHeaderLangHi.addEventListener('click', () => { this.setLanguage('hi'); this._playTelemetrySound(800, 'sine', 0.05); });
     if (dockBtnKo) dockBtnKo.addEventListener('click', () => { this.setLanguage('ko'); this._playTelemetrySound(800, 'sine', 0.05); });
     if (dockBtnEn) dockBtnEn.addEventListener('click', () => { this.setLanguage('en'); this._playTelemetrySound(800, 'sine', 0.05); });
 
@@ -1408,7 +1322,6 @@ class ClinLoopApp {
     container.innerHTML = '';
 
     const isKo = (this.currentLang === 'ko');
-          const isHi = (this.currentLang === 'hi');
 
     if (this.filteredCases.length === 0) {
       container.innerHTML = `<div style="grid-column: 1 / -1; padding: 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.85rem;">${isKo ? '일치하는 환자 진료 케이스가 없습니다.' : 'No matching patient cases found.'}</div>`;
@@ -1511,7 +1424,6 @@ class ClinLoopApp {
 
   updateDetailsPanel(scenario, isClosed) {
     const isKo = (this.currentLang === 'ko');
-          const isHi = (this.currentLang === 'hi');
     const riskValue = document.getElementById('risk-num-val');
     if (riskValue) riskValue.textContent = isKo ? '미검증' : 'N/A';
     for (const id of ['safety-gauge-canvas', 'sigmoid-canvas']) {
@@ -1826,7 +1738,6 @@ class ClinLoopApp {
     const isOverridden = this.closedOverrides.has(c.scenario_id);
     const isClosed = (c.ground_truth_status === 'closed') || isOverridden;
     const isKo = (this.currentLang === 'ko');
-          const isHi = (this.currentLang === 'hi');
 
     const patientProfiles_ko = {
       'SC-0062': {
