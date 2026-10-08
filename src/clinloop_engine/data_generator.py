@@ -165,7 +165,11 @@ class ScenarioFactory:
         pid, age, sex = self._random_patient(idx)
         base = self._random_base()
         nodule_size = round(random.uniform(6.0, 12.0), 1)
-        followup_days = random.randint(120, 175)
+        # Fleischner 2017: >8 mm solid nodules need follow-up at ~3 months
+        if nodule_size > 8.0:
+            followup_days = random.randint(60, 85)
+        else:
+            followup_days = random.randint(120, 175)
 
         events = [
             ClinicalEvent(

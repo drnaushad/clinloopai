@@ -318,6 +318,60 @@ OBLIGATION_RULES: List[ObligationRule] = [
 ]
 
 
+# ── Finding-specific deadlines ──────────────────────────────────────────────
+#
+# Some rules need a deadline that depends on the trigger's details.
+#
+# R003: Fleischner 2017 recommends CT at 6–12 months for a solid 6–8 mm
+#       nodule, but CT at ~3 months, PET/CT or tissue sampling for >8 mm.
+#       The 180-day window would let a 12 mm nodule wait six months.
+# R010: the generic 14-day lab window is wrong for drugs whose recheck
+#       interval differs; low-harm monitoring labs use the guideline's
+#       upper bound so a loop is only violated once the window has passed.
+
+FLEISCHNER_LARGE_NODULE_MM = 8.0
+FLEISCHNER_LARGE_NODULE_DAYS = 90.0
+
+MONITORING_WINDOW_DAYS: Dict[str, float] = {
+    "levothyroxine": 56.0,  # TSH 6–8 weeks after dose change (ATA 2014)
+    "lithium": 7.0,         # Serum lithium ~1 week after dose change (NICE CG185)
+}
+
+
+def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
+    """Deadline for one triggered obligation, applying finding/drug-specific windows."""
+    if rule.rule_id == "R003":
+        try:
+            if float(details.get("nodule_size_mm", 0)) > FLEISCHNER_LARGE_NODULE_MM:
+                return FLEISCHNER_LARGE_NODULE_DAYS
+        except (TypeError, ValueError):
+            pass
+    if rule.rule_id == "R010":
+        drug = str(details.get("drug", "")).strip().lower()
+        if drug in MONITORING_WINDOW_DAYS:
+            return MONITORING_WINDOW_DAYS[drug]
+    return rule.deadline_days
+
+
+# ── Follow-up event statuses ────────────────────────────────────────────────
+#
+# A follow-up only closes a loop if it actually happened. A cancelled CT, a
+# no-show visit or a booked-but-not-yet-attended appointment leaves the
+# patient exactly as exposed as no follow-up at all ("click ≠ closure").
+
+NON_FULFILLING_STATUSES = frozenset({
+    "cancelled", "canceled", "no_show", "no-show", "noshow",
+    "entered-in-error", "entered_in_error", "not-done", "not_done",
+    "revoked", "declined", "refused", "failed", "rejected",
+    "scheduled", "booked", "planned", "proposed", "pending", "draft",
+})
+
+
+def is_fulfilling_status(status: Optional[str]) -> bool:
+    """True if an event with this status counts as a completed follow-up."""
+    return str(status or "completed").strip().lower() not in NON_FULFILLING_STATUSES
+
+
 def get_rule_by_id(rule_id: str) -> Optional[ObligationRule]:
     """Look up an obligation rule by its ID."""
     for rule in OBLIGATION_RULES:

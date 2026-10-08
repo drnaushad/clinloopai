@@ -96,6 +96,8 @@ class ClinLoopDetector:
 
         # Step 2: Get all obligation chains
         all_loops = graph.get_all_loops()
+        # Score against the graph's resolved clock so status and risk agree
+        evaluation_time = graph.evaluation_time
 
         if not all_loops:
             return []
@@ -115,11 +117,11 @@ class ClinLoopDetector:
                 rule_name=he.obligation_rule.name,
                 severity=severity,
                 trigger_time=he.trigger_node.timestamp,
-                deadline_days=he.obligation_rule.deadline_days,
+                deadline_days=he.deadline_days,
                 event_details=he.trigger_node.details,
                 n_events=len(events),
                 is_open=is_open,
-                evaluation_time=self.evaluation_time,
+                evaluation_time=evaluation_time,
             )
             risk_assessments.append(assessment)
 
@@ -133,7 +135,10 @@ class ClinLoopDetector:
             if is_open:
                 fulfilled = {fn.event_type for fn in he.actual_followup_nodes}
                 missing = [ft for ft in he.expected_followup_types if ft not in fulfilled]
-                missing_step = f"Missing: {', '.join(missing)} within {he.obligation_rule.deadline_days} days"
+                if missing:
+                    missing_step = f"Missing: {', '.join(missing)} within {he.deadline_days} days"
+                else:
+                    missing_step = f"Completed late: follow-up came after the {he.deadline_days}-day deadline"
             else:
                 missing_step = "All follow-ups completed"
 
@@ -154,14 +159,20 @@ class ClinLoopDetector:
                 clock_state=assessment.clock_state,
                 recommended_action=assessment.recommended_action,
                 explanation=assessment.explanation,
-                evidence_chain=he.evidence_chain,
+                evidence_chain=list(he.evidence_chain),
                 should_abstain=assessment.should_abstain,
             )
             detections.append(detection)
 
 
-        # Keep low-confidence cases visible ahead of scored cases for review.
-        detections.sort(key=lambda d: (not d.should_abstain, -d.risk_score))
+        # Unresolved loops first, highest risk first. An overdue critical loop
+        # must outrank a low-risk one that merely needs human review; ties go
+        # to the human-review case so low-confidence items stay visible.
+        detections.sort(key=lambda d: (
+            d.loop_status == LoopStatus.CLOSED.value,
+            -d.risk_score,
+            not d.should_abstain,
+        ))
 
         # Build local previews only; this code has no EHR transport connection.
         for det in detections:

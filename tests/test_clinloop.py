@@ -509,9 +509,6 @@ class TestCriticalLabDetection(unittest.TestCase):
         self.assertTrue(any(d.risk_score > 0 for d in detections))
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class TestDigitalSignature(unittest.TestCase):
     def test_sign_and_verify(self):
@@ -554,3 +551,185 @@ class TestCausalMessage(unittest.TestCase):
         tmpl = recommend_message_template(features)
         self.assertTrue(len(tmpl.text_template) > 0)
         self.assertIsInstance(tmpl.estimated_engagement_score, float)
+
+
+# ── Patient-safety regression tests ──────────────────────────────────────────
+
+def _evt(event_id, event_type, timestamp, details=None, status="completed"):
+    return {"event_id": event_id, "patient_id": _PATIENT_ID, "event_type": event_type,
+            "timestamp": timestamp, "details": details or {}, "status": status}
+
+
+def _loop_statuses(events, evaluation_time=datetime(2026, 6, 1)):
+    graph = DynamicTemporalHypergraph(evaluation_time=evaluation_time)
+    graph.build_from_patient_trajectory(events)
+    return {he.obligation_rule.rule_id: he.status for he in graph.get_all_loops()}
+
+
+class TestSafetyRegressions(unittest.TestCase):
+    """Each test pins a failure mode that would silently drop a patient."""
+
+    def test_all_logic_requires_every_followup(self):
+        """R009 needs notification AND referral; notification alone stays open."""
+        statuses = _loop_statuses([
+            _evt("a", "pathology_result", "2026-03-01T09:00:00",
+                 {"condition": "abnormal", "result": "adenocarcinoma"}),
+            _evt("b", "patient_notification", "2026-03-02T09:00:00"),
+        ])
+        self.assertEqual(statuses["R009"], LoopStatus.OPEN.value)
+
+    def test_all_logic_closes_when_every_followup_present(self):
+        statuses = _loop_statuses([
+            _evt("a", "pathology_result", "2026-03-01T09:00:00", {"condition": "abnormal"}),
+            _evt("b", "patient_notification", "2026-03-02T09:00:00"),
+            _evt("c", "specialist_referral", "2026-03-03T09:00:00"),
+        ])
+        self.assertEqual(statuses["R009"], LoopStatus.CLOSED.value)
+
+    def test_any_logic_still_closes_on_one_followup(self):
+        """R004 is disjunctive: a urology referral alone satisfies it."""
+        statuses = _loop_statuses([
+            _evt("a", "lab_result", "2026-03-01T09:00:00", {"condition": "elevated_psa"}),
+            _evt("b", "specialist_referral", "2026-03-10T09:00:00"),
+        ])
+        self.assertEqual(statuses["R004"], LoopStatus.CLOSED.value)
+
+    def test_cancelled_followup_does_not_close_loop(self):
+        statuses = _loop_statuses([
+            _evt("a", "radiology_report", "2026-01-01T09:00:00",
+                 {"finding": "incidental_pulmonary_nodule", "nodule_size_mm": 7}),
+            _evt("b", "followup_ct", "2026-03-01T09:00:00", status="cancelled"),
+        ])
+        self.assertEqual(statuses["R003"], LoopStatus.OPEN.value)
+
+    def test_cancelled_followup_is_named_in_evidence_chain(self):
+        detections = ClinLoopDetector(evaluation_time=datetime(2026, 9, 1)).process_patient(
+            "CANCELLED", _PATIENT_ID, [
+                _evt("a", "radiology_report", "2026-01-01T09:00:00",
+                     {"finding": "incidental_pulmonary_nodule", "nodule_size_mm": 7}),
+                _evt("b", "followup_ct", "2026-03-01T09:00:00", status="no_show"),
+            ])
+        chain = " ".join(detections[0].evidence_chain)
+        self.assertIn("followup_ct [no_show]", chain)
+
+    def test_followup_after_evaluation_time_ignored(self):
+        statuses = _loop_statuses([
+            _evt("a", "lab_result", "2026-05-01T09:00:00",
+                 {"condition": "abnormal_cervical_cytology"}),
+            _evt("b", "colposcopy_referral", "2026-12-01T09:00:00"),
+        ])
+        self.assertEqual(statuses["R005"], LoopStatus.OPEN.value)
+
+    def test_diagnosis_containing_mi_substring_is_not_mi(self):
+        for dx in ("iron_deficiency_anemia", "hypokalemia", "septicemia", "migraine"):
+            statuses = _loop_statuses([
+                _evt("a", "discharge", "2026-03-01T09:00:00", {"primary_diagnosis": dx}),
+            ])
+            self.assertNotIn("R014", statuses, dx)
+
+    def test_true_mi_discharge_triggers_r014(self):
+        for dx in ("acute_mi", "NSTEMI", "myocardial_infarction"):
+            statuses = _loop_statuses([
+                _evt("a", "discharge", "2026-03-01T09:00:00", {"primary_diagnosis": dx}),
+            ])
+            self.assertIn("R014", statuses, dx)
+
+    def test_timezone_aware_and_mixed_timestamps(self):
+        events = [
+            _evt("a", "lab_result", "2026-05-01T09:00:00+09:00", {"flag": "ABNORMAL"}),
+            _evt("b", "patient_notification", "2026-05-01T12:00:00Z"),
+        ]
+        detections = ClinLoopDetector().process_patient("TZ", _PATIENT_ID, events)
+        self.assertGreater(len(detections), 0)
+
+    def test_overdue_critical_loop_is_escalated_not_abstained(self):
+        detections = ClinLoopDetector(evaluation_time=datetime(2026, 6, 1)).process_patient(
+            "CULTURE", _PATIENT_ID, [
+                _evt("a", "culture_result", "2026-03-01T09:00:00",
+                     {"condition": "positive_post_discharge", "organism": "S. aureus"}),
+            ])
+        top = detections[0]
+        self.assertEqual(top.loop_status, LoopStatus.OPEN.value)
+        self.assertFalse(top.should_abstain)
+        self.assertTrue(top.recommended_action.startswith("URGENT"))
+
+    def test_large_nodule_uses_three_month_window(self):
+        """Fleischner 2017: >8 mm solid nodule needs follow-up at ~3 months."""
+        statuses = _loop_statuses([
+            _evt("a", "radiology_report", "2026-01-01T09:00:00",
+                 {"finding": "incidental_pulmonary_nodule", "nodule_size_mm": 12}),
+            _evt("b", "followup_ct", "2026-05-15T09:00:00"),
+        ])
+        self.assertEqual(statuses["R003"], LoopStatus.DELAYED.value)
+
+    def test_levothyroxine_uses_six_to_eight_week_window(self):
+        statuses = _loop_statuses([
+            _evt("a", "medication_change", "2026-03-01T09:00:00",
+                 {"drug": "levothyroxine", "condition": "requires_monitoring"}),
+            _evt("b", "followup_lab", "2026-04-15T09:00:00"),
+        ])
+        self.assertEqual(statuses["R010"], LoopStatus.CLOSED.value)
+
+    def test_open_loop_ranked_before_closed(self):
+        detections = ClinLoopDetector(evaluation_time=datetime(2026, 6, 1)).process_patient(
+            "RANK", _PATIENT_ID, [
+                _evt("a", "lab_result", "2026-03-01T09:00:00", {"flag": "NORMAL"}),
+                _evt("b", "provider_review", "2026-03-02T09:00:00"),
+                _evt("c", "lab_result", "2026-03-03T09:00:00",
+                     {"condition": "abnormal_cervical_cytology"}),
+            ])
+        self.assertNotEqual(detections[0].loop_status, LoopStatus.CLOSED.value)
+
+
+class TestPrivacyAndAgentRegressions(unittest.TestCase):
+
+    def test_phi_scrubber_removes_embedded_identifiers(self):
+        from src.clinloop_engine.phi_deidentifier import PHIDeidentifier
+        safe, log = PHIDeidentifier().deidentify_patient({
+            "name": "김민수",
+            "clinical_context": "Patient 김민수 (MRN: 12345678) seen 2026년 3월 5일, "
+                                "call 010-1234-5678, lives at 테헤란로 123. Nodule 8.5 mm.",
+        })
+        text = safe["clinical"]["clinical_context"]
+        for identifier in ("김민수", "12345678", "3월 5일", "010-1234-5678", "테헤란로 123"):
+            self.assertNotIn(identifier, text)
+        self.assertIn("8.5 mm", text)
+        self.assertTrue(log["safe_to_send_cloud"])
+
+    def test_outreach_blocks_definitive_diagnosis(self):
+        from unittest.mock import patch
+        from src.clinloop_engine.patient_outreach_agent import (
+            OutreachRequest, generate_dynamic_outreach, FALLBACK_MESSAGES,
+        )
+        request = OutreachRequest("P", "O", "follow_up", {"finding": "lung nodule"}, "en",
+                                  None, "kakao", None, "HIGH", [])
+        with patch("src.clinloop_engine.patient_outreach_agent.generate_kakao_message",
+                   return_value={"text": "You have cancer. Book now."}):
+            draft = generate_dynamic_outreach(request)
+        self.assertEqual(draft.message_text, FALLBACK_MESSAGES["en"])
+        self.assertIn("unsupported_claim_blocked_fallback_used", draft.safety_flags)
+        self.assertTrue(draft.requires_human_review)
+
+    def test_evidence_agent_uses_reported_nodule_size(self):
+        from src.clinloop_engine.evidence_agent import run_evidence_synthesis
+        small = run_evidence_synthesis("Incidental 7 mm nodule on CT")
+        large = run_evidence_synthesis("Incidental 14 mm nodule on CT")
+        self.assertEqual(small[0].temporal_expression, "180 days")
+        self.assertEqual(large[0].temporal_expression, "90 days")
+        self.assertEqual(run_evidence_synthesis("Incidental nodule, size not reported"), [])
+
+    def test_fhir_timestamp_is_valid_iso(self):
+        from src.clinloop_engine.fhir_integration import fhir_create_task
+        authored = fhir_create_task("O", "P", "d", "2026-12-01")["authoredOn"]
+        self.assertFalse(authored.endswith("Z") and "+" in authored)
+        datetime.fromisoformat(authored)
+
+    def test_watchdog_monitors_demo_cases(self):
+        from src.clinloop_engine.safety_clock import scan_for_violations, clock_state
+        scan_for_violations(evaluation_time=datetime(2026, 9, 22))
+        self.assertGreater(clock_state.active_cases_monitored, 0)
+        self.assertGreater(len(clock_state.escalations), 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -192,7 +192,16 @@ class RiskScorer:
         normalized = min(1.0, composite / 0.5)  # 0.5 is roughly max expected composite
 
         # Abstention decision
-        should_abstain = uncertainty_score > self.abstention_threshold and is_open
+        # Sparse data may justify asking a human, but never at the cost of
+        # urgency: once a deadline is violated, or the obligation is CRITICAL,
+        # the loop is escalated as a definite alert (with a data-quality note)
+        # instead of being softened into "insufficient data".
+        sparse_data = uncertainty_score > self.abstention_threshold and is_open
+        must_escalate = (
+            clock_reading.clock_state == ClockState.BLACK
+            or severity == Severity.CRITICAL
+        )
+        should_abstain = sparse_data and not must_escalate
         abstain_reason = ""
         if should_abstain:
             abstain_reason = (
@@ -227,6 +236,12 @@ class RiskScorer:
         ]
         if should_abstain:
             explanation.append(f"⚠ ABSTENTION: {abstain_reason}")
+        elif sparse_data:
+            explanation.append(
+                f"⚠ Sparse record (uncertainty {uncertainty_score:.2f}): verify the chart, "
+                f"but the alert is escalated because the obligation is "
+                f"{'past its deadline' if clock_reading.clock_state == ClockState.BLACK else 'critical'}."
+            )
 
         return RiskAssessment(
             obligation_id=obligation_id,
