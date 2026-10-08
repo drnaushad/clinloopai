@@ -22,8 +22,12 @@ the worklist:
 CLINLOOP_PACS_DICOMWEB=https://pacs.hospital.local/dicom-web   # QIDO-RS base URL
 CLINLOOP_PACS_TOKEN=…                                          # optional bearer token
 CLINLOOP_PACS_ID_SYSTEM=…   # FHIR Patient.identifier system holding the PACS PatientID (default: the MR identifier)
-CLINLOOP_LOCAL_TZ=Asia/Seoul  # DICOM times are local; the default compose file sets Asia/Seoul
+CLINLOOP_PACS_MATCH_FHIR_ID=1 # only if the PACS uses FHIR ids as PatientID (otherwise patients without an MRN are not looked up)
+CLINLOOP_LOCAL_TZ=Asia/Seoul  # DICOM times are local (default Asia/Seoul; "UTC" if the PACS stores UTC)
 ```
+
+**Patient check.** Every study the PACS returns must carry the PatientID that was queried;
+otherwise it is skipped. IDs containing DICOM wildcards (`*`, `?`) are never queried.
 
 **What is read.** For every patient evaluated, ClinLoop queries `/studies?PatientID=…` and
 `/studies/{uid}/series`. It reads Study/Series Description, Modalities in Study, Body Part
@@ -57,8 +61,25 @@ SR. Alternatively, ClinLoop's own model runner produces them (section 4). Then:
 - The vendor's own positive/negative flag (its operating point) is used when present.
 - Otherwise ClinLoop uses `CLINLOOP_AI_THRESHOLD_<FINDING>`, else `CLINLOOP_AI_THRESHOLD`, else 0.5.
 
-**Research-use models:** findings from products marked research-use open no loops unless
-`CLINLOOP_IMAGING_RESEARCH_AI=1`.
+**Which report is the study's report:**
+- Matched by DICOM StudyInstanceUID, or by the same ImagingStudy reference, even when the hospital
+  uses its own ImagingStudy ids or absolute URLs.
+- If neither side names its study, the first report *after* the study whose body region covers the
+  finding is used. A report written before the study never counts.
+- A finding with no study link and no body region (e.g. a fracture AI result without a body part)
+  is not compared, because ClinLoop cannot tell which report it belongs to.
+
+**Counted as "addressed" only with specific wording.** None of these addresses the AI finding:
+- "no osseous lesion" for a lung nodule;
+- "pericardial effusion" for a pleural effusion;
+- "vertebral collapse" for atelectasis;
+- "scalp hematoma" for an intracranial haemorrhage.
+
+**Duplicates:** the same finding on the same study, from two sources (vendor feed and upload) or a
+re-analysis, is reviewed once.
+
+**Research-use models, or no stated approval:** findings from products marked research-use, or
+with no stated regulatory status, open no loops unless `CLINLOOP_IMAGING_RESEARCH_AI=1`.
 
 ## 3. Outside reports (PDF and OCR)
 
@@ -72,8 +93,20 @@ SR. Alternatively, ClinLoop's own model runner produces them (section 4). Then:
    - Text a person confirms is trusted.
    - Unconfirmed text keeps a "verify against the original" flag on every loop it creates.
 
-**Stored:** only the impression (identifiers scrubbed), the title, the date and the file's SHA-256.
+**Stored:**
+- the impression, with identifiers removed: resident numbers, phone numbers, MRNs, labelled names
+  and birth dates, and the patient's own name from their record. Dates, sizes and clinical words
+  are never changed;
+- the title, reduced to its clinical words ("CT Chest - Hong Gil-dong" → "CT Chest");
+- the date and the file's SHA-256.
+
 The file itself is never kept.
+
+**Report date:**
+- A date labelled as the exam date wins; otherwise the latest date in the document is used
+  (comparison dates are earlier).
+- Birth dates are excluded, including in table layouts.
+- An ambiguous date like 05/06/2026 is never guessed.
 
 **OCR limits (tested):**
 - Clean English text read at 95% confidence.
@@ -87,8 +120,11 @@ The file itself is never kept.
 `imaging.html` → *DICOM image analysis*, or `POST /api/v1/imaging/analyze`, takes one DICOM file.
 
 **Header safety checks (no AI):**
-- **Wrong patient (refused).** If the image's PatientID does not match the patient or their MRN,
-  nothing is filed and the attempt is audited.
+- **Unknown patient (refused).** The patient must exist in ClinLoop's record, and the id must be a
+  valid FHIR id.
+- **Wrong patient, or no PatientID (refused).** If the image's PatientID is missing or does not
+  match the patient's FHIR id or MRN, nothing is filed and the attempt is audited.
+- **Not a DICOM file (refused).**
 - **Secondary capture or derived image**, for example a screenshot.
 - **Identifiers burned into the pixels.**
 - **Missing body part or date.**
@@ -148,6 +184,32 @@ for sites without DICOMweb.
   2026-04-03 were found.
   - A person corrected "2.4 07" to "2.4 cm" and confirmed. Filing opened the radiologist's
     "3개월 후 추적 CT 권고" as R030 (adrenal region).
+
+## Independent review
+
+A separate reviewer ran edge cases through the imaging code and confirmed 15 problems; all are
+fixed and now tests (`TestIndependentReviewImaging`, `TestImagingAPISafety`):
+
+- **Report matching:**
+  - reports linked to the hospital's own ImagingStudy id were never compared;
+  - a report from before the study could count;
+  - a chest report's "no rib fracture" addressed a wrist fracture finding;
+  - unrelated wording counted as "addressed".
+- **Duplicates:** the same finding from two sources opened two review loops.
+- **PACS:** a study of another PatientID could be filed.
+- **Outside reports:**
+  - a birth date in a table, or an earlier comparison date, became the report date;
+  - a sentence starting with "Comparison" cut the impression short;
+  - the old scrubber changed "6개월 후" and image numbers;
+  - names in titles were stored.
+- **Integrity:**
+  - a reused file or vendor id could attach one patient's record to another;
+  - injected or unknown patient ids were accepted.
+- **Robustness and privacy:**
+  - invalid dates, multi-frame colour ultrasound, text scores and non-DICOM files could crash
+    analysis or create junk records;
+  - DICOM SR scores were given to the wrong finding;
+  - a hash of the MRN was returned.
 
 ## Before clinical use
 

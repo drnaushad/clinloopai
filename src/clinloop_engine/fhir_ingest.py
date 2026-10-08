@@ -32,7 +32,7 @@ from .clinical_ontology import (
 from .ai_review import apply_ai_review
 from .imaging_fhir import (
     CLINLOOP_TAG_SYSTEM, DEFAULT_AI_THRESHOLD, DICOM_MODALITY, OCR_CONFIDENCE_URL, REGULATORY_URL,
-    ai_finding_key, dicom_regions, is_research_use,
+    ai_finding_key, dicom_regions, norm_ref, regulatory_unverified, study_uid_from,
 )
 from .radiology import _CHEST_CT, _LIVER, decide_obligations, map_radiology_report
 from .report_text import affirmed as _affirmed, first_affirmed as _first_affirmed
@@ -307,7 +307,7 @@ def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
     conclusion = " ".join(filter(None, [r.get("conclusion", ""),
                                         " ".join(_concept_text(c) for c in r.get("conclusionCode", []))]))
     details: Dict[str, Any] = {"report": code_text or None, "conclusion": conclusion or None}
-    studies = [s.get("reference") for s in r.get("imagingStudy", []) if s.get("reference")]
+    studies = [norm_ref(s.get("reference")) for s in r.get("imagingStudy", []) if s.get("reference")]
     if studies:
         details["imaging_studies"] = studies
     tags = {t.get("code") for t in (r.get("meta") or {}).get("tag", []) if t.get("system") == CLINLOOP_TAG_SYSTEM}
@@ -363,7 +363,11 @@ def _map_ai_observation(r: Dict, ts: Optional[str]) -> List[Tuple[str, str, Dict
     regions = dicom_regions("", body) if body else []
     key = ai_finding_key(label, regions)
     score = (r.get("valueQuantity") or {}).get("value")
-    if isinstance(score, (int, float)) and (r.get("valueQuantity") or {}).get("unit") in ("%", "percent"):
+    try:
+        score = float(score) if score is not None else None
+    except (TypeError, ValueError):
+        score = None
+    if score is not None and (r.get("valueQuantity") or {}).get("unit") in ("%", "percent"):
         score = score / 100.0
     interp = _flag_from_interpretation(r)
     codes = {c for i in r.get("interpretation", []) for c in _codes(i)}
@@ -371,14 +375,21 @@ def _map_ai_observation(r: Dict, ts: Optional[str]) -> List[Tuple[str, str, Dict
         positive, basis = True, "vendor flagged positive"
     elif codes & {"NEG", "N", "ND"}:
         positive, basis = False, "vendor flagged negative"
-    elif isinstance(score, (int, float)):
+    elif score is not None and score > 1:
+        positive, basis = False, f"score {score:g} on an unknown scale: set a vendor flag or label map"
+    elif score is not None:
         positive, basis = score >= _ai_threshold(key), f"score {score:g} vs threshold {_ai_threshold(key):g}"
     else:
         positive, basis = False, "no score or flag"
-    study_ref = next((x.get("reference") for x in r.get("derivedFrom", []) if "ImagingStudy" in str(x.get("reference"))), None)
+    links = r.get("derivedFrom", [])
+    study_ref = next((norm_ref(x.get("reference")) for x in links if "ImagingStudy" in str(x.get("reference"))), None)
+    study_uid = next((study_uid_from((x.get("identifier") or {}).get("value")) for x in links
+                      if "dicom" in str((x.get("identifier") or {}).get("system", "")).lower()
+                      or str((x.get("identifier") or {}).get("value", "")).startswith("urn:oid:")), None)
     details = {"finding_label": label, "finding_key": key, "score": score, "positive": positive,
                "product": product, "regulatory": regulatory or "not stated",
-               "research_use": is_research_use(regulatory), "study_ref": study_ref, "study_time": ts,
+               "research_use": regulatory_unverified(regulatory), "study_ref": study_ref, "study_uid": study_uid,
+               "study_time": ts,
                "regions": regions,
                "mapping": [f"Observation(imaging AI: {product})→ai_finding '{label}'"
                            f"{' → ' + key if key else ' (label not mapped)'}: {'positive' if positive else 'negative'} ({basis})"]}
@@ -396,7 +407,9 @@ def _map_imaging_study(r: Dict) -> List[Tuple[str, str, Dict]]:
     regions = sorted(set().union(*[set(dicom_regions(b, *descriptions)) for b in (body or [""])]))
     details = {"study": " / ".join(filter(None, descriptions)) or None, "modalities": sorted(modalities),
                "body_regions": regions,
-               "study_uid": next((i.get("value") for i in r.get("identifier", []) if "dicom" in str(i.get("system"))), None),
+               "study_uid": study_uid_from(next((i.get("value") for i in r.get("identifier", [])
+                                                 if "dicom" in str(i.get("system"))), None)),
+               "study_ref": f"ImagingStudy/{r.get('id')}",
                "mapping": [f"ImagingStudy({', '.join(sorted(modalities)) or '?'})"
                            f" [{', '.join(regions) or 'region unknown'}]"]}
     events: List[Tuple[str, str, Dict]] = []

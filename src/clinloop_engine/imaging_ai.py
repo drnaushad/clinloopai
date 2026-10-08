@@ -64,9 +64,13 @@ def read_dicom(content: bytes):
     if len(content) > MAX_DICOM_BYTES:
         raise ImagingError("DICOM file too large")
     try:
-        return pydicom.dcmread(io.BytesIO(content), force=True)
+        ds = pydicom.dcmread(io.BytesIO(content), force=True)
     except Exception as e:
         raise ImagingError(f"Not a readable DICOM file ({type(e).__name__})") from e
+    # force=True reads almost anything: require the basic identity of a DICOM object
+    if not any(t in ds for t in ("SOPClassUID", "StudyInstanceUID", "Modality")):
+        raise ImagingError("Not a DICOM file (no SOP Class, Study UID or Modality)")
+    return ds
 
 
 def _get(ds, name: str, default=None):
@@ -102,8 +106,6 @@ def dicom_summary(ds) -> Dict[str, Any]:
         "manufacturer": _get(ds, "Manufacturer"),
         "burned_in_annotation": (_get(ds, "BurnedInAnnotation") or "").upper() == "YES",
         "has_pixels": "PixelData" in ds,
-        "patient_id_sha256": hashlib.sha256((_get(ds, "PatientID") or "").encode()).hexdigest()[:16]
-        if _get(ds, "PatientID") else None,
     }
 
 
@@ -114,8 +116,9 @@ def qa_checks(ds, summary: Dict[str, Any], expected_patient_ids: List[str],
     pid = _get(ds, "PatientID")
     if expected_patient_ids:
         if not pid:
-            checks.append({"level": "warning", "code": "no_patient_id",
-                           "message": "The image has no PatientID: confirm it belongs to this patient."})
+            checks.append({"level": "critical", "code": "no_patient_id",
+                           "message": "The image has no PatientID, so it cannot be verified to belong to this patient. "
+                                      "Nothing was filed."})
         elif pid not in expected_patient_ids:
             checks.append({"level": "critical", "code": "patient_mismatch",
                            "message": "The PatientID in the image does not match the selected patient. "
@@ -150,10 +153,11 @@ def pixel_image(ds) -> Optional[np.ndarray]:
         return None
     from pydicom.pixels import apply_modality_lut, apply_voi_lut
     arr = ds.pixel_array
-    if arr.ndim == 3 and getattr(ds, "SamplesPerPixel", 1) == 1:   # multi-frame: middle frame
+    colour = int(getattr(ds, "SamplesPerPixel", 1) or 1) > 1
+    if arr.ndim == 4 or (arr.ndim == 3 and not colour):            # multi-frame: middle frame
         arr = arr[arr.shape[0] // 2]
     if arr.ndim == 3:                                               # colour (e.g. ultrasound)
-        arr = arr[..., :3].mean(axis=-1)
+        arr = arr[..., :3].astype(np.float32).mean(axis=-1)
     else:
         arr = apply_modality_lut(arr, ds)
         try:
@@ -166,6 +170,16 @@ def pixel_image(ds) -> Optional[np.ndarray]:
     if str(getattr(ds, "PhotometricInterpretation", "")).upper() == "MONOCHROME1":
         arr = 1.0 - arr
     return arr
+
+
+def _safe_preview(img: Optional[np.ndarray]) -> Optional[str]:
+    if img is None or img.ndim != 2:
+        return None
+    try:
+        return preview_png(img)
+    except Exception as e:          # a preview must never stop the analysis
+        logger.warning("Preview failed: %s", e)
+        return None
 
 
 def preview_png(img: np.ndarray, size: int = 512) -> str:
@@ -358,8 +372,13 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
         by_key: Dict[str, Dict[str, Any]] = {}
         findings = []
         for f in raw:
-            score = f.get("score")
+            try:
+                score = float(f["score"]) if f.get("score") is not None else None
+            except (TypeError, ValueError):
+                score = None
             positive = f.get("positive")
+            if isinstance(positive, str):
+                positive = positive.strip().lower() in ("true", "1", "yes", "positive", "pos")
             if positive is None and isinstance(score, (int, float)):
                 positive = score >= model.threshold
             key = ai_finding_key(f["label"], summary["regions"])
@@ -371,8 +390,9 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
             labels = " / ".join(sorted({x["label"] for x in findings if (x["finding_key"] or x["label"]) == k and x["positive"]}))
             observations.append(ai_observation_resource(
                 patient_id, labels, best["score"], True, model.name, model.version, model.regulatory,
-                study_ref, when, body_part=summary["body_part"] or None, source="imaging-ai"))
-        findings.sort(key=lambda x: -(x["score"] or 0))
+                study_ref, when, body_part=summary["body_part"] or None, source="imaging-ai",
+                finding_key=k, study_uid=summary["study_uid"]))
+        findings.sort(key=lambda x: -(x["score"] if isinstance(x["score"], float) else 0))
         model_results.append({**info, "ran": True, "findings": findings})
 
     critical = [c for c in qa if c["level"] == "critical"]
@@ -380,7 +400,7 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
         "summary": summary, "qa": qa, "models": model_results,
         "filed": not critical,
         "resources": [] if critical else [study] + observations,
-        "preview": preview_png(img) if (with_preview and img is not None) else None,
+        "preview": _safe_preview(img) if with_preview else None,
         "sha256": hashlib.sha256(content).hexdigest(),
     }
 
@@ -406,30 +426,51 @@ def parse_dicom_sr(content: bytes) -> Dict[str, Any]:
         except (AttributeError, IndexError, TypeError):
             return ""
 
+    def score_of(it) -> Optional[Dict[str, Any]]:
+        name = meaning(getattr(it, "ConceptNameCodeSequence", None)).lower()
+        if str(getattr(it, "ValueType", "")) != "NUM" or not any(k in name for k in ("probab", "likelihood", "score", "confidence")):
+            return None
+        try:
+            mv = it.MeasuredValueSequence[0]
+            v = float(mv.NumericValue)
+            unit = meaning(getattr(mv, "MeasurementUnitsCodeSequence", None)).strip().lower()
+        except (AttributeError, IndexError, ValueError, TypeError):
+            return None
+        if unit in ("%", "percent"):
+            return {"score": v / 100.0}
+        if 0 <= v <= 1:
+            return {"score": v}
+        return {"score": None, "raw_score": v, "unit": unit or None}     # unknown scale: never rescaled by guess
+
     def walk(items):
-        container: List[Dict[str, Any]] = []
-        score = None
+        """Each CODE finding takes the score inside it, else the next score before another finding."""
+        pending = None
         for it in items or []:
             vt = str(getattr(it, "ValueType", ""))
             name = meaning(getattr(it, "ConceptNameCodeSequence", None)).lower()
-            if vt == "CODE" and ("finding" in name or "abnormality" in name or "detection" in name):
-                container.append({"label": meaning(getattr(it, "ConceptCodeSequence", None)), "score": None})
-            elif vt == "NUM" and any(k in name for k in ("probab", "likelihood", "score", "confidence")):
-                try:
-                    v = float(it.MeasuredValueSequence[0].NumericValue)
-                    unit = meaning(getattr(it.MeasuredValueSequence[0], "MeasurementUnitsCodeSequence", None))
-                    score = v / 100.0 if unit in ("%", "percent") or v > 1 else v
-                except (AttributeError, IndexError, ValueError, TypeError):
-                    pass
-            if vt == "CONTAINER" or hasattr(it, "ContentSequence"):
-                walk(getattr(it, "ContentSequence", None))
-        for f in container:
-            if f["label"]:
-                findings.append({"label": f["label"], "score": score})
+            if vt == "CODE" and any(k in name for k in ("finding", "abnormality", "detection")):
+                f = {"label": meaning(getattr(it, "ConceptCodeSequence", None)), "score": None}
+                for child in getattr(it, "ContentSequence", None) or []:
+                    sc = score_of(child)
+                    if sc:
+                        f.update(sc)
+                        break
+                if f["label"]:
+                    findings.append(f)
+                    pending = f if f["score"] is None and "raw_score" not in f else None
+                continue
+            sc = score_of(it)
+            if sc and pending is not None:
+                pending.update(sc)
+                pending = None
+                continue
+            if hasattr(it, "ContentSequence") and vt == "CONTAINER":
+                walk(it.ContentSequence)
 
     walk(getattr(ds, "ContentSequence", None))
     return {"product": " ".join(filter(None, [_get(ds, "Manufacturer"), _get(ds, "ManufacturerModelName"),
                                               _get(ds, "SoftwareVersions") if isinstance(_get(ds, "SoftwareVersions"), str) else None])) or "imaging AI (DICOM SR)",
             "study_uid": _get(ds, "StudyInstanceUID"), "patient_id": _get(ds, "PatientID"),
             "study_date": _get(ds, "StudyDate") or _get(ds, "ContentDate"), "study_time": _get(ds, "StudyTime"),
-            "findings": findings}
+            # An SR lists what the product detected: a finding without a usable score is still a detection
+            "findings": [{**f, "positive": True if f.get("score") is None else None} for f in findings]}

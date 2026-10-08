@@ -59,7 +59,11 @@ _ANATOMY = [
     ("head", r"\b(head|brain|skull|cranial|intracranial)\b|두부|뇌|머리"),
     ("neck", r"\bneck\b|경부"),
     ("thyroid", r"\bthyroid\b|갑상선"),
-    ("chest", r"\b(chest|thorax|thoracic|lungs?|pulmonary|ldct|cxr)\b|흉부|(?:(?<![가-힣])|(?<=[좌우양]))폐(?!경)"),
+    ("chest", r"\b(chest|thorax|thoracic|lungs?|pulmonary|ldct|cxr|ribs?)\b|흉부|늑골|(?:(?<![가-힣])|(?<=[좌우양]))폐(?!경)"),
+    ("upper_extremity", r"\b(hands?|wrists?|forearms?|elbows?|humer\w*|shoulders?|fingers?|clavicle|scaphoid|radius|ulna)\b"
+                        r"|손목|손가락|팔꿈치|어깨|상완|전완"),
+    ("lower_extremity", r"\b(hips?|femur|femoral|knees?|tibia\w*|fibula\w*|ankles?|foot|feet|toes?|calcane\w*|pelvic girdle)\b"
+                        r"|고관절|대퇴|무릎|발목|경골|족부"),
     ("abdomen", r"\b(abdomen|abdominal)\b|복부"),
     ("pelvis", r"\b(pelvis|pelvic)\b|골반"),
     ("liver", r"\b(liver|hepatic)\b|(?<![가-힣])간(?=\s*(?:초음파|CT|MRI)|[의에내])"),

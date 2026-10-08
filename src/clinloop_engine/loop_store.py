@@ -282,16 +282,20 @@ class LoopStore:
     # ── resources added outside the FHIR feed (uploads, imaging AI) ──────────
     def add_external_resource(self, resource: Dict, kind: str, actor: str, role: str,
                               source_sha256: Optional[str] = None, summary: str = "") -> None:
-        pid = str((resource.get("subject") or {}).get("reference", "")).split("/")[-1]
-        if not pid or not resource.get("id"):
-            raise WorkflowError("External resource needs an id and a Patient subject")
+        ref = str((resource.get("subject") or {}).get("reference", ""))
+        if not ref.startswith("Patient/") or ref.count("/") != 1 or not resource.get("id"):
+            raise WorkflowError("External resource needs an id and a subject of the form Patient/<id>")
+        pid = ref.split("/", 1)[1]
+        # Keyed by patient AND resource id: a vendor or file id reused for another patient never
+        # overwrites or moves this patient's record
+        row_id = f"{pid}|{resource['resourceType']}/{resource['id']}"
         now = utc_now().isoformat()
         with self._lock:
             self._db.execute(
                 "INSERT INTO external_resources (id, patient_id, kind, resource, source_sha256, summary, created_by, created_at) "
                 "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET resource=excluded.resource, "
                 "summary=excluded.summary, created_by=excluded.created_by, created_at=excluded.created_at",
-                (resource["id"], pid, kind, json.dumps(resource, ensure_ascii=False), source_sha256, summary, actor, now))
+                (row_id, pid, kind, json.dumps(resource, ensure_ascii=False), source_sha256, summary, actor, now))
             self._audit(actor, role, f"external_resource:{kind}", None,
                         {"patient_id": pid, "resource": f"{resource.get('resourceType')}/{resource['id']}",
                          "source_sha256": source_sha256, "summary": summary})

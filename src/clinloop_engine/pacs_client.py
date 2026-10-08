@@ -14,7 +14,12 @@ Configuration (environment):
   CLINLOOP_PACS_DICOMWEB     QIDO-RS base URL, e.g. https://pacs.hospital.local/dicom-web
   CLINLOOP_PACS_TOKEN        bearer token (optional)
   CLINLOOP_PACS_ID_SYSTEM    FHIR Patient.identifier system whose value is the PACS PatientID
-                             (default: the identifier typed MR, else the FHIR Patient id)
+                             (default: the identifier typed MR)
+  CLINLOOP_PACS_MATCH_FHIR_ID=1  also query by the FHIR Patient id when the patient has no MRN
+                             (only if the PACS really uses those ids: otherwise another
+                             person's studies could match)
+
+Every study returned is checked: its PatientID must equal the one queried.
 """
 
 import logging
@@ -72,14 +77,23 @@ class DICOMwebClient:
             data = r.json()
         except ValueError as e:
             raise PACSError(f"QIDO-RS {path}: not JSON") from e
-        return data if isinstance(data, list) else []
+        if not isinstance(data, list):
+            raise PACSError(f"QIDO-RS {path}: unexpected response (not a list of studies)")
+        return data
 
     def studies(self, pacs_patient_id: str) -> List[Dict[str, Any]]:
         """Study labels for one patient (with each study's series body parts), as plain dicts."""
+        if not pacs_patient_id or any(c in pacs_patient_id for c in "*?\\"):
+            raise PACSError("Patient ID contains DICOM wildcard characters: not queried")
         out = []
-        for item in self._get("/studies", {"PatientID": pacs_patient_id, "includefield": ",".join(STUDY_FIELDS)}):
+        fields = ",".join(STUDY_FIELDS + [TAG["patient_id"]])
+        for item in self._get("/studies", {"PatientID": pacs_patient_id, "includefield": fields}):
             uid = _value(item, TAG["study_uid"])
             if not uid:
+                continue
+            returned = _value(item, TAG["patient_id"])
+            if returned is not None and str(returned) != pacs_patient_id:
+                logger.error("PACS returned a study of another PatientID for a query: study skipped")
                 continue
             study = {
                 "study_uid": uid, "accession": _value(item, TAG["accession"]),
@@ -116,17 +130,23 @@ def pacs_patient_ids(patient_resource: Optional[Dict[str, Any]], fhir_id: str) -
     ids = (patient_resource or {}).get("identifier", [])
     if system:
         values = [i.get("value") for i in ids if i.get("system") == system and i.get("value")]
-        return values or [fhir_id]
-    mrn = [i.get("value") for i in ids
-           if any(c.get("code") == "MR" for c in (i.get("type") or {}).get("coding", [])) and i.get("value")]
-    return mrn or [fhir_id]
+    else:
+        values = [i.get("value") for i in ids
+                  if any(c.get("code") == "MR" for c in (i.get("type") or {}).get("coding", [])) and i.get("value")]
+    if not values and os.environ.get("CLINLOOP_PACS_MATCH_FHIR_ID", "").strip().lower() in ("1", "true", "yes", "on"):
+        values = [fhir_id]
+    return values
 
 
 def imaging_studies_for(client: DICOMwebClient, fhir_id: str,
                         patient_resource: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """FHIR ImagingStudy resources for a patient, read from the PACS."""
     resources = []
-    for pid in pacs_patient_ids(patient_resource, fhir_id):
+    ids = pacs_patient_ids(patient_resource, fhir_id)
+    if not ids:
+        raise PACSError("patient has no MRN to look up in the PACS (set CLINLOOP_PACS_ID_SYSTEM, "
+                        "or CLINLOOP_PACS_MATCH_FHIR_ID=1 if the PACS uses FHIR ids)")
+    for pid in ids:
         for study in client.studies(pid):
             resources.append(imaging_study_resource(study, fhir_id, source="pacs"))
     return resources

@@ -177,12 +177,39 @@ class TestPACSStudies(unittest.TestCase):
         self.assertEqual(len(resources), 1)
         r = resources[0]
         self.assertEqual((r["resourceType"], r["started"], r["series"][0]["bodySite"]["display"]),
-                         ("ImagingStudy", "2026-03-01T10:15:00", "CHEST"))
+                         ("ImagingStudy", "2026-03-01T10:15:00+09:00", "CHEST"))   # DICOM local time, Asia/Seoul
         self.assertNotIn("HONG", json.dumps(r))          # no patient name stored
 
     def test_patient_id_mapping(self):
         self.assertEqual(pacs_patient_ids(P, "P"), ["MRN-0042"])
-        self.assertEqual(pacs_patient_ids({"identifier": []}, "P"), ["P"])
+        self.assertEqual(pacs_patient_ids({"identifier": []}, "P"), [])          # never guess
+        with mock.patch.dict(os.environ, {"CLINLOOP_PACS_MATCH_FHIR_ID": "1"}):
+            self.assertEqual(pacs_patient_ids({"identifier": []}, "P"), ["P"])
+        insurance = {"identifier": [{"system": "urn:nhis", "value": "123"}]}
+        self.assertEqual(pacs_patient_ids(insurance, "P"), [])
+
+    def test_study_of_another_patient_is_rejected(self):
+        from src.clinloop_engine.pacs_client import PACSError
+        other = {"0020000D": {"vr": "UI", "Value": ["1.2.9"]}, "00100020": {"vr": "LO", "Value": ["MRN-9999"]},
+                 "00080061": {"vr": "CS", "Value": ["CT"]}}
+
+        class Resp:
+            status_code = 200
+
+            def __init__(self, body):
+                self.body = body
+
+            def json(self):
+                return self.body
+        session = mock.Mock()
+        session.get.side_effect = lambda url, **kw: Resp([] if url.endswith("/series") else [other])
+        client = DICOMwebClient("https://pacs.example/dicom-web", session=session)
+        self.assertEqual(client.studies("MRN-0042"), [])
+        with self.assertRaises(PACSError):
+            client.studies("12*")
+        session.get.side_effect = lambda url, **kw: Resp({"error": "bad request"})
+        with self.assertRaises(PACSError):
+            client.studies("MRN-0042")
 
     def test_pacs_outage_is_a_warning_not_a_crash(self):
         from src.clinloop_engine.fhir_sync import patient_record
@@ -421,12 +448,31 @@ class TestDicomAnalysis(unittest.TestCase):
         mv = Dataset()
         mv.NumericValue, mv.MeasurementUnitsCodeSequence = "87", [code("%")]
         num.MeasuredValueSequence = [mv]
+        def item(meaning_name, value, unit="%"):
+            n = Dataset()
+            n.ValueType, n.ConceptNameCodeSequence = "NUM", [code(meaning_name)]
+            v = Dataset()
+            v.NumericValue, v.MeasurementUnitsCodeSequence = str(value), [code(unit)]
+            n.MeasuredValueSequence = [v]
+            return n
+
+        def finding_of(label):
+            f = Dataset()
+            f.ValueType, f.ConceptNameCodeSequence, f.ConceptCodeSequence = "CODE", [code("Finding")], [code(label)]
+            return f
+        effusion = finding_of("Effusion")
+        unscored = finding_of("Pneumothorax")
+        tenscale = finding_of("Fracture")
         group = Dataset()
-        group.ValueType, group.ConceptNameCodeSequence, group.ContentSequence = "CONTAINER", [code("Imaging finding")], [finding, num]
+        group.ValueType, group.ConceptNameCodeSequence = "CONTAINER", [code("Imaging finding")]
+        group.ContentSequence = [finding, num, effusion, item("Probability", 5), unscored, tenscale, item("Score", 7, "{score}")]
         raw = make_dicom(phantom(16), extra={"ContentSequence": [group], "Manufacturer": "VendorX",
                                              "ManufacturerModelName": "CXR AI"})
         out = parse_dicom_sr(raw)
-        self.assertEqual(out["findings"], [{"label": "Nodule", "score": 0.87}])
+        by = {f["label"]: f for f in out["findings"]}
+        self.assertEqual((by["Nodule"]["score"], by["Effusion"]["score"]), (0.87, 0.05))   # each keeps its own score
+        self.assertEqual((by["Pneumothorax"]["score"], by["Pneumothorax"]["positive"]), (None, True))
+        self.assertEqual((by["Fracture"]["score"], by["Fracture"]["raw_score"]), (None, 7.0))  # unknown scale: not guessed
         self.assertIn("VendorX", out["product"])
 
     def test_torchxrayvision_if_installed(self):
@@ -510,6 +556,160 @@ class TestImagingAPI(unittest.TestCase):
                              json={"patient_id": "P", "bundle": {"resourceType": "Bundle", "entry": [{"resource": obs}]}})
         self.assertEqual(r.status_code, 200, r.text)
         self.assertIn("R047", [a["rule_id"] for a in r.json()["active"]])
+
+
+class TestIndependentReviewImaging(unittest.TestCase):
+    """Cases from an independent review of the imaging code that the first version got wrong."""
+
+    def study(self, uid="1.2.3.4", body="CHEST", modality="DX", date="20260110", time="080000", sid=None):
+        r = imaging_study_resource({"study_uid": uid, "modalities": [modality], "body_part": body,
+                                    "study_date": date, "study_time": time}, "P", "pacs")
+        if sid:
+            r["id"] = sid
+        return r
+
+    def ai(self, label="Nodule", ref=None, uid="1.2.3.4", product="Vendor CXR", body=None):
+        return ai_observation_resource("P", label, 0.9, True, product, "3", "MFDS approved", ref,
+                                       "2026-01-10T08:05:00+09:00", body_part=body, finding_key=ai_finding_key(label),
+                                       study_uid=uid)
+
+    def test_report_linked_to_the_hospitals_own_study_id_is_compared(self):
+        hosp = self.study(sid="hosp-555")
+        report = rad("r1", "2026-01-10T10:00:00+09:00", "Chest radiograph", "No acute abnormality.",
+                     "https://fhir.hospital.local/r4/ImagingStudy/hosp-555")
+        self.assertEqual(loops([P, hosp, self.ai(), report], datetime(2026, 1, 20))[0], {"R047": "open"})
+
+    def test_unrelated_wording_does_not_count_as_addressed(self):
+        for label, text in (("Nodule", "No acute osseous lesion."),
+                            ("Nodule", "Bibasilar opacity, likely atelectasis."),
+                            ("Effusion", "Small pericardial effusion."),
+                            ("Atelectasis", "No vertebral body collapse."),
+                            ("Intracranial hemorrhage", "Small scalp hematoma.")):
+            body = "HEAD" if "hemorrhage" in label else "CHEST"
+            st = self.study(body=body, modality="CT" if body == "HEAD" else "DX")
+            report = rad("r1", "2026-01-10T10:00:00+09:00", "CT head" if body == "HEAD" else "Chest radiograph", text,
+                         "ImagingStudy/" + st["id"])
+            statuses, _ = loops([P, st, self.ai(label, body=body), report], datetime(2026, 1, 20))
+            self.assertEqual(statuses.get("R047"), "open", (label, text))
+
+    def test_fracture_is_compared_with_its_own_studys_report(self):
+        wrist = self.study(uid="9.1", body="WRIST", modality="CR")
+        chest_report = rad("rc", "2026-01-10T09:00:00+09:00", "CT chest", "No rib fracture.")
+        wrist_report = rad("rw", "2026-01-10T11:00:00+09:00", "Wrist radiograph", "Normal alignment.",
+                           "ImagingStudy/" + wrist["id"])
+        obs = self.ai("Fracture", uid="9.1", body="WRIST")
+        self.assertEqual(loops([P, wrist, obs, chest_report, wrist_report], datetime(2026, 1, 20))[0], {"R047": "open"})
+
+    def test_a_report_written_before_the_study_is_not_its_report(self):
+        st = self.study(uid=None)
+        st.pop("identifier", None)
+        old = rad("r0", "2026-01-10T07:30:00+09:00", "Chest radiograph", "Stable 8 mm nodule.")
+        new = rad("r1", "2026-01-10T10:00:00+09:00", "Chest radiograph", "No acute abnormality.")
+        obs = ai_observation_resource("P", "Nodule", 0.9, True, "Vendor", "3", "MFDS approved", None,
+                                      "2026-01-10T08:00:00+09:00", body_part="CHEST")
+        statuses, _ = loops([P, st, obs, old, new], datetime(2026, 1, 20))
+        self.assertEqual(statuses.get("R047"), "open")
+
+    def test_same_finding_from_two_sources_is_reviewed_once(self):
+        st = self.study()
+        report = rad("r1", "2026-01-10T10:00:00+09:00", "Chest radiograph", "No acute abnormality.", "ImagingStudy/" + st["id"])
+        a = self.ai("Nodule", product="Vendor CXR")
+        b = self.ai("Mass / Nodule", product="ClinLoop runner")
+        self.assertEqual(loops([P, st, a, b, report], datetime(2026, 1, 20))[0], {"R047": "open"})
+        # the same product re-run gives the same record id
+        self.assertEqual(self.ai("Nodule")["id"], self.ai("Nodule / Mass")["id"])
+
+    def test_unstated_regulatory_status_is_gated(self):
+        st = self.study()
+        report = rad("r1", "2026-01-10T10:00:00+09:00", "Chest radiograph", "No acute abnormality.", "ImagingStudy/" + st["id"])
+        obs = ai_observation_resource("P", "Nodule", 0.9, True, "Unknown AI", "1", "not stated", None,
+                                      "2026-01-10T08:05:00+09:00", study_uid="1.2.3.4")
+        self.assertEqual(loops([P, st, obs, report], datetime(2026, 1, 20))[0], {})
+
+    def test_outside_report_dates_and_sections(self):
+        self.assertEqual(parse_report("Name DOB Exam Date\nHong 1960-04-12 2026-05-14\nIMPRESSION:\n9 mm nodule.")["date"],
+                         "2026-05-14")
+        self.assertIsNone(parse_report("DOB:\n1960-04-12\nCT chest\nIMPRESSION: 9 mm nodule.")["date"])
+        self.assertEqual(parse_report("CT chest\nCOMPARISON: 2024-01-03\nDate 2026-05-14\nIMPRESSION:\nStable.")["date"],
+                         "2026-05-14")
+        self.assertEqual(parse_report("CT chest 05/14/2026\nIMPRESSION: x")["date"], "2026-05-14")
+        self.assertIsNone(parse_report("CT chest 05/06/2026\nIMPRESSION: x")["date"])         # ambiguous: not guessed
+        p = parse_report("IMPRESSION:\n1.2 cm adrenal nodule.\nComparison with outside CT is recommended.\n"
+                         "Recommend adrenal CT in 12 months.")
+        self.assertIn("Recommend adrenal CT in 12 months", p["conclusion"])
+
+    def test_identifier_removal_keeps_clinical_text(self):
+        from src.clinloop_engine.document_reader import clean_title, scrub_identifiers
+        text = "추적 관찰로 6개월 후 CT 권고. image 45 46 47 48 49. 2026-05-14 비교."
+        self.assertEqual(scrub_identifiers(text), text)
+        out = scrub_identifiers("환자명: 홍길동 010-1234-5678 600412-1234567. 홍길동 님 결절.", ["홍길동"])
+        self.assertNotIn("홍길동", out)
+        self.assertNotIn("1234567", out)
+        self.assertEqual(clean_title("CT Chest - Hong Gil-dong"), "CT Chest")
+
+    def test_store_keeps_patients_apart(self):
+        store = LoopStore()
+        r = {"resourceType": "Observation", "id": "vendor-1", "subject": {"reference": "Patient/P"}}
+        store.add_external_resource(r, "imaging-ai", "it", "admin")
+        store.add_external_resource({**r, "subject": {"reference": "Patient/Q"}}, "imaging-ai", "it", "admin")
+        self.assertEqual(len(store.external_resources("P")), 1)
+        self.assertEqual(store.external_resources("Q")[0]["subject"]["reference"], "Patient/Q")
+        from src.clinloop_engine.loop_store import WorkflowError
+        with self.assertRaises(WorkflowError):
+            store.add_external_resource({**r, "subject": {"reference": "Patient/ZZZ/P"}}, "imaging-ai", "it", "admin")
+
+    @unittest.skipUnless(HAVE_DICOM, "pydicom not installed")
+    def test_dicom_robustness(self):
+        from src.clinloop_engine.imaging_ai import ImagingError, analyze_dicom
+        bad_date = analyze_dicom(make_dicom(phantom(), date="20260230"), "P", ["MRN-0042"], models=[])
+        self.assertTrue(bad_date["filed"])
+        rgb = np.random.RandomState(1).randint(0, 255, (3, 32, 32, 3)).astype(np.uint8)
+        from pydicom.uid import ExplicitVRLittleEndian  # noqa: F401
+        raw = make_dicom(phantom(32), modality="US", body="ABDOMEN", extra={"NumberOfFrames": 3})
+        import pydicom
+        ds = pydicom.dcmread(io.BytesIO(raw))
+        ds.SamplesPerPixel, ds.PhotometricInterpretation, ds.PlanarConfiguration = 3, "RGB", 0
+        ds.BitsAllocated, ds.BitsStored, ds.HighBit = 8, 8, 7
+        ds.PixelData = rgb.tobytes()
+        buf = io.BytesIO()
+        ds.save_as(buf, enforce_file_format=True)
+        out = analyze_dicom(buf.getvalue(), "P", ["MRN-0042"], models=[])
+        self.assertTrue(out["filed"])
+        self.assertIsNotNone(out["preview"])
+        strings = analyze_dicom(make_dicom(phantom()), "P", ["MRN-0042"],
+                                models=[StubModel({"Nodule": "0.9", "Effusion": "n/a"})])
+        self.assertEqual(len(strings["resources"]), 2)
+        with self.assertRaises(ImagingError):
+            analyze_dicom(b"%PDF-1.4 not a dicom file at all" * 10, "P", ["P"], models=[])
+        no_id = analyze_dicom(make_dicom(phantom(), pid=""), "P", ["MRN-0042"], models=[])
+        self.assertFalse(no_id["filed"])
+        self.assertNotIn("patient_id_sha256", json.dumps(no_id["summary"]))
+
+
+@unittest.skipUnless(HAVE_API and HAVE_DICOM, "API dependencies or pydicom not installed")
+class TestImagingAPISafety(unittest.TestCase):
+
+    def setUp(self):
+        clinical_api.set_store(LoopStore())
+        self.client = TestClient(app)
+        bundle = {"resourceType": "Bundle", "entry": [{"resource": P}]}
+        self.client.post("/api/v1/fhir/ingest", json=bundle, headers=_h("admin"))
+
+    def test_patient_id_is_validated_and_must_exist(self):
+        b64 = base64.b64encode(make_dicom(phantom())).decode()
+        r = self.client.post("/api/v1/imaging/analyze", json={"patient_id": "ZZZ/P", "content_base64": b64},
+                             headers=_h("navigator"))
+        self.assertEqual(r.status_code, 422)
+        r = self.client.post("/api/v1/imaging/analyze", json={"patient_id": "NOPE-123", "content_base64": b64},
+                             headers=_h("navigator"))
+        self.assertEqual(r.status_code, 404)
+
+    def test_ai_results_for_another_patient_are_refused(self):
+        obs = ai_observation_resource("Q", "Nodule", 0.9, True, "Vendor", "3", "MFDS approved", None, "2026-01-10T08:00:00")
+        r = self.client.post("/api/v1/imaging/ai-results", headers=_h("admin"),
+                             json={"patient_id": "P", "bundle": {"resourceType": "Bundle", "entry": [{"resource": obs}]}})
+        self.assertEqual(r.status_code, 409)
+        self.assertEqual(self.client.get("/api/v1/patients/Q/documents", headers=_h("viewer")).json()["documents"], [])
 
 
 if __name__ == "__main__":

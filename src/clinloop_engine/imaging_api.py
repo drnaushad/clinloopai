@@ -17,6 +17,7 @@ and the file's SHA-256 hash. Every filing is audited.
 import base64
 import binascii
 import hashlib
+import re
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -31,8 +32,11 @@ router = APIRouter(prefix="/api/v1")
 MAX_UPLOAD_BYTES = 60 * 1024 * 1024
 
 
+FHIR_ID = r"^[A-Za-z0-9\-.]{1,64}$"
+
+
 class FileUpload(BaseModel):
-    patient_id: str = Field(..., min_length=1, max_length=128)
+    patient_id: str = Field(..., pattern=FHIR_ID, description="FHIR Patient id")
     filename: str = ""
     content_base64: str
 
@@ -49,7 +53,7 @@ class DicomUpload(FileUpload):
 
 
 class AIResults(BaseModel):
-    patient_id: str
+    patient_id: str = Field(..., pattern=FHIR_ID)
     bundle: Optional[Dict[str, Any]] = Field(None, description="FHIR Bundle of AI Observations (and ImagingStudy)")
     dicom_sr_base64: Optional[str] = None
     regulatory: str = Field("not stated", description="Regulatory status of the product, e.g. 'MFDS approved (Class II)'")
@@ -67,22 +71,42 @@ def _decode(b64: str) -> bytes:
     return data
 
 
-def _patient_ids(patient_id: str) -> List[str]:
-    """The ClinLoop id and the MRN(s) on the patient's FHIR record: what a DICOM PatientID may be."""
+def _patient_resource(patient_id: str) -> Dict[str, Any]:
+    """The patient's FHIR Patient resource (FHIR server, else the last upload); 404 if the patient is unknown."""
     from .fhir_sync import client_from_env
-    ids = [patient_id]
-    store = get_store()
-    records = store.snapshot(patient_id)
     client = client_from_env()
     if client is not None:
         try:
-            records = list(client.search("Patient", {"_id": patient_id}))
+            found = [r for r in client.search("Patient", {"_id": patient_id}) if r.get("id") == patient_id]
         except Exception:
-            pass
-    for r in records:
-        if r.get("resourceType") == "Patient":
-            ids += [i.get("value") for i in r.get("identifier", []) if i.get("value")]
+            raise HTTPException(503, "FHIR server unreachable: cannot confirm the patient")
+    else:
+        found = [r for r in get_store().snapshot(patient_id)
+                 if r.get("resourceType") == "Patient" and r.get("id") == patient_id]
+    if not found:
+        raise HTTPException(404, f"Unknown patient '{patient_id}': load the patient's record first")
+    return found[0]
+
+
+def _patient_ids(patient: Dict[str, Any]) -> List[str]:
+    """What a DICOM PatientID may be: the FHIR id and the MRN (or the configured identifier system)."""
+    import os
+    system = os.environ.get("CLINLOOP_PACS_ID_SYSTEM")
+    ids = [patient["id"]]
+    for i in patient.get("identifier", []):
+        is_mrn = any(c.get("code") == "MR" for c in (i.get("type") or {}).get("coding", []))
+        if i.get("value") and (is_mrn or (system and i.get("system") == system)):
+            ids.append(i["value"])
     return list(dict.fromkeys(ids))
+
+
+def _patient_names(patient: Dict[str, Any]) -> List[str]:
+    names = []
+    for n in patient.get("name", []):
+        names += [n.get("text") or "", n.get("family") or ""] + list(n.get("given") or [])
+        names.append(" ".join(list(n.get("given") or []) + [n.get("family") or ""]).strip())
+        names.append(((n.get("family") or "") + "".join(n.get("given") or [])).strip())   # 홍길동
+    return [x for x in names if x and len(x) >= 2]
 
 
 def evaluate_patient(patient_id: str, actor: str) -> Dict[str, Any]:
@@ -107,23 +131,25 @@ def evaluate_patient(patient_id: str, actor: str) -> Dict[str, Any]:
 @router.post("/documents/outside-report/extract", tags=["Imaging & Documents"])
 def extract_outside_report(req: FileUpload, user: User = Depends(require_role("navigator"))):
     """Read a report from another hospital (PDF or image). Nothing is stored: check the result, then file it."""
-    from .document_reader import DocumentError, extract_text, parse_report
-    from .phi_deidentifier import PHIDeidentifier
+    from .document_reader import DocumentError, extract_text, parse_report, scrub_identifiers
+    names = _patient_names(_patient_resource(req.patient_id))
     data = _decode(req.content_base64)
     try:
         extracted = extract_text(data, req.filename)
     except DocumentError as e:
         raise HTTPException(422, str(e))
     parsed = parse_report(extracted["text"])
-    text, _ = PHIDeidentifier()._scrub_text(extracted["text"])
+    parsed["conclusion"] = scrub_identifiers(parsed["conclusion"], names)
     return {"method": extracted["method"], "confidence": extracted["confidence"], "pages": extracted["pages"],
-            "text": text, "parsed": parsed, "sha256": hashlib.sha256(data).hexdigest()}
+            "text": scrub_identifiers(extracted["text"], names), "parsed": parsed,
+            "sha256": hashlib.sha256(data).hexdigest()}
 
 
 @router.post("/documents/outside-report", tags=["Imaging & Documents"])
 def file_outside_report(req: OutsideReportFiling, user: User = Depends(require_role("navigator"))):
     """File an outside report for a patient and re-evaluate their loops."""
     from .document_reader import DocumentError, extract_text, outside_report_resource, parse_report
+    names = _patient_names(_patient_resource(req.patient_id))
     data = _decode(req.content_base64)
     try:
         extracted = extract_text(data, req.filename)
@@ -134,16 +160,16 @@ def file_outside_report(req: OutsideReportFiling, user: User = Depends(require_r
         value = getattr(req, field)
         if value is not None and str(value).strip():
             parsed[field] = str(value).strip()
-    if parsed.get("date") and not __import__("re").fullmatch(r"\d{4}-\d{2}-\d{2}", parsed["date"]):
+    if parsed.get("date") and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", parsed["date"]):
         raise HTTPException(422, "date must be YYYY-MM-DD")
     if len((parsed.get("conclusion") or "").strip()) < 5:
         raise HTTPException(422, "No report text found: enter the impression")
     resource = outside_report_resource(req.patient_id, data, extracted, parsed,
-                                       confirmed_by=user.name if req.confirmed else None)
+                                       confirmed_by=user.name if req.confirmed else None, names=names)
     store = get_store()
     store.add_external_resource(resource, "outside-report", user.name, user.role,
                                 source_sha256=hashlib.sha256(data).hexdigest(),
-                                summary=f"{parsed.get('title') or 'Outside report'} {parsed.get('date') or ''} "
+                                summary=f"{resource['code']['text']} {parsed.get('date') or ''} "
                                         f"({extracted['method']}{', confirmed' if req.confirmed else ''})".strip())
     return {"resource": resource, **evaluate_patient(req.patient_id, user.name)}
 
@@ -157,9 +183,10 @@ def analyze_image(req: DicomUpload, user: User = Depends(require_role("navigator
     A wrong-patient image is refused. AI findings are a second reader for radiologist review only.
     """
     from .imaging_ai import ImagingError, analyze_dicom
+    patient = _patient_resource(req.patient_id)
     data = _decode(req.content_base64)
     try:
-        result = analyze_dicom(data, req.patient_id, _patient_ids(req.patient_id), req.expected_modality)
+        result = analyze_dicom(data, req.patient_id, _patient_ids(patient), req.expected_modality)
     except ImagingError as e:
         raise HTTPException(422, str(e))
     store = get_store()
@@ -186,12 +213,17 @@ def receive_ai_results(req: AIResults, user: User = Depends(require_role("admin"
     """
     from .imaging_ai import ImagingError, parse_dicom_sr
     from .imaging_fhir import ai_observation_resource, dicom_datetime, imaging_study_resource
+    patient = _patient_resource(req.patient_id)
     resources: List[Dict[str, Any]] = []
     if req.bundle:
         for e in req.bundle.get("entry", []):
             r = e.get("resource", e)
             if r.get("resourceType") in ("Observation", "ImagingStudy") and r.get("id"):
-                r.setdefault("subject", {"reference": f"Patient/{req.patient_id}"})
+                subject = (r.get("subject") or {}).get("reference")
+                if subject and subject != f"Patient/{req.patient_id}":
+                    raise HTTPException(409, f"{r['resourceType']}/{r['id']} is for {subject}, not Patient/{req.patient_id}: "
+                                             "nothing filed")
+                r["subject"] = {"reference": f"Patient/{req.patient_id}"}
                 if r["resourceType"] == "Observation":   # read as imaging AI, never as a lab result
                     r.setdefault("meta", {}).setdefault("tag", []).append(
                         {"system": "https://clinloopai.app/fhir/tags", "code": "imaging-ai"})
@@ -205,15 +237,17 @@ def receive_ai_results(req: AIResults, user: User = Depends(require_role("admin"
             sr = parse_dicom_sr(_decode(req.dicom_sr_base64))
         except ImagingError as e:
             raise HTTPException(422, str(e))
-        if sr["patient_id"] and sr["patient_id"] not in _patient_ids(req.patient_id):
-            raise HTTPException(409, "The SR's PatientID does not match the patient: nothing filed")
+        if not sr["patient_id"] or sr["patient_id"] not in _patient_ids(patient):
+            raise HTTPException(409, "The SR's PatientID is missing or does not match the patient: nothing filed")
         when = dicom_datetime(sr["study_date"], sr["study_time"]) or __import__("datetime").datetime.now(__import__("datetime").timezone.utc).replace(tzinfo=None, microsecond=0).isoformat()
         study = imaging_study_resource({"study_uid": sr["study_uid"], "study_date": sr["study_date"],
                                         "study_time": sr["study_time"]}, req.patient_id, source="ai-sr")
         ref = f"ImagingStudy/{study['id']}" if sr["study_uid"] else None
+        from .imaging_fhir import ai_finding_key
         for f in sr["findings"]:
-            resources.append(ai_observation_resource(req.patient_id, f["label"], f["score"], None, sr["product"], "",
-                                                     req.regulatory, ref, when, source="ai-sr"))
+            resources.append(ai_observation_resource(req.patient_id, f["label"], f["score"], f.get("positive"),
+                                                     sr["product"], "", req.regulatory, ref, when, source="ai-sr",
+                                                     finding_key=ai_finding_key(f["label"]), study_uid=sr["study_uid"]))
     else:
         raise HTTPException(422, "Send a FHIR bundle or a DICOM SR")
     if not resources:
@@ -244,6 +278,8 @@ def imaging_models():
 
 @router.get("/patients/{patient_id}/documents", tags=["Imaging & Documents"])
 def patient_documents(patient_id: str, user: User = Depends(require_role("viewer"))):
+    if not re.fullmatch(FHIR_ID, patient_id):
+        raise HTTPException(422, "Invalid patient id")
     return {"patient_id": patient_id, "documents": get_store().external_resource_list(patient_id)}
 
 

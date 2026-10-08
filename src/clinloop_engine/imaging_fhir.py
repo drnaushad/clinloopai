@@ -14,6 +14,7 @@ Pixel data and patient names are never stored.
 """
 
 import hashlib
+import logging
 import os
 import re
 from datetime import datetime, timedelta, timezone
@@ -22,6 +23,9 @@ from typing import Any, Dict, List, Optional
 from .radiology import expand_regions, regions_in
 
 CLINLOOP_TAG_SYSTEM = "https://clinloopai.app/fhir/tags"
+# DICOM dates/times are local and carry no zone. ClinLoop's pilots are in Korea; set
+# CLINLOOP_LOCAL_TZ to the hospital's IANA zone elsewhere ("UTC" if the PACS stores UTC).
+DEFAULT_LOCAL_TZ = "Asia/Seoul"
 REGULATORY_URL = "https://clinloopai.app/fhir/StructureDefinition/regulatory-status"
 OCR_CONFIDENCE_URL = "https://clinloopai.app/fhir/StructureDefinition/ocr-confidence"
 DICOM_UID_SYSTEM = "urn:dicom:uid"
@@ -64,14 +68,16 @@ def _local_tz(offset: Optional[str] = None):
     if offset and re.fullmatch(r"[+-]\d{4}", offset.strip()):
         sign = 1 if offset.strip()[0] == "+" else -1
         return timezone(sign * timedelta(hours=int(offset[1:3]), minutes=int(offset[3:5])))
-    name = os.environ.get("CLINLOOP_LOCAL_TZ")
-    if name:
-        try:
-            from zoneinfo import ZoneInfo
-            return ZoneInfo(name)
-        except Exception:
-            return None
-    return None
+    name = os.environ.get("CLINLOOP_LOCAL_TZ", DEFAULT_LOCAL_TZ).strip()
+    if name.upper() in ("", "NONE", "NAIVE"):
+        return None
+    try:
+        from zoneinfo import ZoneInfo
+        return ZoneInfo(name)
+    except Exception:
+        logging.getLogger("clinloop.imaging").error(
+            "CLINLOOP_LOCAL_TZ=%r is not a valid IANA time zone: DICOM times are read as UTC", name)
+        return None
 
 
 def dicom_datetime(date: Optional[str], time: Optional[str] = None, tz_offset: Optional[str] = None) -> Optional[str]:
@@ -83,7 +89,10 @@ def dicom_datetime(date: Optional[str], time: Optional[str] = None, tz_offset: O
     try:
         dt = datetime(int(date[:4]), int(date[4:6]), int(date[6:8]), int(t[:2]), int(t[2:4]), int(t[4:6]))
     except ValueError:
-        dt = datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
+        try:
+            dt = datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
+        except ValueError:
+            return None          # e.g. "20260230"
     tz = _local_tz(tz_offset)
     return (dt.replace(tzinfo=tz) if tz else dt).isoformat()
 
@@ -130,26 +139,31 @@ def imaging_study_resource(meta: Dict[str, Any], patient_id: str, source: str) -
 
 AI_FINDINGS: Dict[str, Dict[str, Any]] = {
     "lung_nodule": {"labels": r"nodule|\bmass\b|lung lesion|결절|종괴", "en": "Lung nodule or mass", "ko": "폐결절·종괴",
-                    "report": r"nodul\w*|\bmass(?:es)?\b|lesion|opacit\w*|결절|종괴|병변", "regions": ["chest"]},
+                    "report": r"nodul\w*|\bmass(?:es)?\b(?!\s+effect)|(?:lung|pulmonary|nodular|rounded|focal|spiculated)\s+"
+                              r"(?:lesion|opacit\w*)|결절|종괴", "regions": ["chest"]},
     "pneumothorax": {"labels": r"pneumothorax|기흉", "en": "Pneumothorax", "ko": "기흉",
                      "report": r"pneumothora\w*|기흉", "regions": ["chest"], "critical": True},
     "consolidation": {"labels": r"consolidation|pneumonia|lung opacity|airspace|infiltrat\w*|경화|폐렴",
                       "en": "Consolidation / pneumonia", "ko": "경화·폐렴",
                       "report": r"consolidat\w*|pneumoni\w*|opacit\w*|airspace|infiltrat\w*|경화|폐렴|음영", "regions": ["chest"]},
     "pleural_effusion": {"labels": r"effusion|흉수", "en": "Pleural effusion", "ko": "흉수",
-                         "report": r"effusion|흉수|pleural fluid", "regions": ["chest"]},
+                         "report": r"(?<!pericardial )(?<!joint )(?<!knee )\beffusions?\b|흉수|pleural fluid", "regions": ["chest"]},
     "cardiomegaly": {"labels": r"cardiomegaly|enlarged cardiomediastinum|심비대", "en": "Cardiomegaly", "ko": "심비대",
                      "report": r"cardiomegal\w*|heart size|cardiac (?:silhouette|enlargement)|cardiomediastin\w*|심비대|심장\s*크기",
                      "regions": ["chest"]},
     "atelectasis": {"labels": r"atelectasis|무기폐", "en": "Atelectasis", "ko": "무기폐",
-                    "report": r"atelecta\w*|collapse|무기폐", "regions": ["chest"]},
+                    "report": r"atelecta\w*|(?:lobar|lobe|lung|segmental)\s+collapse|무기폐", "regions": ["chest"]},
+    # No default region: a fracture is compared only with the report of the same study or body region
     "fracture": {"labels": r"fracture|골절", "en": "Fracture", "ko": "골절", "report": r"fractur\w*|골절", "regions": []},
     "pneumoperitoneum": {"labels": r"pneumoperitoneum|free air|기복증", "en": "Free intraperitoneal air", "ko": "기복증",
                          "report": r"pneumoperitoneum|free (?:intraperitoneal )?air|기복증|유리\s*공기", "regions": ["abdomen"],
                          "critical": True},
     "intracranial_hemorrhage": {"labels": r"intracranial h(?:a)?emorrhage|\bich\b|h(?:a)?emorrhage|뇌출혈|두개내\s*출혈",
                                 "en": "Intracranial haemorrhage", "ko": "두개내 출혈",
-                                "report": r"h(?:a)?emorrhag\w*|h(?:a)?ematoma|bleed\w*|출혈|혈종", "regions": ["head"],
+                                "report": r"(?<!scalp )(?<!soft tissue )(?<!subgaleal )h(?:a)?emorrhag\w*|"
+                                          r"(?:intracranial|subdural|epidural|extradural|subarachnoid|intraparenchymal|"
+                                          r"intraventricular|parenchymal)\s+h(?:a)?ematoma|\bich\b|bleed\w*|뇌출혈|두개내\s*출혈|"
+                                          r"경막(?:하|외)\s*혈종|지주막하\s*출혈", "regions": ["head"],
                                 "critical": True},
     "breast_malignancy": {"labels": r"malignan\w*|abnormality score|cancer|악성", "en": "Suspicious breast lesion",
                           "ko": "유방 악성 의심 병변",
@@ -180,11 +194,19 @@ def ai_finding_key(label: str, study_regions: Optional[List[str]] = None) -> Opt
 
 def ai_observation_resource(patient_id: str, label: str, score: Optional[float], positive: Optional[bool],
                             product: str, version: str, regulatory: str, study_ref: Optional[str],
-                            when: str, body_part: Optional[str] = None, source: str = "imaging-ai") -> Dict[str, Any]:
-    """FHIR Observation for one imaging-AI output (positive or not)."""
+                            when: str, body_part: Optional[str] = None, source: str = "imaging-ai",
+                            finding_key: Optional[str] = None, study_uid: Optional[str] = None) -> Dict[str, Any]:
+    """
+    FHIR Observation for one imaging-AI output (positive or not).
+
+    The id depends on the patient, the study, the product and the finding (not on
+    the time or the exact label set), so re-analysing the same image updates the
+    same record instead of adding a duplicate.
+    """
+    study_key = study_uid or study_ref or when
     obs: Dict[str, Any] = {
         "resourceType": "Observation",
-        "id": "ai-" + _fhir_id(patient_id, study_ref or "", product, label, when),
+        "id": "ai-" + _fhir_id(patient_id, study_key, product, finding_key or label.lower()),
         "meta": {"tag": [{"system": CLINLOOP_TAG_SYSTEM, "code": "imaging-ai"},
                          {"system": CLINLOOP_TAG_SYSTEM, "code": source}]},
         "status": "final",
@@ -202,8 +224,11 @@ def ai_observation_resource(patient_id: str, label: str, score: Optional[float],
     if positive is not None:
         obs["interpretation"] = [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
                                               "code": "POS" if positive else "NEG"}]}]
-    if study_ref:
-        obs["derivedFrom"] = [{"reference": study_ref}]
+    if study_ref or study_uid:
+        link: Dict[str, Any] = {"reference": study_ref} if study_ref else {}
+        if study_uid:
+            link["identifier"] = {"system": DICOM_UID_SYSTEM, "value": f"urn:oid:{study_uid}"}
+        obs["derivedFrom"] = [link]
     if body_part:
         obs["bodySite"] = {"text": body_part}
     return obs
@@ -211,3 +236,25 @@ def ai_observation_resource(patient_id: str, label: str, score: Optional[float],
 
 def is_research_use(regulatory: str) -> bool:
     return bool(re.search(r"research|not a medical device|investigational|연구용", regulatory or "", re.I))
+
+
+def regulatory_unverified(regulatory: str) -> bool:
+    """No stated approval (research use, or nothing stated): such findings open no loops unless allowed."""
+    r = (regulatory or "").strip().lower()
+    return is_research_use(r) or r in ("", "not stated", "unknown")
+
+
+def study_uid_from(value: Optional[str]) -> Optional[str]:
+    """'urn:oid:1.2.3' / '1.2.3' → '1.2.3'."""
+    if not value:
+        return None
+    v = str(value).strip()
+    return v[8:] if v.lower().startswith("urn:oid:") else v
+
+
+def norm_ref(ref: Optional[str]) -> Optional[str]:
+    """'https://fhir.x/r4/ImagingStudy/123/_history/2' → 'ImagingStudy/123'."""
+    if not ref:
+        return None
+    parts = [p for p in str(ref).split("/_history")[0].split("/") if p]
+    return "/".join(parts[-2:]) if len(parts) >= 2 else str(ref)
