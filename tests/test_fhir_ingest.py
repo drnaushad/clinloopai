@@ -233,7 +233,8 @@ class TestRadiologyReportReading(unittest.TestCase):
         statuses, report = self._rules("CT abdomen and pelvis",
                                        "Incidental 18 mm left adrenal nodule. Recommend adrenal protocol CT in 12 months.")
         self.assertEqual(statuses, {"R030": "open"})
-        self.assertEqual(report["details"]["nodule_site"], "adrenal")
+        self.assertNotIn("lung_nodule", report["details"]["radiology"])
+        self.assertEqual([f["kind"] for f in report["details"]["radiology"]["incidental"]], ["adrenal"])
 
     def test_lung_base_nodule_on_abdominal_ct_is_a_lung_nodule(self):
         statuses, _ = self._rules("CT abdomen", "Incidental 7 mm nodule at the right lung base.")

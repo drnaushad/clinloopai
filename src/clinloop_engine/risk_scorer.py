@@ -227,6 +227,13 @@ class RiskScorer:
                 f"({self.abstention_threshold}). Insufficient data for confident "
                 f"automated assessment. Flagged for human review."
             )
+        # A guideline exclusion (e.g. Fleischner in a patient with cancer) asks a
+        # human to confirm the plan, unless the loop is already past its deadline.
+        review_notes = (event_details or {}).get("review_notes")
+        review_note = review_notes.get(rule_id) if isinstance(review_notes, dict) else None
+        if review_note and is_open and not must_escalate:
+            should_abstain = True
+            abstain_reason = review_note
 
         # Generate recommended action
         if not is_open:
@@ -255,6 +262,8 @@ class RiskScorer:
         ]
         if should_abstain:
             explanation.append(f"⚠ ABSTENTION: {abstain_reason}")
+        elif review_note and is_open:
+            explanation.append(f"⚠ Confirm with the treating team: {review_note}")
         elif sparse_data:
             explanation.append(
                 f"⚠ Sparse record (uncertainty {uncertainty_score:.2f}): verify the chart, "

@@ -50,6 +50,11 @@ if [ ! -f .env ]; then
       echo "CLINLOOP_OLLAMA_URL=http://host.docker.internal:11434"
     fi
     echo "# Hospital FHIR server (read-only):"
+    echo "# Governance: keep rules a specialist has not signed off in shadow mode (recommended for clinical use)"
+    echo "CLINLOOP_ENFORCE_SIGNOFF=1"
+    echo "CLINLOOP_SIGNOFF_APPROVALS=1"
+    echo "# Your hospital's critical-finding list (copy the default from the image, edit, approve at /governance.html):"
+    echo "# CLINLOOP_CRITICAL_FINDINGS=/var/lib/clinloop/critical_findings.json"
     echo "# CLINLOOP_FHIR_BASE=https://fhir.hospital.local/r4"
     echo "# CLINLOOP_FHIR_TOKEN="
   } > .env
@@ -72,6 +77,7 @@ for _ in $(seq 1 60); do
     if [ "$NEW_INSTALL" = "1" ]; then
       echo "   Admin token (also in $DIR/.env):  $ADMIN_TOKEN"
     fi
+    echo "   Rules stay in shadow mode until a specialist signs them off: http://localhost:8124/governance.html"
     echo "   Add users by editing CLINLOOP_API_TOKENS in $DIR/.env, then: docker compose up -d"
     echo "   Update later by re-running this installer."
     exit 0

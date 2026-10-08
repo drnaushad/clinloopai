@@ -604,6 +604,627 @@
     },
     "recordedDate": "2020-05-01"
    }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-17",
+    "birthDate": "1969-03-01",
+    "gender": "female"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-17",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT abdomen with contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-17"
+    },
+    "effectiveDateTime": "2026-07-01T10:00:00+09:00",
+    "conclusion": "Incidental 1.5 cm left adrenal nodule, indeterminate. Liver, pancreas and kidneys unremarkable."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-18",
+    "birthDate": "1961-03-01",
+    "gender": "male"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-18",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT abdomen and pelvis"
+    },
+    "subject": {
+     "reference": "Patient/RP-18"
+    },
+    "effectiveDateTime": "2026-01-05T10:00:00+09:00",
+    "conclusion": "Indeterminate 2.2 cm right adrenal nodule. Recommend adrenal protocol CT in 3 months."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-18-B",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT head without contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-18"
+    },
+    "effectiveDateTime": "2026-03-20T10:00:00+09:00",
+    "conclusion": "No acute intracranial abnormality."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-19",
+    "birthDate": "1958-03-01",
+    "gender": "male"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-19",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT abdomen with contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-19"
+    },
+    "effectiveDateTime": "2026-06-10T10:00:00+09:00",
+    "conclusion": "2.4 cm enhancing solid mass in the lower pole of the left kidney, suspicious for renal cell carcinoma."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-20",
+    "birthDate": "1955-03-01",
+    "gender": "female"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-20",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT abdomen with contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-20"
+    },
+    "effectiveDateTime": "2026-05-15T10:00:00+09:00",
+    "conclusion": "2.8 cm cystic lesion in the pancreatic body without solid component. Main pancreatic duct is not dilated."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-21",
+    "birthDate": "1952-03-01",
+    "gender": "male"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-21",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "MRI abdomen with MRCP"
+    },
+    "subject": {
+     "reference": "Patient/RP-21"
+    },
+    "effectiveDateTime": "2026-08-01T10:00:00+09:00",
+    "conclusion": "3.4 cm pancreatic head cyst with an enhancing mural nodule. Main pancreatic duct dilated to 9 mm."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-22",
+    "birthDate": "1966-03-01",
+    "gender": "female"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-22",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT neck with contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-22"
+    },
+    "effectiveDateTime": "2026-06-20T10:00:00+09:00",
+    "conclusion": "1.8 cm hypodense nodule in the left thyroid lobe. No cervical lymphadenopathy."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-23",
+    "birthDate": "1950-03-01",
+    "gender": "male"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-23",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "US abdominal aorta"
+    },
+    "subject": {
+     "reference": "Patient/RP-23"
+    },
+    "effectiveDateTime": "2025-12-10T10:00:00+09:00",
+    "conclusion": "Infrarenal abdominal aortic aneurysm, maximal diameter 4.6 cm."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-24",
+    "birthDate": "1953-03-01",
+    "gender": "female"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-24",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT abdomen and pelvis"
+    },
+    "subject": {
+     "reference": "Patient/RP-24"
+    },
+    "effectiveDateTime": "2026-09-01T10:00:00+09:00",
+    "conclusion": "Fusiform infrarenal aortic aneurysm measuring 5.3 cm without rupture."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-25",
+    "birthDate": "1964-03-01",
+    "gender": "female"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Observation",
+    "id": "SMK-RP-25",
+    "status": "final",
+    "code": {
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "72166-2"
+      }
+     ],
+     "text": "Tobacco smoking status"
+    },
+    "subject": {
+     "reference": "Patient/RP-25"
+    },
+    "effectiveDateTime": "2025-01-01T09:00:00+09:00",
+    "valueCodeableConcept": {
+     "coding": [
+      {
+       "system": "http://snomed.info/sct",
+       "code": "266919005",
+       "display": "Never smoked tobacco"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-25",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT chest without contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-25"
+    },
+    "effectiveDateTime": "2026-02-10T10:00:00+09:00",
+    "conclusion": "8 mm pure ground-glass nodule in the left lower lobe."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-26",
+    "birthDate": "1957-03-01",
+    "gender": "male"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Observation",
+    "id": "SMK-RP-26",
+    "status": "final",
+    "code": {
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "72166-2"
+      }
+     ],
+     "text": "Tobacco smoking status"
+    },
+    "subject": {
+     "reference": "Patient/RP-26"
+    },
+    "effectiveDateTime": "2025-01-01T09:00:00+09:00",
+    "valueCodeableConcept": {
+     "coding": [
+      {
+       "system": "http://snomed.info/sct",
+       "code": "8517006",
+       "display": "Ex-smoker"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-26-A",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT chest without contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-26"
+    },
+    "effectiveDateTime": "2025-01-15T10:00:00+09:00",
+    "conclusion": "7 mm solid nodule in the right middle lobe."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-26-B",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT chest without contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-26"
+    },
+    "effectiveDateTime": "2025-12-20T10:00:00+09:00",
+    "conclusion": "Stable 7 mm solid nodule in the right middle lobe."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-27",
+    "birthDate": "1959-03-01",
+    "gender": "male"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-27-A",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT chest without contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-27"
+    },
+    "effectiveDateTime": "2025-09-01T10:00:00+09:00",
+    "conclusion": "6 mm solid nodule in the left upper lobe."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-27-B",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT chest without contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-27"
+    },
+    "effectiveDateTime": "2026-03-05T10:00:00+09:00",
+    "conclusion": "9 mm solid nodule in the left upper lobe."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-28",
+    "birthDate": "1968-03-01",
+    "gender": "female"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Condition",
+    "id": "CA-RP-28",
+    "subject": {
+     "reference": "Patient/RP-28"
+    },
+    "clinicalStatus": {
+     "coding": [
+      {
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "coding": [
+      {
+       "system": "http://hl7.org/fhir/sid/icd-10",
+       "code": "C50.9"
+      }
+     ],
+     "text": "Breast cancer"
+    },
+    "recordedDate": "2023-03-01"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-28",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT chest with contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-28"
+    },
+    "effectiveDateTime": "2026-08-20T10:00:00+09:00",
+    "conclusion": "9 mm solid nodule in the right lower lobe."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-29",
+    "birthDate": "1944-03-01",
+    "gender": "male"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-29",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT head without contrast (ED)"
+    },
+    "subject": {
+     "reference": "Patient/RP-29"
+    },
+    "effectiveDateTime": "2026-10-07T02:00:00+09:00",
+    "conclusion": "Acute right subdural hematoma with 6 mm midline shift. Findings discussed with Dr Park (ED) by telephone at 02:20."
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "Patient",
+    "id": "RP-30",
+    "birthDate": "1976-03-01",
+    "gender": "female"
+   }
+  },
+  {
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "RAD-30",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT chest without contrast"
+    },
+    "subject": {
+     "reference": "Patient/RP-30"
+    },
+    "effectiveDateTime": "2026-04-01T10:00:00+09:00",
+    "conclusion": "4 mm solid nodule in the right middle lobe. No other abnormality."
+   }
   }
  ]
 }

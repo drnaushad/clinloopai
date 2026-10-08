@@ -67,6 +67,16 @@ EVIDENCE_QUERIES: Dict[str, str] = {
     "R034": "Lung-RADS category 3 adherence follow-up",
     "R035": "critical imaging findings communication radiology",
     "R036": "radiologist recommended biopsy completion follow-up",
+    "R037": "incidental adrenal nodule follow-up imaging",
+    "R038": "adrenal incidentaloma 4 cm management",
+    "R039": "incidental solid renal mass urology referral",
+    "R040": "Bosniak IIF cyst follow-up imaging",
+    "R041": "incidental pancreatic cyst surveillance MRI",
+    "R042": "pancreatic cyst worrisome features endoscopic ultrasound",
+    "R043": "incidental thyroid nodule CT ultrasound evaluation",
+    "R044": "incidental abdominal aortic aneurysm surveillance follow-up",
+    "R045": "abdominal aortic aneurysm repair threshold referral",
+    "R046": "growing pulmonary nodule management",
 }
 
 

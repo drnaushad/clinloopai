@@ -1,14 +1,14 @@
-# Radiology live-run: 16 reports, read the way a radiologist writes them
+# Radiology live-run: read the way a radiologist writes reports
 
 **Date:** 2026-10-08 · **Data:** synthetic patients only (`data/radiology_test_bundle.json`) · **Evaluation time:** 2026-10-08 09:00 KST
 
-We ran 16 radiology reports through the real FHIR ingestion endpoint
+Round 1 ran 16 radiology reports through the real FHIR ingestion endpoint
 (`POST /api/v1/fhir/ingest`). The reports cover CT, chest radiographs, screening LDCT,
 mammography and ultrasound, in English and Korean. They include negative reports and
 one patient whose follow-up was done. The wording was chosen to stress the parser:
 sizes in centimetres, X-rays, an adrenal nodule, a critical result and hedged phrasing.
 
-## Result
+## Round 1 result (16 patients)
 
 | # | Study | Report (key sentence) | Before | After |
 |---|---|---|---|---|
@@ -29,8 +29,7 @@ sizes in centimetres, X-rays, an adrenal nodule, a critical result and hedged ph
 | RP-15 | 흉부 CT (Korean) | 우상엽 12 mm 결절, 3개월 후 추적 CT 권고 | ✅ R003 | ✅ unchanged |
 | RP-16 | CT chest | Multiple nodules, largest 11 mm | ✅ R003 | ✅ unchanged |
 
-**Before: 7 / 16 correct. After: 16 / 16.** 170 automated tests pass, including 17 new ones
-built from these cases and from false-positive checks.
+**Before: 7 / 16 correct. After round 1: 16 / 16.** See round 2 below for 14 more patients.
 
 ![Worklist after ingestion](images/radiology_worklist.png)
 
@@ -56,22 +55,73 @@ built from these cases and from false-positive checks.
 - **R003** is also closed by tissue sampling, which Fleischner lists as a >8 mm option.
 - **Negation after the finding:** "is not identified", "has resolved", "없음" are now read as negations.
 
-## Known limitations (radiologist review)
+## Round 2: the five limitations from round 1
 
-1. **Modality, not body region:** any CT closes a "CT recommended" loop, even a CT of a different body part. Matching by body region needs procedure codes (LOINC/RadLex playbook).
-2. **No incidental-findings guidance without a recommendation:**
-   - ACR white-paper management of adrenal, renal, pancreatic-cyst, thyroid and AAA findings is not encoded.
-   - These findings are tracked only when the radiologist writes a recommendation.
-3. **Lung-RADS and Fleischner nuance:**
-   - Not encoded: subsolid nodules, the Fleischner low-risk vs high-risk choice, Lung-RADS 4B "PET/CT" alternatives, and stepped follow-up after a stable nodule.
-4. **Critical findings use a keyword list.** Each hospital must review the list and the 1-hour window.
-   - Communication found in the report text is timestamped at report time + 1 minute; the actual time of the call is not parsed.
-5. **Report text only:**
-   - Free-text conclusions are read; structured findings from the PACS or RIS are not.
-   - Addenda and amended reports need a site-specific feed.
-6. **All rules are `pending_specialist_review`.** The reports here are synthetic.
-   - Before any clinical use, a radiologist must sign off each rule.
-   - Stage-1 chart review on real, de-identified reports is also required (`src/validation/chart_review.py`).
+Round 1 left five gaps that made ClinLoop unsafe for real patients. All five are now addressed in
+code and tests. Two of them can only be finished by people at the hospital.
+
+| Round-1 limitation | What changed |
+|---|---|
+| **1. Body region not checked**: any CT closed a "CT recommended" loop | Every study gets body regions and organs from its title (an abdominal CT covers the adrenals, kidneys, pancreas and liver). Every recommendation gets the region it names, else the region of its finding, else the region of the study. A follow-up closes the loop only if the regions match. A study of unknown region does not close it, and the evidence chain lists studies "not counted (different or unknown body region)". |
+| **2. Incidental findings tracked only with an explicit recommendation** | ACR white-paper management is now encoded for findings with no recommendation: adrenal (R037, R038), renal/Bosniak (R039, R040), pancreatic cyst (R041, R042), thyroid on CT/MRI/PET (R043), and TI-RADS on thyroid US (via R036/R032). Abdominal aortic aneurysm is covered by R044 and R045. Benign features are recognised (adrenal adenoma ≤10 HU, simple cyst, angiomyolipoma, "too small to characterise", pseudocyst). When the radiologist did write a recommendation for that organ, theirs is tracked instead. |
+| **3. Fleischner nuance missing** | Covered now: solid, part-solid (with solid-component size) and ground-glass nodules; single and multiple; low and high risk, from smoking status (FHIR LOINC 72166-2), spiculation, upper lobe, emphysema and fibrosis. Unknown risk is managed as high risk. Stepped follow-up of a known nodule uses earlier reports or "stable for N years" in the text: solid stable ≥2 years is done, ground-glass every 2 years to 5 years, part-solid yearly to 5 years. Low-risk optional scans are not tracked. Growth of ≥2 mm, or a persistent solid component ≥6 mm, triggers work-up within 30 days (R046). Age < 35, known cancer or immunocompromise → human review. |
+| **4. Critical-finding list was a hard-coded keyword list** | The list is a hospital-editable file with ACR category and a reporting window per finding. A clinical leader approves it on `governance.html`; the approval is bound to the file's hash, so any edit voids it. |
+| **5. No specialist sign-off** | Each rule is signed off by a named specialist (approve / reject / request changes, with specialty and note). The sign-off is bound to the rule's fingerprint, and any change makes it "needs re-review". Shadow mode (`CLINLOOP_ENFORCE_SIGNOFF=1`) keeps unsigned rules off the worklist and out of escalation. A report-level validation tool (`src/validation/report_validation.py`) measures sensitivity and PPV per rule on blind radiologist labels. |
+
+### Live run, round 2: 30 patients (14 new)
+
+The test set (`data/radiology_test_bundle.json`) now has 30 synthetic patients, 34 reports, smoking
+status and cancer history. New cases, evaluated on 2026-10-08:
+
+| # | Case | ClinLoop |
+|---|---|---|
+| RP-17 | CT abdomen: 1.5 cm indeterminate adrenal nodule, no recommendation | R037: adrenal CT/MRI within 12 months (+ grace) |
+| RP-18 | Adrenal CT recommended in 3 months; the only later study is a **head CT** | R030 **stays open**: head CT not counted (wrong region) |
+| RP-19 | 2.4 cm enhancing solid mass, lower pole of the left kidney | R039: urology referral, overdue |
+| RP-20 | 2.8 cm pancreatic cyst, no worrisome features | R041: MRI/MRCP at 6 months |
+| RP-21 | Pancreatic cyst with mural nodule, main duct 9 mm | R042: EUS / specialist within 30 days, overdue |
+| RP-22 | CT neck: 1.8 cm thyroid nodule, age 60 | R043: thyroid ultrasound |
+| RP-23 | AAA 4.6 cm | R044: imaging at 6 months, overdue |
+| RP-24 | AAA 5.3 cm in a woman, "without rupture" | R045: vascular surgery referral (≥5.0 cm in women) |
+| RP-25 | 8 mm ground-glass nodule, never smoker | R003: CT within 12 months (+ grace) |
+| RP-26 | 7 mm solid nodule, stable at 11 months, ex-smoker | first loop closed; next CT at 18–24 months tracked (high risk) |
+| RP-27 | Nodule 6 mm → 9 mm in 6 months | R046: growth → work-up |
+| RP-28 | 9 mm nodule in a patient with breast cancer | R003, flagged for human review (Fleischner does not apply) |
+| RP-29 | Acute subdural haematoma, "discussed with Dr Park by telephone" | R035 closed by the documented communication |
+| RP-30 | 4 mm solid nodule | no loop (Fleischner: no routine follow-up) |
+
+The extended run found two more parser misses, which are now fixed and tested:
+
+- In RP-19, "mass in the lower pole of the left kidney" was missed because the organ word was beyond the search window.
+- In RP-24, "aneurysm … without rupture" was dropped because the rupture exclusion ignored the negation.
+
+![Rule sign-off](images/governance_signoff.png)
+
+With shadow mode on, the worklist showed nothing until a radiologist signed off R003 and R035 and
+approved the critical-finding list. After that, only those loops appeared; the other 18 stayed in
+shadow:
+
+![Worklist in shadow mode](images/worklist_shadow_mode.png)
+
+## What still needs people, not code
+
+1. **Specialist sign-off of all 46 rules** in `governance.html`, by radiologists and the relevant
+   specialists (pulmonology, endocrinology, urology, GI, vascular surgery). Every "proposed" interval
+   in the rule notes needs a local decision.
+2. **The hospital's critical-finding list**: edit the example list, then approve it.
+3. **Validation on real, de-identified reports.** Use `report_validation.py` to label a sample blind
+   and measure sensitivity and PPV per rule, then run the chart review (`chart_review.py`). Both need
+   IRB approval. The synthetic sheet's 100% agreement is circular: the same team wrote the reports
+   and the labels.
+4. **Local vocabulary.** Map the hospital's study titles and procedure codes; LOINC/RadLex Playbook
+   codes would make body-region matching more precise than title text.
+
+Remaining technical limits:
+- The ACR age adjustments for pancreatic cysts are not encoded.
+- Adrenal biochemical work-up is not tracked.
+- The thoracic aorta is not covered.
+- Nodules are matched across reports per patient, not per lobe.
+- In-report communication is timestamped at report time + 1 minute.
 
 ## Reproduce
 
@@ -82,4 +132,14 @@ curl -X POST "http://localhost:8124/api/v1/fhir/ingest?evaluation_time=2026-10-0
      -H "Authorization: Bearer your-long-admin-token" -H "Content-Type: application/json" \
      --data-binary @data/radiology_test_bundle.json
 # then open worklist.html, API http://localhost:8124, same token
+# (the worklist's "Load synthetic radiology example" button does the same)
+```
+
+To see shadow mode, start the API with `CLINLOOP_ENFORCE_SIGNOFF=1`. Then sign off rules on
+`governance.html` with a clinician token (`token:dr.name:clinician`).
+
+Report-level validation on the synthetic sheet:
+
+```bash
+python -m src.validation.report_validation score --sheet data/radiology_validation_synthetic.csv
 ```

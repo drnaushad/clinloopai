@@ -1,0 +1,35 @@
+report_id,study,report_date,conclusion,age,sex,smoking,cancer,expected_rules,notes
+SYN-001,"CT chest with contrast (ED, trauma)",2026-03-02,"Nondisplaced right 6th rib fracture. Incidental 1.4 cm spiculated solid nodule in the right upper lobe, suspicious for malignancy. Recommend PET/CT or tissue sampling.",71,male,former,,R003,synthetic
+SYN-002,CT chest without contrast,2026-05-10,"6 mm solid nodule in the left lower lobe. For a high-risk patient, CT at 6-12 months is recommended per Fleischner 2017.",64,female,current,,R003,synthetic
+SYN-003,Chest radiograph PA and lateral,2026-06-01,2.5 cm right hilar mass. Recommend contrast-enhanced CT chest for further evaluation.,58,male,,,R030,synthetic
+SYN-004,Low-dose CT chest (lung cancer screening),2026-04-15,Lung-RADS 4A. 7 mm solid nodule in the right upper lobe. Recommend LDCT in 3 months.,66,male,current,,R019,synthetic
+SYN-005,CT abdomen and pelvis with contrast,2026-02-20,"Incidental 18 mm left adrenal nodule, indeterminate. Recommend adrenal protocol CT in 12 months.",55,female,,,R030,synthetic
+SYN-006,Bilateral diagnostic mammography,2026-05-02,BI-RADS 4B: suspicious grouped microcalcifications in the right upper outer quadrant. Stereotactic biopsy recommended.,52,female,,,R018,synthetic
+SYN-007,US thyroid,2026-03-10,"1.6 cm solid hypoechoic nodule in the right lobe, ACR TI-RADS TR4. Fine-needle aspiration recommended.",47,female,,,R036,synthetic
+SYN-008,CT head without contrast (ED),2026-08-01,No acute intracranial abnormality. No follow-up imaging recommended.,80,male,,,,synthetic
+SYN-009,CT chest with contrast,2026-01-15,No pulmonary nodule or mass. No mediastinal lymphadenopathy.,61,female,,,,synthetic
+SYN-010,CT abdomen with contrast,2026-03-01,8 mm indeterminate hepatic lesion in segment 6. Follow-up MRI in 3-6 months is recommended.,59,male,,,R031,synthetic
+SYN-011,Chest radiograph PA,2026-07-20,Right lower lobe consolidation consistent with pneumonia. Recommend follow-up chest radiograph in 6 weeks to document resolution.,68,male,,,R033,synthetic
+SYN-012,CT pulmonary angiography (ED),2026-10-07,Acute pulmonary embolism in the right main and lower lobe pulmonary arteries. RV/LV ratio 1.2. Critical result.,63,female,,,R035,synthetic
+SYN-013,흉부 CT,2026-04-01,우상엽에 12 mm 고형 결절이 있습니다. 3개월 후 추적 CT 권고.,70,male,,,R003,synthetic
+SYN-014,CT abdomen,2026-02-01,"Incidental 1.5 cm left adrenal nodule, indeterminate.",57,female,,,R037,synthetic
+SYN-015,CT abdomen,2026-02-01,"2.1 cm left adrenal nodule measuring 5 HU, consistent with lipid-rich adenoma.",62,male,,,,synthetic
+SYN-016,CT abdomen,2026-02-01,"2.1 cm solid enhancing mass in the left kidney, suspicious for renal cell carcinoma.",66,male,,,R039,synthetic
+SYN-017,CT abdomen,2026-02-01,"2.5 cm right renal cyst with thin septa, Bosniak IIF.",54,female,,,R040,synthetic
+SYN-018,CT abdomen,2026-02-01,"3 cm simple renal cyst, Bosniak I.",73,male,,,,synthetic
+SYN-019,CT abdomen,2026-02-01,"1.2 cm cystic lesion in the pancreatic tail, likely side-branch IPMN.",67,female,,,R041,synthetic
+SYN-020,MRI abdomen MRCP,2026-02-01,3.2 cm pancreatic head cyst with an enhancing mural nodule. Main pancreatic duct measures 8 mm.,71,male,,,R042,synthetic
+SYN-021,CT neck with contrast,2026-02-01,1.8 cm hypodense nodule in the left thyroid lobe.,60,female,,,R043,synthetic
+SYN-022,CT chest,2026-02-01,1.2 cm nodule in the right thyroid lobe.,60,female,,,,synthetic
+SYN-023,CT abdomen,2026-02-01,Infrarenal abdominal aortic aneurysm measuring 4.2 cm.,74,male,,,R044,synthetic
+SYN-024,CT abdomen,2026-02-01,"Fusiform infrarenal aortic aneurysm, maximal diameter 5.6 cm.",78,male,,,R045,synthetic
+SYN-025,CT chest,2026-02-01,4 mm solid nodule in the right middle lobe.,50,female,never,,,synthetic
+SYN-026,CT chest,2026-02-01,8 mm pure ground-glass nodule in the left lower lobe.,62,female,never,,R003,synthetic
+SYN-027,CT chest,2026-02-01,Interval increase in the 9 mm right upper lobe nodule.,69,male,former,,R046,synthetic
+SYN-028,CT chest,2026-02-01,9 mm solid nodule in the right lower lobe.,58,female,,yes,R003,synthetic
+SYN-029,CT head,2026-02-01,Acute subdural hematoma with 5 mm midline shift. Findings discussed with Dr Lee at 02:10.,82,male,,,R035,synthetic
+SYN-030,CT chest PE protocol,2026-02-01,No pulmonary embolism. No pneumothorax.,45,female,,,,synthetic
+SYN-031,CT chest,2026-02-01,"Chronic pulmonary embolism in the right lower lobe artery, unchanged.",70,male,,,,synthetic
+SYN-032,CT abdomen,2026-02-01,Renal cyst. MRI could be considered if clinically indicated.,61,female,,,,synthetic
+SYN-033,CT chest,2026-02-01,8 mm calcified granuloma in the right upper lobe.,55,male,,,,synthetic
+SYN-034,CT chest,2026-02-01,"8 mm solid nodule in the left upper lobe, stable for 2 years.",66,male,,,,synthetic

@@ -35,6 +35,11 @@ services:
       CLINLOOP_OUTREACH_PROVIDER: ${CLINLOOP_OUTREACH_PROVIDER:-outbox}
       CLINLOOP_OUTREACH_WEBHOOK_URL: ${CLINLOOP_OUTREACH_WEBHOOK_URL:-}
       NCBI_API_KEY: ${NCBI_API_KEY:-}
+      # Governance: shadow mode for rules a specialist has not signed off (set 1 for clinical use),
+      # approvals needed per rule, and the hospital's own critical-finding list (on the data volume)
+      CLINLOOP_ENFORCE_SIGNOFF: ${CLINLOOP_ENFORCE_SIGNOFF:-0}
+      CLINLOOP_SIGNOFF_APPROVALS: ${CLINLOOP_SIGNOFF_APPROVALS:-1}
+      CLINLOOP_CRITICAL_FINDINGS: ${CLINLOOP_CRITICAL_FINDINGS:-}
     volumes:
       - clinloop-data:/var/lib/clinloop
     extra_hosts:

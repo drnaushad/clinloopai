@@ -124,6 +124,28 @@ CREATE TABLE IF NOT EXISTS sync_state (
     cursor TEXT,
     updated_at TEXT
 );
+CREATE TABLE IF NOT EXISTS rule_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    rule_id TEXT NOT NULL,
+    rule_hash TEXT NOT NULL,          -- fingerprint of the rule definition reviewed
+    decision TEXT NOT NULL,           -- approve | reject | request_changes
+    reviewer TEXT NOT NULL,
+    role TEXT,
+    specialty TEXT,
+    note TEXT,
+    decided_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_rule_reviews_rule ON rule_reviews(rule_id);
+CREATE TABLE IF NOT EXISTS config_approvals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,               -- e.g. critical_findings
+    content_hash TEXT NOT NULL,
+    approver TEXT NOT NULL,
+    role TEXT,
+    title TEXT,
+    note TEXT,
+    decided_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts TEXT NOT NULL,
@@ -191,6 +213,55 @@ class LoopStore:
                     return False
                 prev = r["hash"]
             return True
+
+    # ── governance: rule sign-off and configuration approval ─────────────────
+    REVIEW_DECISIONS = ("approve", "reject", "request_changes")
+
+    def add_rule_review(self, rule_id: str, rule_hash: str, decision: str, reviewer: str, role: str,
+                        specialty: str, note: str = "") -> Dict:
+        if decision not in self.REVIEW_DECISIONS:
+            raise WorkflowError(f"decision must be one of {', '.join(self.REVIEW_DECISIONS)}")
+        if not specialty.strip():
+            raise WorkflowError("The reviewer's specialty is required")
+        if decision != "approve" and len(note.strip()) < 5:
+            raise WorkflowError("Explain a rejection or change request (at least 5 characters)")
+        now = utc_now().isoformat()
+        with self._lock:
+            cur = self._db.execute(
+                "INSERT INTO rule_reviews (rule_id, rule_hash, decision, reviewer, role, specialty, note, decided_at) "
+                "VALUES (?,?,?,?,?,?,?,?)", (rule_id, rule_hash, decision, reviewer, role, specialty.strip(), note, now))
+            self._audit(reviewer, role, f"rule_review:{decision}", None,
+                        {"rule_id": rule_id, "rule_hash": rule_hash, "specialty": specialty.strip(), "note": note})
+            self._db.commit()
+            return dict(self._db.execute("SELECT * FROM rule_reviews WHERE id=?", (cur.lastrowid,)).fetchone())
+
+    def rule_reviews(self, rule_id: Optional[str] = None) -> List[Dict]:
+        with self._lock:
+            if rule_id:
+                rows = self._db.execute("SELECT * FROM rule_reviews WHERE rule_id=? ORDER BY id", (rule_id,))
+            else:
+                rows = self._db.execute("SELECT * FROM rule_reviews ORDER BY id")
+            return [dict(r) for r in rows]
+
+    def add_config_approval(self, kind: str, content_hash: str, approver: str, role: str,
+                            title: str, note: str = "") -> Dict:
+        if not title.strip():
+            raise WorkflowError("The approver's title (e.g. Chair of Radiology) is required")
+        now = utc_now().isoformat()
+        with self._lock:
+            cur = self._db.execute(
+                "INSERT INTO config_approvals (kind, content_hash, approver, role, title, note, decided_at) "
+                "VALUES (?,?,?,?,?,?,?)", (kind, content_hash, approver, role, title.strip(), note, now))
+            self._audit(approver, role, f"config_approval:{kind}", None,
+                        {"content_hash": content_hash, "title": title.strip(), "note": note})
+            self._db.commit()
+            return dict(self._db.execute("SELECT * FROM config_approvals WHERE id=?", (cur.lastrowid,)).fetchone())
+
+    def latest_config_approval(self, kind: str) -> Optional[Dict]:
+        with self._lock:
+            r = self._db.execute("SELECT * FROM config_approvals WHERE kind=? ORDER BY id DESC LIMIT 1",
+                                 (kind,)).fetchone()
+        return dict(r) if r else None
 
     # ── ingest detections ────────────────────────────────────────────────────
     def upsert_detections(self, detections: Iterable[Any],
@@ -337,15 +408,19 @@ class LoopStore:
                                 {"evidence": evidence})
 
     # ── escalation ───────────────────────────────────────────────────────────
-    def escalate_overdue(self, now: Optional[datetime] = None, actor: str = "watchdog") -> List[Dict]:
+    def escalate_overdue(self, now: Optional[datetime] = None, actor: str = "watchdog",
+                         rule_ids: Optional[set] = None) -> List[Dict]:
         """
         Climb the escalation chain for loops past their deadline that nobody
         has acknowledged. Each level waits one severity-specific grace period.
+        ``rule_ids`` limits escalation to live rules (shadow-mode loops never page anyone).
         """
         now = now or utc_now()
         escalated = []
         with self._lock:
             for loop in self.worklist(now=now):
+                if rule_ids is not None and loop["rule_id"] not in rule_ids:
+                    continue
                 if loop["workflow_state"] != "new" or loop["clock_state"] != "BLACK":
                     continue
                 if loop["escalation_level"] >= len(ESCALATION_CHAIN) - 1:
