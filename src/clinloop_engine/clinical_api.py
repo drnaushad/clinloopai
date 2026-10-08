@@ -194,11 +194,22 @@ def connections_status():
                         "feed": get_store().feed_status(_max_silence_hours())["status"]},
         "local_llm": cached,
         "cloud_llm": {"status": "not_used", "note": "This build uses only the on-premise LLM"},
+        "pacs": {"status": "configured" if os.environ.get("CLINLOOP_PACS_DICOMWEB") else "not_configured",
+                 "note": "Study labels only (DICOMweb QIDO-RS); no pixel data"},
+        "imaging_ai": _imaging_ai_status(),
         "omop_cdm": {"status": "not_connected", "note": "No OMOP database is connected"},
         "ehr_writeback": {"status": "not_connected", "note": "Read-only by design; FHIR Tasks are previews"},
         "guideline_library": {"status": "static", "rules": len(OBLIGATION_RULES),
                               "note": "Curated rule and guideline library in code"},
     }
+
+
+def _imaging_ai_status() -> Dict[str, Any]:
+    from .imaging_ai import registered_models
+    models = registered_models()
+    ready = [m.name for m in models if m.available() is None]
+    return {"status": "ok" if ready else ("not_ready" if models else "not_configured"), "models": ready,
+            "note": "Second reader only: findings open radiologist-review loops, never a diagnosis"}
 
 
 @router.get("/evidence/{rule_id}", tags=["Connections"])
@@ -229,13 +240,31 @@ def ingest_fhir(bundle: Dict[str, Any] = Body(..., description="FHIR R4 Bundle")
     if bundle.get("resourceType") != "Bundle":
         raise HTTPException(422, "Body must be a FHIR Bundle")
     when = normalize_timestamp(evaluation_time) if evaluation_time else None
-    events_by_patient, warnings = bundle_to_events(bundle)
+    store = get_store()
+    # Keep each patient's records, so later uploads (outside reports, DICOM) are judged in context
+    from .fhir_ingest import _patient_id, _resources
+    by_patient: Dict[str, list] = {}
+    for r in _resources(bundle):
+        pid = r.get("id") if r.get("resourceType") == "Patient" else _patient_id(r)
+        if pid:
+            by_patient.setdefault(pid, []).append(r)
+    from .fhir_sync import patient_record
+    from .pacs_client import client_from_env as pacs_from_env
+    pacs = pacs_from_env()
+    resources, record_warnings = [], []
+    for pid, items in by_patient.items():
+        store.save_snapshot(pid, items)
+        # the snapshot just saved, plus uploads and the PACS's studies for this patient
+        record, w = patient_record(pid, store, None, pacs)
+        resources += record
+        record_warnings += w
+    events_by_patient, warnings = bundle_to_events(resources)
+    warnings += record_warnings
     strata = patient_strata(bundle)
     detector = ClinLoopDetector(evaluation_time=when)
     detections = []
     for pid, events in events_by_patient.items():
         detections.extend(detector.process_patient("fhir-ingest", pid, events))
-    store = get_store()
     counts = store.upsert_detections(detections, strata=strata, actor=user.name)
     store.record_ingest("manual-upload", user.name, ok=True, patients=len(events_by_patient),
                         events=sum(len(v) for v in events_by_patient.values()), warnings=len(warnings))

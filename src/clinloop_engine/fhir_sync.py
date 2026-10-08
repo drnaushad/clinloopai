@@ -46,6 +46,8 @@ logger = logging.getLogger("clinloop.fhir_sync")
 # Resource types ClinLoop reads (all search parameters used are standard R4)
 CLINICAL_TYPES = ["Observation", "DiagnosticReport", "ServiceRequest", "Appointment", "Communication",
                   "Encounter", "MedicationRequest", "Procedure", "Condition"]
+# Read when the server supports them; a server without ImagingStudy does not fail the sync
+OPTIONAL_TYPES = ["ImagingStudy"]
 PAGE_SIZE = 100
 MAX_PAGES = 1000   # hard stop against paging loops
 
@@ -85,8 +87,14 @@ class FHIRClient:
         """Patients with any clinical resource updated after `since`, and the newest lastUpdated seen."""
         patients: Set[str] = set()
         newest: Optional[str] = None
-        for rtype in CLINICAL_TYPES + ["Patient"]:
-            for r in self.search(rtype, {"_lastUpdated": f"gt{since}"}):
+        for rtype in CLINICAL_TYPES + OPTIONAL_TYPES + ["Patient"]:
+            try:
+                found = list(self.search(rtype, {"_lastUpdated": f"gt{since}"}))
+            except FHIRSyncError:
+                if rtype in OPTIONAL_TYPES:
+                    continue
+                raise
+            for r in found:
                 pid = r.get("id") if rtype == "Patient" else _patient_id(r)
                 if pid:
                     patients.add(pid)
@@ -97,9 +105,13 @@ class FHIRClient:
 
     def patient_history(self, patient_id: str) -> List[Dict]:
         resources: List[Dict] = []
-        for rtype in CLINICAL_TYPES:
+        for rtype in CLINICAL_TYPES + OPTIONAL_TYPES:
             # `patient` is a standard R4 search parameter on every type read here
-            resources.extend(self.search(rtype, {"patient": f"Patient/{patient_id}"}))
+            try:
+                resources.extend(self.search(rtype, {"patient": f"Patient/{patient_id}"}))
+            except FHIRSyncError:
+                if rtype not in OPTIONAL_TYPES:
+                    raise
         try:
             resources.extend(self.search("Patient", {"_id": patient_id}))
         except FHIRSyncError:
@@ -107,8 +119,29 @@ class FHIRClient:
         return resources
 
 
+def patient_record(patient_id: str, store: LoopStore, client: Optional["FHIRClient"] = None,
+                   pacs=None) -> Tuple[List[Dict], List[str]]:
+    """
+    Everything ClinLoop knows about one patient: the FHIR history, resources
+    added in ClinLoop (outside reports, DICOM uploads, imaging-AI results) and
+    the imaging studies in the PACS.
+    """
+    from .pacs_client import PACSError, imaging_studies_for
+    warnings: List[str] = []
+    resources = client.patient_history(patient_id) if client else store.snapshot(patient_id)
+    resources = resources + store.external_resources(patient_id)
+    if pacs is not None:
+        patient = next((r for r in resources if r.get("resourceType") == "Patient" and r.get("id") == patient_id), None)
+        try:
+            resources += imaging_studies_for(pacs, patient_id, patient)
+        except (PACSError, requests.RequestException) as e:
+            # Without PACS data, follow-up scans can look missing: more alerts, never fewer
+            warnings.append(f"PACS unreachable for this patient: {e}")
+    return resources, warnings
+
+
 def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
-              now: Optional[datetime] = None, initial_days: int = 365) -> Dict:
+              now: Optional[datetime] = None, initial_days: int = 365, pacs=None) -> Dict:
     """One sync run. Never raises: failures are recorded for the feed monitor."""
     now = now or utc_now()
     since = store.get_cursor(source) or (now - timedelta(days=initial_days)).isoformat() + "Z"
@@ -117,8 +150,9 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
         detector = ClinLoopDetector(evaluation_time=now)
         n_events, n_warnings, counts = 0, 0, {"new": 0, "updated": 0, "resolved_by_engine": 0}
         for pid in sorted(patients):
-            history = client.patient_history(pid)
+            history, record_warnings = patient_record(pid, store, client, pacs)
             events_by_patient, warnings = bundle_to_events(history)
+            warnings += record_warnings
             n_warnings += len(warnings)
             strata = patient_strata(history)
             for p, events in events_by_patient.items():
@@ -155,7 +189,8 @@ async def sync_loop(get_store, interval_minutes: Optional[float] = None):
     initial = int(os.environ.get("CLINLOOP_FHIR_INITIAL_DAYS", "365"))
     while True:
         # Run the blocking HTTP calls off the event loop
-        result = await asyncio.to_thread(sync_once, get_store(), client, "fhir-sync", None, initial)
+        from .pacs_client import client_from_env as pacs_from_env
+        result = await asyncio.to_thread(sync_once, get_store(), client, "fhir-sync", None, initial, pacs_from_env())
         logger.info("FHIR sync: %s", result)
         await asyncio.sleep(minutes * 60)
 

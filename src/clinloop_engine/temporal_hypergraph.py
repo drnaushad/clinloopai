@@ -44,6 +44,13 @@ def _required_regions(trigger: "ClinicalNode", rule: ObligationRule) -> List[str
     return []
 
 
+def _details_match(trigger: "ClinicalNode", rule: ObligationRule, node: "ClinicalNode") -> bool:
+    """A trigger may require its follow-up to carry matching details (e.g. the same AI finding)."""
+    spec = trigger.details.get("followup_match")
+    want = spec.get(rule.rule_id) if isinstance(spec, dict) else None
+    return not want or all(node.details.get(k) == v for k, v in want.items())
+
+
 def _region_ok(required: List[str], node: "ClinicalNode") -> bool:
     """A study of unknown region does not close a region-specific loop (a clinician can close it with evidence)."""
     covered = node.details.get("body_regions") or []
@@ -413,8 +420,9 @@ class DynamicTemporalHypergraph:
                     if wrong_region:
                         hyperedge.evidence_chain.append(
                             f"Not counted as follow-up (different or unknown body region): {wrong_region}")
-                review = (node.details.get("review_notes") or {}).get(rule.rule_id) \
-                    if isinstance(node.details.get("review_notes"), dict) else None
+                review = ((node.details.get("review_notes") or {}).get(rule.rule_id)
+                          if isinstance(node.details.get("review_notes"), dict) else None) \
+                    or node.details.get("review_note_all")
                 if review:
                     hyperedge.evidence_chain.append(f"Human review: {review}")
 
@@ -451,6 +459,8 @@ class DynamicTemporalHypergraph:
             if node.event_type in required_values:
                 if (required_regions and node.event_type in REGION_CHECKED_TYPES
                         and not _region_ok(required_regions, node)):
+                    continue
+                if rule is not None and not _details_match(trigger, rule, node):
                     continue
                 followups.append(node)
 

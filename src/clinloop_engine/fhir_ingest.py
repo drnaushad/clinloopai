@@ -20,6 +20,7 @@ Supported resources: Observation, DiagnosticReport, ServiceRequest,
 Appointment, Communication, Encounter, MedicationRequest, Procedure, Condition.
 """
 
+import os
 import re
 from collections import defaultdict
 from datetime import datetime
@@ -28,7 +29,12 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 from .clinical_ontology import (
     EventType, is_fulfilling_status,
 )
-from .radiology import _CHEST_CT, decide_obligations, map_radiology_report
+from .ai_review import apply_ai_review
+from .imaging_fhir import (
+    CLINLOOP_TAG_SYSTEM, DEFAULT_AI_THRESHOLD, DICOM_MODALITY, OCR_CONFIDENCE_URL, REGULATORY_URL,
+    ai_finding_key, dicom_regions, is_research_use,
+)
+from .radiology import _CHEST_CT, _LIVER, decide_obligations, map_radiology_report
 from .report_text import affirmed as _affirmed, first_affirmed as _first_affirmed
 from .report_text import not_negated as _not_negated, span as _span
 from .safety_clock import normalize_timestamp
@@ -103,6 +109,8 @@ STATUS_MAP = {
     # requests / procedures / communications / encounters
     "active": "completed", "on-hold": "pending", "in-progress": "pending",
     "preparation": "planned", "finished": "completed",
+    # imaging studies
+    "available": "completed",
 }
 
 
@@ -184,6 +192,10 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
     ts = _first(r.get("effectiveDateTime"), (r.get("effectivePeriod") or {}).get("end"), r.get("issued"))
     code_text = _concept_text(r.get("code")).lower()
     codes = _codes(r.get("code"))
+
+    # Imaging-AI output (approved product or ClinLoop's model runner): a second reader, not a lab result
+    if _is_ai_observation(r):
+        return _map_ai_observation(r, ts)
 
     # Smoking status is context for lung-nodule risk, not a lab result
     if codes & LOINC_SMOKING or "smoking status" in code_text or "tobacco smoking" in code_text:
@@ -295,6 +307,21 @@ def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
     conclusion = " ".join(filter(None, [r.get("conclusion", ""),
                                         " ".join(_concept_text(c) for c in r.get("conclusionCode", []))]))
     details: Dict[str, Any] = {"report": code_text or None, "conclusion": conclusion or None}
+    studies = [s.get("reference") for s in r.get("imagingStudy", []) if s.get("reference")]
+    if studies:
+        details["imaging_studies"] = studies
+    tags = {t.get("code") for t in (r.get("meta") or {}).get("tag", []) if t.get("system") == CLINLOOP_TAG_SYSTEM}
+    if "outside-report" in tags:
+        confidence = next((x.get("valueDecimal") for x in r.get("extension", []) if x.get("url") == OCR_CONFIDENCE_URL), None)
+        method = "OCR" if "ocr" in tags else "PDF text"
+        details["outside_report"] = {"method": method, "confidence": confidence,
+                                     "confirmed": "human-confirmed" in tags}
+    if "outside-report" in tags and "human-confirmed" not in tags:
+        details["review_note_all"] = (
+            f"Read from an outside report ({method}"
+            + (f", recognition confidence {confidence:.0f}%" if isinstance(confidence, (int, float)) else "")
+            + "): check the text and the date against the original document."
+            + (" The report date was not found; the upload date was used." if "date-unknown" in tags else ""))
 
     if "rad" in category or "imaging" in category or "radiology" in category:
         return map_radiology_report(ts, code_text, conclusion, details)
@@ -309,6 +336,82 @@ def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
         return [(EventType.PATHOLOGY_RESULT.value, ts, details)]
 
     return []  # lab DiagnosticReports: the referenced Observations carry the data
+
+
+def _is_ai_observation(r: Dict) -> bool:
+    tags = {t.get("code") for t in (r.get("meta") or {}).get("tag", []) if t.get("system") == CLINLOOP_TAG_SYSTEM}
+    if "imaging-ai" in tags:
+        return True
+    return bool(r.get("device")) and "imaging" in _all_category_text(r)
+
+
+def _ai_threshold(key: Optional[str]) -> float:
+    """Per-finding operating point: CLINLOOP_AI_THRESHOLD_<KEY>, else CLINLOOP_AI_THRESHOLD, else 0.5."""
+    for name in (f"CLINLOOP_AI_THRESHOLD_{(key or '').upper()}", "CLINLOOP_AI_THRESHOLD"):
+        try:
+            return float(os.environ[name])
+        except (KeyError, ValueError):
+            continue
+    return DEFAULT_AI_THRESHOLD
+
+
+def _map_ai_observation(r: Dict, ts: Optional[str]) -> List[Tuple[str, str, Dict]]:
+    label = _concept_text(r.get("code"))
+    product = (r.get("device") or {}).get("display") or "imaging AI"
+    regulatory = next((x.get("valueString") for x in r.get("extension", []) if x.get("url") == REGULATORY_URL), "")
+    body = _concept_text(r.get("bodySite"))
+    regions = dicom_regions("", body) if body else []
+    key = ai_finding_key(label, regions)
+    score = (r.get("valueQuantity") or {}).get("value")
+    if isinstance(score, (int, float)) and (r.get("valueQuantity") or {}).get("unit") in ("%", "percent"):
+        score = score / 100.0
+    interp = _flag_from_interpretation(r)
+    codes = {c for i in r.get("interpretation", []) for c in _codes(i)}
+    if codes & {"POS", "A", "AA", "H", "DET"} or interp in ("ABNORMAL", "HIGH", "CRITICAL"):
+        positive, basis = True, "vendor flagged positive"
+    elif codes & {"NEG", "N", "ND"}:
+        positive, basis = False, "vendor flagged negative"
+    elif isinstance(score, (int, float)):
+        positive, basis = score >= _ai_threshold(key), f"score {score:g} vs threshold {_ai_threshold(key):g}"
+    else:
+        positive, basis = False, "no score or flag"
+    study_ref = next((x.get("reference") for x in r.get("derivedFrom", []) if "ImagingStudy" in str(x.get("reference"))), None)
+    details = {"finding_label": label, "finding_key": key, "score": score, "positive": positive,
+               "product": product, "regulatory": regulatory or "not stated",
+               "research_use": is_research_use(regulatory), "study_ref": study_ref, "study_time": ts,
+               "regions": regions,
+               "mapping": [f"Observation(imaging AI: {product})→ai_finding '{label}'"
+                           f"{' → ' + key if key else ' (label not mapped)'}: {'positive' if positive else 'negative'} ({basis})"]}
+    return [(EventType.AI_FINDING.value, ts, details)]
+
+
+def _map_imaging_study(r: Dict) -> List[Tuple[str, str, Dict]]:
+    """ImagingStudy (from the PACS or a FHIR server): the study was performed, of this modality and body region."""
+    ts = r.get("started")
+    modalities = {c for m in r.get("modality", []) for c in [m.get("code")] if c}
+    modalities |= {(s.get("modality") or {}).get("code") for s in r.get("series", []) if (s.get("modality") or {}).get("code")}
+    body = [_concept_text(s.get("bodySite")) or (s.get("bodySite") or {}).get("display") or "" for s in r.get("series", [])]
+    descriptions = [r.get("description") or ""] + [s.get("description") or "" for s in r.get("series", [])] \
+        + [_concept_text(c) for c in r.get("procedureCode", [])]
+    regions = sorted(set().union(*[set(dicom_regions(b, *descriptions)) for b in (body or [""])]))
+    details = {"study": " / ".join(filter(None, descriptions)) or None, "modalities": sorted(modalities),
+               "body_regions": regions,
+               "study_uid": next((i.get("value") for i in r.get("identifier", []) if "dicom" in str(i.get("system"))), None),
+               "mapping": [f"ImagingStudy({', '.join(sorted(modalities)) or '?'})"
+                           f" [{', '.join(regions) or 'region unknown'}]"]}
+    events: List[Tuple[str, str, Dict]] = []
+    etype_for = {"ct": EventType.IMAGING_CT, "mri": EventType.IMAGING_MRI, "ultrasound": EventType.IMAGING_ULTRASOUND,
+                 "xray": EventType.IMAGING_XRAY, "pet": EventType.IMAGING_PET}
+    for m in sorted(modalities):
+        kind = DICOM_MODALITY.get(m.upper())
+        if kind in etype_for:
+            etype = etype_for[kind].value
+            events.append((etype, ts, {**details, "mapping": details["mapping"] + [f"→{etype}"]}))
+            if kind in ("ct", "pet") and "chest" in regions:
+                events.append((EventType.FOLLOWUP_CT.value, ts, {**details, "mapping": details["mapping"] + ["chest CT→followup_ct"]}))
+            if kind in ("ct", "mri", "ultrasound") and ("liver" in regions or _LIVER.search(" ".join(descriptions))):
+                events.append((EventType.LIVER_IMAGING.value, ts, {**details, "mapping": details["mapping"] + ["→liver_imaging"]}))
+    return events
 
 
 def _map_service_request(r: Dict) -> List[Tuple[str, str, Dict]]:
@@ -482,6 +585,7 @@ MAPPERS = {
     "MedicationRequest": _map_medication_request,
     "Procedure": _map_procedure,
     "Condition": _map_condition,
+    "ImagingStudy": _map_imaging_study,
 }
 
 
@@ -551,6 +655,7 @@ def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], L
     for pid, events in by_patient.items():
         _derive_context(events)
         decide_obligations(events, patients.get(pid, {}))
+        apply_ai_review(events)
     return dict(by_patient), warnings
 
 

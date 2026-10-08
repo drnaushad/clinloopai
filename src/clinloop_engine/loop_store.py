@@ -146,6 +146,22 @@ CREATE TABLE IF NOT EXISTS config_approvals (
     note TEXT,
     decided_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS patient_snapshots (
+    patient_id TEXT PRIMARY KEY,      -- resources from the last manual FHIR upload (no FHIR server configured)
+    resources TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS external_resources (
+    id TEXT PRIMARY KEY,              -- FHIR resource id
+    patient_id TEXT NOT NULL,
+    kind TEXT NOT NULL,               -- outside-report | dicom-study | imaging-ai
+    resource TEXT NOT NULL,           -- FHIR JSON (never the uploaded file or pixel data)
+    source_sha256 TEXT,               -- hash of the uploaded file, for traceability
+    summary TEXT,
+    created_by TEXT,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_external_patient ON external_resources(patient_id);
 CREATE TABLE IF NOT EXISTS audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts TEXT NOT NULL,
@@ -262,6 +278,52 @@ class LoopStore:
             r = self._db.execute("SELECT * FROM config_approvals WHERE kind=? ORDER BY id DESC LIMIT 1",
                                  (kind,)).fetchone()
         return dict(r) if r else None
+
+    # ── resources added outside the FHIR feed (uploads, imaging AI) ──────────
+    def add_external_resource(self, resource: Dict, kind: str, actor: str, role: str,
+                              source_sha256: Optional[str] = None, summary: str = "") -> None:
+        pid = str((resource.get("subject") or {}).get("reference", "")).split("/")[-1]
+        if not pid or not resource.get("id"):
+            raise WorkflowError("External resource needs an id and a Patient subject")
+        now = utc_now().isoformat()
+        with self._lock:
+            self._db.execute(
+                "INSERT INTO external_resources (id, patient_id, kind, resource, source_sha256, summary, created_by, created_at) "
+                "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET resource=excluded.resource, "
+                "summary=excluded.summary, created_by=excluded.created_by, created_at=excluded.created_at",
+                (resource["id"], pid, kind, json.dumps(resource, ensure_ascii=False), source_sha256, summary, actor, now))
+            self._audit(actor, role, f"external_resource:{kind}", None,
+                        {"patient_id": pid, "resource": f"{resource.get('resourceType')}/{resource['id']}",
+                         "source_sha256": source_sha256, "summary": summary})
+            self._db.commit()
+
+    def external_resources(self, patient_id: str) -> List[Dict]:
+        with self._lock:
+            rows = self._db.execute("SELECT resource FROM external_resources WHERE patient_id=? ORDER BY created_at",
+                                    (patient_id,)).fetchall()
+        return [json.loads(r["resource"]) for r in rows]
+
+    def external_resource_list(self, patient_id: str) -> List[Dict]:
+        with self._lock:
+            rows = self._db.execute("SELECT id, patient_id, kind, source_sha256, summary, created_by, created_at "
+                                    "FROM external_resources WHERE patient_id=? ORDER BY created_at DESC", (patient_id,))
+            return [dict(r) for r in rows]
+
+    def save_snapshot(self, patient_id: str, resources: List[Dict]) -> None:
+        with self._lock:
+            self._db.execute("INSERT INTO patient_snapshots (patient_id, resources, updated_at) VALUES (?,?,?) "
+                             "ON CONFLICT(patient_id) DO UPDATE SET resources=excluded.resources, updated_at=excluded.updated_at",
+                             (patient_id, json.dumps(resources, ensure_ascii=False), utc_now().isoformat()))
+            self._db.commit()
+
+    def snapshot(self, patient_id: str) -> List[Dict]:
+        with self._lock:
+            r = self._db.execute("SELECT resources FROM patient_snapshots WHERE patient_id=?", (patient_id,)).fetchone()
+        return json.loads(r["resources"]) if r else []
+
+    def external_patients(self) -> List[str]:
+        with self._lock:
+            return [r[0] for r in self._db.execute("SELECT DISTINCT patient_id FROM external_resources")]
 
     # ── ingest detections ────────────────────────────────────────────────────
     def upsert_detections(self, detections: Iterable[Any],

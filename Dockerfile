@@ -19,15 +19,30 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     HOME=/var/lib/clinloop \
     XDG_CACHE_HOME=/var/lib/clinloop/cache
 
+# OCR for outside reports (Korean and English)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-kor \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY requirements.txt requirements-api.txt ./
 RUN pip install --no-cache-dir -r requirements-api.txt
+
+# Optional on-premise imaging model (research use only): docker build --build-arg WITH_IMAGING_AI=1
+# Installs CPU PyTorch + TorchXRayVision and bakes the weights into the image, so no internet is needed.
+ARG WITH_IMAGING_AI=0
+ENV CLINLOOP_MODEL_DIR=/opt/clinloop/models
+RUN if [ "$WITH_IMAGING_AI" = "1" ]; then \
+      pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+      && pip install --no-cache-dir torchxrayvision \
+      && python -c "import torchxrayvision as x; x.models.DenseNet(weights='densenet121-res224-all', cache_dir='/opt/clinloop/models')"; \
+    fi
 
 COPY src ./src
 COPY data/cases.json data/fhir_example_bundle.json ./data/
 
 # Web UI, served by the API at / (only these files are exposed)
-COPY index.html worklist.html governance.html config.js manifest.json sw.js ./web/
+COPY index.html worklist.html governance.html imaging.html config.js manifest.json sw.js ./web/
 COPY css ./web/css
 COPY js ./web/js
 COPY icons ./web/icons

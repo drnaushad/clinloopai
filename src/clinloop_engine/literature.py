@@ -77,6 +77,7 @@ EVIDENCE_QUERIES: Dict[str, str] = {
     "R044": "incidental abdominal aortic aneurysm surveillance follow-up",
     "R045": "abdominal aortic aneurysm repair threshold referral",
     "R046": "growing pulmonary nodule management",
+    "R047": "artificial intelligence second reader radiology discrepancy missed findings",
 }
 
 

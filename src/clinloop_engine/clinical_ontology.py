@@ -57,6 +57,8 @@ class EventType(Enum):
     IMAGING_PET = "imaging_pet"                   # any completed PET or PET/CT study
     ENDOSCOPIC_ULTRASOUND = "endoscopic_ultrasound"
     RISK_FACTOR = "risk_factor"                   # e.g. smoking status (context only, never a trigger)
+    AI_FINDING = "ai_finding"                     # positive finding from an imaging-AI product (second reader)
+    AI_FINDING_REVIEWED = "ai_finding_reviewed"   # a radiologist addressed the AI finding (report/addendum)
 
 
 # ── Severity Classification ─────────────────────────────────────────────────
@@ -798,6 +800,26 @@ OBLIGATION_RULES: List[ObligationRule] = [
         followup_logic="any",
         evidence_note="Growth = report says so, or ≥2 mm larger than the patient's previous report. 30 days is a proposed target.",
     ),
+    ObligationRule(
+        rule_id="R047",
+        name="Imaging-AI Finding Not Addressed in the Report → Radiologist Review",
+        description=("An imaging-AI product flagged a finding (e.g. lung nodule, pneumothorax) that the radiology "
+                     "report does not mention; a radiologist must review the images and document a decision"),
+        trigger_event=EventType.AI_FINDING,
+        trigger_condition="ai_report_discrepancy",
+        required_followups=[EventType.AI_FINDING_REVIEWED],
+        deadline_days=7.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula="□(AI_FINDING[positive ∧ ¬mentioned in report] → ◇_{≤7d} AI_FINDING_REVIEWED)",
+        references=["ACR Data Science Institute: AI in clinical practice (second-reader use)",
+                    "MFDS 인공지능 의료기기 허가·심사 가이드라인"],
+        evidence_note=("The AI is a second reader, never a diagnosis. Critical findings (pneumothorax, free air, "
+                       "intracranial haemorrhage) are due within 1 day. Closed by a report or addendum that addresses "
+                       "the finding (confirming or refuting it), or by a clinician closing the loop with evidence. "
+                       "Findings from research-use models count only when the hospital enables them."),
+        patient_outreach=False,
+    ),
 ]
 
 
@@ -850,6 +872,7 @@ RULE_NAMES_KO: Dict[str, str] = {
     "R044": "복부대동맥류 → 추적 영상검사",
     "R045": "수술 기준 복부대동맥류 → 혈관외과 의뢰",
     "R046": "커지거나 의심되는 폐결절 → 정밀검사",
+    "R047": "영상 AI 소견이 판독문에 없음 → 영상의학과 재검토",
 }
 assert set(RULE_NAMES_KO) == {r.rule_id for r in OBLIGATION_RULES}, "every rule needs a Korean name"
 

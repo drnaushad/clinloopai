@@ -39,6 +39,7 @@ from src.clinloop_engine.auth import User, require_role
 from src.clinloop_engine.ehr_mcp_server import handle_call_tool as handle_ehr
 from src.clinloop_engine.pacs_mcp_server import handle_call_tool as handle_pacs
 from src.clinloop_engine.clinical_api import router as clinical_router, escalation_loop, get_store
+from src.clinloop_engine.imaging_api import router as imaging_router
 from src.clinloop_engine.fhir_sync import sync_loop
 
 # Initialize FastAPI App
@@ -79,6 +80,7 @@ app.add_middleware(
 )
 
 app.include_router(clinical_router)
+app.include_router(imaging_router)
 
 # Load Cases Data
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "cases.json")
