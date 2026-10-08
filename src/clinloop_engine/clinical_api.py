@@ -380,6 +380,12 @@ def open_loop_rate(stratify_by: Optional[str] = Query(None, description="rule | 
     return get_store().open_loop_rate(stratify_by=stratify_by)
 
 
+@router.get("/metrics/breakdowns", tags=["Clinical Pilot"])
+def breakdowns(user: User = Depends(require_role("viewer"))):
+    """Where follow-up breaks, hospital-wide: per rule, per owner (workload), per equity stratum, and bottlenecks."""
+    return get_store().breakdowns()
+
+
 @router.post("/watchdog/escalate", tags=["Clinical Pilot"])
 def escalate_now(user: User = Depends(require_role("admin"))):
     store = get_store()

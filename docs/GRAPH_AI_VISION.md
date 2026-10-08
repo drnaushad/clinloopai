@@ -220,3 +220,20 @@ on `governance.html`). For every rule it checks whether hospital data can produc
 whether hospital data can produce a follow-up that closes it. It also checks the references, the
 Korean name and the formal statement. It currently reports 56 rules with 0 errors and 0 warnings.
 Tests prove it catches a rule that can never fire or never close.
+
+**Guideline provenance (idea 3).** `config/guidelines.json` records the current edition of each
+guideline the rules cite. A rule citing an older edition is flagged on `governance.html` for specialist
+re-review. On day one it flagged three rules:
+- **R054** cites ESC 2020. ESC 2024 moved to CHA₂DS₂-VA, where sex no longer scores.
+  - `CLINLOOP_AF_SCORE=cha2ds2_va` switches the rule to the 2024 score.
+  - ACC/AHA 2023 still uses CHA₂DS₂-VASc, so the choice belongs to the hospital's cardiologists.
+- **R013 and R025** cite the ADA Standards 2024; the current edition is 2026.
+
+A specialist's documented decision to keep an older edition ("accepted") clears the flag.
+
+**Where follow-up breaks (idea 5, first step).** `quality.html` and `GET /api/v1/metrics/breakdowns`
+show:
+- each rule's active, overdue and on-time rates;
+- the follow-up step most often missing, which is the bottleneck a process fix should target;
+- missed rates by age group, language and sex, with groups ≥ 10 points above the overall rate marked;
+- workload by owner, for sharing work, never for ranking clinicians.

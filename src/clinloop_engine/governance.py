@@ -23,6 +23,7 @@ Every review and approval is written to the hash-chained audit log.
 
 import hashlib
 import json
+import re
 import os
 from typing import Dict, List, Optional
 
@@ -66,6 +67,43 @@ def enforcement_enabled() -> bool:
     return os.environ.get("CLINLOOP_ENFORCE_SIGNOFF", "").strip().lower() in ("1", "true", "yes", "on")
 
 
+GUIDELINES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "guidelines.json")
+
+
+def load_guidelines() -> Dict:
+    """The guideline registry (CLINLOOP_GUIDELINES overrides the bundled one)."""
+    path = os.environ.get("CLINLOOP_GUIDELINES") or GUIDELINES_PATH
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {"guidelines": []}
+
+
+def _version(text: str) -> Optional[int]:
+    """The edition a citation names: its 4-digit year (v2022, 2017, 'Diabetes-2026')."""
+    years = [int(y) for y in re.findall(r"(?<!\d)((?:19|20)\d{2})(?!\d)", text or "")]
+    return min(years) if years else None
+
+
+def guideline_alerts(rule: ObligationRule, registry: Optional[Dict] = None) -> List[Dict]:
+    """Citations of an older edition than the registry's current one: the rule needs specialist re-review."""
+    registry = registry if registry is not None else load_guidelines()
+    alerts = []
+    for g in registry.get("guidelines", []):
+        current = _version(str(g.get("current")))
+        for ref in rule.references:
+            if not re.search(g.get("match") or "^$", ref, re.I):
+                continue
+            cited = _version(ref)
+            if cited and current and cited < current:
+                accepted = (g.get("accepted") or {}).get(rule.rule_id)
+                alerts.append({"guideline": g["id"], "title": g.get("title"), "cited": cited, "current": current,
+                               "current_ref": g.get("current_ref"), "change": g.get("change"),
+                               "accepted": accepted, "reference": ref})
+    return alerts
+
+
 def rule_status(rule: ObligationRule, reviews: List[Dict]) -> Dict:
     current = rule_fingerprint(rule)
     on_current = [r for r in reviews if r["rule_hash"] == current]
@@ -85,6 +123,7 @@ def rule_status(rule: ObligationRule, reviews: List[Dict]) -> Dict:
     else:
         status = "pending"
     return {"rule_id": rule.rule_id, "fingerprint": current, "status": status,
+            "guideline_alerts": guideline_alerts(rule),
             "approvals": len(approvers), "approvals_required": approvals_required(), "approvers": approvers,
             "reviews": [{k: r[k] for k in ("decision", "reviewer", "specialty", "note", "decided_at", "rule_hash")}
                         for r in reviews]}
@@ -122,7 +161,9 @@ def summary(store) -> Dict:
     critical = critical_list_status(store)
     return {"rules_total": len(statuses), "rules_approved": counts.get("approved", 0), "by_status": counts,
             "approvals_required": approvals_required(), "enforce_signoff": enforcement_enabled(),
-            "critical_findings_list": critical["status"]}
+            "critical_findings_list": critical["status"],
+            "guideline_updates": sorted(r for r, st in statuses.items()
+                                        if any(not a["accepted"] for a in st.get("guideline_alerts") or []))}
 
 
 def live_rule_ids(store) -> Optional[set]:

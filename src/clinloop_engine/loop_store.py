@@ -24,6 +24,7 @@ Uses only the Python standard library (sqlite3).
 
 import hashlib
 import json
+import re
 import sqlite3
 import threading
 from datetime import datetime, timedelta
@@ -646,6 +647,78 @@ class LoopStore:
         return detail
 
     # ── quality measure ──────────────────────────────────────────────────────
+    def breakdowns(self, now: Optional[datetime] = None) -> Dict:
+        """
+        Where follow-up breaks, hospital-wide (process view, not people ranking):
+          * per rule: active, overdue, closed on time, closed late, closed by a clinician, deferred,
+            on-time rate among loops whose deadline has passed, and the follow-up step most often missing;
+          * per owner: active and overdue load, escalations (to balance work, not to blame);
+          * per equity stratum (age group, language, sex): overdue rate, so a gap affecting one group shows;
+          * bottlenecks: rules ranked by overdue loops weighted by severity.
+        """
+        now_iso = (now or utc_now()).isoformat()
+        sev_w = {"critical": 4, "high": 3, "moderate": 2, "low": 1}
+        with self._lock:
+            rows = [self._row(r) for r in self._db.execute("SELECT * FROM loops")]
+        rules: Dict[str, Dict] = {}
+        owners: Dict[str, Dict] = {}
+        strata: Dict[str, Dict[str, Dict[str, int]]] = {}
+        for r in rows:
+            active = r["engine_status"] in ACTIVE_ENGINE_STATUSES and r["workflow_state"] in ACTIVE_WORKFLOW_STATES
+            due_passed = bool(r["deadline"]) and r["deadline"] <= now_iso
+            overdue = active and due_passed
+            g = rules.setdefault(r["rule_id"], {
+                "rule_id": r["rule_id"], "rule_name": r["rule_name"], "severity": r["severity"], "total": 0,
+                "active": 0, "overdue": 0, "closed_on_time": 0, "closed_late": 0, "closed_by_clinician": 0,
+                "deferred": 0, "due_passed": 0, "missing": {}})
+            g["total"] += 1
+            g["active"] += int(active)
+            g["overdue"] += int(overdue)
+            if r["workflow_state"] == "closed_by_clinician":
+                g["closed_by_clinician"] += 1
+            elif r["workflow_state"] == "deferred":
+                g["deferred"] += 1
+            elif r["engine_status"] == "closed":
+                g["closed_on_time"] += 1
+            elif r["engine_status"] == "delayed" and not active:
+                g["closed_late"] += 1
+            if due_passed and r["workflow_state"] != "deferred":
+                g["due_passed"] += 1
+            if active and r.get("missing_step"):
+                step = re.sub(r"\s+within\s+.*$", "", re.sub(r"^Missing:\s*", "", r["missing_step"])).strip()
+                g["missing"][step] = g["missing"].get(step, 0) + 1
+            if active:
+                o = owners.setdefault(r["owner"], {"owner": r["owner"], "active": 0, "overdue": 0, "escalated": 0})
+                o["active"] += 1
+                o["overdue"] += int(overdue)
+                o["escalated"] += int((r.get("escalation_level") or 0) > 0)
+            if due_passed and r["workflow_state"] != "deferred":
+                for key in ("age_group", "language", "sex"):
+                    val = str((r.get("strata") or {}).get(key, "unknown"))
+                    cell = strata.setdefault(key, {}).setdefault(val, {"due_passed": 0, "missed": 0})
+                    cell["due_passed"] += 1
+                    cell["missed"] += int(r["engine_status"] in ACTIVE_ENGINE_STATUSES
+                                          and r["workflow_state"] != "closed_by_clinician")
+        for g in rules.values():
+            missed = g["overdue"] + g["closed_late"]
+            g["on_time_rate"] = round(1 - missed / g["due_passed"], 3) if g["due_passed"] else None
+            g["top_missing"] = max(g["missing"], key=g["missing"].get) if g["missing"] else None
+            g["bottleneck_score"] = g["overdue"] * sev_w.get(g["severity"], 1)
+        for groups in strata.values():
+            for cell in groups.values():
+                cell["missed_rate"] = round(cell["missed"] / cell["due_passed"], 3) if cell["due_passed"] else None
+        ranked = sorted(rules.values(), key=lambda g: (-g["bottleneck_score"], -g["active"], g["rule_id"]))
+        return {
+            "as_of": now_iso, "loops": len(rows),
+            "rules": ranked,
+            "bottlenecks": [{"rule_id": g["rule_id"], "rule_name": g["rule_name"], "overdue": g["overdue"],
+                             "severity": g["severity"], "top_missing": g["top_missing"]}
+                            for g in ranked if g["overdue"]][:5],
+            "owners": sorted(owners.values(), key=lambda o: (-o["overdue"], -o["active"], o["owner"])),
+            "strata": strata,
+            "note": "A process view: where follow-up breaks and for whom. Not a ranking of clinicians.",
+        }
+
     def open_loop_rate(self, now: Optional[datetime] = None, stratify_by: Optional[str] = None) -> Dict:
         """
         Open-loop rate (docs/LIFE_SAVING_ROADMAP.md §3.2), per 1,000 loops

@@ -1,0 +1,29 @@
+{
+  "_about": "Guideline registry: the current version of each guideline the rules cite. When a guideline committee learns of a new edition, it updates 'current' here; every rule citing an older edition is then flagged on governance.html for specialist re-review. 'accepted' records a specialist's documented decision that a rule may keep citing the older edition (rule id -> reason). Checked 2026-10-08; versions are listed only where the current edition is certain.",
+  "checked": "2026-10-08",
+  "guidelines": [
+    {"id": "esc-af", "title": "ESC Guidelines for the management of atrial fibrillation", "match": "ESC Guidelines? for atrial fibrillation|ESC.*atrial fibrillation",
+     "current": "2024", "current_ref": "Van Gelder IC et al. 2024 ESC Guidelines for atrial fibrillation. Eur Heart J 2024;45:3314-3414",
+     "change": "Stroke risk uses CHA2DS2-VA (sex no longer scores); oral anticoagulation recommended at a score >= 2 for everyone",
+     "accepted": {}},
+    {"id": "ada-soc", "title": "ADA Standards of Care in Diabetes", "match": "ADA Standards of (?:Medical )?Care in Diabetes",
+     "current": "2026", "current_ref": "American Diabetes Association. Standards of Care in Diabetes-2026. Diabetes Care 2026;49(Suppl 1)",
+     "change": "Annual update: check the relevant section of the current edition", "accepted": {}},
+    {"id": "fleischner", "title": "Fleischner Society guidelines for incidental pulmonary nodules", "match": "Fleischner",
+     "current": "2017", "current_ref": "MacMahon H et al. Radiology 2017;284:228-243", "accepted": {}},
+    {"id": "lung-rads", "title": "ACR Lung-RADS", "match": "Lung-RADS", "current": "2022",
+     "current_ref": "ACR Lung-RADS v2022", "accepted": {}},
+    {"id": "acc-aha-hf", "title": "AHA/ACC/HFSA Heart Failure Guideline", "match": "Heart Failure Guideline", "current": "2022",
+     "current_ref": "Heidenreich PA et al. Circulation 2022", "accepted": {}},
+    {"id": "aasld-hcc", "title": "AASLD HCC Practice Guidance", "match": "AASLD.*HCC", "current": "2023",
+     "current_ref": "Singal AG et al. Hepatology 2023", "accepted": {}},
+    {"id": "bsg-ida", "title": "BSG guidelines for iron deficiency anaemia", "match": "BSG guidelines for the management of iron deficiency",
+     "current": "2021", "current_ref": "Snook J et al. Gut 2021;70:2030-51", "accepted": {}},
+    {"id": "svs-aaa", "title": "SVS abdominal aortic aneurysm guidelines", "match": "SVS AAA", "current": "2018",
+     "current_ref": "Chaikof EL et al. J Vasc Surg 2018;67:2-77", "accepted": {}},
+    {"id": "acr-tirads", "title": "ACR TI-RADS", "match": "ACR TI-RADS", "current": "2017",
+     "current_ref": "Tessler FN et al. JACR 2017;14:587-595", "accepted": {}},
+    {"id": "bosniak", "title": "Bosniak classification", "match": "Bosniak", "current": "2019",
+     "current_ref": "Silverman SG et al. Radiology 2019;292:475-488", "accepted": {}}
+  ]
+}
