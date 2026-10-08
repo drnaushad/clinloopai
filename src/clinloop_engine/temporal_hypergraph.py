@@ -51,6 +51,13 @@ def _details_match(trigger: "ClinicalNode", rule: ObligationRule, node: "Clinica
     return not want or all(node.details.get(k) == v for k, v in want.items())
 
 
+def _type_ok(trigger: "ClinicalNode", rule: ObligationRule, node: "ClinicalNode") -> bool:
+    """A trigger may narrow which of the rule's follow-up types count (a note's 'CT' plan: CT studies only)."""
+    spec = trigger.details.get("followup_types")
+    allowed = spec.get(rule.rule_id) if isinstance(spec, dict) else None
+    return not allowed or node.event_type in allowed
+
+
 def _region_ok(required: List[str], node: "ClinicalNode") -> bool:
     """A study of unknown region does not close a region-specific loop (a clinician can close it with evidence)."""
     covered = node.details.get("body_regions") or []
@@ -460,7 +467,7 @@ class DynamicTemporalHypergraph:
                 if (required_regions and node.event_type in REGION_CHECKED_TYPES
                         and not _region_ok(required_regions, node)):
                     continue
-                if rule is not None and not _details_match(trigger, rule, node):
+                if rule is not None and not (_details_match(trigger, rule, node) and _type_ok(trigger, rule, node)):
                     continue
                 followups.append(node)
 

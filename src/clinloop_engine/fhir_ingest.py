@@ -34,6 +34,7 @@ from .imaging_fhir import (
     CLINLOOP_TAG_SYSTEM, DEFAULT_AI_THRESHOLD, DICOM_MODALITY, OCR_CONFIDENCE_URL, REGULATORY_URL,
     ai_finding_key, dicom_regions, norm_ref, regulatory_unverified, study_uid_from,
 )
+from .note_reader import analyte_of, find_plans, plan_label, specialty_of, MODALITY_EVENTS
 from .radiology import _CHEST_CT, _LIVER, decide_obligations, map_radiology_report
 from .report_text import affirmed as _affirmed, first_affirmed as _first_affirmed
 from .report_text import not_negated as _not_negated, span as _span
@@ -217,6 +218,9 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
             return [(EventType.BP_CHECK.value, ts, {"mapping": ["Observation(blood pressure)→bp_check"]})]
         return []
     details: Dict[str, Any] = {"test": _concept_text(r.get("code")) or None, "loinc": sorted(codes)}
+    analyte = analyte_of(_concept_text(r.get("code")), sorted(codes))
+    if analyte:
+        details["analyte"] = analyte          # matches a note's "repeat potassium" plan (R048)
 
     value = None
     if "valueQuantity" in r:
@@ -244,6 +248,7 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
 
     if codes & LOINC_FIT or re.search(r"\b(fit|fecal immunochemical|immunochemical.*stool|분변잠혈)\b", code_text):
         details["test"] = "FIT"
+        details.pop("analyte", None)
         positive = flag in ("ABNORMAL", "CRITICAL", "HIGH") or bool(
             re.search(r"\b(positive|detected|양성)\b", value_text, re.I)
             and not re.search(r"\bnot detected\b", value_text, re.I))
@@ -444,6 +449,12 @@ def _map_service_request(r: Dict) -> List[Tuple[str, str, Dict]]:
         etype = EventType.IMAGING_ORDER.value
     else:
         etype = EventType.LAB_ORDER.value
+    if etype == EventType.SPECIALIST_REFERRAL.value:
+        spec = specialty_of(_concept_text(r.get("code")) + " " + " ".join(
+            _concept_text(c) for c in r.get("performerType", []) if isinstance(r.get("performerType"), list))
+            + " " + _concept_text(r.get("performerType") if isinstance(r.get("performerType"), dict) else None))
+        if spec:
+            details["specialty"] = spec
     details["mapping"] = [f"ServiceRequest→{etype}"]
     return [(etype, ts, details)]
 
@@ -465,9 +476,11 @@ def _map_appointment(r: Dict) -> List[Tuple[str, str, Dict]]:
                 (EventType.FOLLOWUP_APPOINTMENT.value, ts, {"mapping": ["Appointment→followup_appointment"]})]
     if "blood pressure" in text or "혈압" in text:
         return [(EventType.BP_CHECK.value, ts, {"mapping": ["Appointment(BP check)→bp_check"]})]
-    events = [(EventType.FOLLOWUP_APPOINTMENT.value, ts, {"mapping": ["Appointment→followup_appointment"]})]
+    spec = specialty_of(text)
+    extra = {"specialty": spec} if spec else {}
+    events = [(EventType.FOLLOWUP_APPOINTMENT.value, ts, {**extra, "mapping": ["Appointment→followup_appointment"]})]
     if any(_ref_id(b, "ServiceRequest") for b in r.get("basedOn", [])):
-        events.append((EventType.REFERRAL_VISIT.value, ts, {"mapping": ["Appointment.basedOn referral→referral_visit"]}))
+        events.append((EventType.REFERRAL_VISIT.value, ts, {**extra, "mapping": ["Appointment.basedOn referral→referral_visit"]}))
     return events
 
 
@@ -588,6 +601,67 @@ def _map_procedure(r: Dict) -> List[Tuple[str, str, Dict]]:
     return [(etype, ts, {"procedure": _concept_text(r.get("code")), "mapping": [f"Procedure→{etype}"]})]
 
 
+def note_text(r: Dict) -> str:
+    """Plain text of a DocumentReference (text/plain or text/html attachments carried inline)."""
+    import base64
+    import html as _html
+    parts = []
+    for c in r.get("content", []):
+        a = c.get("attachment") or {}
+        ctype = str(a.get("contentType") or "text/plain").lower()
+        if not a.get("data") or not (ctype.startswith("text/plain") or ctype.startswith("text/html")):
+            continue
+        try:
+            raw = base64.b64decode(a["data"]).decode("utf-8", errors="replace")
+        except (ValueError, TypeError):
+            continue
+        if "html" in ctype:
+            raw = _html.unescape(re.sub(r"<br\s*/?>|</p>|</li>|</div>", "\n", raw, flags=re.I))
+            raw = re.sub(r"<[^>]+>", " ", raw)
+        parts.append(raw)
+    return "\n".join(parts)
+
+
+def _map_document_reference(r: Dict) -> List[Tuple[str, str, Dict]]:
+    """
+    A clinician's note: each concrete plan in it ("repeat potassium in 1 week", "refer to cardiology",
+    "3개월 후 흉부 CT") becomes an obligation (R048–R051), closed by the matching event.
+    """
+    if str(r.get("docStatus") or "").lower() in ("preliminary", "entered-in-error"):
+        return []
+    ts = _first(r.get("date"), ((r.get("context") or {}).get("period") or {}).get("start"))
+    text = note_text(r)
+    if not text.strip():
+        return []
+    note_type = _concept_text(r.get("type")) or r.get("description") or "Clinical note"
+    found = find_plans(text)
+    out = []
+    for i, p in enumerate(found["plans"]):
+        rule = p["rule_id"]
+        d: Dict[str, Any] = {
+            "note_type": note_type, "plan": p, "plan_label": plan_label(p), "evidence_span": p["evidence"],
+            "event_suffix": f"plan{i + 1}-{p['kind']}-{p['target'] or 'any'}",
+        }
+        if not p["tracked"]:
+            d["condition"] = "note_plan_not_tracked"
+            d["mapping"] = [f"DocumentReference→plan '{plan_label(p)}': not tracked ({p['reason']})"]
+        else:
+            d["condition"] = f"note_plan_{p['kind']}"
+            d["rule_deadline_days"] = {rule: p["due_days"]}
+            if p["kind"] == "lab" and p["target"]:
+                d["followup_match"] = {rule: {"analyte": p["target"]}}
+            if p["kind"] == "referral" and p["target"]:
+                d["followup_match"] = {rule: {"specialty": p["target"]}}
+            if p["kind"] == "imaging":
+                d["followup_types"] = {rule: MODALITY_EVENTS.get(p["target"], [])}
+                if p.get("regions"):
+                    d["followup_regions"] = {rule: list(p["regions"])}
+            d["mapping"] = [f"DocumentReference({note_type})→plan '{plan_label(p)}' → {rule}, due in "
+                            f"{p['due_days']:g} days{'' if p['interval_stated'] else ' (no interval in the note: default)'}"]
+        out.append((EventType.CLINICAL_NOTE_PLAN.value, ts, d))
+    return out
+
+
 MAPPERS = {
     "Observation": _map_observation,
     "DiagnosticReport": _map_diagnostic_report,
@@ -599,6 +673,7 @@ MAPPERS = {
     "Procedure": _map_procedure,
     "Condition": _map_condition,
     "ImagingStudy": _map_imaging_study,
+    "DocumentReference": _map_document_reference,
 }
 
 
@@ -655,8 +730,9 @@ def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], L
                 continue
             # Deterministic id: the same resource yields the same loop key on
             # every ingest, whatever order the bundle lists resources in.
+            suffix = details.pop("event_suffix", None)   # several plans from one note
             by_patient[pid].append({
-                "event_id": f"{rtype}/{rid}:{etype}",
+                "event_id": f"{rtype}/{rid}:{etype}" + (f":{suffix}" if suffix else ""),
                 "patient_id": pid,
                 "event_type": etype,
                 "timestamp": ts,

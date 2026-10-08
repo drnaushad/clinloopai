@@ -188,6 +188,21 @@ svg .ob-label { font: 700 10px var(--font-mono); }
       <div class="graph-wrap" id="graph-wrap" hidden><svg id="graph" role="img" aria-labelledby="graph-desc"><desc id="graph-desc"></desc></svg></div>
       <div class="legend" id="legend" hidden></div>
     </section>
+    <section class="card pane" style="margin-top:12px;" aria-labelledby="h-note">
+      <h2 id="h-note" data-i18n="noteTitle"></h2>
+      <p class="sub" data-i18n="noteHelp"></p>
+      <form id="note-form" style="display:grid;gap:8px;">
+        <textarea id="note-text" rows="7" data-i18n-ph="notePh"></textarea>
+        <div class="row3">
+          <div><label for="note-type" data-i18n="noteType"></label><input id="note-type" value="Outpatient progress note"></div>
+          <div><label for="note-date" data-i18n="noteDate"></label><input id="note-date" type="date"></div>
+          <label class="check" style="align-self:end;"><input type="checkbox" id="note-llm"> <span data-i18n="noteLlm"></span></label>
+        </div>
+        <div class="actions" style="margin-top:0;"><button type="submit" data-i18n="noteRead"></button>
+          <button type="button" class="primary" id="note-file" data-i18n="noteFile"></button></div>
+      </form>
+      <div id="note-result"></div>
+    </section>
     <section class="card detail" id="detail" hidden aria-live="polite"></section>
     <section class="card pane" id="obligations" hidden style="margin-top:12px;"></section>
   </div>
@@ -210,6 +225,11 @@ svg .ob-label { font: 700 10px var(--font-mono); }
       empty: '이 환자에 대해 읽은 임상 사건이 없습니다.', future: '평가 시점 이후', derived: 'ClinLoop이 다른 사건에서 도출',
       desc: (n, o) => `임상 사건 ${n}개와 진료 의무 ${o}개의 시간축 그래프`,
       footer: 'ClinLoop AI · 그래프는 엔진이 루프를 여닫는 데 쓴 것과 같은 데이터입니다. 진단이 아니라 후속 조치 추적입니다.',
+      noteTitle: '진료기록 읽기', noteHelp: '의사의 진료기록에서 계획(검사 재검, 영상, 타과 의뢰, 외래 재방문)을 찾아 추적합니다. 조건부(필요시), 취소, 이미 시행한 계획은 추적하지 않습니다. 저장 전에 식별정보를 지웁니다.',
+      notePh: '예) 계획: 2주 후 칼륨 재검. 3개월 후 흉부 CT. 심장내과 협진 의뢰. 6주 후 외래.', noteType: '기록 종류', noteDate: '기록 날짜',
+      noteLlm: '병원 내 로컬 AI에게 놓친 계획 제안 받기 (검토용)', noteRead: '계획 찾기', noteFile: '기록 등록 및 추적',
+      tracked: '추적', notTracked: '추적 안 함', dueIn: (d) => `${d}일 이내`, noPlans: '추적할 계획을 찾지 못했습니다.', filedNote: (n) => `등록했습니다. 추적 중인 계획 ${n}건. 그래프를 갱신했습니다.`,
+      llmTitle: '로컬 AI 제안 (검토용, 자동 추적 안 함)', llmNone: '추가 제안 없음', llmOff: (r) => `로컬 AI 사용 불가: ${r}`, source: '읽은 부분',
     },
     en: {
       title: 'Patient knowledge graph', subtitle: 'Every clinical event the engine read (diagnoses, lab values, orders, medications, appointments, imaging, reports, imaging AI) and the clinical obligations between them, on one time axis.',
@@ -223,9 +243,14 @@ svg .ob-label { font: 700 10px var(--font-mono); }
       empty: 'No clinical events were read for this patient.', future: 'after the evaluation time', derived: 'derived by ClinLoop from another event',
       desc: (n, o) => `Time-axis graph of ${n} clinical events and ${o} obligations`,
       footer: 'ClinLoop AI · The graph is the same data the engine used to open and close loops. Follow-up tracking, not diagnosis.',
+      noteTitle: 'Read a clinical note', noteHelp: 'Finds the plans in a clinician\'s note (repeat tests, imaging, referrals, follow-up visits) and tracks them. Conditional ("if…"), cancelled and already-done plans are not tracked. Identifiers are removed before the note is stored.',
+      notePh: 'e.g. Plan: Repeat potassium in 1 week. CT chest in 3 months. Refer to cardiology. Follow-up in 6 weeks.', noteType: 'Note type', noteDate: 'Note date',
+      noteLlm: 'Also ask the hospital\'s local AI for missed plans (for review)', noteRead: 'Find plans', noteFile: 'File note and track',
+      tracked: 'tracked', notTracked: 'not tracked', dueIn: (d) => `due within ${d} days`, noPlans: 'No plans to track were found.', filedNote: (n) => `Filed. ${n} plan(s) tracked. The graph was updated.`,
+      llmTitle: 'Local AI suggestions (for review, never tracked automatically)', llmNone: 'No further suggestions', llmOff: (r) => `Local AI unavailable: ${r}`, source: 'Read from',
     },
   };
-  const LANE_COLOR = { diagnoses: '#7c3aed', labs: '#0891b2', orders: '#ca8a04', medications: '#db2777', appointments: '#64748b', imaging: '#0284c7', reports: '#059669', ai: '#ea580c' };
+  const LANE_COLOR = { notes: '#4f46e5', diagnoses: '#7c3aed', labs: '#0891b2', orders: '#ca8a04', medications: '#db2777', appointments: '#64748b', imaging: '#0284c7', reports: '#059669', ai: '#ea580c' };
   const store = { get(k, s = sessionStorage) { try { return s.getItem(k) || ''; } catch { return ''; } },
                   set(k, v, s = sessionStorage) { try { s.setItem(k, v); } catch {} } };
   let lang = store.get('clinloop_lang', localStorage) || ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');
@@ -242,11 +267,14 @@ svg .ob-label { font: 700 10px var(--font-mono); }
     document.documentElement.lang = lang;
     $('btn-lang').textContent = lang === 'ko' ? 'English' : '한국어';
     document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t()[el.dataset.i18n]; });
+    document.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t()[el.dataset.i18nPh]; });
     if (state.graph) render();
   }
   function setStatus(msg, isError = false) { $('status').textContent = msg; $('status').classList.toggle('error', isError); }
-  async function api(path) {
-    const res = await fetch(state.base + path, { headers: { 'Authorization': `Bearer ${state.token}` } });
+  async function api(path, payload) {
+    const res = await fetch(state.base + path, payload ? { method: 'POST', body: JSON.stringify(payload),
+      headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' } }
+      : { headers: { 'Authorization': `Bearer ${state.token}` } });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.detail || `HTTP ${res.status}`);
     return body;
@@ -414,6 +442,36 @@ svg .ob-label { font: 700 10px var(--font-mono); }
       setStatus((state.graph.warnings || []).join(' · '));
     } catch (err) { setStatus(err.message, true); }
   }
+  function plansHtml(plans) {
+    if (!plans.length) return `<p class="sub">${esc(t().noPlans)}</p>`;
+    return `<table class="ob-table"><tbody>${plans.map((p) => `<tr><td><b>${esc(p.label || '')}</b><div class="sub" style="font-size:.8rem;">“${esc(p.evidence)}”</div></td>
+      <td>${p.tracked ? `<span class="chip ok">${esc(t().tracked)}</span> <span class="sub">${esc(p.rule_id)} · ${esc(t().dueIn(Math.round(p.due_days)))}</span>`
+        : `<span class="chip neutral">${esc(t().notTracked)}</span> <span class="sub">${esc(p.reason)}</span>`}</td></tr>`).join('')}</tbody></table>`;
+  }
+  const noteBody = () => ({ patient_id: $('patient').value.trim(), text: $('note-text').value, note_type: $('note-type').value || 'Clinical note',
+    date: $('note-date').value || null, suggest_with_llm: $('note-llm').checked });
+  $('note-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      setStatus(t().working);
+      const r = await api('/api/v1/documents/clinical-note/extract', noteBody());
+      let llm = '';
+      if (r.llm) {
+        llm = `<h3 class="sub" style="margin:10px 0 4px;"><b>${esc(t().llmTitle)}</b></h3>` + (!r.llm.available ? `<p class="sub">${esc(t().llmOff(r.llm.reason))}</p>`
+          : r.llm.suggestions.length ? `<ul class="sub">${r.llm.suggestions.map((x) => `<li>${esc(x.kind)} · ${esc(x.target || '')} ${esc(x.interval || '')} — “${esc(x.quote)}”</li>`).join('')}</ul>` : `<p class="sub">${esc(t().llmNone)}</p>`);
+      }
+      $('note-result').innerHTML = `<p class="sub">${esc(t().source)}: ${esc(r.source)}</p>` + plansHtml(r.plans) + llm;
+      setStatus('');
+    } catch (err) { setStatus(err.message, true); }
+  });
+  $('note-file').addEventListener('click', async () => {
+    try {
+      setStatus(t().working);
+      const r = await api('/api/v1/documents/clinical-note', noteBody());
+      await load();
+      setStatus(t().filedNote(r.plans.filter((p) => p.tracked).length));
+    } catch (err) { setStatus(err.message, true); }
+  });
   $('graph-form').addEventListener('submit', (e) => { e.preventDefault(); load(); });
   $('connect-form').addEventListener('submit', async (e) => {
     e.preventDefault();

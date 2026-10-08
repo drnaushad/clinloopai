@@ -39,6 +39,7 @@ LANES = [
     ("imaging", "Imaging studies & procedures", "영상 검사·시술"),
     ("reports", "Radiology reports", "영상 판독"),
     ("ai", "Imaging AI", "영상 AI"),
+    ("notes", "Clinical notes: plans", "진료기록 계획"),
 ]
 _E = EventType
 LANE_OF = {
@@ -57,6 +58,7 @@ LANE_OF = {
                                     _E.COLONOSCOPY, _E.BREAST_BIOPSY, _E.ENDOSCOPIC_ULTRASOUND)},
     **{e.value: "reports" for e in (_E.RADIOLOGY_REPORT, _E.IMAGING_RESULT)},
     **{e.value: "ai" for e in (_E.AI_FINDING, _E.AI_FINDING_REVIEWED)},
+    _E.CLINICAL_NOTE_PLAN.value: "notes",
 }
 
 
@@ -91,6 +93,10 @@ def node_label(event_type: str, d: Dict[str, Any]) -> str:
         return f"Smoking: {d['smoking']}" if d.get("smoking") else "Risk factor"
     if t == _E.MEDICATION_CHANGE.value:
         return str(d.get("medication") or d.get("drug") or "Medication change")
+    if t == _E.CLINICAL_NOTE_PLAN.value:
+        plan = d.get("plan") or {}
+        label = d.get("plan_label") or "Plan in a note"
+        return label if plan.get("tracked", True) else f"{label} — not tracked: {plan.get('reason')}"
     if t == _E.AI_FINDING.value:
         return f"AI: {d.get('finding_label') or 'finding'}" + (" (positive)" if d.get("positive") else "")
     if t in (_E.RADIOLOGY_REPORT.value, _E.PATHOLOGY_RESULT.value):
@@ -132,12 +138,20 @@ def build_patient_graph(patient_id: str, events: List[Dict[str, Any]],
         if rule.followup_logic == "any" and found:
             missing = []
         regions = _required_regions(he.trigger_node, rule)
+        narrowed = (he.trigger_node.details.get("followup_types") or {}).get(rule.rule_id)
+        if narrowed:                      # a note's "CT" plan: only CT counts
+            missing = [ft for ft in missing if ft in narrowed][:1] or missing[:1]
+        elif he.trigger_node.event_type == _E.CLINICAL_NOTE_PLAN.value:
+            missing = missing[:1]         # "lab result", not every lab-like event type
+        match = (he.trigger_node.details.get("followup_match") or {}).get(rule.rule_id) or {}
+        what = ", ".join(str(v).replace("_", " ") for k, v in match.items() if k in ("analyte", "specialty"))
         hyperedges.append({
             "id": he.edge_id, "rule_id": rule.rule_id, "rule_name": rule.name,
             "severity": rule.severity.value, "status": he.status,
             "trigger": he.trigger_node.node_id,
             "followups": [f.node_id for f in he.actual_followup_nodes],
-            "expected": [{"type": ft, "label": _pretty(ft) + (f" · {', '.join(regions)}" if regions and LANE_OF.get(ft) == "imaging" else ""),
+            "expected": [{"type": ft, "label": _pretty(ft) + (f" · {', '.join(regions)}" if regions and LANE_OF.get(ft) == "imaging" else "")
+                          + (f" · {what}" if what else ""),
                           "lane": LANE_OF.get(ft, "appointments")} for ft in missing],
             "followup_logic": rule.followup_logic,
             "deadline": he.deadline.isoformat() if he.deadline else None,
