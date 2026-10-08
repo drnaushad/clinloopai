@@ -25,7 +25,7 @@ import numpy as np
 from .clinical_ontology import (
     EventType, Severity, LoopStatus, ObligationRule,
     OBLIGATION_RULES, get_rules_for_event, get_severity_score,
-    get_deadline_days, is_fulfilling_status,
+    get_deadline_days, is_fulfilling_status, format_window,
 )
 from .safety_clock import normalize_timestamp, utc_now
 
@@ -231,12 +231,49 @@ class DynamicTemporalHypergraph:
 
         # 5. Standard flag fallback
         flag = details.get("flag", "")
-        if flag in ("ABNORMAL", "HIGH", "CRITICAL"):
+        if flag in ("ABNORMAL", "HIGH", "LOW", "CRITICAL", "PANIC"):
             return "abnormal"
         if flag == "NORMAL":
             return "normal"
 
         return ""
+
+    def _infer_conditions(self, node: "ClinicalNode") -> List[str]:
+        """
+        All trigger conditions an event satisfies.
+
+        One result can carry several obligations at once: a panic potassium
+        is both "abnormal" (notify, follow up) and "critical_value" (call a
+        clinician within the hour). Additional conditions come from
+        structured fields, so FHIR ingestion can set them reliably.
+        """
+        details = node.details
+        conditions = [self._infer_condition(node)]
+        flag = str(details.get("flag", "")).upper()
+        is_abnormal = conditions[0] not in ("", "normal") or flag in (
+            "ABNORMAL", "HIGH", "LOW", "CRITICAL", "PANIC")
+
+        if flag in ("CRITICAL", "PANIC") or details.get("critical") is True:
+            conditions.append("critical_value")
+        if details.get("resulted_after_discharge") is True and is_abnormal:
+            conditions.append("abnormal_post_discharge")
+
+        test = str(details.get("test", "")).strip().lower()
+        result = str(details.get("result", "")).strip().lower()
+        if test in ("fit", "fecal_immunochemical_test", "fobt") and result in ("positive", "detected"):
+            conditions.append("positive_fit")
+
+        birads = str(details.get("birads", "")).strip().upper()
+        if birads[:1] in ("4", "5"):
+            conditions.append("birads_4_5")
+
+        lung_rads = str(details.get("lung_rads", "")).strip().upper()
+        if lung_rads == "4A":
+            conditions.append("lung_rads_4a")
+        elif lung_rads in ("4B", "4X"):
+            conditions.append("lung_rads_4b_4x")
+
+        return [c for c in dict.fromkeys(conditions) if c]
 
     def _build_obligation_hyperedges(self, nodes_list: List[ClinicalNode]) -> None:
         """
@@ -248,11 +285,12 @@ class DynamicTemporalHypergraph:
             if event_enum is None:
                 continue
 
-            # Infer the trigger condition using the enriched helper
-            condition = self._infer_condition(node)
-
-            # Find matching obligation rules
-            matching_rules = get_rules_for_event(event_enum, condition)
+            # Infer every trigger condition and collect their rules (once each)
+            matching_rules: List[ObligationRule] = []
+            for condition in self._infer_conditions(node):
+                for rule in get_rules_for_event(event_enum, condition):
+                    if rule not in matching_rules:
+                        matching_rules.append(rule)
 
             for rule in matching_rules:
                 # Check if follow-up nodes exist
@@ -289,7 +327,7 @@ class DynamicTemporalHypergraph:
                     f"(details: {node.details})",
                     f"Rule: {rule.name} [{rule.rule_id}]",
                     f"Required: {[ft.value for ft in rule.required_followups]}",
-                    f"Deadline: {deadline.isoformat()} ({deadline_days} days)",
+                    f"Deadline: {deadline.isoformat()} ({format_window(deadline_days)})",
                     f"Found follow-ups: {[fn.event_type for fn in followup_nodes]}",
                     f"Status: {hyperedge.status}",
                 ]

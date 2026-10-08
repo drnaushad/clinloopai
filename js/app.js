@@ -250,6 +250,13 @@ const CLINLOOP_I18N = {
 
 
 // ── Global: Test Local LLM Button (Privacy Shield Tab) ──────────────────────
+// The local LLM runs on-premise, so the backend is only reachable when the
+// cockpit itself is served from the hospital machine (or when a deployment
+// sets window.CLINLOOP_API_BASE explicitly).
+const IS_LOCAL_HOST = ['localhost', '127.0.0.1'].includes(location.hostname);
+const CLINLOOP_API_BASE = window.CLINLOOP_API_BASE || (IS_LOCAL_HOST ? 'http://localhost:8124' : null);
+const OLLAMA_BASE = IS_LOCAL_HOST ? 'http://localhost:11434' : null;
+
 async function testLocalLLM() {
   const btn = document.getElementById('test-local-llm-btn');
   const badge = document.getElementById('local-llm-status-badge');
@@ -261,21 +268,30 @@ async function testLocalLLM() {
   if (badge) badge.textContent = 'Calling MedLlama2 via Ollama...';
   if (output) { output.style.display = 'block'; output.textContent = ''; }
 
+  if (!CLINLOOP_API_BASE && !OLLAMA_BASE) {
+    if (badge) badge.innerHTML = `<span style="color:#f59e0b">⚠️ On-premise LLM not available in the public demo</span>`;
+    if (output) output.textContent = 'The local LLM runs only inside the hospital network (ClinLoop API on port 8124 with Ollama). Nothing was generated. Run the cockpit and API locally to try this panel.';
+    btn.textContent = '▶ Initialize Secure Local LLM';
+    btn.disabled = false;
+    return;
+  }
+
   try {
+    if (!CLINLOOP_API_BASE) throw new Error('API not configured');
     // First check engine status
-    const statusResp = await fetch('http://localhost:8124/api/v1/local-llm/status', {timeout: 5000});
+    const statusResp = await fetch(`${CLINLOOP_API_BASE}/api/v1/local-llm/status`);
     const status = statusResp.ok ? await statusResp.json() : null;
     const bestModel = status?.best_model || 'deepseek-r1:32b';
 
     if (badge) badge.textContent = `Best model: ${status?.best_model_label || bestModel} · Generating...`;
 
     const t0 = Date.now();
-    const resp = await fetch('http://localhost:8124/api/v1/local-llm/generate', {
+    const resp = await fetch(`${CLINLOOP_API_BASE}/api/v1/local-llm/generate`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         task: 'kakao_message_ko',
-        clinical_context: 'Patient: 40대 남성. CT finding: 14mm ground-glass nodule in right lower lobe. Risk: 42.1% malignant progression (Fleischner 2017 high-risk). Follow-up PET-CT required within 24 days.',
+        clinical_context: 'Patient: 40대 남성. CT finding: 14mm ground-glass nodule in right lower lobe. Fleischner 2017: follow-up chest CT at 6-12 months.',
       })
     });
 
@@ -283,7 +299,8 @@ async function testLocalLLM() {
 
     if (resp.ok) {
       const data = await resp.json();
-      if (output) output.textContent = data.text || '(empty response)';
+      if (!data.text) throw new Error(data.error || 'empty response');
+      if (output) output.textContent = data.text;
       if (badge) badge.innerHTML = `<span style="color:#10b981">✅ ${data.model} · ${data.latency_ms || latency}ms · On-Premise ✓</span>`;
     } else {
       throw new Error(`HTTP ${resp.status}`);
@@ -291,8 +308,9 @@ async function testLocalLLM() {
   } catch (e) {
     // Fallback: call Ollama directly
     try {
+      if (!OLLAMA_BASE) throw e;
       const t0 = Date.now();
-      const resp = await fetch('http://localhost:11434/api/generate', {
+      const resp = await fetch(`${OLLAMA_BASE}/api/generate`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -304,11 +322,12 @@ async function testLocalLLM() {
       });
       const latency = Date.now() - t0;
       const data = await resp.json();
-      if (output) output.textContent = data.response || '(empty)';
+      if (!data.response) throw new Error('empty response');
+      if (output) output.textContent = data.response;
       if (badge) badge.innerHTML = `<span style="color:#10b981">✅ ${data.model} (direct Ollama) · ${Math.round(latency/1000)}s · On-Premise ✓</span>`;
     } catch (e2) {
-      if (badge) badge.innerHTML = `<span style="color:#f59e0b">⚠️ Backend offline. DeepSeek-R1 runs on port 8124 / Ollama port 11434</span>`;
-      if (output) { output.textContent = '[Secure link: Patient communication successfully generated and staged for approval.]'; output.style.display = 'block'; }
+      if (badge) badge.innerHTML = `<span style="color:#f59e0b">⚠️ Local LLM offline (ClinLoop API port 8124 / Ollama port 11434)</span>`;
+      if (output) { output.textContent = 'No message was generated: the on-premise LLM did not respond. Start Ollama and the ClinLoop API, then try again.'; output.style.display = 'block'; }
     }
   }
   btn.textContent = '▶ Initialize Secure Local LLM';
@@ -1831,9 +1850,9 @@ class ClinLoopApp {
         ageSex: '남성 52세',
         dept: '응급의학과 외상진료 (갈비뼈 골절 치료 후 퇴원)',
         finding: '흉부 CT 판독 결과 우상엽(RUL)에 7.8mm 크기의 침상형 폐 결절 우연 발견 (조기 폐암 의심 소견)',
-        missed: '갈비뼈 치료만 완료되고 폐 결절에 대한 외래 예약이나 호흡기내과 협진이 누락된 채 66일 경과',
-        guideline: 'Fleischner Society 2017 가이드라인 (90일 이내 저선량 흉부 CT 재검 또는 조직검사 필수)',
-        deadline: '24일 남음 (마감일자: 2026-10-15)',
+        missed: '갈비뼈 치료만 완료되고 폐 결절에 대한 외래 예약이나 호흡기내과 협진이 누락된 채 105일 경과',
+        guideline: 'Fleischner Society 2017 가이드라인 (6–8mm 고형 결절: 6–12개월 내 흉부 CT 추적, 침상형 등 고위험 형태는 더 이른 추적 고려)',
+        deadline: '74일 남음 (마감일자: 2026-12-04)',
         negRisk: '42.1% (1년 내 Stage IV 전이암 악화 위험)',
         negSurvival: '15.0% (치명적 급락)',
         posCure: '94.8% (조기 흉강경 절제술 완치)',
@@ -1914,9 +1933,9 @@ class ClinLoopApp {
         ageSex: 'Male 52y',
         dept: 'Emergency Medicine Trauma (Discharged post-rib fracture fixation)',
         finding: 'Chest CT reveals incidental 7.8mm spiculated pulmonary nodule in RUL (High suspicion of early Stage IA lung cancer)',
-        missed: 'Rib fracture treated but follow-up CT and Pulmonology referral silently lost in EMR for 66 days post-discharge',
-        guideline: 'Fleischner Society 2017 Guidelines (Thin-slice Chest CT repeat within 90 days or tissue biopsy)',
-        deadline: '24 Days Remaining (Safety Deadline: 2026-10-15)',
+        missed: 'Rib fracture treated but follow-up CT and Pulmonology referral silently lost in EMR for 105 days post-discharge',
+        guideline: 'Fleischner Society 2017 Guidelines (6–8 mm solid nodule: chest CT at 6–12 months; consider earlier follow-up for suspicious morphology such as spiculation)',
+        deadline: '74 Days Remaining (Safety Deadline: 2026-12-04)',
         negRisk: '42.1% (Progression to metastatic Stage IV within 1 year)',
         negSurvival: '15.0% (Catastrophic drop in survival)',
         posCure: '94.8% (Curative early VATS wedge resection)',

@@ -91,6 +91,13 @@ class RiskScorer:
             "R014": 0.20,  # Post-MI follow-up: high urgency ensures moderate compliance
             "R015": 0.12,  # Bacteremia repeat culture: inpatient protocol-driven, low miss rate
             "R016": 0.35,  # New HF echocardiogram: outpatient scheduling delays common
+            # Wave 1 placeholders until estimated from local data
+            "R017": 0.40,  # FIT+ colonoscopy completion is often incomplete
+            "R018": 0.15,
+            "R019": 0.30,
+            "R020": 0.20,
+            "R021": 0.40,  # Post-discharge results frequently unacknowledged
+            "R022": 0.10,
         }
 
         # Actionability scores (does a clear next step exist?)
@@ -111,6 +118,12 @@ class RiskScorer:
             "R014": 0.95,  # Clear: schedule cardiology outpatient visit
             "R015": 0.95,  # Clear: order repeat blood culture (inpatient protocol)
             "R016": 0.90,  # Clear: order echocardiogram
+            "R017": 0.90,  # Clear: book colonoscopy
+            "R018": 0.90,  # Clear: order biopsy
+            "R019": 0.90,  # Clear: order 3-month LDCT
+            "R020": 0.85,  # Clear but multi-option work-up
+            "R021": 0.90,  # Clear: review and act on result
+            "R022": 0.95,  # Clear: call the responsible clinician
         }
 
     def compute_uncertainty(self, event_details: Dict, n_events: int) -> float:

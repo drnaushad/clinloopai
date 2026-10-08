@@ -1,0 +1,356 @@
+"""
+loop_store.py — Persistent loop registry, clinical workflow and audit log
+
+The detection engine is stateless: it re-derives every loop from the record
+on each run. Clinical work is not stateless. This module remembers, per
+loop, who owns it, what was done about it and why, and escalates loops
+nobody is acting on.
+
+Workflow states:
+    new → acknowledged → closed_by_clinician
+        ↘ deferred (coded reason, optional until-date; resurfaces when it expires)
+    any active state → resolved_by_engine (the record now shows the follow-up)
+
+Principles:
+  * Closure needs evidence. A clinician closing a loop must say what closed
+    it; a click is not closure.
+  * Deferral needs a coded reason, so clinical judgment is documented and
+    the reasons can refine the rules.
+  * Every action is written to an append-only audit log whose entries are
+    SHA-256 hash-chained, so tampering with history is detectable.
+
+Uses only the Python standard library (sqlite3).
+"""
+
+import hashlib
+import json
+import sqlite3
+import threading
+from datetime import datetime, timedelta
+from typing import Any, Dict, Iterable, List, Optional
+
+from .clinical_ontology import LoopStatus
+from .safety_clock import utc_now
+
+ACTIVE_ENGINE_STATUSES = (LoopStatus.OPEN.value, LoopStatus.DELAYED.value, LoopStatus.ABSTAIN.value)
+ACTIVE_WORKFLOW_STATES = ("new", "acknowledged")
+
+DEFER_REASONS = {
+    "patient_declined": "Patient informed and declined (informed refusal documented)",
+    "completed_elsewhere": "Follow-up completed at another institution",
+    "not_clinically_indicated": "Clinician judges follow-up not indicated",
+    "hospice_or_comfort_care": "Patient in hospice or comfort-focused care",
+    "patient_deceased": "Patient deceased",
+    "duplicate": "Duplicate of another loop",
+    "other": "Other (note required)",
+}
+REASONS_REQUIRING_NOTE = {"not_clinically_indicated", "other"}
+
+# Escalation chain. A loop past its deadline that nobody has acknowledged
+# climbs one level each time its grace period passes again.
+ESCALATION_CHAIN = ["owner", "department_lead", "patient_safety_officer"]
+ESCALATION_GRACE = {"critical": timedelta(hours=1), "high": timedelta(hours=24),
+                    "moderate": timedelta(hours=72), "low": timedelta(days=7)}
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS loops (
+    loop_key TEXT PRIMARY KEY,
+    patient_id TEXT NOT NULL,
+    rule_id TEXT NOT NULL,
+    rule_name TEXT,
+    severity TEXT,
+    trigger_event TEXT,
+    trigger_time TEXT,
+    deadline TEXT,
+    engine_status TEXT,
+    workflow_state TEXT NOT NULL DEFAULT 'new',
+    risk_score REAL,
+    clock_state TEXT,
+    missing_step TEXT,
+    recommended_action TEXT,
+    explanation TEXT,
+    evidence_chain TEXT,
+    owner TEXT NOT NULL DEFAULT 'unassigned',
+    escalation_level INTEGER NOT NULL DEFAULT 0,
+    last_escalated_at TEXT,
+    defer_reason TEXT,
+    defer_note TEXT,
+    defer_until TEXT,
+    closure_evidence TEXT,
+    strata TEXT,
+    first_seen TEXT,
+    last_seen TEXT,
+    updated_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_loops_patient ON loops(patient_id);
+CREATE INDEX IF NOT EXISTS idx_loops_owner ON loops(owner);
+CREATE TABLE IF NOT EXISTS audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    role TEXT,
+    action TEXT NOT NULL,
+    loop_key TEXT,
+    detail TEXT,
+    prev_hash TEXT NOT NULL,
+    hash TEXT NOT NULL
+);
+"""
+
+
+class WorkflowError(ValueError):
+    """Raised when a workflow action is not allowed in the loop's current state."""
+
+
+def loop_key(patient_id: str, rule_id: str, trigger_event_id: str) -> str:
+    return f"{patient_id}|{rule_id}|{trigger_event_id}"
+
+
+class LoopStore:
+    def __init__(self, path: str = ":memory:"):
+        self._lock = threading.RLock()
+        self._db = sqlite3.connect(path, check_same_thread=False)
+        self._db.row_factory = sqlite3.Row
+        with self._lock:
+            self._db.executescript(SCHEMA)
+            self._db.commit()
+
+    # ── audit ────────────────────────────────────────────────────────────────
+    def _audit(self, actor: str, role: str, action: str, key: Optional[str], detail: Dict) -> None:
+        row = self._db.execute("SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1").fetchone()
+        prev = row["hash"] if row else "GENESIS"
+        ts = utc_now().isoformat()
+        body = json.dumps({"ts": ts, "actor": actor, "role": role, "action": action,
+                           "loop_key": key, "detail": detail, "prev": prev},
+                          sort_keys=True, ensure_ascii=False, default=str)
+        digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
+        self._db.execute(
+            "INSERT INTO audit_log (ts, actor, role, action, loop_key, detail, prev_hash, hash) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            (ts, actor, role, action, key, json.dumps(detail, ensure_ascii=False, default=str), prev, digest))
+
+    def audit_trail(self, key: Optional[str] = None, limit: int = 200) -> List[Dict]:
+        with self._lock:
+            if key:
+                rows = self._db.execute("SELECT * FROM audit_log WHERE loop_key=? ORDER BY id", (key,))
+            else:
+                rows = self._db.execute("SELECT * FROM audit_log ORDER BY id DESC LIMIT ?", (limit,))
+            return [{**dict(r), "detail": json.loads(r["detail"] or "{}")} for r in rows]
+
+    def verify_audit_chain(self) -> bool:
+        """Recompute every hash; False if any entry was altered, removed or reordered."""
+        with self._lock:
+            prev = "GENESIS"
+            for r in self._db.execute("SELECT * FROM audit_log ORDER BY id"):
+                body = json.dumps({"ts": r["ts"], "actor": r["actor"], "role": r["role"],
+                                   "action": r["action"], "loop_key": r["loop_key"],
+                                   "detail": json.loads(r["detail"] or "{}"), "prev": prev},
+                                  sort_keys=True, ensure_ascii=False, default=str)
+                if r["prev_hash"] != prev or hashlib.sha256(body.encode("utf-8")).hexdigest() != r["hash"]:
+                    return False
+                prev = r["hash"]
+            return True
+
+    # ── ingest detections ────────────────────────────────────────────────────
+    def upsert_detections(self, detections: Iterable[Any],
+                          strata: Optional[Dict[str, Dict]] = None, actor: str = "engine",
+                          default_owner: str = "unassigned") -> Dict[str, int]:
+        """
+        Record the engine's view of each loop. A loop's key is
+        patient | rule | trigger event, so it is stable across runs.
+        `strata` maps patient_id → equity attributes (age group, insurance,
+        language) used to stratify the open-loop rate.
+        Returns counts of new / updated / resolved loops.
+        """
+        counts = {"new": 0, "updated": 0, "resolved_by_engine": 0}
+        now = utc_now().isoformat()
+        strata = strata or {}
+        with self._lock:
+            for d in detections:
+                key = loop_key(d.patient_id, d.rule_id, d.trigger_event_id or d.trigger_time)
+                existing = self._db.execute("SELECT * FROM loops WHERE loop_key=?", (key,)).fetchone()
+                fields = {
+                    "rule_name": d.rule_name, "severity": d.severity, "trigger_event": d.trigger_event,
+                    "trigger_time": d.trigger_time, "deadline": d.deadline, "engine_status": d.loop_status,
+                    "risk_score": d.risk_score, "clock_state": d.clock_state, "missing_step": d.missing_step,
+                    "recommended_action": d.recommended_action,
+                    "explanation": json.dumps(d.explanation, ensure_ascii=False),
+                    "evidence_chain": json.dumps(d.evidence_chain, ensure_ascii=False),
+                    "last_seen": now, "updated_at": now,
+                }
+                if existing is None:
+                    workflow = "new" if d.loop_status in ACTIVE_ENGINE_STATUSES else "resolved_by_engine"
+                    self._db.execute(
+                        f"INSERT INTO loops (loop_key, patient_id, rule_id, workflow_state, owner, strata, first_seen, "
+                        f"{', '.join(fields)}) VALUES (?,?,?,?,?,?,?,{', '.join('?' * len(fields))})",
+                        (key, d.patient_id, d.rule_id, workflow, default_owner,
+                         json.dumps(strata.get(d.patient_id, {}), ensure_ascii=False), now, *fields.values()))
+                    if workflow == "new":
+                        counts["new"] += 1
+                        self._audit(actor, "system", "loop_opened", key,
+                                    {"rule_id": d.rule_id, "engine_status": d.loop_status, "deadline": d.deadline})
+                    continue
+
+                if (d.loop_status == LoopStatus.CLOSED.value
+                        and existing["workflow_state"] in ACTIVE_WORKFLOW_STATES + ("deferred",)):
+                    fields["workflow_state"] = "resolved_by_engine"
+                    counts["resolved_by_engine"] += 1
+                    self._audit(actor, "system", "loop_resolved_by_record", key,
+                                {"evidence": "required follow-up found in the record"})
+                elif (d.loop_status in ACTIVE_ENGINE_STATUSES
+                      and existing["workflow_state"] == "resolved_by_engine"):
+                    # The record changed (e.g. a follow-up was cancelled): reopen
+                    fields["workflow_state"] = "new"
+                    self._audit(actor, "system", "loop_reopened", key, {"engine_status": d.loop_status})
+                counts["updated"] += 1
+                self._db.execute(
+                    f"UPDATE loops SET {', '.join(f'{k}=?' for k in fields)} WHERE loop_key=?",
+                    (*fields.values(), key))
+            self._db.commit()
+        return counts
+
+    # ── read ─────────────────────────────────────────────────────────────────
+    @staticmethod
+    def _row(r: sqlite3.Row) -> Dict:
+        d = dict(r)
+        for k in ("explanation", "evidence_chain", "strata"):
+            d[k] = json.loads(d[k]) if d.get(k) else ([] if k != "strata" else {})
+        d["escalated_to"] = ESCALATION_CHAIN[min(d["escalation_level"], len(ESCALATION_CHAIN) - 1)]
+        return d
+
+    def get(self, key: str) -> Dict:
+        with self._lock:
+            r = self._db.execute("SELECT * FROM loops WHERE loop_key=?", (key,)).fetchone()
+        if r is None:
+            raise KeyError(key)
+        return self._row(r)
+
+    def worklist(self, owner: Optional[str] = None, include_inactive: bool = False,
+                 now: Optional[datetime] = None) -> List[Dict]:
+        """
+        Active loops, most dangerous first: severity, then overdue, then risk.
+        Deferred loops come back once their until-date passes.
+        """
+        now_iso = (now or utc_now()).isoformat()
+        with self._lock:
+            rows = [self._row(r) for r in self._db.execute("SELECT * FROM loops")]
+        out = []
+        for r in rows:
+            expired_deferral = (r["workflow_state"] == "deferred" and r["defer_until"]
+                                and r["defer_until"] <= now_iso)
+            active = r["workflow_state"] in ACTIVE_WORKFLOW_STATES or expired_deferral
+            if not include_inactive and not active:
+                continue
+            if owner and r["owner"] != owner:
+                continue
+            r["deferral_expired"] = bool(expired_deferral)
+            out.append(r)
+        sev_rank = {"critical": 0, "high": 1, "moderate": 2, "low": 3}
+        out.sort(key=lambda r: (
+            r["workflow_state"] not in ACTIVE_WORKFLOW_STATES and not r["deferral_expired"],
+            sev_rank.get(r["severity"], 4),
+            r["clock_state"] != "BLACK",
+            -(r["risk_score"] or 0),
+        ))
+        return out
+
+    # ── clinician actions ────────────────────────────────────────────────────
+    def _transition(self, key: str, actor: str, role: str, action: str,
+                    allowed_from: Iterable[str], updates: Dict, detail: Dict) -> Dict:
+        with self._lock:
+            loop = self.get(key)
+            if loop["workflow_state"] not in allowed_from:
+                raise WorkflowError(f"Cannot {action} a loop in state '{loop['workflow_state']}'")
+            updates = {**updates, "updated_at": utc_now().isoformat()}
+            self._db.execute(f"UPDATE loops SET {', '.join(f'{k}=?' for k in updates)} WHERE loop_key=?",
+                             (*updates.values(), key))
+            self._audit(actor, role, action, key, detail)
+            self._db.commit()
+            return self.get(key)
+
+    def acknowledge(self, key: str, actor: str, role: str = "clinician") -> Dict:
+        return self._transition(key, actor, role, "acknowledge", ("new", "deferred"),
+                                {"workflow_state": "acknowledged"}, {})
+
+    def assign(self, key: str, owner: str, actor: str, role: str = "admin") -> Dict:
+        return self._transition(key, actor, role, "assign", ACTIVE_WORKFLOW_STATES + ("deferred",),
+                                {"owner": owner, "escalation_level": 0}, {"owner": owner})
+
+    def defer(self, key: str, actor: str, reason_code: str, note: str = "",
+              until: Optional[str] = None, role: str = "clinician") -> Dict:
+        if reason_code not in DEFER_REASONS:
+            raise WorkflowError(f"Unknown reason '{reason_code}'. Use one of: {', '.join(DEFER_REASONS)}")
+        if reason_code in REASONS_REQUIRING_NOTE and not note.strip():
+            raise WorkflowError(f"A note is required for reason '{reason_code}'")
+        return self._transition(key, actor, role, "defer", ACTIVE_WORKFLOW_STATES,
+                                {"workflow_state": "deferred", "defer_reason": reason_code,
+                                 "defer_note": note, "defer_until": until},
+                                {"reason": reason_code, "note": note, "until": until})
+
+    def close(self, key: str, actor: str, evidence: str, role: str = "clinician") -> Dict:
+        if not evidence or len(evidence.strip()) < 5:
+            raise WorkflowError("Closure requires evidence of the completed follow-up (e.g. order or visit reference)")
+        return self._transition(key, actor, role, "close", ACTIVE_WORKFLOW_STATES + ("deferred",),
+                                {"workflow_state": "closed_by_clinician", "closure_evidence": evidence},
+                                {"evidence": evidence})
+
+    # ── escalation ───────────────────────────────────────────────────────────
+    def escalate_overdue(self, now: Optional[datetime] = None, actor: str = "watchdog") -> List[Dict]:
+        """
+        Climb the escalation chain for loops past their deadline that nobody
+        has acknowledged. Each level waits one severity-specific grace period.
+        """
+        now = now or utc_now()
+        escalated = []
+        with self._lock:
+            for loop in self.worklist(now=now):
+                if loop["workflow_state"] != "new" or loop["clock_state"] != "BLACK":
+                    continue
+                if loop["escalation_level"] >= len(ESCALATION_CHAIN) - 1:
+                    continue
+                grace = ESCALATION_GRACE.get(loop["severity"], timedelta(hours=24))
+                since = loop["last_escalated_at"] or loop["deadline"]
+                if since and datetime.fromisoformat(since) + grace > now:
+                    continue
+                level = loop["escalation_level"] + 1
+                self._db.execute("UPDATE loops SET escalation_level=?, last_escalated_at=?, updated_at=? "
+                                 "WHERE loop_key=?",
+                                 (level, now.isoformat(), now.isoformat(), loop["loop_key"]))
+                self._audit(actor, "system", "escalate", loop["loop_key"],
+                            {"level": level, "to": ESCALATION_CHAIN[level], "severity": loop["severity"]})
+                escalated.append({"loop_key": loop["loop_key"], "level": level, "to": ESCALATION_CHAIN[level]})
+            self._db.commit()
+        return escalated
+
+    # ── quality measure ──────────────────────────────────────────────────────
+    def open_loop_rate(self, now: Optional[datetime] = None, stratify_by: Optional[str] = None) -> Dict:
+        """
+        Open-loop rate (docs/LIFE_SAVING_ROADMAP.md §3.2), per 1,000 loops
+        whose deadline has passed:
+          numerator   = loops not closed on time (still open, or closed late)
+          denominator = all loops whose deadline has passed
+        Loops deferred with a documented reason are excluded from both.
+        """
+        now_iso = (now or utc_now()).isoformat()
+        with self._lock:
+            rows = [self._row(r) for r in self._db.execute("SELECT * FROM loops")]
+        groups: Dict[str, Dict[str, int]] = {}
+        for r in rows:
+            if not r["deadline"] or r["deadline"] > now_iso or r["workflow_state"] == "deferred":
+                continue
+            if stratify_by == "rule":
+                g = r["rule_id"]
+            elif stratify_by:
+                g = str(r["strata"].get(stratify_by, "unknown"))
+            else:
+                g = "all"
+            missed = r["engine_status"] in ACTIVE_ENGINE_STATUSES and r["workflow_state"] != "closed_by_clinician"
+            groups.setdefault(g, {"eligible": 0, "missed": 0})
+            groups[g]["eligible"] += 1
+            groups[g]["missed"] += int(missed)
+        return {
+            "definition": "Loops not closed within their guideline window per 1,000 loops whose deadline has passed",
+            "stratified_by": stratify_by,
+            "groups": {g: {**v, "rate_per_1000": round(1000 * v["missed"] / v["eligible"], 1)}
+                       for g, v in sorted(groups.items())},
+        }

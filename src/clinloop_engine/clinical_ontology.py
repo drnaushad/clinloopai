@@ -41,6 +41,9 @@ class EventType(Enum):
     HBA1C_RECHECK = "hba1c_recheck"
     ECHOCARDIOGRAM = "echocardiogram"
     SEPSIS_BUNDLE_COMPLETION = "sepsis_bundle_completion"
+    COLONOSCOPY = "colonoscopy"
+    BREAST_BIOPSY = "breast_biopsy"
+    CRITICAL_VALUE_NOTIFICATION = "critical_value_notification"
 
 
 # ── Severity Classification ─────────────────────────────────────────────────
@@ -100,6 +103,10 @@ class ObligationRule:
     ltl_formula: str                 # formal LTL expression
     references: List[str] = field(default_factory=list)
     followup_logic: str = "all"      # "all" (conjunction) or "any" (disjunction)
+    # No rule may drive alerts in a real deployment until a named specialist
+    # has signed it off (see docs/LIFE_SAVING_ROADMAP.md §3.1, §6).
+    review_status: str = "pending_specialist_review"
+    evidence_note: str = ""          # caveats on the deadline, shown to reviewers
 
 
 # ── Complete Rule Set ────────────────────────────────────────────────────────
@@ -315,6 +322,95 @@ OBLIGATION_RULES: List[ObligationRule] = [
         ltl_formula="□(DISCHARGE[heart_failure_new] → ◇_{≤30d} ECHOCARDIOGRAM)",
         references=["ACC/AHA 2022 Heart Failure Guidelines", "PMID: 35379503"],
     ),
+
+    # ── Wave 1: highest-yield loops (docs/LIFE_SAVING_ROADMAP.md §2) ─────────
+    ObligationRule(
+        rule_id="R017",
+        name="Positive FIT → Diagnostic Colonoscopy",
+        description="A positive fecal immunochemical test requires diagnostic colonoscopy",
+        trigger_event=EventType.LAB_RESULT,
+        trigger_condition="positive_fit",
+        required_followups=[EventType.COLONOSCOPY],
+        deadline_days=90.0,
+        severity=Severity.HIGH,
+        clinical_domain="cancer_screening",
+        ltl_formula="□(LAB_RESULT[FIT+] → ◇_{≤90d} COLONOSCOPY)",
+        references=["Corley DA et al. JAMA 2017;317:1631-1641",
+                    "Korean National Cancer Screening Program (FIT from age 50)"],
+        evidence_note=("Risk of advanced-stage cancer rises with longer FIT+-to-colonoscopy "
+                       "intervals; programme targets are often shorter than 90 days."),
+    ),
+    ObligationRule(
+        rule_id="R018",
+        name="Mammography BI-RADS 4/5 → Tissue Diagnosis",
+        description="Suspicious (BI-RADS 4) or highly suggestive (BI-RADS 5) findings require biopsy",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="birads_4_5",
+        required_followups=[EventType.BREAST_BIOPSY],
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="cancer_screening",
+        ltl_formula="□(RADIOLOGY_REPORT[BI-RADS 4/5] → ◇_{≤30d} BREAST_BIOPSY)",
+        references=["ACR BI-RADS Atlas, 5th ed. (2013)"],
+        evidence_note="BI-RADS mandates tissue diagnosis; the 30-day window is a quality target.",
+    ),
+    ObligationRule(
+        rule_id="R019",
+        name="Lung-RADS 4A → 3-Month LDCT",
+        description="Lung-RADS category 4A on screening LDCT requires 3-month LDCT (or PET/CT)",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="lung_rads_4a",
+        required_followups=[EventType.FOLLOWUP_CT],
+        deadline_days=90.0,
+        severity=Severity.HIGH,
+        clinical_domain="cancer_screening",
+        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 4A] → ◇_{≤90d} FOLLOWUP_CT)",
+        references=["ACR Lung-RADS v2022"],
+    ),
+    ObligationRule(
+        rule_id="R020",
+        name="Lung-RADS 4B/4X → Diagnostic Work-up",
+        description="Lung-RADS 4B/4X requires diagnostic CT, PET/CT, tissue sampling or referral",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="lung_rads_4b_4x",
+        required_followups=[EventType.FOLLOWUP_CT, EventType.BIOPSY_ORDER,
+                            EventType.SPECIALIST_REFERRAL],
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="cancer_screening",
+        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 4B/4X] → ◇_{≤30d} (CT ∨ BIOPSY ∨ REFERRAL))",
+        references=["ACR Lung-RADS v2022"],
+        followup_logic="any",
+        evidence_note="Lung-RADS gives no explicit interval for 4B/4X; 30 days is a proposed target.",
+    ),
+    ObligationRule(
+        rule_id="R021",
+        name="Abnormal Result After Discharge → Clinician Review",
+        description="An abnormal result finalised after the patient left hospital must be reviewed by a responsible clinician",
+        trigger_event=EventType.LAB_RESULT,
+        trigger_condition="abnormal_post_discharge",
+        required_followups=[EventType.PROVIDER_REVIEW],
+        deadline_days=3.0,
+        severity=Severity.HIGH,
+        clinical_domain="transitions_of_care",
+        ltl_formula="□(LAB_RESULT[abnormal ∧ after_discharge] → ◇_{≤3d} PROVIDER_REVIEW)",
+        references=["Roy CL et al. Ann Intern Med 2005;143:121-128"],
+    ),
+    ObligationRule(
+        rule_id="R022",
+        name="Critical Value → Documented Clinician Notification ≤1 Hour",
+        description="A critical (panic) result must be communicated to a responsible clinician and documented",
+        trigger_event=EventType.LAB_RESULT,
+        trigger_condition="critical_value",
+        required_followups=[EventType.CRITICAL_VALUE_NOTIFICATION],
+        deadline_days=1.0 / 24.0,
+        severity=Severity.CRITICAL,
+        clinical_domain="laboratory",
+        ltl_formula="□(LAB_RESULT[critical] → ◇_{≤1h} CRITICAL_VALUE_NOTIFICATION)",
+        references=["CLSI GP47 Management of Critical- and Significant-Risk Results",
+                    "The Joint Commission NPSG.02.03.01"],
+        evidence_note="Institutions set the exact window; 1 hour is a common upper limit.",
+    ),
 ]
 
 
@@ -370,6 +466,15 @@ NON_FULFILLING_STATUSES = frozenset({
 def is_fulfilling_status(status: Optional[str]) -> bool:
     """True if an event with this status counts as a completed follow-up."""
     return str(status or "completed").strip().lower() not in NON_FULFILLING_STATUSES
+
+
+def format_window(days: float) -> str:
+    """Human-readable deadline window: '1 hour', '3 days', '6 months'-style."""
+    if days < 1.0:
+        hours = round(days * 24)
+        return f"{hours} hour{'s' if hours != 1 else ''}"
+    whole = int(days) if float(days).is_integer() else round(days, 1)
+    return f"{whole} day{'s' if whole != 1 else ''}"
 
 
 def get_rule_by_id(rule_id: str) -> Optional[ObligationRule]:

@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 import json
 
-from .clinical_ontology import Severity, LoopStatus, OBLIGATION_RULES, get_severity_score
+from .clinical_ontology import Severity, LoopStatus, OBLIGATION_RULES, get_severity_score, format_window
 from .temporal_hypergraph import DynamicTemporalHypergraph, TemporalHyperedge
 from .safety_clock import SafetyClock
 from .risk_scorer import RiskScorer, RiskAssessment, prioritize_risks
@@ -40,6 +40,7 @@ class LoopDetection:
     explanation: List[str] = field(default_factory=list)
     evidence_chain: List[str] = field(default_factory=list)
     should_abstain: bool = False
+    trigger_event_id: str = ""      # source event id: stable loop identity across runs
 
     def to_dict(self):
         return asdict(self)
@@ -136,9 +137,10 @@ class ClinLoopDetector:
                 fulfilled = {fn.event_type for fn in he.actual_followup_nodes}
                 missing = [ft for ft in he.expected_followup_types if ft not in fulfilled]
                 if missing:
-                    missing_step = f"Missing: {', '.join(missing)} within {he.deadline_days} days"
+                    joiner = " or " if he.obligation_rule.followup_logic == "any" else ", "
+                    missing_step = f"Missing: {joiner.join(missing)} within {format_window(he.deadline_days)}"
                 else:
-                    missing_step = f"Completed late: follow-up came after the {he.deadline_days}-day deadline"
+                    missing_step = f"Completed late: follow-up came after the {format_window(he.deadline_days)} deadline"
             else:
                 missing_step = "All follow-ups completed"
 
@@ -156,11 +158,12 @@ class ClinLoopDetector:
                 trigger_time=he.trigger_node.timestamp.isoformat(),
                 missing_step=missing_step,
                 deadline=he.deadline.isoformat() if he.deadline else "",
-                clock_state=assessment.clock_state,
+                clock_state=assessment.clock_state if is_open else "CLOSED",
                 recommended_action=assessment.recommended_action,
                 explanation=assessment.explanation,
                 evidence_chain=list(he.evidence_chain),
                 should_abstain=assessment.should_abstain,
+                trigger_event_id=he.trigger_node.node_id,
             )
             detections.append(detection)
 

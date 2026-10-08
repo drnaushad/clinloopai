@@ -731,5 +731,73 @@ class TestPrivacyAndAgentRegressions(unittest.TestCase):
         self.assertGreater(len(clock_state.escalations), 0)
 
 
+
+class TestWaveOneRules(unittest.TestCase):
+    """Wave 1 life-saving rules (docs/LIFE_SAVING_ROADMAP.md §2)."""
+
+    def test_positive_fit_without_colonoscopy_is_open(self):
+        statuses = _loop_statuses([
+            _evt("a", "lab_result", "2026-01-05T09:00:00",
+                 {"test": "FIT", "result": "positive", "flag": "ABNORMAL"}),
+        ])
+        self.assertEqual(statuses["R017"], LoopStatus.OPEN.value)
+
+    def test_positive_fit_with_timely_colonoscopy_closes(self):
+        statuses = _loop_statuses([
+            _evt("a", "lab_result", "2026-01-05T09:00:00", {"test": "FIT", "result": "positive"}),
+            _evt("b", "colonoscopy", "2026-02-20T09:00:00"),
+        ])
+        self.assertEqual(statuses["R017"], LoopStatus.CLOSED.value)
+
+    def test_birads_4_requires_biopsy(self):
+        statuses = _loop_statuses([
+            _evt("a", "radiology_report", "2026-03-01T09:00:00", {"birads": "4B"}),
+        ])
+        self.assertEqual(statuses["R018"], LoopStatus.OPEN.value)
+
+    def test_lung_rads_categories(self):
+        self.assertIn("R019", _loop_statuses([
+            _evt("a", "radiology_report", "2026-03-01T09:00:00", {"lung_rads": "4A"})]))
+        statuses = _loop_statuses([
+            _evt("a", "radiology_report", "2026-03-01T09:00:00", {"lung_rads": "4X"}),
+            _evt("b", "specialist_referral", "2026-03-10T09:00:00"),
+        ])
+        self.assertEqual(statuses["R020"], LoopStatus.CLOSED.value)
+
+    def test_abnormal_result_after_discharge_needs_review(self):
+        statuses = _loop_statuses([
+            _evt("a", "lab_result", "2026-03-01T09:00:00",
+                 {"flag": "ABNORMAL", "resulted_after_discharge": True}),
+        ])
+        self.assertEqual(statuses["R021"], LoopStatus.OPEN.value)
+        self.assertIn("R001", statuses)  # still also an abnormal result
+
+    def test_critical_value_carries_both_obligations(self):
+        """A panic K+ needs a 1-hour clinician call AND the abnormal-result follow-up."""
+        events = _make_hyperkalemia_events() + [
+            _evt("n", "critical_value_notification", "2026-09-01T12:00:00"),
+        ]
+        statuses = _loop_statuses(events, evaluation_time=datetime(2026, 9, 2))
+        self.assertEqual(statuses["R022"], LoopStatus.CLOSED.value)
+        self.assertEqual(statuses["R001"], LoopStatus.OPEN.value)
+
+    def test_late_critical_notification_is_delayed(self):
+        events = _make_hyperkalemia_events() + [
+            _evt("n", "critical_value_notification", "2026-09-01T14:00:00"),
+        ]
+        statuses = _loop_statuses(events, evaluation_time=datetime(2026, 9, 2))
+        self.assertEqual(statuses["R022"], LoopStatus.DELAYED.value)
+
+    def test_one_hour_window_reads_naturally(self):
+        detections = ClinLoopDetector(evaluation_time=datetime(2026, 9, 2)).process_patient(
+            "CRIT", _PATIENT_ID, _make_hyperkalemia_events())
+        r022 = next(d for d in detections if d.rule_id == "R022")
+        self.assertIn("within 1 hour", r022.missing_step)
+
+    def test_all_rules_await_specialist_review(self):
+        for rule in OBLIGATION_RULES:
+            self.assertEqual(rule.review_status, "pending_specialist_review", rule.rule_id)
+
+
 if __name__ == "__main__":
     unittest.main()

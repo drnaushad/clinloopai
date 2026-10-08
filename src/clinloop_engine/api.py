@@ -6,7 +6,10 @@ Run from the repository root:
     uvicorn src.clinloop_engine.api:app --host 127.0.0.1 --port 8124
 """
 
-from src.clinloop_engine.gpu_engine import gpu_engine
+try:  # PyTorch is optional; only the GPU demo endpoints need it
+    from src.clinloop_engine.gpu_engine import gpu_engine
+except ImportError:
+    gpu_engine = None
 from src.clinloop_engine.local_llm_engine import (
     get_engine_status as get_local_llm_status,
     get_best_model,
@@ -29,33 +32,49 @@ from src.clinloop_engine.patient_outreach_agent import generate_dynamic_outreach
 from src.clinloop_engine.evidence_agent import run_evidence_synthesis
 from src.clinloop_engine.safety_clock import safety_clock_loop, get_clock_status
 import asyncio
+from contextlib import asynccontextmanager
 from src.clinloop_engine.biomcp_server import handle_call_tool as handle_biomcp
 from src.clinloop_engine.ehr_mcp_server import handle_call_tool as handle_ehr
 from src.clinloop_engine.pacs_mcp_server import handle_call_tool as handle_pacs
+from src.clinloop_engine.clinical_api import router as clinical_router, escalation_loop
 
 # Initialize FastAPI App
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Background safety tasks: the Safety Clock watchdog over the demo cases,
+    # and escalation of unacknowledged overdue loops in the pilot registry
+    tasks = [asyncio.create_task(safety_clock_loop()), asyncio.create_task(escalation_loop())]
+    yield
+    for t in tasks:
+        t.cancel()
+
+
 app = FastAPI(
     title="ClinLoop AI - Clinical Safety Platform API",
     description="Backend microservice for Neuro-Symbolic Closed-Loop Clinical Safety, Counterfactual Causal Simulations, and Patient Outreach.",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
-@app.on_event("startup")
-async def startup_event():
-    # Launch the Safety Clock Autonomous Watchdog in the background
-    asyncio.create_task(safety_clock_loop())
 
-
-# CORS Middleware for Web and Mobile Apps
+# CORS: only the cockpit origins may call the API from a browser. Override
+# with a comma-separated CLINLOOP_CORS_ORIGINS. Bearer tokens travel in a
+# header, so cookies/credentials are never needed.
+_cors_origins = [o.strip() for o in os.environ.get(
+    "CLINLOOP_CORS_ORIGINS",
+    "http://localhost:8123,http://127.0.0.1:8123,https://clinloopai.app",
+).split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_cors_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+app.include_router(clinical_router)
 
 # Load Cases Data
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "cases.json")
@@ -341,6 +360,11 @@ def generate_with_local_llm(req: LocalLLMRequest):
 # ---------------------------------------------------------------------------
 # GPU-Accelerated Neural-Symbolic Safety Telemetry (NVIDIA RTX A4500 20GB)
 # ---------------------------------------------------------------------------
+def _require_gpu_engine():
+    if gpu_engine is None:
+        raise HTTPException(status_code=503, detail="GPU engine unavailable: install PyTorch to enable it")
+
+
 class GPUVerificationRequest(BaseModel):
     scenario_id: str
     clinical_text: str
@@ -351,11 +375,13 @@ class GPUVerificationRequest(BaseModel):
 @app.get("/api/v1/gpu/telemetry", tags=["GPU Acceleration (NVIDIA RTX A4500)"])
 def get_gpu_telemetry():
     """Returns live hardware telemetry and memory statistics for the NVIDIA RTX A4500."""
+    _require_gpu_engine()
     return gpu_engine.get_telemetry()
 
 @app.post("/api/v1/gpu/verify-trajectory", tags=["GPU Acceleration (NVIDIA RTX A4500)"])
 def verify_trajectory_on_gpu(req: GPUVerificationRequest):
     """Runs PyTorch CUDA tensor kernels for Metric Temporal Logic robustness margin & obligation matching."""
+    _require_gpu_engine()
     return gpu_engine.verify_trajectory_gpu(
         scenario_id=req.scenario_id,
         clinical_text=req.clinical_text,
@@ -367,6 +393,7 @@ def verify_trajectory_on_gpu(req: GPUVerificationRequest):
 @app.post("/api/v1/gpu/benchmark", tags=["GPU Acceleration (NVIDIA RTX A4500)"])
 def run_gpu_benchmark(batch_size: int = 1000):
     """Runs vectorized PyTorch CUDA benchmark across N parallel trajectories on RTX A4500."""
+    _require_gpu_engine()
     return gpu_engine.run_benchmark(batch_size=min(50000, max(100, batch_size)))
 
 
