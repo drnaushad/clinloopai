@@ -540,6 +540,28 @@ def agent_generate_patient_outreach(req: DynamicOutreachRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ---------------------------------------------------------------------------
+# Web UI (cockpit + worklist) served by the same container
+# ---------------------------------------------------------------------------
+from fastapi.responses import Response
+from fastapi.staticfiles import StaticFiles
+
+_WEB_ROOT = os.environ.get("CLINLOOP_WEB_ROOT")
+
+
+@app.get("/config.js", include_in_schema=False)
+def web_config():
+    """Point the pages at this server: same origin, so no CORS and no address to type."""
+    return Response("window.CLINLOOP_API_BASE = window.location.origin;\n",
+                    media_type="application/javascript", headers={"Cache-Control": "no-store"})
+
+
+# Only a dedicated directory holding the UI files is served (never the
+# project root, which holds source code and, in development, the database).
+if _WEB_ROOT and os.path.isdir(_WEB_ROOT):
+    app.mount("/", StaticFiles(directory=_WEB_ROOT, html=True), name="web")
+
+
 # Must stay at the end of the module: uvicorn.run() blocks, so any route
 # declared below it would never be registered.
 if __name__ == "__main__":
