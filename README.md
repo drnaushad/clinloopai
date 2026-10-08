@@ -28,7 +28,7 @@ with transparent, rule-grounded logic and an audit trail.
                                                                   Patient outreach: draft → clinician approval → send
 ```
 
-1. **Obligation rules** (`clinical_ontology.py`): 46 guideline-based rules, each with a trigger, its
+1. **Obligation rules** (`clinical_ontology.py`): 47 guideline-based rules, each with a trigger, its
    required follow-ups (all or any), a deadline, a severity, references and a Korean name. None is
    fit for patient care until a specialist signs it off (see **Governance** below). Example:
    `□(LAB_RESULT[abnormal_pap] → ◇≤30d COLPOSCOPY_REFERRAL)`.
@@ -41,6 +41,7 @@ with transparent, rule-grounded logic and an audit trail.
    | R030–R033 | Follow-up CT / MRI / ultrasound / radiograph **recommended in the radiology report**, with the deadline taken from the report itself (30-day default when no interval is stated) |
    | R034–R036 | Lung-RADS 3 → 6-month LDCT; critical imaging finding (from the hospital-approved list) → documented clinician communication within its window; radiologist-recommended biopsy/FNA |
    | R037–R046 | ACR incidental findings without a written recommendation: adrenal nodule (1–4 cm → CT/MRI; ≥4 cm or with cancer → work-up), renal mass (solid/Bosniak III–IV → urology; IIF or indeterminate → CT/MRI), pancreatic cyst (size-based MRI; worrisome features → EUS), thyroid nodule on CT/MRI/PET (→ ultrasound), abdominal aortic aneurysm (diameter-based surveillance; ≥5.5 cm, ≥5.0 cm in women → vascular surgery); growing or suspicious lung nodule → work-up |
+   | R047 | Imaging-AI finding (approved product or ClinLoop's model runner) that the radiology report does not address → radiologist review (1 day for critical findings, 7 days otherwise) |
 2. **Temporal hypergraph** (`temporal_hypergraph.py`): builds one hyperedge per triggered rule and
    marks it `closed`, `open` or `delayed`.
 3. **Safety clock** (`safety_clock.py`): converts elapsed time against the deadline into a time-risk
@@ -103,6 +104,12 @@ clinloopai/
 │       ├── radiology.py              # Radiology reports: Fleischner, ACR incidental findings, regions, critical findings
 │       ├── report_text.py            # Negation-aware report text helpers
 │       ├── governance.py             # Specialist rule sign-off, critical-finding list approval, shadow mode
+│       ├── imaging_fhir.py           # Imaging studies and imaging-AI findings as FHIR resources
+│       ├── pacs_client.py            # PACS study labels over DICOMweb QIDO-RS (read-only, no pixels)
+│       ├── ai_review.py              # Imaging AI as second reader: findings the report does not address (R047)
+│       ├── imaging_ai.py             # DICOM analysis: header safety checks, study record, imaging models
+│       ├── document_reader.py        # Outside reports: PDF text and OCR (Korean/English)
+│       ├── imaging_api.py            # Imaging and outside-report endpoints
 │       ├── config/critical_findings.json # Example critical-finding list (each hospital approves its own)
 │       ├── fhir_sync.py              # Scheduled read-only sync from a FHIR server
 │       ├── outreach.py               # Patient messages: draft → approval → provider (outbox / webhook)
@@ -133,6 +140,7 @@ clinloopai/
 ├── index.html, css/, js/         # Static web cockpit (served at clinloopai.app)
 ├── worklist.html                 # Clinician worklist (talks to the API)
 ├── governance.html               # Specialist rule sign-off and critical-finding list approval
+├── imaging.html                  # Outside reports (PDF/OCR) and DICOM analysis
 ├── data/cases.json               # 5 curated synthetic demo cases used by the web cockpit
 ├── data/fhir_example_bundle.json # Synthetic FHIR R4 bundle: 7 patients, the main failure modes
 ├── requirements-api.txt          # API dependencies
@@ -213,6 +221,9 @@ pip install pytest                 # to run the test suite
 | GPU demo endpoints | `pip install torch` (optional; without it those endpoints return 503) |
 | Local LLM (patient-message drafts) | Install [Ollama](https://ollama.com), then `./scripts/setup_local_llm.sh` (pulls `exaone3.5:7.8b`). Without it, messages use a fixed safe template |
 | BioMCP | Included in `requirements-api.txt` (`biomcp-python`); ClinLoop starts it automatically |
+| DICOM, outside-report PDFs | Included in `requirements-api.txt` (`pydicom`, `pdfplumber`) |
+| OCR of scanned reports | `apt install tesseract-ocr tesseract-ocr-kor` (the Docker image includes it) |
+| Research chest-X-ray model | `pip install torch torchxrayvision`, then `CLINLOOP_IMAGING_MODELS=txrv`; or build the image with `--build-arg WITH_IMAGING_AI=1`. Research use only |
 | Word monograph scripts | `pip install python-docx` and `mkdir ClinLoop_AI_Package` |
 
 ---
@@ -413,7 +424,22 @@ The cockpit loads `data/cases.json` directly. Its local-LLM panel works only whe
 served from `localhost` with the API and Ollama running. On the public site it states that the
 on-premise LLM is unavailable.
 
-### 6. Governance: specialist sign-off and the critical-finding list
+### 6. Imaging: PACS, imaging AI, outside reports, DICOM
+
+See [`docs/IMAGING.md`](docs/IMAGING.md). In short:
+
+- **PACS** (`CLINLOOP_PACS_DICOMWEB`): reads study labels only (modality, body part, date) over
+  DICOMweb. "Was the follow-up adrenal CT done?" is then answered from the PACS itself.
+- **Imaging AI as second reader** (`/api/v1/imaging/ai-results`, R047): a finding from an approved
+  product that the report does not address asks a radiologist to look again. ClinLoop never
+  diagnoses.
+- **Outside reports** (`imaging.html`): PDF text or OCR (Tesseract, Korean and English). A person
+  checks and corrects the text before filing.
+- **DICOM analysis** (`imaging.html`): header safety checks (a wrong-patient image is refused), a
+  study record, and imaging models. The built-in research chest-X-ray model is TorchXRayVision;
+  approved vendor models can be added for any modality. Pixel data is never stored.
+
+### 7. Governance: specialist sign-off and the critical-finding list
 
 No rule should be used for patient care until a named specialist has reviewed it. ClinLoop records
 that review; it cannot replace it.
@@ -432,7 +458,7 @@ that review; it cannot replace it.
   also needs the approved critical-finding list.
 - Every review and approval goes into the hash-chained audit log.
 
-### 7. Validation studies
+### 8. Validation studies
 
 **Report reading** (does ClinLoop create the right obligations from each report?):
 
@@ -507,7 +533,11 @@ synthetic event, so results are identical on every run.
 | Synthetic data generator, benchmark, figures | **Implemented** (seeded) |
 | BioMCP | **Connected** over MCP (stdio or streamable HTTP) to the open-source BioMCP server: 36 tools, read-only allowlist |
 | Built-in guideline library | Static, curated guideline citations in code (`biomcp_server.py`, `/api/v1/guidelines/call`) |
-| EHR / PACS connectors | **Mock**: responses are labelled `simulated` |
+| PACS | **Implemented**: study labels over DICOMweb QIDO-RS, with body-region matching. Tested against a stand-in DICOMweb server; not yet against a hospital PACS |
+| Imaging AI | **Implemented** as a second reader (R047): approved products' results (FHIR or DICOM SR), plus an on-premise runner. Built-in model: TorchXRayVision (chest X-ray, **research use only**); vendor models over HTTP for any modality. Research findings open no loops by default |
+| Outside reports | **Implemented**: PDF text and OCR (Tesseract kor+eng) with a human check before filing |
+| DICOM analysis | **Implemented**: header safety checks (wrong patient refused), study record, model plug-ins, preview. No built-in CT/MRI/US model |
+| EHR connector (MCP demo) | **Mock**: responses are labelled `simulated` |
 | PubMed / Europe PMC | **Live** through the ClinLoop server: per-rule literature search and health checks. Only rule-level search terms are sent; never patient data |
 | Connection status | The cockpit's badges, the "Live connections" count and the Connections panel show only what the server has verified. On the public site, with no server, they read "not connected" |
 | OMOP CDM, EHR writeback, cloud LLMs | **Not connected** (OMOP: no database; EHR: read-only by design; cloud LLMs: not used) |

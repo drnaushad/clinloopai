@@ -40,6 +40,14 @@ services:
       CLINLOOP_ENFORCE_SIGNOFF: ${CLINLOOP_ENFORCE_SIGNOFF:-0}
       CLINLOOP_SIGNOFF_APPROVALS: ${CLINLOOP_SIGNOFF_APPROVALS:-1}
       CLINLOOP_CRITICAL_FINDINGS: ${CLINLOOP_CRITICAL_FINDINGS:-}
+      # Imaging: PACS study labels (DICOMweb), imaging models, research-model findings opening loops (0/1)
+      CLINLOOP_PACS_DICOMWEB: ${CLINLOOP_PACS_DICOMWEB:-}
+      CLINLOOP_PACS_TOKEN: ${CLINLOOP_PACS_TOKEN:-}
+      CLINLOOP_IMAGING_MODELS: ${CLINLOOP_IMAGING_MODELS:-}
+      CLINLOOP_IMAGING_MODELS_CONFIG: ${CLINLOOP_IMAGING_MODELS_CONFIG:-}
+      CLINLOOP_IMAGING_RESEARCH_AI: ${CLINLOOP_IMAGING_RESEARCH_AI:-0}
+      # DICOM dates/times are local: the hospital's time zone (IANA name)
+      CLINLOOP_LOCAL_TZ: ${CLINLOOP_LOCAL_TZ:-Asia/Seoul}
     volumes:
       - clinloop-data:/var/lib/clinloop
     extra_hosts:
