@@ -3,6 +3,8 @@ imaging_api.py — Imaging endpoints: outside reports, DICOM analysis, imaging-A
 
   POST /api/v1/documents/outside-report/extract   read a PDF/image report (nothing stored)
   POST /api/v1/documents/outside-report           file the (checked) report and re-evaluate the patient
+  POST /api/v1/documents/clinical-note/extract   read a clinician's note: the plans it contains (nothing stored)
+  POST /api/v1/documents/clinical-note           file the note; its plans become tracked follow-ups (R048–R051)
   POST /api/v1/imaging/analyze                    DICOM: header checks, study record, imaging models
   POST /api/v1/imaging/ct-organs                  CT series: organ segmentation and measurements (3-D)
   POST /api/v1/imaging/ai-results                 results from an approved imaging-AI product (FHIR or DICOM SR)
@@ -48,6 +50,16 @@ class OutsideReportFiling(FileUpload):
     date: Optional[str] = Field(None, description="Report date YYYY-MM-DD, as checked")
     conclusion: Optional[str] = Field(None, description="Impression text, as checked/corrected")
     confirmed: bool = Field(False, description="The person checked title, date and impression against the original")
+
+
+class ClinicalNote(BaseModel):
+    patient_id: str = Field(..., pattern=FHIR_ID)
+    text: Optional[str] = Field(None, description="The note as text (or send a PDF/image file instead)")
+    filename: str = ""
+    content_base64: Optional[str] = None
+    date: Optional[str] = Field(None, description="Note date YYYY-MM-DD (default: today)")
+    note_type: str = Field("Clinical note", max_length=80)
+    suggest_with_llm: bool = Field(False, description="Also ask the hospital's local LLM for plans the rules missed")
 
 
 class DicomUpload(FileUpload):
@@ -174,6 +186,71 @@ def file_outside_report(req: OutsideReportFiling, user: User = Depends(require_r
                                 summary=f"{resource['code']['text']} {parsed.get('date') or ''} "
                                         f"({extracted['method']}{', confirmed' if req.confirmed else ''})".strip())
     return {"resource": resource, **evaluate_patient(req.patient_id, user.name)}
+
+
+# ── Clinical notes ──────────────────────────────────────────────────────────
+
+def _note_text(req: ClinicalNote) -> Dict[str, Any]:
+    from .document_reader import DocumentError, extract_text
+    if req.text and req.text.strip():
+        text = req.text
+        if len(text) > 200_000:
+            raise HTTPException(413, "Note too long")
+        return {"text": text, "method": "text", "confidence": None}
+    if not req.content_base64:
+        raise HTTPException(422, "Send the note as text or as a file")
+    try:
+        return extract_text(_decode(req.content_base64), req.filename)
+    except DocumentError as e:
+        raise HTTPException(422, str(e))
+
+
+@router.post("/documents/clinical-note/extract", tags=["Imaging & Documents"])
+def extract_clinical_note(req: ClinicalNote, user: User = Depends(require_role("navigator"))):
+    """The follow-up plans in a note, with the sentence each came from. Nothing is stored."""
+    from .note_reader import find_plans, llm_suggestions, plan_label
+    _patient_resource(req.patient_id)
+    got = _note_text(req)
+    found = find_plans(got["text"])
+    for p in found["plans"]:
+        p["label"] = plan_label(p)
+    out = {"method": got["method"], "confidence": got.get("confidence"), **found}
+    if req.suggest_with_llm:
+        out["llm"] = llm_suggestions(got["text"], found["plans"])
+    return out
+
+
+@router.post("/documents/clinical-note", tags=["Imaging & Documents"])
+def file_clinical_note(req: ClinicalNote, user: User = Depends(require_role("navigator"))):
+    """File a note (identifiers removed) for a patient: its plans become tracked follow-ups, and the patient is re-evaluated."""
+    import base64 as _b64
+    from datetime import date as _date
+    from .document_reader import scrub_identifiers
+    from .note_reader import find_plans
+    patient = _patient_resource(req.patient_id)
+    got = _note_text(req)
+    when = req.date or _date.today().isoformat()
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", when):
+        raise HTTPException(422, "date must be YYYY-MM-DD")
+    text = scrub_identifiers(got["text"], _patient_names(patient))
+    sha = hashlib.sha256(got["text"].encode("utf-8")).hexdigest()
+    resource = {
+        "resourceType": "DocumentReference",
+        "id": "note-" + hashlib.sha256(f"{req.patient_id}|{sha}".encode()).hexdigest()[:32],
+        "meta": {"tag": [{"system": "https://clinloopai.app/fhir/tags", "code": "clinical-note"}]},
+        "status": "current", "docStatus": "final",
+        "type": {"text": req.note_type or "Clinical note"},
+        "subject": {"reference": f"Patient/{req.patient_id}"},
+        "date": f"{when}T12:00:00",
+        "author": [{"display": user.name}],
+        "content": [{"attachment": {"contentType": "text/plain; charset=utf-8",
+                                    "data": _b64.b64encode(text.encode("utf-8")).decode()}}],
+    }
+    found = find_plans(text)
+    store = get_store()
+    store.add_external_resource(resource, "clinical-note", user.name, user.role, source_sha256=sha,
+                                summary=f"{resource['type']['text']} {when}: {found['tracked']} plan(s) tracked")
+    return {"resource_id": resource["id"], "plans": found["plans"], **evaluate_patient(req.patient_id, user.name)}
 
 
 # ── DICOM images ────────────────────────────────────────────────────────────

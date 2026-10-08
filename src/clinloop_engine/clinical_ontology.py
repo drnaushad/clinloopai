@@ -59,6 +59,7 @@ class EventType(Enum):
     RISK_FACTOR = "risk_factor"                   # e.g. smoking status (context only, never a trigger)
     AI_FINDING = "ai_finding"                     # positive finding from an imaging-AI product (second reader)
     AI_FINDING_REVIEWED = "ai_finding_reviewed"   # a radiologist addressed the AI finding (report/addendum)
+    CLINICAL_NOTE_PLAN = "clinical_note_plan"     # a concrete plan written in a clinician's note (note_reader)
 
 
 # ── Severity Classification ─────────────────────────────────────────────────
@@ -820,6 +821,74 @@ OBLIGATION_RULES: List[ObligationRule] = [
                        "Findings from research-use models count only when the hospital enables them."),
         patient_outreach=False,
     ),
+    # ── Plans written in clinicians' notes (note_reader.py) ───────────────────
+    ObligationRule(
+        rule_id="R048",
+        name="Note Plan: Repeat Lab Test",
+        description="A clinician's note plans to repeat or check a lab test (e.g. 'repeat potassium in 1 week')",
+        trigger_event=EventType.CLINICAL_NOTE_PLAN,
+        trigger_condition="note_plan_lab",
+        required_followups=[EventType.LAB_RESULT, EventType.FOLLOWUP_LAB, EventType.INR_RECHECK,
+                            EventType.HBA1C_RECHECK, EventType.HCV_RNA_TEST, EventType.POSTPARTUM_GLUCOSE_TEST],
+        followup_logic="any",
+        deadline_days=30.0,
+        severity=Severity.MODERATE,
+        clinical_domain="clinical documentation",
+        ltl_formula="□(NOTE_PLAN[repeat test X in T] → ◇_{≤T+grace} LAB_RESULT[X])",
+        references=["Singh H et al. Missed follow-up of test results. JAMA Intern Med 2013;173:702-704",
+                    "Joint Commission Sentinel Event Alert 47 (diagnostic error, follow-up of results)"],
+        evidence_note=("Closed by a result of the same test (potassium plan → potassium result). 'Repeat labs' with no "
+                       "named test is closed by any lab result. Interval from the note plus 15% (at least 3 days); "
+                       "30 days when the note states none. Conditional, cancelled or already-done plans are not tracked."),
+    ),
+    ObligationRule(
+        rule_id="R049",
+        name="Note Plan: Imaging",
+        description="A clinician's note plans an imaging study (e.g. 'CT chest in 3 months', '3개월 후 흉부 CT')",
+        trigger_event=EventType.CLINICAL_NOTE_PLAN,
+        trigger_condition="note_plan_imaging",
+        required_followups=[EventType.IMAGING_CT, EventType.FOLLOWUP_CT, EventType.IMAGING_MRI,
+                            EventType.IMAGING_ULTRASOUND, EventType.LIVER_IMAGING, EventType.IMAGING_XRAY,
+                            EventType.IMAGING_PET, EventType.ECHOCARDIOGRAM],
+        followup_logic="any",
+        deadline_days=90.0,
+        severity=Severity.HIGH,
+        clinical_domain="clinical documentation",
+        ltl_formula="□(NOTE_PLAN[imaging M of region R in T] → ◇_{≤T+grace} IMAGING[M ∧ covers R])",
+        references=["Callen JL et al. Failure to follow-up test results for ambulatory patients. J Gen Intern Med 2012;27:1334-48"],
+        evidence_note=("Closed only by a study of the same modality that covers the region the note names. Interval from "
+                       "the note plus the radiology grace period; 90 days when the note states none."),
+    ),
+    ObligationRule(
+        rule_id="R050",
+        name="Note Plan: Specialist Referral",
+        description="A clinician's note plans a referral (e.g. 'refer to cardiology', '심장내과 협진 의뢰')",
+        trigger_event=EventType.CLINICAL_NOTE_PLAN,
+        trigger_condition="note_plan_referral",
+        required_followups=[EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT, EventType.FOLLOWUP_APPOINTMENT],
+        followup_logic="any",
+        deadline_days=30.0,
+        severity=Severity.MODERATE,
+        clinical_domain="clinical documentation",
+        ltl_formula="□(NOTE_PLAN[refer to S] → ◇_{≤30d} (REFERRAL[S] ∨ VISIT[S]))",
+        references=["Gandhi TK et al. Communication breakdown in the outpatient referral process. J Gen Intern Med 2000;15:626-31"],
+        evidence_note="Closed by a referral order or a visit to the same specialty. 30 days when the note states no interval.",
+    ),
+    ObligationRule(
+        rule_id="R051",
+        name="Note Plan: Follow-up Visit",
+        description="A clinician's note plans a follow-up visit (e.g. 'RTC 6 weeks', '6주 후 외래 재방문')",
+        trigger_event=EventType.CLINICAL_NOTE_PLAN,
+        trigger_condition="note_plan_visit",
+        required_followups=[EventType.FOLLOWUP_APPOINTMENT, EventType.REFERRAL_VISIT],
+        followup_logic="any",
+        deadline_days=30.0,
+        severity=Severity.MODERATE,
+        clinical_domain="clinical documentation",
+        ltl_formula="□(NOTE_PLAN[follow-up in T] → ◇_{≤T+grace} FOLLOWUP_APPOINTMENT)",
+        references=["Joint Commission Sentinel Event Alert 47 (diagnostic error, follow-up)"],
+        evidence_note="Closed by a follow-up appointment that took place. Booked-but-not-attended visits do not count.",
+    ),
 ]
 
 
@@ -873,6 +942,10 @@ RULE_NAMES_KO: Dict[str, str] = {
     "R045": "수술 기준 복부대동맥류 → 혈관외과 의뢰",
     "R046": "커지거나 의심되는 폐결절 → 정밀검사",
     "R047": "영상 AI 소견이 판독문에 없음 → 영상의학과 재검토",
+    "R048": "진료기록 계획: 검사 재검",
+    "R049": "진료기록 계획: 영상 검사",
+    "R050": "진료기록 계획: 타과 의뢰",
+    "R051": "진료기록 계획: 외래 재방문",
 }
 assert set(RULE_NAMES_KO) == {r.rule_id for r in OBLIGATION_RULES}, "every rule needs a Korean name"
 

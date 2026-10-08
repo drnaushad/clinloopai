@@ -78,6 +78,10 @@ EVIDENCE_QUERIES: Dict[str, str] = {
     "R045": "abdominal aortic aneurysm repair threshold referral",
     "R046": "growing pulmonary nodule management",
     "R047": "artificial intelligence second reader radiology discrepancy missed findings",
+    "R048": "missed follow-up of planned laboratory tests ambulatory care",
+    "R049": "failure to complete planned follow-up imaging ambulatory",
+    "R050": "referral loop closure outpatient specialist referral not completed",
+    "R051": "missed follow-up appointments primary care patient safety",
 }
 
 
