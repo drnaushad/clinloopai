@@ -463,6 +463,10 @@ See [`docs/IMAGING.md`](docs/IMAGING.md). In short:
   tracked follow-ups (R048–R051), each with its source sentence. See
   [`docs/CLINICAL_NOTES.md`](docs/CLINICAL_NOTES.md); the wider graph-AI plan is in
   [`docs/GRAPH_AI_VISION.md`](docs/GRAPH_AI_VISION.md).
+- **Report-reading accuracy**: a blind evaluation on 270 synthetic reports (CT, MRI, X-ray, ultrasound,
+  mammography, pathology; 30% Korean). On a final set scored once, 97% of reports that needed
+  follow-up got a correct obligation and no normal report raised an alert. Method, defects found and
+  limits are in [`docs/ACCURACY_EVALUATION.md`](docs/ACCURACY_EVALUATION.md).
 - **Patient knowledge graph** (`patient.html`, `GET /api/v1/patients/{id}/graph`): every event the
   engine read (diagnoses, lab values, orders, medications, appointments, imaging studies,
   radiology reports, AI findings) on one time axis. Each obligation is drawn as a hyperedge from

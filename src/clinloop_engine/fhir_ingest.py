@@ -303,7 +303,13 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
     return events
 
 
-_MALIGNANT = re.compile(r"(adenocarcinoma|carcinoma|malignan\w*|high-grade dysplasia|melanoma|lymphoma|sarcoma|암)", re.I)
+_MALIGNANT = re.compile(r"(adenocarcinoma|carcinoma|malignan\w*|high-grade dysplasia|melanoma|lymphoma|sarcoma|암|"
+                        # High-grade cervical cytology/histology: colposcopy and treatment are due (ASCCP 2019)
+                        r"\bHSIL\b|high[- ]grade squamous intraepithelial lesion|\bASC-H\b|\bAGC\b|"
+                        r"atypical glandular cells|\bCIN\s*(?:2|3|II|III)\b|"
+                        # High-risk breast lesions: surgical excision is usually advised
+                        r"atypical (?:ductal|lobular) hyperplasia|\bADH\b|\bALH\b|lobular (?:carcinoma|neoplasia) in situ|\bLCIS\b)",
+                        re.I)
 
 
 def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
