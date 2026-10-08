@@ -959,6 +959,25 @@ OBLIGATION_RULES: List[ObligationRule] = [
         ltl_formula="□(RBC ≥ 3/hpf twice in 12mo ∧ age ≥ 35 → ◇_{≤90d} (UROLOGY ∨ CT[kidney ∨ bladder]))",
         references=["Barocas DA et al. Microhematuria: AUA/SUFU Guideline. J Urol 2020;204:778-86"],
         evidence_note="Two positive tests reduce false alarms (menstruation, exercise). Closed by a urology referral or visit, or a CT covering the urinary tract.",
+    ),    ObligationRule(
+        rule_id="R056",
+        name="Lung Nodule Measured Larger Across Reports → Review and Work-up",
+        description=("The same lung nodule (linked across reports by lobe and size) is ≥ 2 mm larger than its smallest "
+                     "earlier measurement, and the latest report does not call it growing"),
+        trigger_event=EventType.DIAGNOSTIC_PATTERN,
+        trigger_condition="pattern_nodule_growth",
+        required_followups=[EventType.IMAGING_PET, EventType.BIOPSY_ORDER, EventType.BIOPSY_RESULT,
+                            EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT],
+        followup_logic="any",
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="diagnostic safety",
+        ltl_formula="□(NODULE[same lesion, size − min(earlier) ≥ 2 mm] ∧ ¬report says growing → ◇_{≤30d} (PET ∨ BIOPSY ∨ REFERRAL))",
+        references=["MacMahon H et al. Fleischner Society 2017. Radiology 2017;284:228-243",
+                    "Callister MEJ et al. BTS guidelines for pulmonary nodules. Thorax 2015;70:ii1-ii54"],
+        evidence_note=("Catches growth that is never written down: 'stable 8 mm' after 6 mm, or 6 → 7 → 8 mm over three "
+                       "scans. The lesion match is probable, so the loop asks a radiologist to confirm it; a re-measurement "
+                       "showing no growth closes it with evidence. Volume-doubling time < 400 days is flagged as suspicious."),
     ),
 ]
 
@@ -1021,6 +1040,7 @@ RULE_NAMES_KO: Dict[str, str] = {
     "R053": "크레아티닌 상승(급성 신손상 경고) → 재검",
     "R054": "심방세동 고위험 → 항응고 치료 결정",
     "R055": "지속 현미경적 혈뇨 → 비뇨의학과 평가",
+    "R056": "보고서 간 폐결절 크기 증가 → 재검토 및 정밀검사",
 }
 assert set(RULE_NAMES_KO) == {r.rule_id for r in OBLIGATION_RULES}, "every rule needs a Korean name"
 

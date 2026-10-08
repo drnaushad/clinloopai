@@ -208,6 +208,30 @@ _RISK_FEATURES = [("spiculation", re.compile(r"spiculat\w*|침상", re.I)),
                   ("pulmonary fibrosis", re.compile(r"fibrosis|섬유화", re.I))]
 
 
+_LOBES = [
+    ("RUL", r"right\s+upper\s+lobe|\brul\b|우(?:측)?\s*상엽"), ("RML", r"right\s+middle\s+lobe|\brml\b|우(?:측)?\s*중엽"),
+    ("RLL", r"right\s+lower\s+lobe|\brll\b|우(?:측)?\s*하엽"), ("LUL", r"left\s+upper\s+lobe|\blul\b|좌(?:측)?\s*상엽"),
+    ("LING", r"lingula\w*|설상엽|설엽"), ("LLL", r"left\s+lower\s+lobe|\blll\b|좌(?:측)?\s*하엽"),
+]
+_SIDE = re.compile(r"\b(right|left)\b|(우측|좌측|우폐|좌폐)", re.I)
+
+
+def nodule_location(s: str, at: int) -> Dict[str, Optional[str]]:
+    """Lobe and side of the nodule mentioned at position `at` of sentence s (the nearest mention wins)."""
+    best = None
+    for lobe, rx in _LOBES:
+        for m in re.finditer(rx, s, re.I):
+            d = abs(m.start() - at)
+            if best is None or d < best[0]:
+                best = (d, lobe)
+    if best:
+        lobe = best[1]
+        return {"lobe": lobe, "side": "left" if lobe in ("LUL", "LING", "LLL") else "right"}
+    sides = [(abs(m.start() - at), "right" if (m.group(1) or "").lower() == "right" or m.group(2) in ("우측", "우폐")
+              else "left") for m in _SIDE.finditer(s)]
+    return {"lobe": None, "side": min(sides)[1] if sides else None}
+
+
 def _nodule_site(text: str, m: re.Match, code_text: str) -> str:
     """'lung', another organ, or 'lung' by default (a false alert is safer than a miss)."""
     s = sentence(text, m.start(), m.end())
@@ -262,8 +286,10 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
                 elif cd:
                     stable_since = ("date", datetime(int(cd.group(1)), int(cd.group(2)), int(cd.group(3) or 1)))
             benign = bool(_BENIGN_NODULE.search(s)) or (bool(_PERIFISSURAL.search(s)) and size < 10)
+            sent_start = text.find(s) if s else -1
+            loc = nodule_location(s, (m.start() - sent_start) if sent_start >= 0 else 0)
             found[m.start()] = {
-                "size_mm": size, "type": typ, "solid_component_mm": comp_mm,
+                "size_mm": size, "type": typ, "solid_component_mm": comp_mm, "lobe": loc["lobe"], "side": loc["side"],
                 "multiple": bool(_MULTIPLE.search(s)), "change": change, "stable_since": stable_since,
                 "benign": benign, "risk_features": [k for k, rx in _RISK_FEATURES if rx.search(s)],
                 "evidence_span": span(text, m), "_start": m.start(),
@@ -617,6 +643,7 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
         dominant = max(nodules, key=lambda n: (n["size_mm"], n["type"] != "ggn"))
         dominant["multiple"] = dominant["multiple"] or len(nodules) > 1
         rad["lung_nodule"] = dominant
+        rad["lung_nodules"] = nodules           # every nodule, for lesion tracking across reports
         details["nodule_size_mm"] = dominant["size_mm"]
         details["finding"] = "lung_nodule"
         mapping.append(f"lung nodule {dominant['size_mm']:g} mm, {dominant['type'].replace('_', '-')}"

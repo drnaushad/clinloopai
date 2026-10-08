@@ -86,6 +86,7 @@ EVIDENCE_QUERIES: Dict[str, str] = {
     "R053": "acute kidney injury electronic alert creatinine follow-up",
     "R054": "atrial fibrillation anticoagulation underuse CHA2DS2-VASc",
     "R055": "microscopic hematuria evaluation urology referral delay bladder cancer",
+    "R056": "pulmonary nodule growth volume doubling time missed interval change",
 }
 
 
