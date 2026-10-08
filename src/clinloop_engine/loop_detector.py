@@ -197,7 +197,7 @@ class ClinLoopDetector:
                         deadline_str=det.deadline
                     )
                     det.evidence_chain.append(
-                        f"FHIR Task preview (not transmitted): {json.dumps(task_resource)}"
+                        f"FHIR Task preview (not transmitted): {json.dumps(task_resource, ensure_ascii=False)}"
                     )
                 except Exception as exc:
                     det.explanation.append(

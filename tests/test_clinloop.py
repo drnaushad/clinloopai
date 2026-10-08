@@ -653,6 +653,17 @@ class TestSafetyRegressions(unittest.TestCase):
         self.assertFalse(top.should_abstain)
         self.assertTrue(top.recommended_action.startswith("URGENT"))
 
+    def test_overdue_loop_uses_observed_failure_not_prior(self):
+        """A missed deadline is an observed failure: risk must not be discounted by a low prior."""
+        detections = ClinLoopDetector(evaluation_time=datetime(2026, 6, 1)).process_patient(
+            "CULTURE", _PATIENT_ID, [
+                _evt("a", "culture_result", "2026-03-01T09:00:00",
+                     {"condition": "positive_post_discharge", "organism": "S. aureus"}),
+            ])
+        top = detections[0]
+        self.assertTrue(any(line.startswith("Failure: observed") for line in top.explanation))
+        self.assertGreater(top.risk_score, 0.5)
+
     def test_large_nodule_uses_three_month_window(self):
         """Fleischner 2017: >8 mm solid nodule needs follow-up at ~3 months."""
         statuses = _loop_statuses([

@@ -19,15 +19,20 @@ with transparent, rule-grounded logic and an audit trail.
 ## How it works
 
 ```
-patient events ──► Temporal Hypergraph ──► Safety Clock ──► Risk Scorer ──► prioritized open loops
- (labs, imaging,    (match each trigger      (sigmoid time     (severity × time    + explanation
-  referrals, Rx)     to its required          risk, GREEN/      × failure prior ×    + evidence chain
-                     follow-ups per rule)     YELLOW/RED/BLACK)  actionability)      + FHIR Task preview
+ FHIR R4 export ──► FHIR adapter ──► Detection engine ──────────────────────► Loop registry ──► Clinician worklist
+ (Observation,      (status-aware,     Temporal Hypergraph → Safety Clock       (owner, ack,      (ranked, evidence,
+  DiagnosticReport,  evidence spans)   → Risk Scorer: which obligations are     defer, close,     acknowledge / defer /
+  Appointment, …)                       open, overdue, and how dangerous         escalation,       close with evidence)
+                                                                                 hash-chained audit)
 ```
 
-1. **Obligation rules** (`clinical_ontology.py`): 16 guideline-based rules (R001–R016). Each has a
-   trigger, its required follow-ups, a deadline and a severity. Example rule:
-   `□(LAB_RESULT[abnormal_pap] → ◇≤30d COLPOSCOPY_REFERRAL)`.
+1. **Obligation rules** (`clinical_ontology.py`): 22 guideline-based rules. R001–R016 cover abnormal
+   labs, incidental nodules, cytology, cultures, anticoagulation, referrals and cardiac transitions.
+   R017–R022 are the Wave 1 life-saving rules: positive FIT → colonoscopy, BI-RADS 4/5 → biopsy,
+   Lung-RADS 4A/4B/4X work-up, abnormal results after discharge, and critical values (clinician
+   notified within 1 hour). Each rule has a trigger, its required follow-ups (all or any), a deadline,
+   a severity, references, and a `review_status` (all currently `pending_specialist_review`).
+   Example rule: `□(LAB_RESULT[abnormal_pap] → ◇≤30d COLPOSCOPY_REFERRAL)`.
 2. **Temporal hypergraph** (`temporal_hypergraph.py`): builds one hyperedge per triggered rule and
    marks it `closed`, `open` or `delayed`.
 3. **Safety clock** (`safety_clock.py`): converts elapsed time against the deadline into a time-risk
@@ -36,6 +41,11 @@ patient events ──► Temporal Hypergraph ──► Safety Clock ──► Ri
    (`needs_human_review`) when the data are too sparse.
 5. **Loop detector** (`loop_detector.py`): runs the pipeline per patient and returns ranked
    detections with full explanations.
+6. **FHIR adapter** (`fhir_ingest.py`): maps hospital FHIR R4 resources to events. FHIR status is
+   preserved (a *booked* appointment is not a completed one), report text extraction is
+   negation-aware and records its evidence span, and every event says how it was mapped.
+7. **Loop registry** (`loop_store.py`): remembers each loop's owner and workflow state, escalates
+   unacknowledged overdue loops, computes the open-loop rate, and keeps a hash-chained audit log.
 
 ---
 
@@ -52,8 +62,9 @@ clinloopai/
 │   ├── data_loader.py            # Load / generate / tabulate synthetic trajectories
 │   ├── run_benchmark.py          # End-to-end benchmark entry point
 │   ├── tests/test_noble_engine.py# Tests for counterfactual, outreach, BioMCP modules
+│   ├── validation/chart_review.py# Stage 1 chart-review study toolkit (sampling, blinding, metrics)
 │   └── clinloop_engine/
-│       ├── clinical_ontology.py      # Event types, severities, obligation rules R001–R016
+│       ├── clinical_ontology.py      # Event types, severities, obligation rules R001–R022
 │       ├── temporal_hypergraph.py    # Dynamic Temporal Hypergraph (obligation matching)
 │       ├── safety_clock.py           # SafetyClock (time risk) + background watchdog loop
 │       ├── risk_scorer.py            # Multi-factor risk + abstention
@@ -62,7 +73,11 @@ clinloopai/
 │       ├── baselines.py              # Simulated EMR-inbox and LLM baselines
 │       ├── benchmark.py              # Metrics (sens/spec/F1/AUROC/PR-AUC/alert burden)
 │       ├── visualizer.py             # ROC / PR / bar / alert-fatigue figures
-│       ├── api.py                    # FastAPI backend for the web cockpit
+│       ├── fhir_ingest.py            # FHIR R4 → ClinLoop event adapter
+│       ├── loop_store.py             # SQLite loop registry, workflow, escalation, audit, open-loop rate
+│       ├── clinical_api.py           # Pilot endpoints: ingest, worklist, actions, metrics
+│       ├── auth.py                   # Bearer-token roles: viewer / navigator / clinician / admin
+│       ├── api.py                    # FastAPI backend (mounts clinical_api)
 │       ├── biomcp_server.py          # Guideline lookup tools (MCP-style, static data)
 │       ├── ehr_mcp_server.py         # Mock EHR connector (returns canned responses)
 │       ├── pacs_mcp_server.py        # Mock PACS connector (returns canned responses)
@@ -79,10 +94,14 @@ clinloopai/
 │       ├── sdoh_monitor.py           # Equity (disparity ratio) monitor
 │       └── safety/agent_guard.py     # Prompt-injection / unsafe-claim filters
 │
-├── tests/test_clinloop.py        # Unit + integration tests for the core engine
+├── tests/                        # Engine, FHIR, registry, API and chart-review tests
 │
 ├── index.html, css/, js/         # Static web cockpit (served at clinloopai.app)
+├── worklist.html                 # Clinician worklist (talks to the API)
 ├── data/cases.json               # 5 curated synthetic demo cases used by the web cockpit
+├── data/fhir_example_bundle.json # Synthetic FHIR R4 bundle: 7 patients, the main failure modes
+├── requirements-api.txt          # API dependencies
+├── Dockerfile                    # On-premise API image
 ├── manifest.json, sw.js, icons/  # PWA manifest and service worker
 ├── CNAME                         # Custom domain for static hosting
 │
@@ -90,8 +109,8 @@ clinloopai/
     build_full_monograph.py       #   existing ClinLoop_AI_Package/ output directory)
 ```
 
-Generated at runtime (not committed): `data/synthetic/` (300 scenario JSON files) and `results/`
-(benchmark JSON and figures).
+Generated at runtime (not committed): `data/synthetic/` (300 scenario JSON files), `results/`
+(benchmark JSON and figures) and `data/clinloop.db` (the loop registry).
 
 ---
 
@@ -114,7 +133,8 @@ pip install pytest                 # to run the test suite
 
 | Feature | Extra install |
 | --- | --- |
-| REST API (`api.py`) | `pip install fastapi uvicorn requests torch` (the API imports `gpu_engine`, which needs `torch`; CPU is fine) |
+| REST API, worklist, FHIR ingest | `pip install -r requirements-api.txt` |
+| GPU demo endpoints | `pip install torch` (optional; without it those endpoints return 503) |
 | Local LLM text generation | Install [Ollama](https://ollama.com) and pull a model, e.g. `ollama pull llama3.1`. Without it, LLM endpoints return an "unavailable" result. |
 | Word monograph scripts | `pip install python-docx` and `mkdir ClinLoop_AI_Package` |
 
@@ -127,8 +147,10 @@ Run every command from the **repository root**. The code imports modules as `src
 ### 1. Tests
 
 ```bash
-python -m pytest tests/ src/tests/ -v            # 54 tests
+python -m pytest tests/ src/tests/ -v            # 106 tests
 ```
+
+The API tests are skipped automatically when `requirements-api.txt` is not installed.
 
 `tests/test_clinloop.py` includes patient-safety regression tests. Each one pins a failure mode
 that would silently drop a patient: a partially completed follow-up counted as closed, a cancelled
@@ -171,20 +193,68 @@ Give a rule's trigger condition explicitly with `details["condition"]` (for exam
 Give each event a `status`: only follow-ups that actually happened close a loop. `cancelled`,
 `no_show`, `scheduled`, `pending` and similar statuses do not.
 
-### 4. REST API
+### 4. Clinical pilot: API and worklist
 
 ```bash
-uvicorn src.clinloop_engine.api:app --host 127.0.0.1 --port 8124
-# Interactive docs: http://127.0.0.1:8124/docs
+pip install -r requirements-api.txt
+
+# One token per person: token:user:role  (roles: viewer, navigator, clinician, admin)
+export CLINLOOP_API_TOKENS="$(openssl rand -hex 16):dr.lee:admin,$(openssl rand -hex 16):nurse.park:navigator"
+export CLINLOOP_SIGNING_KEY="$(openssl rand -hex 32)"
+echo "$CLINLOOP_API_TOKENS"          # hand each person their token
+
+uvicorn src.clinloop_engine.api:app --host 127.0.0.1 --port 8124      # API + docs at /docs
+python3 -m http.server 8123 --bind 127.0.0.1                           # in a second terminal
 ```
 
-`/api/v1/agent/safety-clock/status` reports the background watchdog. Every 10 seconds it runs the
-full detection engine over `data/cases.json` and lists every obligation past its deadline.
+Open <http://localhost:8123/worklist.html>, sign in with the admin token, and click **Load synthetic
+FHIR example**. Seven synthetic patients are ingested and their open loops appear, most dangerous
+first:
+- a positive culture after discharge with no callback;
+- a 12 mm nodule whose follow-up CT was a no-show;
+- colon cancer on biopsy with no referral;
+- a positive FIT with no colonoscopy.
 
-Set `CLINLOOP_SIGNING_KEY` to sign agent audit envelopes with a stable key. Without it, a random
-per-process key is used.
+Each loop can be acknowledged, deferred with a coded reason, or closed with evidence. Every action
+is written to the audit trail.
 
-The API has **no authentication** and allows CORS from any origin. Keep it bound to `127.0.0.1`.
+Ingesting a real FHIR export instead (admin token):
+
+```bash
+curl -X POST http://127.0.0.1:8124/api/v1/fhir/ingest \
+     -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
+     --data @export_bundle.json
+```
+
+Key endpoints (all except `/rules` and `/health` require a token):
+
+| Endpoint | Role | Purpose |
+| --- | --- | --- |
+| `GET /api/v1/rules` | public | The rule library, with references and review status |
+| `POST /api/v1/fhir/ingest` | admin | Map a FHIR Bundle, run the engine, record loops |
+| `GET /api/v1/worklist` | viewer | Active loops, ranked |
+| `POST /api/v1/loops/{key}/acknowledge` | navigator | Take ownership of the next step |
+| `POST /api/v1/loops/{key}/defer` | navigator / clinician | Coded reason; clinical reasons need a clinician |
+| `POST /api/v1/loops/{key}/close` | navigator | Requires evidence of the completed follow-up |
+| `GET /api/v1/metrics/open-loop-rate?stratify_by=` | viewer | Quality measure by rule, language, age group, sex |
+| `GET /api/v1/audit/verify` | admin | Verify the audit hash chain |
+
+Overdue loops nobody has acknowledged escalate automatically: owner → department lead → patient
+safety officer. Each step waits a severity-specific grace period (1 hour for critical).
+
+Without `CLINLOOP_API_TOKENS`, the API generates a one-time admin token and logs it, so it is never
+open by default. CORS is limited to the cockpit origins (`CLINLOOP_CORS_ORIGINS` overrides). The
+database path is `CLINLOOP_DB` (default `data/clinloop.db`).
+
+Docker (on-premise; publish the port on localhost only):
+
+```bash
+docker build -t clinloop-api .
+docker run -p 127.0.0.1:8124:8124 -v clinloop-data:/var/lib/clinloop \
+  -e CLINLOOP_API_TOKENS -e CLINLOOP_SIGNING_KEY clinloop-api
+```
+
+`/api/v1/agent/safety-clock/status` reports the background watchdog over the cockpit demo cases.
 
 ### 5. Web cockpit (static demo)
 
@@ -193,8 +263,24 @@ python3 -m http.server 8123
 # open http://localhost:8123/
 ```
 
-The cockpit loads `data/cases.json` directly. Its live-LLM panels call the API on port 8124 when
-the API is running.
+The cockpit loads `data/cases.json` directly. Its local-LLM panel works only when the cockpit is
+served from `localhost` with the API and Ollama running. On the public site it states that the
+on-premise LLM is unavailable.
+
+### 6. Stage 1 validation study (chart review)
+
+```bash
+# Draw a stratified sample of loops from a FHIR export; reviewers get a blinded packet
+python -m src.validation.chart_review sample --fhir export_bundle.json --out review/ --per-stratum 20
+
+# Two clinicians fill reviewer_1 / reviewer_2 (yes / no / unclear: "follow-up completed in time?"),
+# an adjudicator resolves disagreements, then:
+python -m src.validation.chart_review analyze --packet review/review_packet.csv --key review/prediction_key.csv
+```
+
+The analysis reports weighted sensitivity, specificity, PPV and NPV with stratified-bootstrap 95% CIs,
+per-rule results, and Cohen's kappa between reviewers. This is the study that turns ClinLoop's
+accuracy from a claim into a measurement.
 
 ---
 
@@ -227,7 +313,12 @@ synthetic event, so results are identical on every run.
 
 | Component | Status |
 | --- | --- |
-| Obligation rules, hypergraph, safety clock, risk scorer, loop detector | **Implemented** (deterministic, tested) |
+| Obligation rules, hypergraph, safety clock, risk scorer, loop detector | **Implemented** (deterministic, tested). Rules await specialist sign-off |
+| FHIR R4 ingestion | **Implemented** for 8 resource types; LOINC lists and text patterns need checking against each hospital's coding |
+| Loop registry, workflow, escalation, audit, open-loop rate | **Implemented** (SQLite) |
+| API authentication | **Implemented**: bearer tokens with roles. Not yet integrated with hospital SSO |
+| Clinician worklist | **Implemented** (`worklist.html`) |
+| Stage 1 validation toolkit | **Implemented**; awaits IRB approval and real data |
 | Synthetic data generator, benchmark, figures | **Implemented** (seeded) |
 | BioMCP guideline tools | Static guideline lookup; no live PubMed/guideline retrieval |
 | EHR / PACS MCP servers | **Mock**: return canned text and do not connect to any EHR |

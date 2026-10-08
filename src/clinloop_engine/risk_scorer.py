@@ -182,7 +182,12 @@ class RiskScorer:
         uncertainty_score = self.compute_uncertainty(event_details, n_events)
 
         # Factor 4: Failure Probability
-        failure_prob = self._failure_priors.get(rule_id, 0.25)
+        # The prior estimates how often this kind of loop is missed. Once the
+        # deadline has passed with the loop still open, the miss is observed,
+        # not estimated, so the probability is 1.
+        failure_prior = self._failure_priors.get(rule_id, 0.25)
+        failure_observed = is_open and clock_reading.clock_state == ClockState.BLACK
+        failure_prob = 1.0 if failure_observed else failure_prior
 
         # Factor 5: Actionability
         actionability = self._actionability.get(rule_id, 0.75)
@@ -243,7 +248,8 @@ class RiskScorer:
             f"Severity: {severity.value} (score: {severity_score:.2f})",
             f"Time Risk: {time_risk_score:.3f} (clock: {clock_reading.clock_state.value})",
             f"Uncertainty: {uncertainty_score:.3f}",
-            f"Historical Failure Rate: {failure_prob:.2f}",
+            (f"Failure: observed (deadline passed; prior {failure_prior:.2f})" if failure_observed
+             else f"Historical Failure Rate: {failure_prob:.2f}"),
             f"Actionability: {actionability:.2f}",
             f"Composite Risk: {composite:.4f} → Normalized: {normalized:.3f}",
         ]

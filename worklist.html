@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClinLoop Worklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --border-strong: #cbd5e1;
+  --text: #0f172a; --muted: #475569; --dim: #64748b;
+  --accent: #0284c7; --accent-soft: rgba(2,132,199,.10);
+  --critical: #be123c; --critical-soft: rgba(225,29,72,.10);
+  --high: #c2410c; --high-soft: rgba(234,88,12,.10);
+  --moderate: #a16207; --moderate-soft: rgba(202,138,4,.12);
+  --low: #475569; --low-soft: rgba(71,85,105,.10);
+  --ok: #047857; --ok-soft: rgba(5,150,105,.10);
+  --radius: 12px; --shadow: 0 4px 14px rgba(15,23,42,.06);
+  --font-head: 'Outfit', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+    --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+    --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+    --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+    --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+    --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+    --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+    --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+  --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+  --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+  --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+  --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+  --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+  --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+  --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 var(--font-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 64px; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; }
+h1 { font: 800 1.6rem/1.2 var(--font-head); margin: 0; letter-spacing: -.01em; }
+h1 span { color: var(--accent); }
+.sub { color: var(--muted); margin: 4px 0 0; }
+.banner { margin: 16px 0; padding: 10px 14px; border-radius: var(--radius); background: var(--moderate-soft);
+  color: var(--text); border: 1px solid var(--border); font-size: .9rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.connect { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 10px; padding: 14px; align-items: end; }
+label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+input, select, textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; }
+textarea { min-height: 64px; resize: vertical; }
+button { font: 600 .88rem var(--font-body); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+.status-line { padding: 0 14px 12px; font-size: .85rem; color: var(--muted); min-height: 1.4em; }
+.status-line.error { color: var(--critical); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+.kpi { padding: 12px 14px; }
+.kpi .v { font: 700 1.6rem/1.1 var(--font-head); font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: .8rem; color: var(--muted); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 12px; }
+.toolbar .spacer { flex: 1; }
+.loop { padding: 14px; margin-bottom: 10px; border-left: 4px solid var(--low); }
+.loop.critical { border-left-color: var(--critical); }
+.loop.high { border-left-color: var(--high); }
+.loop.moderate { border-left-color: var(--moderate); }
+.loop-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.loop-title { font-weight: 700; flex: 1 1 260px; }
+.chip { font: 600 .72rem var(--font-mono); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.critical { background: var(--critical-soft); color: var(--critical); }
+.chip.high { background: var(--high-soft); color: var(--high); }
+.chip.moderate { background: var(--moderate-soft); color: var(--moderate); }
+.chip.low, .chip.neutral { background: var(--low-soft); color: var(--low); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.overdue { background: var(--critical); color: #fff; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: .85rem; margin: 6px 0; }
+.meta b { color: var(--text); font-weight: 600; }
+.missing { font-weight: 600; margin: 4px 0; }
+.action { color: var(--muted); font-size: .9rem; }
+details { margin-top: 8px; }
+summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
+.evidence { font: .78rem/1.5 var(--font-mono); color: var(--muted); background: var(--bg); padding: 10px;
+  border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.form { display: none; gap: 8px; margin-top: 10px; padding: 12px; border-radius: 8px; background: var(--bg); }
+.form.open { display: grid; }
+.form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.empty { text-align: center; color: var(--muted); padding: 40px 16px; }
+.rate-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.rate-table th, .rate-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.rate-table td.num { font-variant-numeric: tabular-nums; text-align: right; }
+footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
+@media (max-width: 720px) {
+  .connect { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .form .row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>ClinLoop <span>Worklist</span></h1>
+      <p class="sub">Open clinical loops, most dangerous first. Act, defer with a reason, or close with evidence.</p>
+    </div>
+    <a href="./" style="color:var(--accent);font-weight:600;">← Cockpit</a>
+  </header>
+
+  <div class="banner" role="note">
+    Research prototype on synthetic data. Every rule is pending specialist review; do not use for patient care.
+  </div>
+
+  <section class="card" aria-label="Connection">
+    <form class="connect" id="connect-form">
+      <div>
+        <label for="api-base">ClinLoop API</label>
+        <input id="api-base" type="url" placeholder="http://localhost:8124" required>
+      </div>
+      <div>
+        <label for="token">Access token</label>
+        <input id="token" type="password" autocomplete="off" placeholder="Bearer token from your administrator" required>
+      </div>
+      <button class="primary" type="submit">Sign in</button>
+    </form>
+    <div class="status-line" id="status" aria-live="polite"></div>
+  </section>
+
+  <div id="app" hidden>
+    <section class="kpis" aria-label="Summary">
+      <div class="card kpi"><div class="v" id="k-active">–</div><div class="l">Active loops</div></div>
+      <div class="card kpi"><div class="v" id="k-overdue">–</div><div class="l">Past deadline</div></div>
+      <div class="card kpi"><div class="v" id="k-critical">–</div><div class="l">Critical</div></div>
+      <div class="card kpi"><div class="v" id="k-rate">–</div><div class="l">Open-loop rate / 1,000</div></div>
+    </section>
+
+    <div class="toolbar">
+      <label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--text);font-weight:500;">
+        <input type="checkbox" id="show-inactive" style="width:auto;"> Show deferred &amp; closed
+      </label>
+      <span class="spacer"></span>
+      <button type="button" id="btn-refresh">Refresh</button>
+      <button type="button" id="btn-load-example" hidden>Load synthetic FHIR example</button>
+      <button type="button" id="btn-escalate" hidden>Run escalation</button>
+    </div>
+
+    <section id="worklist" aria-label="Open loops"></section>
+
+    <section class="card" style="padding:14px;margin-top:16px;" aria-label="Equity">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;">
+        <strong>Open-loop rate by group</strong>
+        <select id="strata" style="width:auto;" aria-label="Group by">
+          <option value="rule">Rule</option>
+          <option value="language">Language</option>
+          <option value="age_group">Age group</option>
+          <option value="sex">Sex</option>
+        </select>
+      </div>
+      <p class="sub" style="font-size:.85rem;">Loops not closed within their guideline window, per 1,000 loops past deadline. Groups should not differ; if they do, outreach is failing someone.</p>
+      <div id="rate-table"></div>
+    </section>
+  </div>
+
+  <footer>ClinLoop AI · Rules decide, people act, every action is audited.</footer>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const RANK = { viewer: 0, navigator: 1, clinician: 2, admin: 3 };
+  const NAVIGATOR_REASONS = ['completed_elsewhere', 'patient_declined', 'duplicate', 'patient_deceased'];
+  const state = { base: '', token: '', user: null, deferReasons: {} };
+
+  // Session storage only: the token disappears when the tab closes.
+  const store = {
+    get(k) { try { return sessionStorage.getItem(k) || ''; } catch { return ''; } },
+    set(k, v) { try { sessionStorage.setItem(k, v); } catch {} },
+  };
+  const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+  $('api-base').value = store.get('clinloop_api') || (isLocal ? 'http://localhost:8124' : '');
+  $('token').value = store.get('clinloop_token');
+
+  function setStatus(msg, isError = false) {
+    $('status').textContent = msg;
+    $('status').classList.toggle('error', isError);
+  }
+
+  async function api(path, opts = {}) {
+    const res = await fetch(state.base + path, {
+      ...opts,
+      headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.detail || `HTTP ${res.status}`);
+    return body;
+  }
+
+  const can = (role) => state.user && RANK[state.user.role] >= RANK[role];
+  const fmtDate = (iso) => iso ? iso.replace('T', ' ').slice(0, 16) + ' UTC' : '—';
+  const keyPath = (key) => `/api/v1/loops/${encodeURIComponent(key)}`;
+
+  function loopCard(l) {
+    const overdue = l.clock_state === 'BLACK' && ['new', 'acknowledged'].includes(l.workflow_state);
+    const active = ['new', 'acknowledged'].includes(l.workflow_state) || l.deferral_expired;
+    const reasons = Object.entries(state.deferReasons)
+      .filter(([code]) => can('clinician') || NAVIGATOR_REASONS.includes(code))
+      .map(([code, text]) => `<option value="${esc(code)}">${esc(text)}</option>`).join('');
+    const id = btoa(unescape(encodeURIComponent(l.loop_key))).replace(/[^a-z0-9]/gi, '');
+    return `
+    <article class="card loop ${esc(l.severity)}" data-key="${esc(l.loop_key)}">
+      <div class="loop-head">
+        <span class="loop-title">${esc(l.rule_name)}</span>
+        <span class="chip ${esc(l.severity)}">${esc(l.severity)}</span>
+        ${overdue ? '<span class="chip overdue">PAST DEADLINE</span>' : ''}
+        <span class="chip ${l.workflow_state.includes('closed') || l.workflow_state === 'resolved_by_engine' ? 'ok' : 'neutral'}">${esc(l.workflow_state.replace(/_/g, ' '))}</span>
+        ${l.escalation_level > 0 ? `<span class="chip high">escalated → ${esc(l.escalated_to.replace(/_/g, ' '))}</span>` : ''}
+      </div>
+      <div class="meta">
+        <span>Patient <b>${esc(l.patient_id)}</b></span>
+        <span>Rule <b>${esc(l.rule_id)}</b></span>
+        <span>Deadline <b>${esc(fmtDate(l.deadline))}</b></span>
+        <span>Owner <b>${esc(l.owner)}</b></span>
+        <span>Risk <b>${esc((l.risk_score ?? 0).toFixed(2))}</b></span>
+      </div>
+      <div class="missing">${esc((l.missing_step || '').replace(/_/g, ' '))}</div>
+      <div class="action">${esc(l.recommended_action)}</div>
+      ${l.defer_reason ? `<div class="action">Deferred: ${esc(state.deferReasons[l.defer_reason] || l.defer_reason)}${l.defer_note ? ' — ' + esc(l.defer_note) : ''}</div>` : ''}
+      ${l.closure_evidence ? `<div class="action">Closed with evidence: ${esc(l.closure_evidence)}</div>` : ''}
+      <details>
+        <summary>Why this alert (evidence &amp; audit)</summary>
+        <div class="evidence">${esc([...(l.explanation || []), '', ...(l.evidence_chain || [])].join('\n'))}</div>
+        <div class="evidence" data-audit>Loading audit trail…</div>
+      </details>
+      ${active && can('navigator') ? `
+      <div class="actions">
+        ${l.workflow_state === 'new' || l.deferral_expired ? '<button type="button" data-act="ack">Acknowledge</button>' : ''}
+        <button type="button" data-act="show-defer" aria-controls="defer-${id}">Defer…</button>
+        <button type="button" data-act="show-close" class="primary" aria-controls="close-${id}">Close with evidence…</button>
+      </div>
+      <form class="form" id="defer-${id}" data-form="defer">
+        <div class="row">
+          <div><label>Reason</label><select name="reason" required>${reasons}</select></div>
+          <div><label>Resurface on (optional)</label><input name="until" type="date"></div>
+        </div>
+        <div><label>Note</label><textarea name="note" placeholder="Required for clinical judgment or 'other'"></textarea></div>
+        <div><button class="primary" type="submit">Record deferral</button></div>
+      </form>
+      <form class="form" id="close-${id}" data-form="close">
+        <div><label>Evidence of the completed follow-up</label>
+          <textarea name="evidence" required minlength="5" placeholder="e.g. Colonoscopy order C-2231 booked for 2026-09-10"></textarea></div>
+        <div><button class="primary" type="submit">Close loop</button></div>
+      </form>` : ''}
+    </article>`;
+  }
+
+  async function refresh() {
+    try {
+      const include = $('show-inactive').checked;
+      const [wl, rate] = await Promise.all([
+        api(`/api/v1/worklist${include ? '?include_inactive=true' : ''}`),
+        api('/api/v1/metrics/open-loop-rate'),
+      ]);
+      state.deferReasons = wl.defer_reasons || {};
+      const active = wl.loops.filter((l) => ['new', 'acknowledged'].includes(l.workflow_state) || l.deferral_expired);
+      $('k-active').textContent = active.length;
+      $('k-overdue').textContent = active.filter((l) => l.clock_state === 'BLACK').length;
+      $('k-critical').textContent = active.filter((l) => l.severity === 'critical').length;
+      const all = rate.groups.all;
+      $('k-rate').textContent = all ? all.rate_per_1000.toLocaleString() : '–';
+      $('worklist').innerHTML = wl.loops.length
+        ? wl.loops.map(loopCard).join('')
+        : `<div class="card empty">No open loops.${can('admin') ? ' Load the synthetic FHIR example to see the workflow.' : ''}</div>`;
+      await renderRates();
+    } catch (e) {
+      setStatus(`Could not load worklist: ${e.message}`, true);
+    }
+  }
+
+  async function renderRates() {
+    const by = $('strata').value;
+    const rate = await api(`/api/v1/metrics/open-loop-rate?stratify_by=${encodeURIComponent(by)}`);
+    const rows = Object.entries(rate.groups);
+    $('rate-table').innerHTML = rows.length ? `
+      <table class="rate-table">
+        <thead><tr><th>${esc(by.replace('_', ' '))}</th><th class="num">Past deadline</th><th class="num">Missed</th><th class="num">Rate / 1,000</th></tr></thead>
+        <tbody>${rows.map(([g, v]) => `<tr><td>${esc(g)}</td><td class="num">${v.eligible}</td><td class="num">${v.missed}</td><td class="num">${v.rate_per_1000.toLocaleString()}</td></tr>`).join('')}</tbody>
+      </table>` : '<p class="sub">No loops past deadline yet.</p>';
+  }
+
+  $('connect-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    state.base = $('api-base').value.replace(/\/+$/, '');
+    state.token = $('token').value.trim();
+    setStatus('Signing in…');
+    try {
+      state.user = await api('/api/v1/me');
+      store.set('clinloop_api', state.base);
+      store.set('clinloop_token', state.token);
+      setStatus(`Signed in as ${state.user.user} (${state.user.role}).`);
+      $('app').hidden = false;
+      $('btn-load-example').hidden = !can('admin');
+      $('btn-escalate').hidden = !can('admin');
+      await refresh();
+    } catch (e) {
+      $('app').hidden = true;
+      setStatus(`Sign-in failed: ${e.message}. Check the API address and token.`, true);
+    }
+  });
+
+  $('btn-refresh').addEventListener('click', refresh);
+  $('show-inactive').addEventListener('change', refresh);
+  $('strata').addEventListener('change', () => renderRates().catch((e) => setStatus(e.message, true)));
+
+  $('btn-load-example').addEventListener('click', async () => {
+    try {
+      const bundle = await (await fetch('data/fhir_example_bundle.json')).json();
+      // Synthetic data is dated 2026; evaluate on 1 Sep 2026 so deadlines are meaningful
+      const r = await api('/api/v1/fhir/ingest?evaluation_time=2026-09-01T00:00:00', { method: 'POST', body: JSON.stringify(bundle) });
+      setStatus(`Ingested ${r.patients} synthetic patients, ${r.events} events: ${r.loops.new} new loops.`);
+      await refresh();
+    } catch (e) { setStatus(`Ingest failed: ${e.message}`, true); }
+  });
+
+  $('btn-escalate').addEventListener('click', async () => {
+    try {
+      const r = await api('/api/v1/watchdog/escalate', { method: 'POST' });
+      setStatus(`${r.escalated.length} loop(s) escalated.`);
+      await refresh();
+    } catch (e) { setStatus(`Escalation failed: ${e.message}`, true); }
+  });
+
+  $('worklist').addEventListener('toggle', async (ev) => {
+    const details = ev.target;
+    if (!(details instanceof HTMLDetailsElement) || !details.open) return;
+    const key = details.closest('[data-key]').dataset.key;
+    const box = details.querySelector('[data-audit]');
+    try {
+      const r = await api(`${keyPath(key)}/audit`);
+      box.textContent = r.audit.map((a) => `${a.ts.slice(0, 19)}  ${a.actor} (${a.role || ''})  ${a.action}  ${JSON.stringify(a.detail)}`).join('\n') || 'No actions yet.';
+    } catch (e) { box.textContent = `Audit unavailable: ${e.message}`; }
+  }, true);
+
+  $('worklist').addEventListener('click', async (ev) => {
+    const btn = ev.target.closest('button[data-act]');
+    if (!btn) return;
+    const card = btn.closest('[data-key]');
+    const key = card.dataset.key;
+    if (btn.dataset.act === 'ack') {
+      btn.disabled = true;
+      try { await api(`${keyPath(key)}/acknowledge`, { method: 'POST' }); await refresh(); }
+      catch (e) { setStatus(e.message, true); btn.disabled = false; }
+    } else {
+      const form = document.getElementById(btn.getAttribute('aria-controls'));
+      card.querySelectorAll('.form').forEach((f) => { if (f !== form) f.classList.remove('open'); });
+      form.classList.toggle('open');
+      form.querySelector('select, textarea')?.focus();
+    }
+  });
+
+  $('worklist').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const form = ev.target;
+    const key = form.closest('[data-key]').dataset.key;
+    const data = new FormData(form);
+    try {
+      if (form.dataset.form === 'defer') {
+        const until = data.get('until');
+        await api(`${keyPath(key)}/defer`, { method: 'POST', body: JSON.stringify({
+          reason_code: data.get('reason'), note: data.get('note') || '', until: until ? `${until}T00:00:00` : null }) });
+        setStatus('Deferral recorded.');
+      } else {
+        await api(`${keyPath(key)}/close`, { method: 'POST', body: JSON.stringify({ evidence: data.get('evidence') }) });
+        setStatus('Loop closed.');
+      }
+      await refresh();
+    } catch (e) { setStatus(e.message, true); }
+  });
+})();
+</script>
+</body>
+</html>

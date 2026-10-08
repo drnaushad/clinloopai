@@ -18,9 +18,11 @@ dangerous, the patient is not lost on the way to treatment. This document sets o
 | Strength | Gap |
 | --- | --- |
 | Deterministic, guideline-cited rules with a full evidence chain for every alert | Runs on synthetic data only; no real-world accuracy has been measured |
-| Formal temporal semantics (`□(trigger → ◇≤T follow-up)`) | 16 rules cover a small slice of the follow-up failures that kill patients |
-| 54 tests, including patient-safety regression tests | The comparison baselines are simulations, not real systems |
+| Formal temporal semantics (`□(trigger → ◇≤T follow-up)`) | 22 rules, none yet signed off by a specialist |
+| FHIR R4 ingestion, loop registry, clinician worklist, escalation, audit | Not yet connected to a hospital system or SSO |
+| 106 tests, including patient-safety regression tests | The comparison baselines are simulations, not real systems |
 | Read-only design: never orders, never auto-closes | Counterfactual survival figures are hand-written illustrations |
+| Stage 1 chart-review toolkit ready | No IRB approval or real-data validation yet |
 
 **Prior art we must build on and beat.** Singh, Murphy and colleagues at the VA showed that
 electronic "e-triggers" can find missed follow-up of cancer red flags, and tested them in a cluster
@@ -289,13 +291,26 @@ everything else, and the only one we should ever put on a slide about saving liv
 - [x] Make the safety-clock watchdog run the real engine
 - [x] Remove unsupported outcome, trial and hallucination claims from the API; label illustrative
       figures on the site
-- [ ] Clinical team: correct the cockpit narrative for case SC-0004. A 7.8 mm solid nodule falls in
-      Fleischner's 6–12-month CT category, not the 90-day window the demo text states.
+- [x] Correct the cockpit narrative for SC-0004 (7.8 mm solid nodule → Fleischner 6–12-month CT)
+- [x] Make the public site's local-LLM panel state plainly that the on-premise LLM is unavailable
+- [ ] Merge to `main` so clinloopai.app serves these changes
+
+### Built for the pilot (2026-10-08)
+- [x] Wave 1 rules R017–R022 (FIT+, BI-RADS 4/5, Lung-RADS 4A/4B/4X, post-discharge results,
+      critical values), every rule marked `pending_specialist_review`
+- [x] FHIR R4 adapter (status-aware, negation-aware extraction with evidence spans)
+- [x] Loop registry: owners, coded deferral, evidence-based closure, escalation chain,
+      hash-chained audit, open-loop rate stratified by equity groups (§3.2, §8)
+- [x] Token authentication with clinical roles; restricted CORS; Docker image
+- [x] Clinician worklist (`worklist.html`)
+- [x] Stage 1 chart-review toolkit: stratified blinded sampling, weighted metrics, bootstrap CIs,
+      Cohen's kappa (§7)
 
 ### 90 days
 - Clinical advisory board: radiology, pathology, oncology, primary care, psychiatry, nursing
   navigation, a patient representative, an ethicist and a medical lawyer
-- Specialist sign-off on all rules; implement Wave 1
+- Specialist sign-off on all 22 rules; map the local LOINC and report vocabularies into the FHIR adapter
+- Hospital SSO integration for the worklist; EMR in-basket integration
 - COL specification v0.1; FHIR PlanDefinition export
 - IRB submission for Stage 1; NHIS data access application for delay–harm curves
 
