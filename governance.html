@@ -181,6 +181,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       <div class="card kpi"><div class="v" id="k-critical" style="font-size:1.1rem;">–</div><div class="l" data-i18n="kCritical"></div></div>
     </section>
     <div id="policy" class="feed" role="status"></div>
+  <div class="feed" id="rulecheck" role="status" hidden></div>
 
     <section class="card" style="padding:14px;margin-bottom:16px;" aria-labelledby="crit-h">
       <div class="loop-head">
@@ -243,6 +244,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       any: '중 하나', all2: '모두', approvals: (n, r) => `승인 ${n}/${r}`,
       decision: '결정', specialty: '전문 분야 (예: 영상의학과 흉부)', reviewNote: '검토 의견 (반려·수정 요청 시 필수)', submit: '결정 기록',
       decisions: { approve: '승인', request_changes: '수정 요청', reject: '반려' },
+      ruleCheck: (r) => r.errors ? `규칙 점검: 오류 ${r.errors}건 — 발동하지 않거나 닫히지 않는 규칙이 있습니다: ${r.issues.filter((i) => i.level === 'error').map((i) => i.rule_id).join(', ')}` : `규칙 점검: ${r.rules}개 규칙 모두 병원 데이터에서 발동·종결 가능 (경고 ${r.warnings}건)`,
       signInToReview: '검토하려면 의료진 토큰으로 불러오세요.', recorded: (id, s) => `${id}: 기록되었습니다 (${s}).`,
       listApproved: '위급 소견 목록을 승인했습니다.', loadFailed: (e) => `불러오지 못했습니다: ${e}`, loaded: (u) => u ? `${u.user}(${u.role})님으로 로그인했습니다.` : '읽기 전용으로 불러왔습니다.',
       noRules: '조건에 맞는 규칙이 없습니다.',
@@ -268,6 +270,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       any: 'any of', all2: 'all of', approvals: (n, r) => `${n}/${r} approvals`,
       decision: 'Decision', specialty: 'Specialty (e.g. Thoracic radiology)', reviewNote: 'Review note (required to reject or request changes)', submit: 'Record decision',
       decisions: { approve: 'Approve', request_changes: 'Request changes', reject: 'Reject' },
+      ruleCheck: (r) => r.errors ? `Rule check: ${r.errors} error(s) — rules that never fire or never close: ${r.issues.filter((i) => i.level === 'error').map((i) => i.rule_id).join(', ')}` : `Rule check: all ${r.rules} rules can fire on hospital data and every loop can close (${r.warnings} warning(s))`,
       signInToReview: 'Load with a clinician token to review.', recorded: (id, s) => `${id}: recorded (${s}).`,
       listApproved: 'Critical-finding list approved.', loadFailed: (e) => `Could not load: ${e}`, loaded: (u) => u ? `Signed in as ${u.user} (${u.role}).` : 'Loaded read-only.',
       noRules: 'No rules match.',
@@ -371,6 +374,11 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     $('k-critical').textContent = t().critStatus[s.critical_findings_list];
     $('policy').className = `feed ${s.enforce_signoff ? 'ok' : 'alarm'}`;
     $('policy').textContent = t().policy(s);
+    if (state.ruleCheck) {
+      $('rulecheck').hidden = false;
+      $('rulecheck').className = `feed ${state.ruleCheck.errors ? 'alarm' : 'ok'}`;
+      $('rulecheck').textContent = t().ruleCheck(state.ruleCheck);
+    }
     renderCritical();
     const st = $('f-status').value, dom = $('f-domain').value, q = $('f-text').value.trim().toLowerCase();
     const rows = state.rules.filter((r) => (!st || r.status === st) && (!dom || r.domain === dom)
@@ -383,6 +391,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     const [summary, rules, critical] = await Promise.all([
       api('/api/v1/governance/summary'), api('/api/v1/governance/rules'), api('/api/v1/governance/critical-findings')]);
     state.summary = summary; state.rules = rules.rules; state.critical = critical;
+    state.ruleCheck = await api('/api/v1/governance/rule-check').catch(() => null);
     const domains = [...new Set(state.rules.map((r) => r.domain))].sort();
     const current = $('f-domain').value;
     $('f-domain').innerHTML = `<option value="">${esc(t().all)}</option>` + domains.map((d) => `<option value="${esc(d)}">${esc(d.replace(/_/g, ' '))}</option>`).join('');

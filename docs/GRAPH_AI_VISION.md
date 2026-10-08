@@ -210,3 +210,13 @@ clearest guideline basis:
 
 Each pattern node links to the events it came from. See
 [`DIAGNOSTIC_PATTERNS.md`](DIAGNOSTIC_PATTERNS.md).
+
+**Lesion identity across studies (R056).** Idea 2 above. Nodules are linked across reports by lobe
+and size. Growth that no single report states is caught, and the volume-doubling time is computed. A
+radiologist confirms the match.
+
+**Model-checking the rule set.** Idea 4 above, as a static check (`rule_check.py`, run in CI and shown
+on `governance.html`). For every rule it checks whether hospital data can produce the trigger, and
+whether hospital data can produce a follow-up that closes it. It also checks the references, the
+Korean name and the formal statement. It currently reports 56 rules with 0 errors and 0 warnings.
+Tests prove it catches a rule that can never fire or never close.

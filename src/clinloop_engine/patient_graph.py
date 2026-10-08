@@ -98,7 +98,8 @@ def node_label(event_type: str, d: Dict[str, Any]) -> str:
         return str(d.get("medication") or d.get("drug") or "Medication change")
     if t == _E.DIAGNOSTIC_PATTERN.value:
         return {"ida": "Pattern: iron-deficiency anaemia", "creatinine-rise": "Pattern: creatinine rise (AKI warning)",
-                "af-oac": "Pattern: AF without anticoagulation", "haematuria": "Pattern: persistent haematuria"
+                "af-oac": "Pattern: AF without anticoagulation", "haematuria": "Pattern: persistent haematuria",
+                "nodule-growth": "Pattern: lung nodule measured larger"
                 }.get(d.get("pattern"), "Diagnostic pattern")
     if t == _E.CLINICAL_NOTE_PLAN.value:
         plan = d.get("plan") or {}

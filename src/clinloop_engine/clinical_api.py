@@ -150,6 +150,13 @@ def review_rule(rule_id: str, req: RuleReviewRequest, user: User = Depends(requi
     return governance.all_rule_statuses(get_store())[rule_id]
 
 
+@router.get("/governance/rule-check", tags=["Governance"])
+def rule_check():
+    """Can every rule fire on hospital data, and can every loop be closed? (Static check of the rule set.)"""
+    from .rule_check import check_rules
+    return check_rules()
+
+
 @router.get("/governance/critical-findings", tags=["Governance"])
 def critical_findings():
     return governance.critical_list_status(get_store())

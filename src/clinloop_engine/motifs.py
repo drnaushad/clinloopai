@@ -16,6 +16,9 @@ moment it became complete (only events up to then count):
   R054  Atrial fibrillation with CHA₂DS₂-VASc ≥ 2 (men) / ≥ 3 (women), computed
         from the problem list and age, and no anticoagulant → anticoagulation
         decision within 30 days. ESC 2020 AF guideline.
+  R056  A lung nodule ≥ 2 mm larger than its smallest earlier measurement across the patient's reports
+        (lesions linked by lobe and size), when the report does not itself call it growing →
+        radiologist review and work-up within 30 days. Fleischner 2017; BTS 2015 (VDT).
   R055  Microscopic haematuria (≥ 3 RBC/hpf) on two tests within 12 months at
         age ≥ 35 → urology referral or CT urography within 90 days. AUA/SUFU 2020.
 
@@ -304,7 +307,94 @@ def pattern_haematuria(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: L
         last = when
 
 
-PATTERNS = [pattern_ida, pattern_creatinine, pattern_af, pattern_haematuria]
+# ── R056 a lung nodule measured larger across reports (lesion tracking) ──────
+
+GROWTH_MM = 2.0          # Fleischner 2017 / Lung-RADS: growth ≥ 2 mm in mean diameter is significant
+VDT_SUSPICIOUS_DAYS = 400.0   # BTS 2015: volume-doubling time < 400 days favours malignancy
+
+
+def _same_lesion(a: Dict[str, Any], b: Dict[str, Any], unique: bool) -> bool:
+    """Probably the same nodule: same lobe (or same side when a lobe is missing), compatible size."""
+    if a.get("lobe") and b.get("lobe"):
+        if a["lobe"] != b["lobe"]:
+            return False
+    elif a.get("side") and b.get("side"):
+        if a["side"] != b["side"]:
+            return False
+    elif not unique:
+        return False            # no location and several nodules: cannot tell which is which
+    return 0.5 <= b["size_mm"] / max(a["size_mm"], 0.1) <= 3.0
+
+
+def volume_doubling_days(d1: float, d2: float, days: float) -> Optional[float]:
+    """Volume-doubling time from two diameters (sphere): Δt · ln 2 / (3 · ln(d2/d1))."""
+    import math
+    if d2 <= d1 or days <= 0:
+        return None
+    return days * math.log(2) / (3 * math.log(d2 / d1))
+
+
+def pattern_nodule_growth(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict[str, Any]]) -> None:
+    """
+    Link each lung nodule across the patient's reports (same lobe, compatible size) and do the arithmetic the
+    reports may not: a nodule now ≥ 2 mm larger than its smallest earlier measurement, when the report itself
+    does not call it growing (e.g. "stable 8 mm nodule", previously 6 mm, or 6 → 7 → 8 mm over three scans).
+    """
+    reports = sorted((e for e in events if e["event_type"] == EventType.RADIOLOGY_REPORT.value
+                      and is_fulfilling_status(e.get("status"))
+                      and ((e["details"] or {}).get("radiology") or {}).get("lung_nodules")), key=_t)
+    chains: List[List[Dict[str, Any]]] = []          # each: [{"size_mm", "lobe", "side", "time", "event", "nodule"}]
+    for rep in reports:
+        nods = [n for n in rep["details"]["radiology"]["lung_nodules"] if not n.get("benign")]
+        unique = len(nods) == 1 and len(chains) <= 1
+        for n in nods:
+            m = {"size_mm": float(n["size_mm"]), "lobe": n.get("lobe"), "side": n.get("side"),
+                 "time": _t(rep), "event": rep, "nodule": n}
+            candidates = [c for c in chains if c[-1]["time"] < m["time"] and _same_lesion(c[-1], m, unique)]
+            if candidates:
+                chain = min(candidates, key=lambda c: abs(c[-1]["size_mm"] - m["size_mm"]))
+                if not m["lobe"]:
+                    m["lobe"] = chain[-1]["lobe"]
+                if not m["side"]:
+                    m["side"] = chain[-1]["side"]
+                chain.append(m)
+            else:
+                chains.append([m])
+    for chain in chains:
+        for k in range(1, len(chain)):
+            cur = chain[k]
+            base = min(chain[:k], key=lambda x: x["size_mm"])
+            growth = round(cur["size_mm"]) - round(base["size_mm"])
+            if growth < GROWTH_MM:
+                continue
+            stated = cur["nodule"].get("change") == "growing"
+            radiology_flagged = "suspicious_lung_nodule" in (cur["event"]["details"].get("extra_conditions") or [])
+            if stated or radiology_flagged:
+                break                                  # the report (or R046) already deals with the growth
+            days = (cur["time"] - base["time"]).days
+            vdt = volume_doubling_days(base["size_mm"], cur["size_mm"], days)
+            where = cur["lobe"] or (f"{cur['side']} lung" if cur["side"] else "lung")
+            history = " → ".join(f"{x['size_mm']:g} mm ({x['time'].date()})" for x in chain[:k + 1])
+            said = cur["nodule"].get("change")
+            out.append(_derived(cur["event"], "nodule-growth", "pattern_nodule_growth", "R056", 30.0,
+                                [x["event"] for x in chain[:k + 1]],
+                                f"{where} nodule {history}: +{growth:g} mm"
+                                + (f", volume-doubling time ≈ {vdt:.0f} days" if vdt else "")
+                                + (f"; the latest report calls it {said}" if said else "; growth not stated in the report"),
+                                [f"pattern: probably the same {where} nodule across {k + 1} reports, +{growth:g} mm from "
+                                 f"{base['size_mm']:g} mm" + (f" (VDT ≈ {vdt:.0f} days"
+                                                              f"{' < 400: suspicious' if vdt < VDT_SUSPICIOUS_DAYS else ''})"
+                                                              if vdt else "")
+                                 + " → radiologist confirms the match and the growth; work-up within 30 days"],
+                                {"nodule_growth_mm": growth, "volume_doubling_days": round(vdt) if vdt else None,
+                                 "lesion": {"lobe": cur["lobe"], "side": cur["side"],
+                                            "sizes_mm": [x["size_mm"] for x in chain[:k + 1]]},
+                                 "review_note_all": "Lesion match is probable, not certain: a radiologist confirms it is "
+                                                    "the same nodule before work-up"}))
+            break                                      # one review per lesion
+
+
+PATTERNS = [pattern_ida, pattern_creatinine, pattern_af, pattern_haematuria, pattern_nodule_growth]
 
 
 def apply_patterns(events: List[Dict[str, Any]], ctx: Dict[str, Any]) -> None:

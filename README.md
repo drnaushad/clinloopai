@@ -42,6 +42,7 @@ with transparent, rule-grounded logic and an audit trail.
    | R034–R036 | Lung-RADS 3 → 6-month LDCT; critical imaging finding (from the hospital-approved list) → documented clinician communication within its window; radiologist-recommended biopsy/FNA |
    | R037–R046 | ACR incidental findings without a written recommendation: adrenal nodule (1–4 cm → CT/MRI; ≥4 cm or with cancer → work-up), renal mass (solid/Bosniak III–IV → urology; IIF or indeterminate → CT/MRI), pancreatic cyst (size-based MRI; worrisome features → EUS), thyroid nodule on CT/MRI/PET (→ ultrasound), abdominal aortic aneurysm (diameter-based surveillance; ≥5.5 cm, ≥5.0 cm in women → vascular surgery); growing or suspicious lung nodule → work-up |
    | R047 | Imaging-AI finding (approved product or ClinLoop's model runner) that the radiology report does not address → radiologist review (1 day for critical findings, 7 days otherwise) |
+   | R056 | The same lung nodule, linked across reports by lobe and size, measured ≥ 2 mm larger than before when the report does not say so (with volume-doubling time) → radiologist confirmation and work-up |
    | R052–R055 | Diagnostic patterns across events: iron-deficiency anaemia → GI investigation; creatinine rise (AKI warning) → repeat creatinine; atrial fibrillation with high CHA₂DS₂-VASc and no anticoagulant → anticoagulation decision; persistent microscopic haematuria → urology. See [`docs/DIAGNOSTIC_PATTERNS.md`](docs/DIAGNOSTIC_PATTERNS.md) |
    | R048–R051 | Plans written in clinicians' notes (English and Korean): repeat a lab test, imaging, a specialist referral, a follow-up visit. Each closes only on the matching event (same test, same modality and region, same specialty). Conditional, cancelled and already-done plans are not tracked |
 2. **Temporal hypergraph** (`temporal_hypergraph.py`): builds one hyperedge per triggered rule and
@@ -115,7 +116,8 @@ clinloopai/
 │       ├── imaging_api.py            # Imaging and outside-report endpoints
 │       ├── patient_graph.py          # Patient knowledge graph from the temporal hypergraph
 │       ├── note_reader.py            # Plans in clinicians' notes (EN/KO) → tracked follow-ups (R048–R051)
-│       ├── motifs.py                 # Diagnostic patterns across events (R052–R055)
+│       ├── motifs.py                 # Diagnostic patterns across events (R052–R056, incl. lesion tracking)
+│       ├── rule_check.py             # Static check: every rule can fire and every loop can close
 │       ├── config/critical_findings.json # Example critical-finding list (each hospital approves its own)
 │       ├── fhir_sync.py              # Scheduled read-only sync from a FHIR server
 │       ├── outreach.py               # Patient messages: draft → approval → provider (outbox / webhook)
