@@ -15,7 +15,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from .auth import ROLE_RANK, User, require_role
-from .clinical_ontology import OBLIGATION_RULES, format_window
+from .clinical_ontology import OBLIGATION_RULES, RULE_NAMES_KO, format_window
 from .fhir_ingest import bundle_to_events, patient_strata
 from .loop_detector import ClinLoopDetector
 from .loop_store import DEFER_REASONS, LoopStore, WorkflowError
@@ -86,7 +86,8 @@ def _workflow(fn, *args, **kwargs):
 @router.get("/rules", tags=["Rule Library"])
 def list_rules():
     return {"rules": [{
-        "rule_id": r.rule_id, "name": r.name, "description": r.description,
+        "rule_id": r.rule_id, "name": r.name, "name_ko": RULE_NAMES_KO.get(r.rule_id, r.name),
+        "description": r.description, "patient_outreach": r.patient_outreach,
         "trigger_event": r.trigger_event.value, "trigger_condition": r.trigger_condition,
         "required_followups": [f.value for f in r.required_followups], "followup_logic": r.followup_logic,
         "deadline": format_window(r.deadline_days), "deadline_days": r.deadline_days,

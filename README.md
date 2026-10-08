@@ -19,20 +19,26 @@ with transparent, rule-grounded logic and an audit trail.
 ## How it works
 
 ```
- FHIR R4 export ──► FHIR adapter ──► Detection engine ──────────────────────► Loop registry ──► Clinician worklist
- (Observation,      (status-aware,     Temporal Hypergraph → Safety Clock       (owner, ack,      (ranked, evidence,
-  DiagnosticReport,  evidence spans)   → Risk Scorer: which obligations are     defer, close,     acknowledge / defer /
-  Appointment, …)                       open, overdue, and how dangerous         escalation,       close with evidence)
-                                                                                 hash-chained audit)
+ Hospital FHIR R4 ──► FHIR sync / adapter ──► Detection engine ──────────────► Loop registry ──► Clinician worklist
+ server (read-only)   (changed patients →     Temporal Hypergraph → Safety      (owner, ack,      (ranked, evidence,
+ or uploaded export    full history; status-   Clock → Risk Scorer: which        defer, close,     acknowledge / defer /
+                       aware, evidence spans)  obligations are open, overdue,    escalation,       close / message patient)
+                                               and how dangerous                 audit, feed alarm)        │
+                                                                                                           ▼
+                                                                  Patient outreach: draft → clinician approval → send
 ```
 
-1. **Obligation rules** (`clinical_ontology.py`): 22 guideline-based rules. R001–R016 cover abnormal
-   labs, incidental nodules, cytology, cultures, anticoagulation, referrals and cardiac transitions.
-   R017–R022 are the Wave 1 life-saving rules: positive FIT → colonoscopy, BI-RADS 4/5 → biopsy,
-   Lung-RADS 4A/4B/4X work-up, abnormal results after discharge, and critical values (clinician
-   notified within 1 hour). Each rule has a trigger, its required follow-ups (all or any), a deadline,
-   a severity, references, and a `review_status` (all currently `pending_specialist_review`).
-   Example rule: `□(LAB_RESULT[abnormal_pap] → ◇≤30d COLPOSCOPY_REFERRAL)`.
+1. **Obligation rules** (`clinical_ontology.py`): 32 guideline-based rules, each with a trigger, its
+   required follow-ups (all or any), a deadline, a severity, references, a Korean name, and a
+   `review_status` (all currently `pending_specialist_review`). Example:
+   `□(LAB_RESULT[abnormal_pap] → ◇≤30d COLPOSCOPY_REFERRAL)`.
+
+   | Rules | Covers |
+   | --- | --- |
+   | R001–R016 | Abnormal labs, incidental lung nodules (size-aware Fleischner windows), cervical cytology, post-discharge cultures, anticoagulation and drug monitoring, referrals, pathology, post-MI and new heart failure |
+   | R017–R022 (Wave 1) | Positive FIT → colonoscopy, BI-RADS 4/5 → biopsy, Lung-RADS 4A and 4B/4X, abnormal result after discharge, critical value → clinician notified within 1 hour |
+   | R023–R029 (Wave 2) | Heart-failure discharge → visit ≤7 days; postpartum BP check after hypertensive disorder of pregnancy (≤72 h if severe); gestational diabetes → postpartum glucose test; HCV antibody → RNA; HCC surveillance imaging every 6 months for chronic HBV or cirrhosis; self-harm or psychiatric discharge → mental-health follow-up ≤7 days (clinician-handled only) |
+   | R030–R032 | Follow-up CT / MRI / ultrasound **recommended in the radiology report**, with the deadline taken from the report itself |
 2. **Temporal hypergraph** (`temporal_hypergraph.py`): builds one hyperedge per triggered rule and
    marks it `closed`, `open` or `delayed`.
 3. **Safety clock** (`safety_clock.py`): converts elapsed time against the deadline into a time-risk
@@ -44,8 +50,15 @@ with transparent, rule-grounded logic and an audit trail.
 6. **FHIR adapter** (`fhir_ingest.py`): maps hospital FHIR R4 resources to events. FHIR status is
    preserved (a *booked* appointment is not a completed one), report text extraction is
    negation-aware and records its evidence span, and every event says how it was mapped.
-7. **Loop registry** (`loop_store.py`): remembers each loop's owner and workflow state, escalates
-   unacknowledged overdue loops, computes the open-loop rate, and keeps a hash-chained audit log.
+7. **FHIR sync** (`fhir_sync.py`): pulls from the hospital's FHIR server on a schedule. It finds
+   patients whose records changed, then evaluates each one's full history, since an incremental
+   pull alone would make earlier follow-ups look missing.
+8. **Loop registry** (`loop_store.py`): remembers each loop's owner and workflow state, escalates
+   unacknowledged overdue loops, computes the open-loop rate, keeps a hash-chained audit log, and
+   **raises an alarm when the data feed goes silent**. A safety net fed by a dead interface shows an
+   empty, reassuring worklist, which is worse than no safety net.
+9. **Patient outreach** (`outreach.py`): diagnosis-free messages, sent only after clinician
+   approval, through the hospital's own messaging integration. ClinLoop stores no contact details.
 
 ---
 
@@ -74,6 +87,8 @@ clinloopai/
 │       ├── benchmark.py              # Metrics (sens/spec/F1/AUROC/PR-AUC/alert burden)
 │       ├── visualizer.py             # ROC / PR / bar / alert-fatigue figures
 │       ├── fhir_ingest.py            # FHIR R4 → ClinLoop event adapter
+│       ├── fhir_sync.py              # Scheduled read-only sync from a FHIR server
+│       ├── outreach.py               # Patient messages: draft → approval → provider (outbox / webhook)
 │       ├── loop_store.py             # SQLite loop registry, workflow, escalation, audit, open-loop rate
 │       ├── clinical_api.py           # Pilot endpoints: ingest, worklist, actions, metrics
 │       ├── auth.py                   # Bearer-token roles: viewer / navigator / clinician / admin
@@ -147,7 +162,7 @@ Run every command from the **repository root**. The code imports modules as `src
 ### 1. Tests
 
 ```bash
-python -m pytest tests/ src/tests/ -v            # 106 tests
+python -m pytest tests/ src/tests/ -v            # 131 tests
 ```
 
 The API tests are skipped automatically when `requirements-api.txt` is not installed.
@@ -215,8 +230,16 @@ first:
 - colon cancer on biopsy with no referral;
 - a positive FIT with no colonoscopy.
 
-Each loop can be acknowledged, deferred with a coded reason, or closed with evidence. Every action
-is written to the audit trail.
+The worklist opens in Korean or English, following the browser setting; the toggle switches
+between them. For each loop you can:
+- acknowledge it, assign it (to yourself or someone else), and filter to **my loops**;
+- defer it with a coded reason;
+- close it with evidence;
+- draft a diagnosis-free message to the patient, which a clinician approves (optionally editing it)
+  before it is sent.
+
+A banner at the top turns red when the data feed is silent or failing. Every action is written to
+the audit trail.
 
 Ingesting a real FHIR export instead (admin token):
 
@@ -237,14 +260,34 @@ Key endpoints (all except `/rules` and `/health` require a token):
 | `POST /api/v1/loops/{key}/defer` | navigator / clinician | Coded reason; clinical reasons need a clinician |
 | `POST /api/v1/loops/{key}/close` | navigator | Requires evidence of the completed follow-up |
 | `GET /api/v1/metrics/open-loop-rate?stratify_by=` | viewer | Quality measure by rule, language, age group, sex |
+| `POST /api/v1/loops/{key}/outreach` | navigator | Draft a patient message (blocked for clinician-handled rules) |
+| `POST /api/v1/outreach/{id}/decision` | clinician | Approve (optionally edited) and send, or reject |
+| `GET /api/v1/feed/status` | viewer | Data feed `OK` / `STALE` / `FAILING` / `NEVER` |
+| `POST /api/v1/fhir/sync` | admin | Run one sync from the configured FHIR server now |
 | `GET /api/v1/audit/verify` | admin | Verify the audit hash chain |
 
 Overdue loops nobody has acknowledged escalate automatically: owner → department lead → patient
 safety officer. Each step waits a severity-specific grace period (1 hour for critical).
 
 Without `CLINLOOP_API_TOKENS`, the API generates a one-time admin token and logs it, so it is never
-open by default. CORS is limited to the cockpit origins (`CLINLOOP_CORS_ORIGINS` overrides). The
-database path is `CLINLOOP_DB` (default `data/clinloop.db`).
+open by default. CORS is limited to the cockpit origins (`CLINLOOP_CORS_ORIGINS` overrides).
+
+Configuration:
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `CLINLOOP_API_TOKENS` | `token:user:role,…` | one-time admin token |
+| `CLINLOOP_SIGNING_KEY` | Key for agent audit signatures | per-process random |
+| `CLINLOOP_DB` | Loop registry (SQLite) | `data/clinloop.db` |
+| `CLINLOOP_FHIR_BASE` / `CLINLOOP_FHIR_TOKEN` | Hospital FHIR server and read-only token; enables background sync | sync off |
+| `CLINLOOP_FHIR_SYNC_MINUTES` / `CLINLOOP_FHIR_INITIAL_DAYS` | Sync interval / first-sync look-back | 15 / 365 |
+| `CLINLOOP_FEED_MAX_SILENCE_HOURS` | Feed alarm threshold | 24 |
+| `CLINLOOP_OUTREACH_PROVIDER` | `outbox` (local JSONL, nothing leaves the server) or `webhook` | `outbox` |
+| `CLINLOOP_OUTREACH_WEBHOOK_URL` | Hospital integration endpoint for KakaoTalk/SMS delivery | — |
+| `CLINLOOP_OUTBOX` | Outbox file path | `data/outbox.jsonl` |
+| `CLINLOOP_CORS_ORIGINS` | Allowed browser origins | cockpit origins |
+
+One-off sync from the command line: `python -m src.clinloop_engine.fhir_sync --once`.
 
 Docker (on-premise; publish the port on localhost only):
 
@@ -317,7 +360,10 @@ synthetic event, so results are identical on every run.
 | FHIR R4 ingestion | **Implemented** for 8 resource types; LOINC lists and text patterns need checking against each hospital's coding |
 | Loop registry, workflow, escalation, audit, open-loop rate | **Implemented** (SQLite) |
 | API authentication | **Implemented**: bearer tokens with roles. Not yet integrated with hospital SSO |
-| Clinician worklist | **Implemented** (`worklist.html`) |
+| Clinician worklist | **Implemented** (`worklist.html`): Korean/English, assignment, my loops, outreach approval |
+| FHIR server sync | **Implemented** (bearer token). SMART Backend Services token exchange not yet built |
+| Data-feed monitoring | **Implemented**: OK / STALE / FAILING / NEVER, audited alarm |
+| Patient outreach | **Implemented** with clinician approval. Real delivery requires the hospital's KakaoTalk/SMS integration behind the webhook |
 | Stage 1 validation toolkit | **Implemented**; awaits IRB approval and real data |
 | Synthetic data generator, benchmark, figures | **Implemented** (seeded) |
 | BioMCP guideline tools | Static guideline lookup; no live PubMed/guideline retrieval |
@@ -325,7 +371,7 @@ synthetic event, so results are identical on every run.
 | Counterfactual engine | **Fixed lookup table** of hand-written, illustrative trajectories for specific case IDs; no Markov simulation runs. The API and cockpit label them as not clinically validated |
 | GPU engine | PyTorch network with **untrained random weights**; its "confidence" output has no clinical meaning |
 | Safety-clock watchdog | **Implemented**: runs the detection engine over the demo cases and escalates deadline violations |
-| Patient outreach agent | Drafts messages with a local LLM (Ollama). It blocks drafts containing definitive diagnoses, falls back to a fixed safe message, and always requires human review |
+| Patient outreach agent | Drafts messages with a local LLM (Ollama) from diagnosis-free facts. It blocks definitive clinical claims and falls back to a fixed safe message |
 | PHI de-identifier | Pseudonymises structured fields and scrubs embedded names, MRNs, resident numbers, phone numbers, dates and Korean addresses from free text. It **cannot** detect names of people absent from the structured record, so human review is still required before any external transmission |
 | API health-economics / ethics-charter endpoints | Report the planned evaluation and the honest status of each safety pillar. No outcomes have been measured |
 | API key test endpoint | Not implemented; reports `not_verified` |

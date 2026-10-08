@@ -14,3 +14,6 @@ results/
 
 # Local pilot database
 data/*.db
+
+# Patient outreach outbox (patient ids and message texts)
+data/outbox.jsonl
