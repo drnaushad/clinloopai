@@ -60,6 +60,18 @@ class AssignRequest(BaseModel):
     owner: str
 
 
+class OutreachDraftRequest(BaseModel):
+    language: str = Field("ko", description="ko | en")
+    channel: str = Field("kakao", description="kakao | sms")
+    scheduling_link: Optional[str] = None
+
+
+class OutreachDecisionRequest(BaseModel):
+    approve: bool
+    text: Optional[str] = Field(None, description="Edited text to send instead of the draft")
+    note: str = ""
+
+
 def _workflow(fn, *args, **kwargs):
     try:
         return fn(*args, **kwargs)
@@ -131,11 +143,6 @@ def loop_audit(loop_key: str, user: User = Depends(require_role("viewer"))):
     return {"loop_key": loop_key, "audit": get_store().audit_trail(loop_key)}
 
 
-@router.get("/loops/{loop_key:path}", tags=["Clinical Pilot"])
-def get_loop(loop_key: str, user: User = Depends(require_role("viewer"))):
-    return _workflow(get_store().get, loop_key)
-
-
 @router.post("/loops/{loop_key:path}/acknowledge", tags=["Clinical Pilot"])
 def acknowledge(loop_key: str, user: User = Depends(require_role("navigator"))):
     return _workflow(get_store().acknowledge, loop_key, user.name, role=user.role)
@@ -156,6 +163,43 @@ def close(loop_key: str, req: CloseRequest, user: User = Depends(require_role("n
 @router.post("/loops/{loop_key:path}/assign", tags=["Clinical Pilot"])
 def assign(loop_key: str, req: AssignRequest, user: User = Depends(require_role("clinician"))):
     return _workflow(get_store().assign, loop_key, req.owner, user.name, role=user.role)
+
+
+# ── Patient outreach ─────────────────────────────────────────────────────────
+
+@router.get("/loops/{loop_key:path}/outreach", tags=["Patient Outreach"])
+def list_outreach(loop_key: str, user: User = Depends(require_role("viewer"))):
+    return {"messages": get_store().outreach_messages(loop_key)}
+
+
+@router.post("/loops/{loop_key:path}/outreach", tags=["Patient Outreach"])
+def draft_outreach(loop_key: str, req: OutreachDraftRequest, user: User = Depends(require_role("navigator"))):
+    """Draft a diagnosis-free message to the patient. Nothing is sent until a clinician approves it."""
+    from .outreach import OutreachNotAllowed, draft_message
+    if req.channel not in ("kakao", "sms"):
+        raise HTTPException(422, "channel must be 'kakao' or 'sms'")
+    loop = _workflow(get_store().get, loop_key)
+    try:
+        draft = draft_message(loop, req.language, req.scheduling_link)
+    except OutreachNotAllowed as e:
+        raise HTTPException(409, str(e))
+    return _workflow(get_store().add_outreach_draft, loop_key, user.name, user.role,
+                     draft["text"], draft["language"], req.channel, draft["safety_flags"])
+
+
+@router.post("/outreach/{message_id}/decision", tags=["Patient Outreach"])
+def decide_outreach(message_id: str, req: OutreachDecisionRequest,
+                    user: User = Depends(require_role("clinician"))):
+    """A clinician approves (optionally editing the text) and sends, or rejects, a draft."""
+    from .outreach import OutreachNotAllowed, check_text, provider_from_env
+    if req.approve:
+        msg = _workflow(get_store().get_outreach, message_id)
+        try:
+            check_text(req.text if req.text is not None else msg["draft_text"])
+        except OutreachNotAllowed as e:
+            raise HTTPException(422, str(e))
+    return _workflow(get_store().decide_outreach, message_id, user.name, user.role, req.approve,
+                     final_text=req.text, provider=provider_from_env() if req.approve else None, note=req.note)
 
 
 # ── Metrics, escalation, audit ───────────────────────────────────────────────
@@ -195,6 +239,13 @@ def sync_now(user: User = Depends(require_role("admin"))):
 def verify_audit(user: User = Depends(require_role("admin"))):
     ok = get_store().verify_audit_chain()
     return {"audit_chain_intact": ok}
+
+
+# Must be the last /loops/{key} GET route: the greedy path parameter would
+# otherwise swallow /loops/{key}/audit and /loops/{key}/outreach.
+@router.get("/loops/{loop_key:path}", tags=["Clinical Pilot"])
+def get_loop(loop_key: str, user: User = Depends(require_role("viewer"))):
+    return _workflow(get_store().get, loop_key)
 
 
 async def escalation_loop(interval_seconds: int = 60):

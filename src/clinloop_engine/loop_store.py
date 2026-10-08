@@ -100,6 +100,25 @@ CREATE TABLE IF NOT EXISTS ingest_runs (
     warnings INTEGER DEFAULT 0,
     error TEXT
 );
+CREATE TABLE IF NOT EXISTS outreach_messages (
+    id TEXT PRIMARY KEY,
+    loop_key TEXT NOT NULL,
+    patient_id TEXT NOT NULL,
+    language TEXT,
+    channel TEXT,
+    draft_text TEXT,
+    final_text TEXT,
+    status TEXT NOT NULL,            -- draft | sent | rejected | failed
+    safety_flags TEXT,
+    drafted_by TEXT,
+    drafted_at TEXT,
+    decided_by TEXT,
+    decided_at TEXT,
+    provider TEXT,
+    provider_ref TEXT,
+    note TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_outreach_loop ON outreach_messages(loop_key);
 CREATE TABLE IF NOT EXISTS sync_state (
     source TEXT PRIMARY KEY,
     cursor TEXT,
@@ -344,6 +363,74 @@ class LoopStore:
                 escalated.append({"loop_key": loop["loop_key"], "level": level, "to": ESCALATION_CHAIN[level]})
             self._db.commit()
         return escalated
+
+    # ── patient outreach (draft → clinician approval → send) ─────────────────
+    def outreach_messages(self, key: str) -> List[Dict]:
+        with self._lock:
+            rows = self._db.execute("SELECT * FROM outreach_messages WHERE loop_key=? ORDER BY drafted_at", (key,))
+            return [{**dict(r), "safety_flags": json.loads(r["safety_flags"] or "[]")} for r in rows]
+
+    def get_outreach(self, msg_id: str) -> Dict:
+        with self._lock:
+            return self._outreach(msg_id)
+
+    def _outreach(self, msg_id: str) -> Dict:
+        r = self._db.execute("SELECT * FROM outreach_messages WHERE id=?", (msg_id,)).fetchone()
+        if r is None:
+            raise KeyError(msg_id)
+        return {**dict(r), "safety_flags": json.loads(r["safety_flags"] or "[]")}
+
+    def add_outreach_draft(self, key: str, actor: str, role: str, text: str, language: str,
+                           channel: str, safety_flags: List[str]) -> Dict:
+        with self._lock:
+            loop = self.get(key)
+            if loop["workflow_state"] not in ACTIVE_WORKFLOW_STATES:
+                raise WorkflowError(f"Cannot message a patient about a loop in state '{loop['workflow_state']}'")
+            msg_id = f"MSG-{hashlib.sha256(f'{key}|{utc_now().isoformat()}'.encode()).hexdigest()[:12]}"
+            self._db.execute(
+                "INSERT INTO outreach_messages (id, loop_key, patient_id, language, channel, draft_text, status, "
+                "safety_flags, drafted_by, drafted_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (msg_id, key, loop["patient_id"], language, channel, text, "draft",
+                 json.dumps(safety_flags), actor, utc_now().isoformat()))
+            self._audit(actor, role, "outreach_drafted", key, {"message_id": msg_id, "language": language})
+            self._db.commit()
+            return self._outreach(msg_id)
+
+    def decide_outreach(self, msg_id: str, actor: str, role: str, approve: bool,
+                        final_text: Optional[str] = None, provider=None, note: str = "") -> Dict:
+        """Approve (and send through `provider`) or reject a draft. Exactly one decision per draft."""
+        with self._lock:
+            msg = self._outreach(msg_id)
+            if msg["status"] != "draft":
+                raise WorkflowError(f"Message {msg_id} is already '{msg['status']}'")
+            now = utc_now().isoformat()
+            if not approve:
+                self._db.execute("UPDATE outreach_messages SET status='rejected', decided_by=?, decided_at=?, note=? "
+                                 "WHERE id=?", (actor, now, note, msg_id))
+                self._audit(actor, role, "outreach_rejected", msg["loop_key"], {"message_id": msg_id, "note": note})
+                self._db.commit()
+                return self._outreach(msg_id)
+            text = (final_text or msg["draft_text"]).strip()
+            payload = {"message_id": msg_id, "patient_id": msg["patient_id"], "channel": msg["channel"],
+                       "language": msg["language"], "text": text}
+            try:
+                ref, status, err = provider.send(payload), "sent", None
+            except Exception as e:  # delivery failure is recorded, never silent
+                ref, status, err = None, "failed", f"{type(e).__name__}: {e}"
+            self._db.execute(
+                "UPDATE outreach_messages SET status=?, final_text=?, decided_by=?, decided_at=?, provider=?, "
+                "provider_ref=?, note=? WHERE id=?",
+                (status, text, actor, now, getattr(provider, "name", "unknown"), ref, err or note, msg_id))
+            self._audit(actor, role, f"outreach_{status}", msg["loop_key"],
+                        {"message_id": msg_id, "edited": text != msg["draft_text"].strip(),
+                         "provider_ref": ref, "error": err})
+            # Contacting the patient means someone is acting on the loop; it is not closure
+            loop = self.get(msg["loop_key"])
+            if status == "sent" and loop["workflow_state"] == "new":
+                self._db.execute("UPDATE loops SET workflow_state='acknowledged', updated_at=? WHERE loop_key=?",
+                                 (now, msg["loop_key"]))
+            self._db.commit()
+            return self._outreach(msg_id)
 
     # ── data feed: ingest runs, sync cursor, silence alarm ───────────────────
     def record_ingest(self, source: str, actor: str, ok: bool, patients: int = 0, events: int = 0,

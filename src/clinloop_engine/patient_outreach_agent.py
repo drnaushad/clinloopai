@@ -95,6 +95,7 @@ def generate_dynamic_outreach(request: OutreachRequest) -> OutreachDraft:
     
     # Append the booking link if provided (but remember: click != closure)
     if request.scheduling_link:
-        draft.message_text += f"\n\n[예약하기/Book Here]: {request.scheduling_link}"
+        label = "예약하기" if request.preferred_language == "ko" else "Book here"
+        draft.message_text += f"\n\n[{label}]: {request.scheduling_link}"
         
     return draft
