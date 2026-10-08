@@ -284,7 +284,7 @@ everything else, and the only one we should ever put on a slide about saving liv
 
 ## 11. Plan
 
-### Next 24 hours (competition submission, deadline 2026-10-09 18:00 KST)
+### Engine safety fixes (2026-10-07)
 - [x] Fix the engine bugs that silently dropped patients (partial closure, cancelled follow-ups,
       downgraded critical alerts, "mi" substring, timezone crashes)
 - [x] Correct the guideline windows (Fleischner >8 mm nodule → 3 months; levothyroxine; lithium)
@@ -293,7 +293,7 @@ everything else, and the only one we should ever put on a slide about saving liv
       figures on the site
 - [x] Correct the cockpit narrative for SC-0004 (7.8 mm solid nodule → Fleischner 6–12-month CT)
 - [x] Make the public site's local-LLM panel state plainly that the on-premise LLM is unavailable
-- [ ] Merge to `main` so clinloopai.app serves these changes
+- [x] Merge to `main` so clinloopai.app serves these changes
 
 ### Built for the pilot (2026-10-08)
 - [x] Wave 1 rules R017–R022 (FIT+, BI-RADS 4/5, Lung-RADS 4A/4B/4X, post-discharge results,
