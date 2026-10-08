@@ -118,7 +118,11 @@ clinloopai/
 ├── data/cases.json               # 5 curated synthetic demo cases used by the web cockpit
 ├── data/fhir_example_bundle.json # Synthetic FHIR R4 bundle: 7 patients, the main failure modes
 ├── requirements-api.txt          # API dependencies
-├── Dockerfile                    # On-premise API image
+├── Dockerfile                    # On-premise image: API + worklist + cockpit + BioMCP
+├── docker-compose.yml            # Full stack (API, BioMCP, optional Ollama)
+├── install.sh                    # One-command hospital install
+├── config.js                     # Tells the pages where the API is (rewritten by the container)
+├── .github/workflows/            # Test → build → smoke-test → publish image to GHCR
 ├── manifest.json, sw.js, icons/  # PWA manifest and service worker
 ├── CNAME                         # Custom domain for static hosting
 │
@@ -132,6 +136,43 @@ Generated at runtime (not committed): `data/synthetic/` (300 scenario JSON files
 ---
 
 ## Installation
+
+### Hospitals: one command
+
+On a Linux server with Docker:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/drnaushad/clinloopai/main/install.sh | bash
+```
+
+This installs into `~/clinloop`. It creates a private `.env` with a new admin token and signing
+key, pulls the published images, and starts:
+- the ClinLoop API, worklist and cockpit;
+- BioMCP;
+- a local LLM (Ollama with EXAONE 3.5).
+
+When it finishes, open **http://localhost:8124/worklist.html** and sign in with the printed admin
+token. Re-running the command updates to the latest image and keeps the existing `.env`.
+
+| Option | Example |
+| --- | --- |
+| Install directory | `CLINLOOP_DIR=/opt/clinloop` |
+| Skip the bundled LLM (Ollama already runs on this host) | `CLINLOOP_LLM=0` |
+| Pin a released version | `CLINLOOP_VERSION=1.0.0` |
+
+Pass options like this: `curl -fsSL …/install.sh | CLINLOOP_LLM=0 bash`.
+
+Images are published automatically to `ghcr.io/drnaushad/clinloopai` for amd64 and arm64:
+- `:latest` on every change to `main`;
+- `:1.2.3` / `:1.2` for version tags.
+
+Each image is published only after the tests pass and a smoke test of the built container succeeds
+(`.github/workflows/docker-publish.yml`).
+
+For clinicians on the hospital network, put an HTTPS reverse proxy (e.g. nginx with the hospital
+certificate) in front of port 8124 rather than exposing it over plain HTTP.
+
+### Developers
 
 **Requirements:** Python **3.10+** (tested on 3.13), `pip`, and git. A GPU is not required.
 
@@ -165,7 +206,7 @@ Run every command from the **repository root**. The code imports modules as `src
 ### 1. Tests
 
 ```bash
-python -m pytest tests/ src/tests/ -v            # 151 tests
+python -m pytest tests/ src/tests/ -v            # 153 tests
 ```
 
 The API tests are skipped automatically when `requirements-api.txt` is not installed.
@@ -318,22 +359,28 @@ DeepSeek-R1 (`<think>…</think>`) is removed before anyone sees it.
 
 Both appear in the Connections panel with their live status.
 
-#### Docker: the whole stack
+#### Docker
+
+`install.sh` (above) is the simplest route. By hand, next to a `.env` file that sets
+`CLINLOOP_API_TOKENS` and `CLINLOOP_SIGNING_KEY`:
 
 ```bash
-export CLINLOOP_API_TOKENS="$(openssl rand -hex 16):dr.lee:admin"
-export CLINLOOP_SIGNING_KEY="$(openssl rand -hex 32)"
-docker compose up -d          # API + BioMCP (HTTP) + Ollama + one-off model download
+COMPOSE_PROFILES=llm docker compose up -d     # API + BioMCP + Ollama + model download
+docker compose up -d                          # without the bundled LLM
 ```
 
-The API is published on `127.0.0.1:8124` only; BioMCP and Ollama stay inside the compose network.
-For an NVIDIA GPU, uncomment the `deploy` block of the `ollama` service. API only:
+The container serves the worklist and cockpit itself, at `http://localhost:8124/worklist.html`
+and `http://localhost:8124/`. It is published on `127.0.0.1` only; BioMCP and Ollama stay inside
+the compose network. For an NVIDIA GPU, uncomment the `deploy` block of the `ollama` service.
+
+Single container, API and UI only:
 
 ```bash
-docker build -t clinloop-api .
 docker run -p 127.0.0.1:8124:8124 -v clinloop-data:/var/lib/clinloop \
-  -e CLINLOOP_API_TOKENS -e CLINLOOP_SIGNING_KEY clinloop-api
+  -e CLINLOOP_API_TOKENS -e CLINLOOP_SIGNING_KEY ghcr.io/drnaushad/clinloopai:latest
 ```
+
+Build locally instead of pulling: `docker build -t ghcr.io/drnaushad/clinloopai:latest .`
 
 `/api/v1/agent/safety-clock/status` reports the background watchdog over the cockpit demo cases.
 

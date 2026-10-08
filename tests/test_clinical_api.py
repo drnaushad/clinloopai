@@ -163,6 +163,15 @@ class TestClinicalAPI(unittest.TestCase):
         r = self.client.get("/api/v1/metrics/open-loop-rate?stratify_by=language", headers=_h("viewer"))
         self.assertIn("vi", r.json()["groups"])
 
+    def test_config_js_points_pages_at_this_server(self):
+        r = self.client.get("/config.js")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("window.location.origin", r.text)
+        self.assertIn("javascript", r.headers["content-type"])
+
+    def test_project_files_are_not_served_without_a_web_root(self):
+        self.assertEqual(self.client.get("/src/clinloop_engine/api.py").status_code, 404)
+
     def test_cors_is_not_wildcard(self):
         r = self.client.get("/api/v1/health", headers={"Origin": "https://evil.example"})
         self.assertNotEqual(r.headers.get("access-control-allow-origin"), "*")

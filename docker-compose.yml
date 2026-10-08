@@ -1,45 +1,60 @@
-# ClinLoop AI — on-premise stack: API + BioMCP + local LLM (Ollama)
+# ClinLoop AI — on-premise stack
 #
-#   export CLINLOOP_API_TOKENS="$(openssl rand -hex 16):dr.lee:admin"
-#   export CLINLOOP_SIGNING_KEY="$(openssl rand -hex 32)"
-#   docker compose up -d
+# One command (creates .env with fresh secrets, pulls images, starts everything):
+#   curl -fsSL https://raw.githubusercontent.com/drnaushad/clinloopai/main/install.sh | bash
 #
-# The API listens on 127.0.0.1:8124 only. BioMCP and Ollama are reachable
-# only inside this compose network. BioMCP needs outbound internet to reach
-# PubMed / ClinicalTrials.gov / openFDA; patient data is never sent to it.
+# Or by hand, next to a .env file containing CLINLOOP_API_TOKENS and CLINLOOP_SIGNING_KEY:
+#   docker compose up -d        →  http://localhost:8124/worklist.html
+#
+# Services
+#   clinloop-api   API + clinician worklist + cockpit (published image)
+#   biomcp         BioMCP over MCP streamable HTTP (same image; needs outbound internet)
+#   ollama         on-premise LLM            ┐ profile "llm": on by default via .env
+#   ollama-pull    one-off model download    ┘ (COMPOSE_PROFILES=llm)
+#
+# Already running Ollama on this host? Remove COMPOSE_PROFILES from .env and set
+#   CLINLOOP_OLLAMA_URL=http://host.docker.internal:11434
+
+x-image: &clinloop-image ghcr.io/drnaushad/clinloopai:${CLINLOOP_VERSION:-latest}
 
 services:
   clinloop-api:
-    build: .
+    image: *clinloop-image
     ports:
-      - "127.0.0.1:8124:8124"
+      # 127.0.0.1 only by default. For clinicians on the hospital network, put an
+      # HTTPS reverse proxy in front instead of exposing this port in plain HTTP.
+      - "${CLINLOOP_BIND:-127.0.0.1}:8124:8124"
     environment:
-      CLINLOOP_API_TOKENS: ${CLINLOOP_API_TOKENS:?set CLINLOOP_API_TOKENS}
-      CLINLOOP_SIGNING_KEY: ${CLINLOOP_SIGNING_KEY:?set CLINLOOP_SIGNING_KEY}
-      CLINLOOP_OLLAMA_URL: http://ollama:11434
+      CLINLOOP_API_TOKENS: ${CLINLOOP_API_TOKENS:?set CLINLOOP_API_TOKENS in .env}
+      CLINLOOP_SIGNING_KEY: ${CLINLOOP_SIGNING_KEY:?set CLINLOOP_SIGNING_KEY in .env}
+      CLINLOOP_OLLAMA_URL: ${CLINLOOP_OLLAMA_URL:-http://ollama:11434}
       CLINLOOP_LLM_MODEL: ${CLINLOOP_LLM_MODEL:-exaone3.5:7.8b}
       CLINLOOP_BIOMCP_URL: http://biomcp:8000/mcp
       CLINLOOP_FHIR_BASE: ${CLINLOOP_FHIR_BASE:-}
       CLINLOOP_FHIR_TOKEN: ${CLINLOOP_FHIR_TOKEN:-}
+      CLINLOOP_OUTREACH_PROVIDER: ${CLINLOOP_OUTREACH_PROVIDER:-outbox}
+      CLINLOOP_OUTREACH_WEBHOOK_URL: ${CLINLOOP_OUTREACH_WEBHOOK_URL:-}
       NCBI_API_KEY: ${NCBI_API_KEY:-}
     volumes:
       - clinloop-data:/var/lib/clinloop
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # reach an Ollama already running on the host
     depends_on:
       - biomcp
-      - ollama
     restart: unless-stopped
 
   biomcp:
-    image: python:3.12-slim
-    command: >
-      sh -c "pip install --no-cache-dir biomcp-python==0.7.3 &&
-             biomcp run --mode streamable_http --host 0.0.0.0 --port 8000"
+    image: *clinloop-image
+    command: ["biomcp", "run", "--mode", "streamable_http", "--host", "0.0.0.0", "--port", "8000"]
     expose:
       - "8000"
+    volumes:
+      - biomcp-cache:/var/lib/clinloop
     restart: unless-stopped
 
   ollama:
     image: ollama/ollama:latest
+    profiles: ["llm"]
     volumes:
       - ollama-models:/root/.ollama
     expose:
@@ -57,6 +72,7 @@ services:
   ollama-pull:
     # One-off: download the model into the shared volume, then exit
     image: ollama/ollama:latest
+    profiles: ["llm"]
     environment:
       OLLAMA_HOST: http://ollama:11434
     entrypoint: ["ollama", "pull", "${CLINLOOP_LLM_MODEL:-exaone3.5:7.8b}"]
@@ -66,4 +82,5 @@ services:
 
 volumes:
   clinloop-data:
+  biomcp-cache:
   ollama-models:
