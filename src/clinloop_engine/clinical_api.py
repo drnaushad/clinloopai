@@ -14,6 +14,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from . import governance
 from .auth import ROLE_RANK, User, require_role
 from .clinical_ontology import OBLIGATION_RULES, RULE_NAMES_KO, format_window
 from .fhir_ingest import bundle_to_events, patient_strata
@@ -66,6 +67,19 @@ class OutreachDraftRequest(BaseModel):
     scheduling_link: Optional[str] = None
 
 
+class RuleReviewRequest(BaseModel):
+    decision: str = Field(..., description="approve | reject | request_changes")
+    specialty: str = Field(..., description="Reviewer's specialty, e.g. 'Radiology (thoracic)'")
+    fingerprint: str = Field(..., description="Fingerprint of the rule version reviewed (from /governance/rules)")
+    note: str = ""
+
+
+class CriticalListApprovalRequest(BaseModel):
+    title: str = Field(..., description="Approver's title, e.g. 'Chair, Department of Radiology'")
+    content_hash: str = Field(..., description="Hash of the list version approved (from /governance/critical-findings)")
+    note: str = ""
+
+
 class OutreachDecisionRequest(BaseModel):
     approve: bool
     text: Optional[str] = Field(None, description="Edited text to send instead of the draft")
@@ -85,6 +99,7 @@ def _workflow(fn, *args, **kwargs):
 
 @router.get("/rules", tags=["Rule Library"])
 def list_rules():
+    signoff = governance.all_rule_statuses(get_store())
     return {"rules": [{
         "rule_id": r.rule_id, "name": r.name, "name_ko": RULE_NAMES_KO.get(r.rule_id, r.name),
         "description": r.description, "patient_outreach": r.patient_outreach,
@@ -93,7 +108,62 @@ def list_rules():
         "deadline": format_window(r.deadline_days), "deadline_days": r.deadline_days,
         "severity": r.severity.value, "domain": r.clinical_domain, "ltl_formula": r.ltl_formula,
         "references": r.references, "review_status": r.review_status, "evidence_note": r.evidence_note,
+        "signoff": {k: signoff[r.rule_id][k] for k in ("status", "approvals", "approvals_required", "fingerprint")},
     } for r in OBLIGATION_RULES]}
+
+
+# ── Governance: specialist sign-off and critical-finding list approval ──────
+# Reading the status is public (it contains no patient data); deciding needs a clinician.
+
+@router.get("/governance/summary", tags=["Governance"])
+def governance_summary():
+    return governance.summary(get_store())
+
+
+@router.get("/governance/rules", tags=["Governance"])
+def governance_rules():
+    statuses = governance.all_rule_statuses(get_store())
+    rules = {r.rule_id: r for r in OBLIGATION_RULES}
+    return {"approvals_required": governance.approvals_required(),
+            "enforce_signoff": governance.enforcement_enabled(),
+            "rules": [{**s, "name": rules[rid].name, "name_ko": RULE_NAMES_KO.get(rid, rules[rid].name),
+                       "domain": rules[rid].clinical_domain, "severity": rules[rid].severity.value,
+                       "description": rules[rid].description, "ltl_formula": rules[rid].ltl_formula,
+                       "deadline": format_window(rules[rid].deadline_days),
+                       "required_followups": [f.value for f in rules[rid].required_followups],
+                       "followup_logic": rules[rid].followup_logic,
+                       "references": rules[rid].references, "evidence_note": rules[rid].evidence_note}
+                      for rid, s in statuses.items()]}
+
+
+@router.post("/governance/rules/{rule_id}/review", tags=["Governance"])
+def review_rule(rule_id: str, req: RuleReviewRequest, user: User = Depends(require_role("clinician"))):
+    """A named specialist approves, rejects or requests changes to the current version of a rule."""
+    rule = next((r for r in OBLIGATION_RULES if r.rule_id == rule_id), None)
+    if rule is None:
+        raise HTTPException(404, f"Unknown rule {rule_id}")
+    current = governance.rule_fingerprint(rule)
+    if req.fingerprint != current:
+        raise HTTPException(409, "The rule has changed since you opened it: reload and review the current version")
+    _workflow(get_store().add_rule_review, rule_id, current, req.decision, user.name, user.role,
+              req.specialty, req.note)
+    return governance.all_rule_statuses(get_store())[rule_id]
+
+
+@router.get("/governance/critical-findings", tags=["Governance"])
+def critical_findings():
+    return governance.critical_list_status(get_store())
+
+
+@router.post("/governance/critical-findings/approve", tags=["Governance"])
+def approve_critical_findings(req: CriticalListApprovalRequest, user: User = Depends(require_role("clinician"))):
+    """Approve the active critical-finding list (bound to its content hash)."""
+    current = governance.critical_list_status(get_store())["content_hash"]
+    if req.content_hash != current:
+        raise HTTPException(409, "The critical-finding list has changed: reload and review the current version")
+    _workflow(get_store().add_config_approval, governance.CRITICAL_FINDINGS_KIND, current, user.name, user.role,
+              req.title, req.note)
+    return governance.critical_list_status(get_store())
 
 
 # ── Connections and live evidence (public: no patient data, no secrets) ─────
@@ -188,8 +258,18 @@ def whoami(user: User = Depends(require_role("viewer"))):
 @router.get("/worklist", tags=["Clinical Pilot"])
 def worklist(owner: Optional[str] = None, include_inactive: bool = False,
              user: User = Depends(require_role("viewer"))):
-    loops = get_store().worklist(owner=owner, include_inactive=include_inactive)
-    return {"count": len(loops), "loops": loops, "defer_reasons": DEFER_REASONS}
+    store = get_store()
+    loops = store.worklist(owner=owner, include_inactive=include_inactive)
+    statuses = governance.all_rule_statuses(store)
+    for loop in loops:
+        loop["rule_signoff"] = statuses.get(loop["rule_id"], {}).get("status", "pending")
+    live = governance.live_rule_ids(store)
+    shadow = 0
+    if live is not None:
+        shadow = sum(1 for loop in loops if loop["rule_id"] not in live)
+        loops = [loop for loop in loops if loop["rule_id"] in live]
+    return {"count": len(loops), "loops": loops, "defer_reasons": DEFER_REASONS,
+            "shadow_count": shadow, "governance": governance.summary(store)}
 
 
 @router.get("/loops/{loop_key:path}/audit", tags=["Clinical Pilot"])
@@ -266,7 +346,8 @@ def open_loop_rate(stratify_by: Optional[str] = Query(None, description="rule | 
 
 @router.post("/watchdog/escalate", tags=["Clinical Pilot"])
 def escalate_now(user: User = Depends(require_role("admin"))):
-    return {"escalated": get_store().escalate_overdue(actor=user.name)}
+    store = get_store()
+    return {"escalated": store.escalate_overdue(actor=user.name, rule_ids=governance.live_rule_ids(store))}
 
 
 def _max_silence_hours() -> float:
@@ -306,7 +387,8 @@ async def escalation_loop(interval_seconds: int = 60):
     """Background escalation of unacknowledged overdue loops, and the feed-silence alarm."""
     while True:
         try:
-            escalated = get_store().escalate_overdue()
+            store = get_store()
+            escalated = store.escalate_overdue(rule_ids=governance.live_rule_ids(store))
             if escalated:
                 logger.warning("Escalated %d overdue loops", len(escalated))
             alarm = get_store().check_feed(_max_silence_hours())

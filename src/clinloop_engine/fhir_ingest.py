@@ -26,8 +26,11 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from .clinical_ontology import (
-    EventType, FLEISCHNER_LARGE_NODULE_DAYS, radiology_grace_days, is_fulfilling_status,
+    EventType, is_fulfilling_status,
 )
+from .radiology import _CHEST_CT, decide_obligations, map_radiology_report
+from .report_text import affirmed as _affirmed, first_affirmed as _first_affirmed
+from .report_text import not_negated as _not_negated, span as _span
 from .safety_clock import normalize_timestamp
 
 # Explicit override: any resource may carry
@@ -59,6 +62,20 @@ LOINC_BP = {"85354-9", "55284-4", "8480-6", "8462-4"}
 HCC_RISK_ICD10 = ("B18.0", "B18.1", "K70.3", "K74.3", "K74.4", "K74.5", "K74.6")
 HCC_RISK_TEXT = re.compile(r"chronic hepatitis b|hepatitis b, chronic|\bchb\b|cirrhosis|만성\s*b형\s*간염|간경변", re.I)
 
+# Context for radiology decisions (Fleischner exclusions, ACR adrenal work-up)
+# Malignancy: ICD-10 C00–C97 except C44 (non-melanoma skin), or personal history Z85
+_MALIGNANCY_TEXT = re.compile(r"cancer|carcinoma|malignan\w*|lymphoma|leuk(?:a)?emia|myeloma|melanoma|sarcoma|암\b|암$", re.I)
+_IMMUNO_ICD10 = ("B20", "B21", "B22", "B23", "B24", "D80", "D81", "D82", "D83", "D84", "Z94", "Z79.6")
+_IMMUNO_TEXT = re.compile(r"\bhiv\b|transplant|immunodeficien\w*|immunosuppress\w*|이식|면역결핍", re.I)
+
+# Smoking status (LOINC 72166-2) → current / former / never (SNOMED CT)
+LOINC_SMOKING = {"72166-2"}
+SMOKING_SNOMED = {
+    "449868002": "current", "428041000124106": "current", "77176002": "current",
+    "428071000124103": "current", "428061000124105": "current", "65568007": "current",
+    "8517006": "former", "266919005": "never",
+}
+
 # Monitoring labs that satisfy R010 for a given drug (by LOINC code)
 DRUG_MONITORING_LOINC = {
     "levothyroxine": {"3016-3"},                       # TSH
@@ -87,11 +104,6 @@ STATUS_MAP = {
     "active": "completed", "on-hold": "pending", "in-progress": "pending",
     "preparation": "planned", "finished": "completed",
 }
-
-_NEGATION = re.compile(
-    r"\b(no|negative for|without|free of|absence of|no evidence of|not)\b[^.;]{0,40}$",
-    re.IGNORECASE,
-)
 
 
 # ── Small FHIR helpers ───────────────────────────────────────────────────────
@@ -165,22 +177,6 @@ def _flag_from_interpretation(resource: Dict) -> Optional[str]:
     return None
 
 
-def _not_negated(text: str, start: int) -> bool:
-    return not _NEGATION.search(text[max(0, start - 60):start])
-
-
-def _span(text: str, match: re.Match, pad: int = 40) -> str:
-    return text[max(0, match.start() - pad): match.end() + pad].strip()
-
-
-def _first_affirmed(pattern: re.Pattern, text: str) -> Optional[re.Match]:
-    """First match not preceded by a negation ("negative for X; Y present" finds Y)."""
-    for m in pattern.finditer(text):
-        if _not_negated(text, m.start()):
-            return m
-    return None
-
-
 # ── Resource mappers ─────────────────────────────────────────────────────────
 
 def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
@@ -188,6 +184,19 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
     ts = _first(r.get("effectiveDateTime"), (r.get("effectivePeriod") or {}).get("end"), r.get("issued"))
     code_text = _concept_text(r.get("code")).lower()
     codes = _codes(r.get("code"))
+
+    # Smoking status is context for lung-nodule risk, not a lab result
+    if codes & LOINC_SMOKING or "smoking status" in code_text or "tobacco smoking" in code_text:
+        value_codes = _codes(r.get("valueCodeableConcept"))
+        value_text = _concept_text(r.get("valueCodeableConcept")).lower()
+        status = next((SMOKING_SNOMED[c] for c in value_codes if c in SMOKING_SNOMED), None)
+        if status is None:
+            status = ("never" if re.search(r"never|비흡연", value_text) else
+                      "former" if re.search(r"former|ex-?smoker|과거", value_text) else
+                      "current" if re.search(r"current|smoker|흡연", value_text) else None)
+        if status is None:
+            return []
+        return [(EventType.RISK_FACTOR.value, ts, {"smoking": status, "mapping": [f"Observation(smoking status)→risk_factor: {status}"]})]
 
     # Vital signs are not lab results: a high BP reading must not raise
     # "abnormal lab" alerts. A recorded BP is evidence of a BP check.
@@ -276,76 +285,6 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
     return events
 
 
-_NODULE = re.compile(r"(\d+(?:\.\d+)?)\s*(?:mm|밀리)[^.;]{0,40}?(nodule|결절)|(nodule|결절)[^.;]{0,40}?(\d+(?:\.\d+)?)\s*mm", re.I)
-_LUNG_RADS = re.compile(r"lung-?rads\s*(?:category\s*)?:?\s*(\d[ABXS]?)", re.I)
-_BIRADS = re.compile(r"bi-?rads\s*(?:category\s*)?:?\s*(\d[ABC]?)", re.I)
-_CHEST_CT = re.compile(r"\b(ct|ldct|computed tomography)\b.*\b(chest|thorax|lung)\b|\b(chest|thorax|lung)\b.*\b(ct|ldct)\b|흉부\s*ct", re.I)
-_WORD_NUM = {"one": 1, "two": 2, "three": 3, "four": 4, "six": 6, "twelve": 12}
-_UNIT_DAYS = {"day": 1, "week": 7, "month": 30.44, "year": 365.25, "일": 1, "주": 7, "개월": 30.44, "년": 365.25}
-_NUM = r"(\d+(?:\.\d+)?|one|two|three|four|six|twelve)"
-# Bare "MR" is excluded: "recommend Mr Kim return in 2 weeks" is not an MRI
-_MOD = r"(cta|ct|mri|(?-i:US)|ultrasound|ultrasonograph\w*|sonograph\w*)"
-_INTERVAL = rf"(?:in|within|at|after)\s+(?:{_NUM}\s*(?:-|–|to)\s*)?{_NUM}\s*(day|week|month|year)s?"
-_REC_PATTERNS = [
-    # "Recommend follow-up chest CT in 3 months" / "recommended: MRI within 6-12 months"
-    re.compile(rf"recommend\w*[^.;]{{0,40}}?\b{_MOD}\b[^.;]{{0,50}}?\b{_INTERVAL}", re.I),
-    # "Follow-up CT in 3 months is recommended"
-    re.compile(rf"\b{_MOD}\b[^.;]{{0,40}}?\b{_INTERVAL}[^.;]{{0,30}}?\brecommend", re.I),
-]
-_REC_KO = re.compile(r"(\d+)\s*(?:[-~]\s*(\d+))?\s*(개월|주|일|년)\s*(?:후|뒤|이내|내)?\s*(?:에\s*)?(?:추적\s*)?(?:검사\s*)?"
-                     r"(CT|MRI|초음파)[^.]{0,20}?(?:권고|권장|필요)", re.I)
-
-
-def _norm_modality(text: str) -> Optional[str]:
-    t = text.lower()
-    if t in ("ct", "cta"):
-        return "ct"
-    if t in ("mri", "mr"):
-        return "mri"
-    if t == "us" or "sonograph" in t or "ultrasound" in t or t == "초음파":
-        return "ultrasound"
-    return None
-
-
-def _extract_recommendation(text: str) -> Optional[Dict[str, Any]]:
-    """Radiologist follow-up recommendation: modality, interval (upper bound of a range) and evidence span."""
-    for pattern in _REC_PATTERNS:
-        for m in pattern.finditer(text):
-            if not _not_negated(text, m.start()):
-                continue
-            modality = _norm_modality(m.group(1))
-            low, high, unit = m.group(2), m.group(3), m.group(4).lower()
-            value = high if high else low
-            number = float(_WORD_NUM.get(value.lower(), value)) if value else None
-            if modality and number:
-                return {"recommended_modality": modality,
-                        "recommended_interval_days": round(number * _UNIT_DAYS[unit], 1),
-                        "evidence_span": _span(text, m)}
-    m = _REC_KO.search(text)
-    if m:
-        number = float(m.group(2) or m.group(1))
-        return {"recommended_modality": _norm_modality(m.group(4)),
-                "recommended_interval_days": round(number * _UNIT_DAYS[m.group(3)], 1),
-                "evidence_span": _span(text, m)}
-    return None
-
-
-_MOD_CT = re.compile(r"\b(ct|cta|ldct|computed tomography)\b", re.I)
-_MOD_MRI = re.compile(r"\b(mri|mr|magnetic resonance)\b", re.I)
-_MOD_US = re.compile(r"\b(?-i:US)\b|ultrasound|sonograph|초음파", re.I)
-_LIVER = re.compile(r"liver|hepat|abdom|간|복부", re.I)
-
-
-def _study_modality(code_text: str) -> Optional[str]:
-    if _MOD_CT.search(code_text):
-        return "ct"
-    if _MOD_MRI.search(code_text):
-        return "mri"
-    if _MOD_US.search(code_text):
-        return "ultrasound"
-    return None
-
-
 _MALIGNANT = re.compile(r"(adenocarcinoma|carcinoma|malignan\w*|high-grade dysplasia|melanoma|lymphoma|sarcoma|암)", re.I)
 
 
@@ -356,53 +295,9 @@ def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
     conclusion = " ".join(filter(None, [r.get("conclusion", ""),
                                         " ".join(_concept_text(c) for c in r.get("conclusionCode", []))]))
     details: Dict[str, Any] = {"report": code_text or None, "conclusion": conclusion or None}
-    events: List[Tuple[str, str, Dict]] = []
 
     if "rad" in category or "imaging" in category or "radiology" in category:
-        mapping = ["DiagnosticReport(RAD)→radiology_report"]
-        m = _first_affirmed(_NODULE, conclusion)
-        if m:
-            size = float(m.group(1) or m.group(4))
-            details.update(finding="incidental_pulmonary_nodule", nodule_size_mm=size,
-                           evidence_span=_span(conclusion, m))
-            mapping.append(f"nodule {size} mm")
-        m = _LUNG_RADS.search(conclusion)
-        if m:
-            details.update(lung_rads=m.group(1).upper(), evidence_span=_span(conclusion, m))
-            mapping.append(f"Lung-RADS {m.group(1).upper()}")
-        m = _BIRADS.search(conclusion)
-        if m:
-            details.update(birads=m.group(1).upper(), evidence_span=_span(conclusion, m))
-            mapping.append(f"BI-RADS {m.group(1).upper()}")
-        rec = _extract_recommendation(conclusion)
-        if rec and rec["recommended_modality"]:
-            mapping.append(f"radiologist recommends {rec['recommended_modality']} in "
-                           f"{rec['recommended_interval_days']:g} days")
-            if details.get("finding") == "incidental_pulmonary_nodule" and rec["recommended_modality"] == "ct":
-                # One finding, one loop: keep whichever deadline is tighter
-                nodule_deadline = FLEISCHNER_LARGE_NODULE_DAYS if details["nodule_size_mm"] > 8 else 180.0
-                rec_deadline = rec["recommended_interval_days"] + radiology_grace_days(rec["recommended_interval_days"])
-                if rec_deadline < nodule_deadline:
-                    details["finding"] = "pulmonary_nodule_with_radiologist_recommendation"
-                    details.update(rec)
-                    mapping.append("radiologist interval is tighter than Fleischner default: tracked as R030")
-                else:
-                    mapping.append("Fleischner window (R003) is tighter: recommendation not tracked separately")
-            else:
-                details.update(rec)
-        details["mapping"] = mapping
-        events.append((EventType.RADIOLOGY_REPORT.value, ts, details))
-        # A completed study fulfils outstanding follow-up imaging obligations
-        if _CHEST_CT.search(code_text):
-            events.append((EventType.FOLLOWUP_CT.value, ts, {"mapping": ["chest CT report→followup_ct"]}))
-        modality = _study_modality(code_text)
-        if modality:
-            etype = {"ct": EventType.IMAGING_CT, "mri": EventType.IMAGING_MRI,
-                     "ultrasound": EventType.IMAGING_ULTRASOUND}[modality].value
-            events.append((etype, ts, {"mapping": [f"{modality} report→{etype}"]}))
-            if _LIVER.search(code_text):
-                events.append((EventType.LIVER_IMAGING.value, ts, {"mapping": [f"{modality} liver/abdomen→liver_imaging"]}))
-        return events
+        return map_radiology_report(ts, code_text, conclusion, details)
 
     if "pat" in category or "pathology" in category or "sp" in category.split():
         mapping = ["DiagnosticReport(PAT)→pathology_result"]
@@ -422,7 +317,10 @@ def _map_service_request(r: Dict) -> List[Tuple[str, str, Dict]]:
     details = {"order": _concept_text(r.get("code")) or None}
     if "colposcopy" in text or "질확대경" in text:
         etype = EventType.COLPOSCOPY_REFERRAL.value
-    elif "biopsy" in text or "조직검사" in text:
+    elif _EUS.search(text):
+        etype = EventType.ENDOSCOPIC_ULTRASOUND.value
+    elif ("biopsy" in text or "aspiration" in text or re.search(r"\bfna\b", text)
+          or "조직검사" in text or "세침" in text):
         etype = EventType.BIOPSY_ORDER.value
     elif "referral" in text or "3457005" in text or "consult" in text or "의뢰" in text or "협진" in text:
         etype = EventType.SPECIALIST_REFERRAL.value
@@ -474,6 +372,7 @@ def _map_communication(r: Dict) -> List[Tuple[str, str, Dict]]:
     return [(etype, ts, {"method": ", ".join(medium) or None, "mapping": [f"Communication→{etype}"]})]
 
 
+_EUS = re.compile(r"endoscopic ultrasound|\beus\b|내시경\s*초음파", re.I)
 _PSYCH = re.compile(r"psychiatr|mental health|behavioral health|정신", re.I)
 
 
@@ -507,18 +406,30 @@ def _map_encounter(r: Dict) -> List[Tuple[str, str, Dict]]:
 
 
 def _map_condition(r: Dict) -> List[Tuple[str, str, Dict]]:
-    """Active problem-list entries that carry an obligation (currently: HCC risk)."""
+    """Active problem-list entries that carry an obligation (HCC risk) or radiology context (cancer, immunocompromise)."""
     clinical = _codes(r.get("clinicalStatus")) or {"active"}
     if not clinical & {"active", "recurrence", "relapse"}:
         return []
     text = _concept_text(r.get("code"))
     codes = _codes(r.get("code"))
-    at_risk = any(c.startswith(HCC_RISK_ICD10) for c in codes) or bool(HCC_RISK_TEXT.search(text))
-    if not at_risk:
+    details: Dict[str, Any] = {"diagnosis": text}
+    mapping: List[str] = []
+    if any(c.startswith(HCC_RISK_ICD10) for c in codes) or HCC_RISK_TEXT.search(text):
+        details["hcc_risk"] = True
+        mapping.append("Condition(HBV/cirrhosis)→diagnosis, hcc_risk")
+    malignant = any(re.match(r"^C(?:[0-8]\d|9[0-7])", c) and not c.startswith("C44") for c in codes) \
+        or any(c.startswith("Z85") for c in codes) or bool(_MALIGNANCY_TEXT.search(text))
+    if malignant:
+        details["malignancy"] = True
+        mapping.append("Condition(malignancy)→diagnosis, context for radiology decisions")
+    if any(c.startswith(_IMMUNO_ICD10) for c in codes) or _IMMUNO_TEXT.search(text):
+        details["immunocompromised"] = True
+        mapping.append("Condition(immunocompromise)→diagnosis, context for radiology decisions")
+    if not mapping:
         return []
+    details["mapping"] = mapping
     ts = _first(r.get("onsetDateTime"), r.get("recordedDate"))
-    return [(EventType.DIAGNOSIS.value, ts, {"diagnosis": text, "hcc_risk": True,
-                                             "mapping": ["Condition(HBV/cirrhosis)→diagnosis, hcc_risk"]})]
+    return [(EventType.DIAGNOSIS.value, ts, details)]
 
 
 def _drug_name(r: Dict) -> str:
@@ -546,13 +457,15 @@ def _map_procedure(r: Dict) -> List[Tuple[str, str, Dict]]:
     text = _concept_text(r.get("code")).lower()
     if "colonoscopy" in text or "대장내시경" in text:
         etype = EventType.COLONOSCOPY.value
+    elif _EUS.search(text):
+        etype = EventType.ENDOSCOPIC_ULTRASOUND.value
     elif "breast" in text and "biopsy" in text:
         etype = EventType.BREAST_BIOPSY.value
     elif "echocardiogra" in text or "심초음파" in text:
         etype = EventType.ECHOCARDIOGRAM.value
     elif "colposcopy" in text:
         etype = EventType.COLPOSCOPY_VISIT.value
-    elif "biopsy" in text:
+    elif "biopsy" in text or "aspiration" in text or re.search(r"\bfna\b", text) or "조직검사" in text or "세침" in text:
         etype = EventType.BIOPSY_RESULT.value
     else:
         return []
@@ -595,6 +508,7 @@ def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], L
     """
     by_patient: Dict[str, List[Dict]] = defaultdict(list)
     warnings: List[str] = []
+    patients = _patient_context(bundle_or_resources)
 
     for r in _resources(bundle_or_resources):
         rtype = r.get("resourceType", "?")
@@ -619,7 +533,8 @@ def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], L
             mapped = [(explicit, ts, {**base, "mapping": [f"explicit extension→{explicit}"]})]
         for etype, ts, details in mapped:
             if not ts:
-                warnings.append(f"{rtype}/{rid}: no timestamp; skipped")
+                if f"{rtype}/{rid}: no timestamp; skipped" not in warnings:
+                    warnings.append(f"{rtype}/{rid}: no timestamp; skipped")
                 continue
             # Deterministic id: the same resource yields the same loop key on
             # every ingest, whatever order the bundle lists resources in.
@@ -635,7 +550,25 @@ def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], L
 
     for pid, events in by_patient.items():
         _derive_context(events)
+        decide_obligations(events, patients.get(pid, {}))
     return dict(by_patient), warnings
+
+
+def _patient_context(bundle_or_resources: Any) -> Dict[str, Dict[str, Any]]:
+    """Birth date and administrative sex per patient (for age- and sex-specific radiology guidance)."""
+    out: Dict[str, Dict[str, Any]] = {}
+    for r in _resources(bundle_or_resources):
+        if r.get("resourceType") != "Patient" or not r.get("id"):
+            continue
+        ctx: Dict[str, Any] = {}
+        birth = str(r.get("birthDate", ""))
+        m = re.match(r"^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?", birth)
+        if m:
+            ctx["birth_date"] = datetime(int(m.group(1)), int(m.group(2) or 7), int(m.group(3) or 1))
+        if r.get("gender"):
+            ctx["sex"] = str(r["gender"]).lower()
+        out[r["id"]] = ctx
+    return out
 
 
 def _derive_context(events: List[Dict]) -> None:

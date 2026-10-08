@@ -28,17 +28,19 @@ with transparent, rule-grounded logic and an audit trail.
                                                                   Patient outreach: draft → clinician approval → send
 ```
 
-1. **Obligation rules** (`clinical_ontology.py`): 32 guideline-based rules, each with a trigger, its
-   required follow-ups (all or any), a deadline, a severity, references, a Korean name, and a
-   `review_status` (all currently `pending_specialist_review`). Example:
+1. **Obligation rules** (`clinical_ontology.py`): 46 guideline-based rules, each with a trigger, its
+   required follow-ups (all or any), a deadline, a severity, references and a Korean name. None is
+   fit for patient care until a specialist signs it off (see **Governance** below). Example:
    `□(LAB_RESULT[abnormal_pap] → ◇≤30d COLPOSCOPY_REFERRAL)`.
 
    | Rules | Covers |
    | --- | --- |
-   | R001–R016 | Abnormal labs, incidental lung nodules (size-aware Fleischner windows), cervical cytology, post-discharge cultures, anticoagulation and drug monitoring, referrals, pathology, post-MI and new heart failure |
+   | R001–R016 | Abnormal labs, incidental lung nodules (Fleischner 2017, see below), cervical cytology, post-discharge cultures, anticoagulation and drug monitoring, referrals, pathology, post-MI and new heart failure |
    | R017–R022 (Wave 1) | Positive FIT → colonoscopy, BI-RADS 4/5 → biopsy, Lung-RADS 4A and 4B/4X, abnormal result after discharge, critical value → clinician notified within 1 hour |
    | R023–R029 (Wave 2) | Heart-failure discharge → visit ≤7 days; postpartum BP check after hypertensive disorder of pregnancy (≤72 h if severe); gestational diabetes → postpartum glucose test; HCV antibody → RNA; HCC surveillance imaging every 6 months for chronic HBV or cirrhosis; self-harm or psychiatric discharge → mental-health follow-up ≤7 days (clinician-handled only) |
-   | R030–R032 | Follow-up CT / MRI / ultrasound **recommended in the radiology report**, with the deadline taken from the report itself |
+   | R030–R033 | Follow-up CT / MRI / ultrasound / radiograph **recommended in the radiology report**, with the deadline taken from the report itself (30-day default when no interval is stated) |
+   | R034–R036 | Lung-RADS 3 → 6-month LDCT; critical imaging finding (from the hospital-approved list) → documented clinician communication within its window; radiologist-recommended biopsy/FNA |
+   | R037–R046 | ACR incidental findings without a written recommendation: adrenal nodule (1–4 cm → CT/MRI; ≥4 cm or with cancer → work-up), renal mass (solid/Bosniak III–IV → urology; IIF or indeterminate → CT/MRI), pancreatic cyst (size-based MRI; worrisome features → EUS), thyroid nodule on CT/MRI/PET (→ ultrasound), abdominal aortic aneurysm (diameter-based surveillance; ≥5.5 cm, ≥5.0 cm in women → vascular surgery); growing or suspicious lung nodule → work-up |
 2. **Temporal hypergraph** (`temporal_hypergraph.py`): builds one hyperedge per triggered rule and
    marks it `closed`, `open` or `delayed`.
 3. **Safety clock** (`safety_clock.py`): converts elapsed time against the deadline into a time-risk
@@ -50,6 +52,16 @@ with transparent, rule-grounded logic and an audit trail.
 6. **FHIR adapter** (`fhir_ingest.py`): maps hospital FHIR R4 resources to events. FHIR status is
    preserved (a *booked* appointment is not a completed one), report text extraction is
    negation-aware and records its evidence span, and every event says how it was mapped.
+   **Radiology reports** (`radiology.py`) are read in two steps: findings from each report, then
+   obligations decided with the patient's context (age, sex, smoking status, cancer history,
+   earlier reports):
+   - *Fleischner 2017*: solid, part-solid and ground-glass; single or multiple; low or high risk
+     (unknown risk is managed as high risk); stepped follow-up of a known nodule; growth → work-up;
+     age < 35, cancer or immunocompromise → human review. Screening LDCT follows Lung-RADS instead.
+   - *ACR incidental findings* (adrenal, renal/Bosniak, pancreatic cyst, thyroid/TI-RADS, aorta)
+     when the radiologist wrote no recommendation; when they did, their recommendation is tracked.
+   - *Body region*: a follow-up study closes a loop only if it covers the region asked for (an
+     abdominal CT covers the adrenals; a head CT does not).
 7. **FHIR sync** (`fhir_sync.py`): pulls from the hospital's FHIR server on a schedule. It finds
    patients whose records changed, then evaluates each one's full history, since an incremental
    pull alone would make earlier follow-ups look missing.
@@ -76,8 +88,9 @@ clinloopai/
 │   ├── run_benchmark.py          # End-to-end benchmark entry point
 │   ├── tests/test_noble_engine.py# Tests for counterfactual, outreach, BioMCP modules
 │   ├── validation/chart_review.py# Stage 1 chart-review study toolkit (sampling, blinding, metrics)
+│   ├── validation/report_validation.py # Report-level validation (blind labels → sensitivity / PPV)
 │   └── clinloop_engine/
-│       ├── clinical_ontology.py      # Event types, severities, obligation rules R001–R022
+│       ├── clinical_ontology.py      # Event types, severities, obligation rules R001–R046
 │       ├── temporal_hypergraph.py    # Dynamic Temporal Hypergraph (obligation matching)
 │       ├── safety_clock.py           # SafetyClock (time risk) + background watchdog loop
 │       ├── risk_scorer.py            # Multi-factor risk + abstention
@@ -87,6 +100,10 @@ clinloopai/
 │       ├── benchmark.py              # Metrics (sens/spec/F1/AUROC/PR-AUC/alert burden)
 │       ├── visualizer.py             # ROC / PR / bar / alert-fatigue figures
 │       ├── fhir_ingest.py            # FHIR R4 → ClinLoop event adapter
+│       ├── radiology.py              # Radiology reports: Fleischner, ACR incidental findings, regions, critical findings
+│       ├── report_text.py            # Negation-aware report text helpers
+│       ├── governance.py             # Specialist rule sign-off, critical-finding list approval, shadow mode
+│       ├── config/critical_findings.json # Example critical-finding list (each hospital approves its own)
 │       ├── fhir_sync.py              # Scheduled read-only sync from a FHIR server
 │       ├── outreach.py               # Patient messages: draft → approval → provider (outbox / webhook)
 │       ├── literature.py             # Live PubMed / Europe PMC search and service health checks
@@ -115,6 +132,7 @@ clinloopai/
 │
 ├── index.html, css/, js/         # Static web cockpit (served at clinloopai.app)
 ├── worklist.html                 # Clinician worklist (talks to the API)
+├── governance.html               # Specialist rule sign-off and critical-finding list approval
 ├── data/cases.json               # 5 curated synthetic demo cases used by the web cockpit
 ├── data/fhir_example_bundle.json # Synthetic FHIR R4 bundle: 7 patients, the main failure modes
 ├── requirements-api.txt          # API dependencies
@@ -395,7 +413,41 @@ The cockpit loads `data/cases.json` directly. Its local-LLM panel works only whe
 served from `localhost` with the API and Ollama running. On the public site it states that the
 on-premise LLM is unavailable.
 
-### 6. Stage 1 validation study (chart review)
+### 6. Governance: specialist sign-off and the critical-finding list
+
+No rule should be used for patient care until a named specialist has reviewed it. ClinLoop records
+that review; it cannot replace it.
+
+- **Rule sign-off** (`governance.html`, `/api/v1/governance/rules`): a clinician approves, rejects or
+  requests changes to a rule. Each sign-off is bound to the rule's **fingerprint** (a hash of its
+  definition, plus the radiology decision code for radiology rules). If the rule changes, the
+  sign-off becomes "needs re-review". `CLINLOOP_SIGNOFF_APPROVALS` sets how many distinct reviewers
+  are required (default 1).
+- **Critical-finding list**: ships as an example in `src/clinloop_engine/config/critical_findings.json`
+  (ACR communication categories, a window per finding). A hospital copies it and points
+  `CLINLOOP_CRITICAL_FINDINGS` at its own version. A clinical leader then approves it on
+  `governance.html`. The approval is bound to the file's content hash.
+- **Shadow mode** (`CLINLOOP_ENFORCE_SIGNOFF=1`, on by default for new installs): loops from unsigned
+  rules are still detected and stored. They are kept off the worklist and never escalate. R035
+  also needs the approved critical-finding list.
+- Every review and approval goes into the hash-chained audit log.
+
+### 7. Validation studies
+
+**Report reading** (does ClinLoop create the right obligations from each report?):
+
+```bash
+# Blind labelling sheet from a FHIR export: de-identified text, patient context, empty expected_rules
+python -m src.validation.report_validation template --fhir export_bundle.json --out sheet.csv
+# A radiologist fills expected_rules (e.g. "R003;R035"), then:
+python -m src.validation.report_validation score --sheet sheet.csv --out result.json
+```
+
+This reports per-rule sensitivity and PPV with Wilson 95% intervals, and lists every disagreement
+for adjudication. `data/radiology_validation_synthetic.csv` exercises the tool. Its labels were
+written by the developers, so its agreement says nothing about real-world accuracy.
+
+**Chart review** (was each follow-up really completed in time?):
 
 ```bash
 # Draw a stratified sample of loops from a FHIR export; reviewers get a blinded packet
@@ -442,6 +494,8 @@ synthetic event, so results are identical on every run.
 | Component | Status |
 | --- | --- |
 | Obligation rules, hypergraph, safety clock, risk scorer, loop detector | **Implemented** (deterministic, tested). Rules await specialist sign-off |
+| Radiology report reading | **Implemented**: Fleischner 2017, Lung-RADS, BI-RADS, TI-RADS, ACR incidental findings, critical findings, body-region matching, English and Korean. Tested on synthetic reports only |
+| Governance | **Implemented**: hash-bound specialist sign-off, critical-finding list approval, shadow mode. The sign-offs themselves must come from the hospital's specialists |
 | FHIR R4 ingestion | **Implemented** for 8 resource types; LOINC lists and text patterns need checking against each hospital's coding |
 | Loop registry, workflow, escalation, audit, open-loop rate | **Implemented** (SQLite) |
 | API authentication | **Implemented**: bearer tokens with roles. Not yet integrated with hospital SSO |
@@ -449,7 +503,7 @@ synthetic event, so results are identical on every run.
 | FHIR server sync | **Implemented** (bearer token). SMART Backend Services token exchange not yet built |
 | Data-feed monitoring | **Implemented**: OK / STALE / FAILING / NEVER, audited alarm |
 | Patient outreach | **Implemented** with clinician approval. Real delivery requires the hospital's KakaoTalk/SMS integration behind the webhook |
-| Stage 1 validation toolkit | **Implemented**; awaits IRB approval and real data |
+| Stage 1 validation toolkits | **Implemented** (report-level and chart review); await IRB approval and real, de-identified data |
 | Synthetic data generator, benchmark, figures | **Implemented** (seeded) |
 | BioMCP | **Connected** over MCP (stdio or streamable HTTP) to the open-source BioMCP server: 36 tools, read-only allowlist |
 | Built-in guideline library | Static, curated guideline citations in code (`biomcp_server.py`, `/api/v1/guidelines/call`) |

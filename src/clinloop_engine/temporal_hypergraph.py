@@ -30,6 +30,26 @@ from .clinical_ontology import (
 from .safety_clock import normalize_timestamp, utc_now
 
 
+# Imaging events whose body region is checked against what the obligation asks for
+REGION_CHECKED_TYPES = {
+    EventType.IMAGING_CT.value, EventType.IMAGING_MRI.value, EventType.IMAGING_ULTRASOUND.value,
+    EventType.IMAGING_XRAY.value, EventType.IMAGING_PET.value,
+}
+
+
+def _required_regions(trigger: "ClinicalNode", rule: ObligationRule) -> List[str]:
+    regions = trigger.details.get("followup_regions")
+    if isinstance(regions, dict):
+        return list(regions.get(rule.rule_id) or [])
+    return []
+
+
+def _region_ok(required: List[str], node: "ClinicalNode") -> bool:
+    """A study of unknown region does not close a region-specific loop (a clinician can close it with evidence)."""
+    covered = node.details.get("body_regions") or []
+    return bool(set(required) & set(covered))
+
+
 @dataclass
 class ClinicalNode:
     """A node in the temporal hypergraph representing a clinical event."""
@@ -268,14 +288,24 @@ class DynamicTemporalHypergraph:
             conditions.append("birads_4_5")
 
         lung_rads = str(details.get("lung_rads", "")).strip().upper()
-        if lung_rads == "4A":
+        if lung_rads == "3":
+            conditions.append("lung_rads_3")
+        elif lung_rads == "4A":
             conditions.append("lung_rads_4a")
         elif lung_rads in ("4B", "4X"):
             conditions.append("lung_rads_4b_4x")
 
         modality = str(details.get("recommended_modality", "")).lower()
-        if modality in ("ct", "mri", "ultrasound") and details.get("recommended_interval_days"):
+        if modality in ("ct", "mri", "ultrasound", "xray") and details.get("recommended_interval_days"):
             conditions.append(f"radiologist_rec_{modality}")
+        if details.get("biopsy_recommended") is True:
+            conditions.append("radiologist_rec_biopsy")
+        if details.get("critical_imaging") is True:
+            conditions.append("critical_imaging_finding")
+        # Conditions decided upstream with the patient's context (radiology.decide_obligations)
+        extra = details.get("extra_conditions")
+        if isinstance(extra, (list, tuple)):
+            conditions.extend(str(c) for c in extra)
 
         if details.get("hcc_risk") is True:
             conditions.append("hcc_risk")
@@ -321,7 +351,7 @@ class DynamicTemporalHypergraph:
                 deadline_days = get_deadline_days(rule, node.details)
                 deadline = node.timestamp + timedelta(days=deadline_days)
                 followup_nodes = self._find_followup_nodes(
-                    node, rule.required_followups, deadline, nodes_list
+                    node, rule.required_followups, deadline, nodes_list, rule
                 )
 
                 edge_id = self._next_edge_id()
@@ -368,6 +398,25 @@ class DynamicTemporalHypergraph:
                     hyperedge.evidence_chain.append(
                         f"Not counted as follow-up (did not take place): {not_done}"
                     )
+                required_regions = _required_regions(node, rule)
+                if required_regions:
+                    hyperedge.evidence_chain.append(
+                        f"Follow-up study must cover: {', '.join(required_regions)}")
+                    wrong_region = [
+                        f"{n.event_type} [{', '.join(n.details.get('body_regions') or []) or 'region unknown'}] "
+                        f"on {n.timestamp.date().isoformat()}"
+                        for n in nodes_list
+                        if n.event_type in required_values and n.event_type in REGION_CHECKED_TYPES
+                        and node.timestamp < n.timestamp <= self.evaluation_time
+                        and is_fulfilling_status(n.status) and not _region_ok(required_regions, n)
+                    ]
+                    if wrong_region:
+                        hyperedge.evidence_chain.append(
+                            f"Not counted as follow-up (different or unknown body region): {wrong_region}")
+                review = (node.details.get("review_notes") or {}).get(rule.rule_id) \
+                    if isinstance(node.details.get("review_notes"), dict) else None
+                if review:
+                    hyperedge.evidence_chain.append(f"Human review: {review}")
 
                 self.hyperedges[edge_id] = hyperedge
 
@@ -377,15 +426,18 @@ class DynamicTemporalHypergraph:
         required_types: List[EventType],
         deadline: datetime,
         all_nodes: List[ClinicalNode],
+        rule: Optional[ObligationRule] = None,
     ) -> List[ClinicalNode]:
         """
         Find follow-up nodes that match the required types after the trigger.
 
         Excludes follow-ups that did not actually happen (cancelled, no-show,
-        merely scheduled) and events dated after the evaluation time.
+        merely scheduled), events dated after the evaluation time, and imaging
+        of a different body region than the obligation asks for.
         """
         followups = []
         required_values = {ft.value for ft in required_types}
+        required_regions = _required_regions(trigger, rule) if rule else []
 
         for node in all_nodes:
             if node.timestamp <= trigger.timestamp:
@@ -397,6 +449,9 @@ class DynamicTemporalHypergraph:
             if node.patient_id != trigger.patient_id:
                 continue
             if node.event_type in required_values:
+                if (required_regions and node.event_type in REGION_CHECKED_TYPES
+                        and not _region_ok(required_regions, node)):
+                    continue
                 followups.append(node)
 
         return followups

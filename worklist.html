@@ -132,6 +132,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     </div>
     <nav>
       <button type="button" id="btn-lang" aria-label="Language">English</button>
+      <a href="governance.html" data-i18n="signoffLink"></a>
       <a href="./" data-i18n="cockpit"></a>
     </nav>
   </header>
@@ -155,6 +156,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 
   <div id="app" hidden>
     <div id="feed" class="feed" role="status" aria-live="polite" style="margin-top:16px;"></div>
+    <div id="gov" class="feed" role="status"></div>
 
     <section class="kpis" aria-label="Summary">
       <div class="card kpi"><div class="v" id="k-active">–</div><div class="l" data-i18n="kActive"></div></div>
@@ -169,6 +171,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       <span class="spacer"></span>
       <button type="button" id="btn-refresh" data-i18n="refresh"></button>
       <button type="button" id="btn-load-example" data-i18n="loadExample" hidden></button>
+      <button type="button" id="btn-load-radiology" data-i18n="loadRadiology" hidden></button>
       <button type="button" id="btn-escalate" data-i18n="escalate" hidden></button>
     </div>
 
@@ -204,7 +207,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   const T = {
     ko: {
       title: '작업 목록', subtitle: '미완결 진료 루프를 위험도 순으로 보여줍니다. 조치하거나, 사유와 함께 보류하거나, 근거와 함께 종결하세요.',
-      cockpit: '← 콕핏', prototype: '연구용 프로토타입입니다. 모든 규칙은 전문의 검토 대기 중이며 실제 진료에 사용하지 마십시오.',
+      cockpit: '← 콕핏', signoffLink: '규칙 승인', prototype: '연구용 프로토타입입니다. 전문의가 승인하지 않은 규칙(“미승인 규칙” 표시)은 실제 진료에 사용하지 마십시오.',
+      gov: (g, shadow) => `전문의 승인 규칙 ${g.rules_approved}/${g.rules_total} · 위급 소견 목록: ${({approved: '승인됨', not_approved: '미승인', changed_since_approval: '승인 후 변경됨'})[g.critical_findings_list]} · `
+        + (g.enforce_signoff ? `섀도 모드: 미승인 규칙의 루프 ${shadow}건은 표시되지 않습니다` : '섀도 모드 꺼짐 (파일럿)'),
+      unsigned: '미승인 규칙', loadRadiology: '합성 영상 판독 예제 불러오기',
       api: 'ClinLoop API', token: '접근 토큰', signin: '로그인', signingIn: '로그인 중…',
       signedIn: (u, r) => `${u}(${r})님으로 로그인했습니다.`, signinFailed: (e) => `로그인 실패: ${e}. API 주소와 토큰을 확인하세요.`,
       kActive: '진행 중 루프', kOverdue: '기한 초과', kCritical: '위급', kRate: '미완결률 / 1,000',
@@ -240,7 +246,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     },
     en: {
       title: 'Worklist', subtitle: 'Open clinical loops, most dangerous first. Act, defer with a reason, or close with evidence.',
-      cockpit: '← Cockpit', prototype: 'Research prototype. Every rule is pending specialist review; do not use for patient care.',
+      cockpit: '← Cockpit', signoffLink: 'Rule sign-off', prototype: 'Research prototype. Do not use a rule for patient care until a specialist has signed it off (marked “unsigned rule”).',
+      gov: (g, shadow) => `Rules signed off by a specialist: ${g.rules_approved}/${g.rules_total} · Critical-finding list: ${g.critical_findings_list.replace(/_/g, ' ')} · `
+        + (g.enforce_signoff ? `Shadow mode: ${shadow} loop(s) from unsigned rules are hidden` : 'Shadow mode off (pilot)'),
+      unsigned: 'unsigned rule', loadRadiology: 'Load synthetic radiology example',
       api: 'ClinLoop API', token: 'Access token', signin: 'Sign in', signingIn: 'Signing in…',
       signedIn: (u, r) => `Signed in as ${u} (${r}).`, signinFailed: (e) => `Sign-in failed: ${e}. Check the API address and token.`,
       kActive: 'Active loops', kOverdue: 'Past deadline', kCritical: 'Critical', kRate: 'Open-loop rate / 1,000',
@@ -283,7 +292,8 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       culture_result: '혈액배양 재검', echocardiogram: '심초음파', colonoscopy: '대장내시경', breast_biopsy: '유방 조직검사',
       critical_value_notification: '의료진 보고', bp_check: '혈압 측정', postpartum_glucose_test: '산후 당부하검사',
       hcv_rna_test: 'HCV RNA 검사', liver_imaging: '간 영상검사', mental_health_followup: '정신건강 추적 진료',
-      imaging_ct: 'CT', imaging_mri: 'MRI', imaging_ultrasound: '초음파' },
+      imaging_ct: 'CT', imaging_mri: 'MRI', imaging_ultrasound: '초음파', imaging_xray: 'X선 촬영', imaging_pet: 'PET/CT',
+      endoscopic_ultrasound: '내시경초음파', biopsy_result: '조직검사 시행', pathology_result: '병리 결과' },
     en: {},
   };
   const store = {
@@ -367,6 +377,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         <span class="chip ${esc(l.severity)}">${esc(t().severity[l.severity] || l.severity)}</span>
         ${overdue ? `<span class="chip overdue">${esc(t().pastDeadline)}</span>` : ''}
         <span class="chip ${done ? 'ok' : 'neutral'}">${esc(t().states[l.workflow_state] || l.workflow_state)}</span>
+        ${l.rule_signoff && l.rule_signoff !== 'approved' ? `<span class="chip moderate">${esc(t().unsigned)}</span>` : ''}
         ${l.escalation_level > 0 ? `<span class="chip high">${esc(t().escalatedTo)} ${esc(l.escalated_to.replace(/_/g, ' '))}</span>` : ''}
       </div>
       <div class="meta">
@@ -473,6 +484,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       const fs = feed.status;
       $('feed').className = `feed ${fs === 'OK' ? 'ok' : 'alarm'}`;
       $('feed').textContent = t().feed[fs](feed.hours_since_success);
+      if (wl.governance) {
+        const g = wl.governance;
+        $('gov').className = `feed ${g.rules_approved === g.rules_total && g.critical_findings_list === 'approved' ? 'ok' : ''}`;
+        $('gov').style.background = g.rules_approved === g.rules_total ? '' : 'var(--moderate-soft)';
+        $('gov').textContent = t().gov(g, wl.shadow_count || 0);
+      }
       $('worklist').innerHTML = wl.loops.length
         ? wl.loops.map(loopCard).join('')
         : `<div class="card empty">${esc(t().noLoops)}${can('admin') ? esc(t().loadHint) : ''}</div>`;
@@ -519,6 +536,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       $('app').hidden = false;
       $('btn-load-example').hidden = !can('admin');
       $('btn-escalate').hidden = !can('admin');
+      $('btn-load-radiology').hidden = !can('admin');
       await refresh();
     } catch (err) {
       $('app').hidden = true;
@@ -536,6 +554,16 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       const bundle = await (await fetch('data/fhir_example_bundle.json')).json();
       // Synthetic data is dated 2026; evaluate on 1 Sep 2026 so deadlines are meaningful
       const r = await api('/api/v1/fhir/ingest?evaluation_time=2026-09-01T00:00:00', { method: 'POST', body: JSON.stringify(bundle) });
+      setStatus(t().ingested(r));
+      await refresh();
+    } catch (e) { setStatus(e.message, true); }
+  });
+
+  $('btn-load-radiology').addEventListener('click', async () => {
+    try {
+      const bundle = await (await fetch('data/radiology_test_bundle.json')).json();
+      // 16 synthetic radiology reports dated 2026; evaluated on 8 Oct 2026
+      const r = await api('/api/v1/fhir/ingest?evaluation_time=2026-10-08T00:00:00', { method: 'POST', body: JSON.stringify(bundle) });
       setStatus(t().ingested(r));
       await refresh();
     } catch (e) { setStatus(e.message, true); }

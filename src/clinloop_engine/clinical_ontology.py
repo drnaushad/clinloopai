@@ -53,6 +53,10 @@ class EventType(Enum):
     IMAGING_CT = "imaging_ct"                     # any completed CT study
     IMAGING_MRI = "imaging_mri"                   # any completed MRI study
     IMAGING_ULTRASOUND = "imaging_ultrasound"     # any completed ultrasound study
+    IMAGING_XRAY = "imaging_xray"                 # any completed radiograph
+    IMAGING_PET = "imaging_pet"                   # any completed PET or PET/CT study
+    ENDOSCOPIC_ULTRASOUND = "endoscopic_ultrasound"
+    RISK_FACTOR = "risk_factor"                   # e.g. smoking status (context only, never a trigger)
 
 
 # ── Severity Classification ─────────────────────────────────────────────────
@@ -152,17 +156,24 @@ OBLIGATION_RULES: List[ObligationRule] = [
     ),
     ObligationRule(
         rule_id="R003",
-        name="Incidental Lung Nodule ≥6mm → Follow-up CT",
-        description="Incidental pulmonary nodule ≥6mm on CT requires follow-up CT within 6 months",
+        name="Incidental Lung Nodule → Fleischner Follow-up CT",
+        description=("Incidental lung nodule needing follow-up under Fleischner 2017 (by size, solid / part-solid / "
+                     "ground-glass, single / multiple, risk, and stepped follow-up of a known nodule)"),
         trigger_event=EventType.RADIOLOGY_REPORT,
         trigger_condition="incidental_nodule_ge_6mm",
-        required_followups=[EventType.FOLLOWUP_CT],
+        required_followups=[EventType.FOLLOWUP_CT, EventType.BIOPSY_ORDER, EventType.BIOPSY_RESULT],
         deadline_days=180.0,
         severity=Severity.HIGH,
         clinical_domain="radiology",
-        ltl_formula="□(RADIOLOGY_REPORT[nodule≥6mm] → ◇_{≤180d} FOLLOWUP_CT)",
+        ltl_formula="□(RADIOLOGY_REPORT[lung nodule≥6mm] → ◇_{≤180d} (FOLLOWUP_CT ∨ BIOPSY))",
         references=["Fleischner Society 2017 Guidelines",
                      "Lacson R et al. JACR 2020"],
+        followup_logic="any",
+        evidence_note=("Deadline from the Fleischner 2017 table (upper bound of the interval): solid 6–8 mm 12 months, "
+                       ">8 mm 3 months, multiple 3–6 months, ground-glass ≥6 mm 12 months, part-solid ≥6 mm 3–6 months; "
+                       "stepped follow-up for a stable nodule; unknown risk managed as high risk. Lung nodules only, "
+                       "not screening LDCT (Lung-RADS). Age <35, known cancer or immunocompromise → human review. "
+                       "Tissue sampling also closes the loop."),
     ),
     ObligationRule(
         rule_id="R004",
@@ -376,8 +387,9 @@ OBLIGATION_RULES: List[ObligationRule] = [
         deadline_days=90.0,
         severity=Severity.HIGH,
         clinical_domain="cancer_screening",
-        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 4A] → ◇_{≤90d} FOLLOWUP_CT)",
+        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 4A] → ◇_{≤90d+grace} FOLLOWUP_CT)",
         references=["ACR Lung-RADS v2022"],
+        evidence_note="Scheduled interval plus a grace period (25%, 7–30 days), as for R030–R033.",
     ),
     ObligationRule(
         rule_id="R020",
@@ -537,7 +549,8 @@ OBLIGATION_RULES: List[ObligationRule] = [
         clinical_domain="radiology",
         ltl_formula="□(RADIOLOGY_REPORT[recommend CT in T] → ◇_{≤T+grace} IMAGING_CT)",
         references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
-        evidence_note="Interval from the report plus a grace period (25%, 7–30 days). Matches modality, not body region.",
+        evidence_note=("Interval from the report plus a grace period (25%, 7–30 days). The follow-up study must cover "
+                       "the body region the recommendation names (an abdominal CT covers the adrenals; a head CT does not)."),
     ),
     ObligationRule(
         rule_id="R031",
@@ -551,7 +564,8 @@ OBLIGATION_RULES: List[ObligationRule] = [
         clinical_domain="radiology",
         ltl_formula="□(RADIOLOGY_REPORT[recommend MRI in T] → ◇_{≤T+grace} IMAGING_MRI)",
         references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
-        evidence_note="Interval from the report plus a grace period (25%, 7–30 days). Matches modality, not body region.",
+        evidence_note=("Interval from the report plus a grace period (25%, 7–30 days). The follow-up study must cover "
+                       "the body region the recommendation names (an abdominal CT covers the adrenals; a head CT does not)."),
     ),
     ObligationRule(
         rule_id="R032",
@@ -565,7 +579,224 @@ OBLIGATION_RULES: List[ObligationRule] = [
         clinical_domain="radiology",
         ltl_formula="□(RADIOLOGY_REPORT[recommend US in T] → ◇_{≤T+grace} IMAGING_ULTRASOUND)",
         references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
-        evidence_note="Interval from the report plus a grace period (25%, 7–30 days). Matches modality, not body region.",
+        evidence_note=("Interval from the report plus a grace period (25%, 7–30 days). The follow-up study must cover "
+                       "the body region the recommendation names (an abdominal CT covers the adrenals; a head CT does not)."),
+    ),
+    ObligationRule(
+        rule_id="R033",
+        name="Radiologist-Recommended Radiograph",
+        description="Follow-up radiograph (e.g. chest X-ray to document resolution) recommended in the report",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="radiologist_rec_xray",
+        required_followups=[EventType.IMAGING_XRAY],
+        deadline_days=90.0,
+        severity=Severity.MODERATE,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend radiograph in T] → ◇_{≤T+grace} IMAGING_XRAY)",
+        references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558",
+                    "BTS Guidelines for community-acquired pneumonia in adults (2009): repeat CXR ~6 weeks"],
+        evidence_note=("Interval from the report plus a grace period. A recommendation without an interval "
+                       "uses a 30-day default. The follow-up radiograph must cover the same body region."),
+    ),
+    ObligationRule(
+        rule_id="R034",
+        name="Lung-RADS 3 → 6-Month LDCT",
+        description="Lung-RADS category 3 on screening LDCT requires 6-month LDCT",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="lung_rads_3",
+        required_followups=[EventType.FOLLOWUP_CT],
+        deadline_days=182.6,
+        severity=Severity.MODERATE,
+        clinical_domain="cancer_screening",
+        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 3] → ◇_{≤6mo+grace} FOLLOWUP_CT)",
+        references=["ACR Lung-RADS v2022"],
+        evidence_note="Scheduled interval plus a grace period (25%, 7–30 days).",
+    ),
+    ObligationRule(
+        rule_id="R035",
+        name="Critical Imaging Finding → Documented Clinician Communication ≤1 Hour",
+        description=("An emergent imaging finding (e.g. acute PE, aortic dissection, intracranial haemorrhage, "
+                     "pneumothorax, free air) must be communicated directly to a responsible clinician"),
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="critical_imaging_finding",
+        required_followups=[EventType.CRITICAL_VALUE_NOTIFICATION],
+        deadline_days=1.0 / 24.0,
+        severity=Severity.CRITICAL,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[critical finding] → ◇_{≤1h} CRITICAL_VALUE_NOTIFICATION)",
+        references=["ACR Practice Parameter for Communication of Diagnostic Imaging Findings (2020)",
+                    "The Joint Commission NPSG.02.03.01"],
+        evidence_note=("Closed by a documented communication: a FHIR Communication, or a statement in the "
+                       "report itself ('discussed with Dr …', 'communicated to …'). Institutions set the "
+                       "window and the list of critical findings."),
+        patient_outreach=False,
+    ),
+    ObligationRule(
+        rule_id="R036",
+        name="Radiologist-Recommended Tissue Sampling → Biopsy/FNA",
+        description="Biopsy or fine-needle aspiration recommended in the radiology report (e.g. TI-RADS, renal or liver mass)",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="radiologist_rec_biopsy",
+        required_followups=[EventType.BIOPSY_ORDER, EventType.BIOPSY_RESULT, EventType.PATHOLOGY_RESULT],
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend biopsy/FNA] → ◇_{≤30d} (BIOPSY ∨ PATHOLOGY))",
+        references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558",
+                    "ACR TI-RADS, JACR 2017;14:587-595"],
+        followup_logic="any",
+        evidence_note=("30 days is a proposed target. Not applied when BI-RADS, Lung-RADS or the lung-nodule "
+                       "rule already governs the same finding."),
+    ),
+    ObligationRule(
+        rule_id="R037",
+        name='Incidental Adrenal Nodule → Adrenal CT/MRI',
+        description='Indeterminate adrenal nodule 1–4 cm needs adrenal protocol CT or MRI (12 months for 1–2 cm)',
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="adrenal_nodule_followup",
+        required_followups=[EventType.IMAGING_CT, EventType.IMAGING_MRI],
+        deadline_days=395.25,
+        severity=Severity.MODERATE,
+        clinical_domain="radiology",
+        ltl_formula='□(RADIOLOGY_REPORT[adrenal 1–4 cm, indeterminate] → ◇_{≤T} (CT ∨ MRI)[adrenal])',
+        references=['ACR Incidental Findings: adrenal (Mayo-Smith WW et al. JACR 2017;14:1038-1044)'],
+        followup_logic="any",
+        evidence_note='1–2 cm: 12 months + grace; 2–4 cm: characterise (90 days, proposed). Benign features (adenoma ≤10 HU, myelolipoma, stable ≥1 year) are excluded. Follow-up must cover the adrenals.',
+    ),
+    ObligationRule(
+        rule_id="R038",
+        name='Adrenal Mass ≥4 cm (or Nodule with Known Cancer) → Specialist Work-up',
+        description='Adrenal mass ≥4 cm, or adrenal nodule ≥1 cm in a patient with cancer, needs referral, PET/CT or biopsy',
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="adrenal_mass_workup",
+        required_followups=[EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT, EventType.IMAGING_PET, EventType.BIOPSY_ORDER, EventType.BIOPSY_RESULT],
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula='□(RADIOLOGY_REPORT[adrenal ≥4 cm ∨ (≥1 cm ∧ cancer)] → ◇_{≤30d} (REFERRAL ∨ PET ∨ BIOPSY))',
+        references=['ACR Incidental Findings: adrenal (Mayo-Smith WW et al. JACR 2017;14:1038-1044)'],
+        followup_logic="any",
+        evidence_note='30 days is a proposed target. Biochemical (hormonal) evaluation is also advised and is not tracked.',
+    ),
+    ObligationRule(
+        rule_id="R039",
+        name='Suspicious Renal Mass → Urology Referral',
+        description='Solid enhancing renal mass or Bosniak III/IV cyst needs urology referral or biopsy',
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="suspicious_renal_mass",
+        required_followups=[EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT, EventType.BIOPSY_ORDER, EventType.BIOPSY_RESULT],
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula='□(RADIOLOGY_REPORT[solid renal mass ∨ Bosniak III/IV] → ◇_{≤30d} (REFERRAL ∨ BIOPSY))',
+        references=['ACR Incidental Findings: renal (Herts BR et al. JACR 2018;15:264-273)', 'Silverman SG et al. Bosniak v2019. Radiology 2019;292:475-488'],
+        followup_logic="any",
+        evidence_note='30 days is a proposed target.',
+    ),
+    ObligationRule(
+        rule_id="R040",
+        name='Indeterminate Renal Lesion / Bosniak IIF → Renal CT/MRI',
+        description='Indeterminate renal lesion ≥1 cm or Bosniak IIF cyst needs renal mass protocol CT or MRI',
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="renal_lesion_followup",
+        required_followups=[EventType.IMAGING_CT, EventType.IMAGING_MRI],
+        deadline_days=90.0,
+        severity=Severity.MODERATE,
+        clinical_domain="radiology",
+        ltl_formula='□(RADIOLOGY_REPORT[indeterminate renal ∨ Bosniak IIF] → ◇_{≤T} (CT ∨ MRI)[kidney])',
+        references=['ACR Incidental Findings: renal (Herts BR et al. JACR 2018;15:264-273)', 'Silverman SG et al. Bosniak v2019. Radiology 2019;292:475-488'],
+        followup_logic="any",
+        evidence_note='Bosniak IIF: 6 months + grace; indeterminate ≥1 cm: 90 days (proposed). Simple cysts, Bosniak I–II, angiomyolipoma and lesions too small to characterise are excluded.',
+    ),
+    ObligationRule(
+        rule_id="R041",
+        name='Incidental Pancreatic Cyst → MRI/MRCP Surveillance',
+        description='Incidental pancreatic cyst needs MRI/MRCP surveillance at a size-based interval',
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="pancreatic_cyst_followup",
+        required_followups=[EventType.IMAGING_MRI, EventType.IMAGING_CT, EventType.ENDOSCOPIC_ULTRASOUND],
+        deadline_days=395.25,
+        severity=Severity.MODERATE,
+        clinical_domain="radiology",
+        ltl_formula='□(RADIOLOGY_REPORT[pancreatic cyst] → ◇_{≤T(size)} (MRI ∨ CT ∨ EUS)[pancreas])',
+        references=['ACR Incidental Findings: pancreatic cysts (Megibow AJ et al. JACR 2017;14:911-923)'],
+        followup_logic="any",
+        evidence_note='<1.5 cm: 2 years; 1.5–2.5 cm: 1 year; >2.5 cm: 6 months or EUS-FNA (each + grace). ACR also adjusts by age (≥80) and growth: specialist review required.',
+    ),
+    ObligationRule(
+        rule_id="R042",
+        name='Pancreatic Cyst with Worrisome Features → EUS / Specialist',
+        description='Pancreatic cyst with main duct ≥7 mm, mural nodule or solid component needs EUS or pancreas specialist',
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="pancreatic_cyst_worrisome",
+        required_followups=[EventType.ENDOSCOPIC_ULTRASOUND, EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT, EventType.BIOPSY_ORDER, EventType.BIOPSY_RESULT],
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula='□(RADIOLOGY_REPORT[pancreatic cyst ∧ worrisome] → ◇_{≤30d} (EUS ∨ REFERRAL ∨ BIOPSY))',
+        references=['ACR Incidental Findings: pancreatic cysts (Megibow AJ et al. JACR 2017;14:911-923)'],
+        followup_logic="any",
+        evidence_note='30 days is a proposed target.',
+    ),
+    ObligationRule(
+        rule_id="R043",
+        name='Incidental Thyroid Nodule on CT/MRI/PET → Thyroid Ultrasound',
+        description='Thyroid nodule ≥1.5 cm (≥1 cm under 35), with suspicious features, or FDG-avid needs thyroid ultrasound',
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="incidental_thyroid_nodule",
+        required_followups=[EventType.IMAGING_ULTRASOUND],
+        deadline_days=90.0,
+        severity=Severity.MODERATE,
+        clinical_domain="radiology",
+        ltl_formula='□(RADIOLOGY_REPORT[thyroid nodule meeting ACR criteria] → ◇_{≤90d} ULTRASOUND[thyroid])',
+        references=['ACR Incidental Findings: thyroid (Hoang JK et al. JACR 2015;12:143-150)'],
+        followup_logic="any",
+        evidence_note='90 days is a proposed target. Age unknown → the 1 cm threshold is used. On thyroid ultrasound, ACR TI-RADS criteria apply instead (R036 FNA, R032 follow-up).',
+    ),
+    ObligationRule(
+        rule_id="R044",
+        name='Abdominal Aortic Aneurysm → Surveillance Imaging',
+        description='Incidental abdominal aortic dilatation ≥2.5 cm needs surveillance imaging at a diameter-based interval',
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="aaa_surveillance",
+        required_followups=[EventType.IMAGING_ULTRASOUND, EventType.IMAGING_CT, EventType.IMAGING_MRI],
+        deadline_days=365.25,
+        severity=Severity.MODERATE,
+        clinical_domain="radiology",
+        ltl_formula='□(RADIOLOGY_REPORT[abdominal aorta ≥2.5 cm] → ◇_{≤T(diameter)} (US ∨ CT ∨ MRI)[abdominal aorta])',
+        references=['ACR Incidental Findings: vascular (Khosa F et al. JACR 2013;10:789-794)', 'Chaikof EL et al. SVS AAA guidelines. J Vasc Surg 2018;67:2-77'],
+        followup_logic="any",
+        evidence_note='2.5–2.9 cm 5 years; 3.0–3.4 cm 3 years; 3.5–3.9 cm 2 years; 4.0–4.4 cm 1 year; ≥4.5 cm 6 months (each + grace).',
+    ),
+    ObligationRule(
+        rule_id="R045",
+        name='Abdominal Aortic Aneurysm at Repair Threshold → Vascular Surgery',
+        description='AAA ≥5.5 cm (≥5.0 cm in women) needs vascular surgery referral',
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="aaa_repair_threshold",
+        required_followups=[EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT],
+        deadline_days=14.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula='□(RADIOLOGY_REPORT[AAA ≥5.5 cm (♀ ≥5.0)] → ◇_{≤14d} REFERRAL)',
+        references=['Chaikof EL et al. SVS AAA guidelines. J Vasc Surg 2018;67:2-77', 'ACR Incidental Findings: vascular (Khosa F et al. JACR 2013)'],
+        followup_logic="any",
+        evidence_note='14 days is a proposed target; a symptomatic or ruptured aneurysm is a critical finding (R035).',
+    ),
+    ObligationRule(
+        rule_id="R046",
+        name='Growing or Suspicious Lung Nodule → Work-up',
+        description='Lung nodule that grew, or persistent part-solid nodule with solid component ≥6 mm, needs PET/CT, tissue sampling or specialist referral',
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="suspicious_lung_nodule",
+        required_followups=[EventType.IMAGING_PET, EventType.BIOPSY_ORDER, EventType.BIOPSY_RESULT, EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT],
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula='□(RADIOLOGY_REPORT[nodule growth ∨ persistent part-solid ≥6 mm solid] → ◇_{≤30d} (PET ∨ BIOPSY ∨ REFERRAL))',
+        references=['Fleischner Society 2017 (MacMahon H et al. Radiology 2017;284:228-243)'],
+        followup_logic="any",
+        evidence_note="Growth = report says so, or ≥2 mm larger than the patient's previous report. 30 days is a proposed target.",
     ),
 ]
 
@@ -575,7 +806,7 @@ OBLIGATION_RULES: List[ObligationRule] = [
 RULE_NAMES_KO: Dict[str, str] = {
     "R001": "이상 검사결과 → 환자 통보",
     "R002": "이상 검사결과 → 추적 외래",
-    "R003": "우연 폐결절 ≥6mm → 추적 CT",
+    "R003": "우연 폐결절 → Fleischner 추적 CT",
     "R004": "PSA 상승 → 비뇨의학과 의뢰/조직검사",
     "R005": "자궁경부 세포검사 이상 → 질확대경 의뢰",
     "R006": "퇴원 후 배양 양성 → 환자 연락",
@@ -605,6 +836,20 @@ RULE_NAMES_KO: Dict[str, str] = {
     "R030": "영상의학과 권고 → 추적 CT",
     "R031": "영상의학과 권고 → 추적 MRI",
     "R032": "영상의학과 권고 → 추적 초음파",
+    "R033": "영상의학과 권고 → 추적 X선 촬영",
+    "R034": "Lung-RADS 3 → 6개월 저선량 CT",
+    "R035": "영상 위급 소견 → 1시간 내 의료진 직접 보고",
+    "R036": "영상의학과 권고 → 조직검사/세침흡인",
+    "R037": "우연 부신 결절 → 부신 CT/MRI",
+    "R038": "부신 종괴 ≥4cm(또는 암 환자) → 전문의 정밀검사",
+    "R039": "의심 신장 종괴 → 비뇨의학과 의뢰",
+    "R040": "불확정 신장 병변/Bosniak IIF → 신장 CT/MRI",
+    "R041": "우연 췌장 낭종 → MRI/MRCP 추적",
+    "R042": "우려 소견 동반 췌장 낭종 → 내시경초음파/전문의",
+    "R043": "CT/MRI/PET 우연 갑상선 결절 → 갑상선 초음파",
+    "R044": "복부대동맥류 → 추적 영상검사",
+    "R045": "수술 기준 복부대동맥류 → 혈관외과 의뢰",
+    "R046": "커지거나 의심되는 폐결절 → 정밀검사",
 }
 assert set(RULE_NAMES_KO) == {r.rule_id for r in OBLIGATION_RULES}, "every rule needs a Korean name"
 
@@ -631,6 +876,13 @@ MONITORING_WINDOW_DAYS: Dict[str, float] = {
 
 def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
     """Deadline for one triggered obligation, applying finding/drug-specific windows."""
+    # Report-specific deadline decided from the patient's context (radiology.decide_obligations)
+    per_rule = details.get("rule_deadline_days") if isinstance(details, dict) else None
+    if isinstance(per_rule, dict) and rule.rule_id in per_rule:
+        try:
+            return float(per_rule[rule.rule_id])
+        except (TypeError, ValueError):
+            pass
     if rule.rule_id == "R003":
         try:
             if float(details.get("nodule_size_mm", 0)) > FLEISCHNER_LARGE_NODULE_MM:
@@ -643,6 +895,8 @@ def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
             return MONITORING_WINDOW_DAYS[drug]
     if rule.rule_id == "R024" and details.get("severe_hypertension") is True:
         return 3.0   # severe hypertension: BP check within 72 hours (ACOG CO 736)
+    if rule.rule_id in LUNG_RADS_INTERVAL_RULES:
+        return rule.deadline_days + radiology_grace_days(rule.deadline_days)
     if rule.rule_id in RADIOLOGIST_REC_RULES:
         try:
             interval = float(details["recommended_interval_days"])
@@ -652,7 +906,9 @@ def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
     return rule.deadline_days
 
 
-RADIOLOGIST_REC_RULES = {"R030", "R031", "R032"}
+RADIOLOGIST_REC_RULES = {"R030", "R031", "R032", "R033"}
+# Scheduled screening intervals: a few days' slip is on time, not a missed follow-up
+LUNG_RADS_INTERVAL_RULES = {"R019", "R034"}
 
 
 def radiology_grace_days(interval_days: float) -> float:

@@ -209,5 +209,112 @@ class TestFHIRWaveTwoMapping(unittest.TestCase):
         self.assertEqual(statuses["R029"], "closed")
 
 
+class TestRadiologyReportReading(unittest.TestCase):
+    """Report wording a radiologist actually uses (radiologist live-run, 2026-10)."""
+
+    def _rules(self, title, conclusion, extra=(), when=datetime(2026, 1, 10, 12)):
+        resources = [_rad("r1", "P", "2026-01-10T09:00:00Z", title, conclusion), *extra]
+        events, warnings = bundle_to_events(resources)
+        self.assertEqual(warnings, [])
+        dets = ClinLoopDetector(evaluation_time=when).process_patient("fhir", "P", events["P"])
+        report = next(e for e in events["P"] if e["event_type"] == "radiology_report")
+        return {d.rule_id: d.loop_status.replace("needs_human_review", "open") for d in dets}, report
+
+    def test_nodule_size_in_centimetres(self):
+        statuses, report = self._rules("CT chest", "Incidental 1.4 cm spiculated solid nodule in the right upper lobe.")
+        self.assertEqual(statuses, {"R003": "open"})
+        self.assertEqual(report["details"]["nodule_size_mm"], 14.0)
+
+    def test_two_dimensions_use_the_average(self):
+        _, report = self._rules("CT chest", "1.6 x 1.2 cm solid nodule in the left upper lobe.")
+        self.assertEqual(report["details"]["nodule_size_mm"], 14.0)
+
+    def test_adrenal_nodule_is_not_a_lung_nodule(self):
+        statuses, report = self._rules("CT abdomen and pelvis",
+                                       "Incidental 18 mm left adrenal nodule. Recommend adrenal protocol CT in 12 months.")
+        self.assertEqual(statuses, {"R030": "open"})
+        self.assertNotIn("lung_nodule", report["details"]["radiology"])
+        self.assertEqual([f["kind"] for f in report["details"]["radiology"]["incidental"]], ["adrenal"])
+
+    def test_lung_base_nodule_on_abdominal_ct_is_a_lung_nodule(self):
+        statuses, _ = self._rules("CT abdomen", "Incidental 7 mm nodule at the right lung base.")
+        self.assertEqual(statuses, {"R003": "open"})
+
+    def test_xray_recommendation_and_followup_radiograph(self):
+        text = "Right lower lobe pneumonia. Recommend follow-up chest radiograph in 6 weeks to document resolution."
+        statuses, _ = self._rules("Chest radiograph PA", text)
+        self.assertEqual(statuses, {"R033": "open"})
+        statuses, _ = self._rules("Chest radiograph PA", text, extra=[
+            _rad("r2", "P", "2026-02-25T09:00:00Z", "Chest radiograph PA", "Pneumonia has resolved.")],
+            when=datetime(2026, 3, 1))
+        self.assertEqual(statuses, {"R033": "closed"})
+
+    def test_korean_xray_recommendation(self):
+        statuses, _ = self._rules("흉부 X선", "우하엽 폐렴. 6주 후 추적 X선 검사 권고.")
+        self.assertEqual(statuses, {"R033": "open"})
+
+    def test_recommendation_without_interval_gets_default(self):
+        statuses, report = self._rules("Chest radiograph",
+                                       "2.5 cm right hilar mass. Recommend contrast-enhanced CT chest for further evaluation.")
+        self.assertEqual(statuses, {"R030": "open"})
+        self.assertFalse(report["details"]["recommended_interval_stated"])
+        self.assertEqual(report["details"]["recommended_interval_days"], 30.0)
+
+    def test_hedged_or_backward_looking_wording_is_not_a_recommendation(self):
+        for text in ("Recommend comparison with prior CT if available.",
+                     "Renal cyst. MRI could be considered if clinically indicated.",
+                     "No follow-up imaging recommended."):
+            statuses, _ = self._rules("CT abdomen", text)
+            self.assertEqual(statuses, {}, text)
+
+    def test_lung_rads_governs_screening_nodules(self):
+        statuses, _ = self._rules("Low-dose CT chest (screening)",
+                                  "Lung-RADS 4A. 7 mm solid nodule in the right upper lobe. Recommend LDCT in 3 months.")
+        self.assertEqual(statuses, {"R019": "open"})   # not R003 as well
+
+    def test_lung_rads_interval_has_grace(self):
+        statuses, _ = self._rules("Low-dose CT chest", "Lung-RADS 4A. 7 mm solid nodule.", extra=[
+            _rad("r2", "P", "2026-04-15T09:00:00Z", "Low-dose CT chest", "Lung-RADS 2.")],   # 95 days later
+            when=datetime(2026, 5, 1))
+        self.assertEqual(statuses, {"R019": "closed"})
+
+    def test_lung_rads_3_needs_six_month_ldct(self):
+        statuses, _ = self._rules("Low-dose CT chest", "Stable 7 mm right upper lobe nodule. Lung-RADS 3.")
+        self.assertEqual(statuses, {"R034": "open"})
+
+    def test_biopsy_recommendation(self):
+        statuses, _ = self._rules("US thyroid", "1.6 cm solid hypoechoic nodule in the right lobe, ACR TI-RADS TR4. "
+                                                "Fine-needle aspiration recommended.")
+        self.assertEqual(statuses, {"R036": "open"})
+
+    def test_birads_biopsy_is_one_loop(self):
+        statuses, _ = self._rules("US breast", "BI-RADS 4A. Recommend ultrasound-guided core biopsy.")
+        self.assertEqual(statuses, {"R018": "open"})   # no R032 for "ultrasound-guided", no R036 duplicate
+
+    def test_critical_finding_needs_communication(self):
+        statuses, report = self._rules("CT pulmonary angiography", "Acute pulmonary embolism in the right main pulmonary artery.")
+        self.assertEqual(statuses, {"R035": "open"})
+        self.assertIn("pulmonary embolism", report["details"]["critical_finding"].lower())
+
+    def test_communication_documented_in_report_closes_critical_loop(self):
+        for title, text in (("CT head", "Acute subdural hematoma. Findings discussed with Dr Lee at 02:10."),
+                            ("흉부 CT", "우측 기흉. 담당의에게 전화로 통보함.")):
+            statuses, _ = self._rules(title, text)
+            self.assertEqual(statuses, {"R035": "closed"}, text)
+
+    def test_negated_chronic_or_resolved_findings_are_not_critical(self):
+        for text in ("No pulmonary embolism. No pneumothorax.",
+                     "Limited evaluation for pulmonary embolism due to motion.",
+                     "Chronic pulmonary embolism, unchanged.",
+                     "Small left apical pneumothorax has resolved.",
+                     "폐색전증 없음."):
+            statuses, _ = self._rules("CT chest", text)
+            self.assertEqual(statuses, {}, text)
+
+    def test_resolved_nodule_is_not_tracked(self):
+        statuses, _ = self._rules("CT chest", "Previously seen 8 mm nodule is not identified.")
+        self.assertEqual(statuses, {})
+
+
 if __name__ == "__main__":
     unittest.main()

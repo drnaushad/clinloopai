@@ -135,7 +135,8 @@ class ClinLoopDetector:
             # Build missing step description
             if is_open:
                 fulfilled = {fn.event_type for fn in he.actual_followup_nodes}
-                missing = [ft for ft in he.expected_followup_types if ft not in fulfilled]
+                missing = ([] if he.satisfied_at is not None else
+                           [ft for ft in he.expected_followup_types if ft not in fulfilled])
                 if missing:
                     joiner = " or " if he.obligation_rule.followup_logic == "any" else ", "
                     missing_step = f"Missing: {joiner.join(missing)} within {format_window(he.deadline_days)}"

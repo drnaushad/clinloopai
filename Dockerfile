@@ -27,11 +27,11 @@ COPY src ./src
 COPY data/cases.json data/fhir_example_bundle.json ./data/
 
 # Web UI, served by the API at / (only these files are exposed)
-COPY index.html worklist.html config.js manifest.json sw.js ./web/
+COPY index.html worklist.html governance.html config.js manifest.json sw.js ./web/
 COPY css ./web/css
 COPY js ./web/js
 COPY icons ./web/icons
-COPY data/cases.json data/fhir_example_bundle.json ./web/data/
+COPY data/cases.json data/fhir_example_bundle.json data/radiology_test_bundle.json ./web/data/
 
 # Unprivileged user; state on a mounted volume
 RUN useradd --system --uid 10001 --home-dir /var/lib/clinloop clinloop \
