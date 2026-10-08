@@ -1,0 +1,400 @@
+"""
+temporal_hypergraph.py — Dynamic Temporal Hypergraph (DTH) Engine
+
+The core innovation of ClinLoop AI: models clinical events as a
+temporal hypergraph where hyperedges connect multiple heterogeneous
+clinical entities that together form a clinical obligation chain.
+
+Unlike simple directed graphs, hyperedges capture the reality that
+a single clinical obligation (e.g., "incidental nodule follow-up")
+simultaneously involves:
+  - The imaging event
+  - The finding details
+  - Patient demographics/risk factors
+  - The guideline-mandated follow-up
+  - The time constraint
+"""
+
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Set, Tuple
+import networkx as nx
+import numpy as np
+
+from .clinical_ontology import (
+    EventType, Severity, LoopStatus, ObligationRule,
+    OBLIGATION_RULES, get_rules_for_event, get_severity_score,
+)
+
+
+@dataclass
+class ClinicalNode:
+    """A node in the temporal hypergraph representing a clinical event."""
+    node_id: str
+    patient_id: str
+    event_type: str         # EventType.value
+    timestamp: datetime
+    details: Dict = field(default_factory=dict)
+    status: str = "completed"
+
+    @property
+    def event_enum(self) -> Optional[EventType]:
+        try:
+            return EventType(self.event_type)
+        except ValueError:
+            return None
+
+
+@dataclass
+class TemporalHyperedge:
+    """
+    A hyperedge connecting multiple clinical nodes that form
+    an obligation chain. Unlike a simple edge, this connects
+    a trigger event to ALL its required follow-up events,
+    along with contextual nodes (demographics, risk factors).
+    
+    This is the key structural innovation over simple graphs.
+    """
+    edge_id: str
+    obligation_rule: ObligationRule
+    trigger_node: ClinicalNode
+    expected_followup_types: List[str]     # EventType values
+    actual_followup_nodes: List[ClinicalNode] = field(default_factory=list)
+    deadline: Optional[datetime] = None
+    status: str = "open"                   # open | closed | delayed | abstain
+    risk_score: float = 0.0
+    evidence_chain: List[str] = field(default_factory=list)
+
+    @property
+    def is_complete(self) -> bool:
+        """Check if all required follow-ups have been fulfilled."""
+        fulfilled_types = {n.event_type for n in self.actual_followup_nodes}
+        # At least one of the required followups must be present
+        return any(ft in fulfilled_types for ft in self.expected_followup_types)
+
+    @property
+    def is_overdue(self) -> bool:
+        """Check if the deadline has passed."""
+        if self.deadline is None:
+            return False
+        # Use the last known event time or current evaluation time
+        return datetime.now() > self.deadline
+
+    @property
+    def days_elapsed(self) -> float:
+        """Days since the trigger event."""
+        return (datetime.now() - self.trigger_node.timestamp).total_seconds() / 86400
+
+    @property
+    def days_until_deadline(self) -> float:
+        """Days remaining until deadline (negative if overdue)."""
+        if self.deadline is None:
+            return float('inf')
+        return (self.deadline - datetime.now()).total_seconds() / 86400
+
+
+class DynamicTemporalHypergraph:
+    """
+    The main hypergraph engine that:
+    1. Ingests patient clinical events
+    2. Constructs temporal hyperedges based on obligation rules
+    3. Identifies open (unclosed) loops
+    4. Computes temporal gaps and risk factors
+    """
+
+    def __init__(self, evaluation_time: Optional[datetime] = None):
+        self.nodes: Dict[str, ClinicalNode] = {}
+        self.hyperedges: Dict[str, TemporalHyperedge] = {}
+        self.graph = nx.DiGraph()  # Internal graph for visualization/traversal
+        self.evaluation_time = evaluation_time or datetime.now()
+        self._edge_counter = 0
+
+    def _next_edge_id(self) -> str:
+        self._edge_counter += 1
+        return f"HE-{self._edge_counter:04d}"
+
+    def _parse_timestamp(self, ts) -> datetime:
+        """Parse various timestamp formats."""
+        if isinstance(ts, datetime):
+            return ts
+        if isinstance(ts, str):
+            # Handle ISO format
+            try:
+                return datetime.fromisoformat(ts)
+            except ValueError:
+                return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+        return ts
+
+    def build_from_patient_trajectory(self, events: List[Dict]) -> None:
+        """
+        Construct the hypergraph from a list of clinical events.
+        
+        Each event dict has: event_id, patient_id, event_type, timestamp, details
+        """
+        # Step 1: Create nodes
+        nodes_list = []
+        for evt in events:
+            node = ClinicalNode(
+                node_id=evt["event_id"],
+                patient_id=evt["patient_id"],
+                event_type=evt["event_type"],
+                timestamp=self._parse_timestamp(evt["timestamp"]),
+                details=evt.get("details", {}),
+                status=evt.get("status", "completed"),
+            )
+            self.nodes[node.node_id] = node
+            nodes_list.append(node)
+            self.graph.add_node(node.node_id, **{
+                "event_type": node.event_type,
+                "timestamp": str(node.timestamp),
+            })
+
+        # Step 2: Sort by timestamp
+        nodes_list.sort(key=lambda n: n.timestamp)
+
+        # Step 3: Build temporal edges between consecutive events
+        for i in range(len(nodes_list) - 1):
+            self.graph.add_edge(
+                nodes_list[i].node_id,
+                nodes_list[i + 1].node_id,
+                weight=(nodes_list[i + 1].timestamp - nodes_list[i].timestamp).total_seconds() / 86400,
+            )
+
+        # Step 4: Identify obligation chains (hyperedges)
+        self._build_obligation_hyperedges(nodes_list)
+
+    def _infer_condition(self, node: "ClinicalNode") -> str:
+        """
+        Infer the clinical trigger condition from event details.
+
+        Handles multiple data schemas:
+        - Explicit ``condition`` key (most scenarios)
+        - Radiology reports with ``finding`` + ``nodule_size_mm``
+        - Discharge events with ``primary_diagnosis``
+        - Culture results with organism / bacteremia fields
+        - Standard ABNORMAL/NORMAL flags
+        """
+        details = node.details
+
+        # 1. Explicit condition field always wins
+        if details.get("condition"):
+            return details["condition"]
+
+        # 2. Radiology-report nodule logic (R003)
+        finding = details.get("finding", "")
+        nodule_size = details.get("nodule_size_mm")
+        if finding in ("incidental_pulmonary_nodule", "pulmonary_nodule"):
+            try:
+                if nodule_size is not None and float(nodule_size) >= 6.0:
+                    return "incidental_nodule_ge_6mm"
+                elif nodule_size is not None:
+                    return "incidental_nodule_lt_6mm"
+            except (TypeError, ValueError):
+                pass
+
+        # 3. Discharge diagnosis conditions (R014, R016)
+        primary_dx = details.get("primary_diagnosis", "")
+        if "mi" in primary_dx.lower() or "myocardial_infarction" in primary_dx.lower():
+            return "post_mi_discharge"
+        if "heart_failure" in primary_dx.lower() or "hf_new" in primary_dx.lower():
+            return "new_heart_failure"
+
+        # 4. Culture results — bacteremia (R015)
+        organism = details.get("organism", "")
+        result = details.get("result", "")
+        if organism or (result and result.lower() in ("positive", "growth")):
+            # R006 positive_post_discharge is already covered by explicit condition;
+            # handle bacteremia confirmed cases
+            if details.get("bacteremia") or details.get("culture_type") == "blood":
+                return "bacteremia_confirmed"
+
+        # 5. Standard flag fallback
+        flag = details.get("flag", "")
+        if flag in ("ABNORMAL", "HIGH", "CRITICAL"):
+            return "abnormal"
+        if flag == "NORMAL":
+            return "normal"
+
+        return ""
+
+    def _build_obligation_hyperedges(self, nodes_list: List[ClinicalNode]) -> None:
+        """
+        For each trigger event, check if matching obligation rules exist,
+        and create hyperedges connecting the trigger to its required follow-ups.
+        """
+        for node in nodes_list:
+            event_enum = node.event_enum
+            if event_enum is None:
+                continue
+
+            # Infer the trigger condition using the enriched helper
+            condition = self._infer_condition(node)
+
+            # Find matching obligation rules
+            matching_rules = get_rules_for_event(event_enum, condition)
+
+            for rule in matching_rules:
+                # Check if follow-up nodes exist
+                deadline = node.timestamp + timedelta(days=rule.deadline_days)
+                followup_nodes = self._find_followup_nodes(
+                    node, rule.required_followups, deadline, nodes_list
+                )
+
+                edge_id = self._next_edge_id()
+                hyperedge = TemporalHyperedge(
+                    edge_id=edge_id,
+                    obligation_rule=rule,
+                    trigger_node=node,
+                    expected_followup_types=[ft.value for ft in rule.required_followups],
+                    actual_followup_nodes=followup_nodes,
+                    deadline=deadline,
+                )
+
+                # Determine status
+                if hyperedge.is_complete:
+                    # Check if any followup was after deadline
+                    late_followups = [
+                        fn for fn in followup_nodes
+                        if fn.timestamp > deadline
+                    ]
+                    if late_followups:
+                        hyperedge.status = LoopStatus.DELAYED.value
+                    else:
+                        hyperedge.status = LoopStatus.CLOSED.value
+                else:
+                    hyperedge.status = LoopStatus.OPEN.value
+
+                # Build evidence chain
+                hyperedge.evidence_chain = [
+                    f"Trigger: {node.event_type} at {node.timestamp.isoformat()} "
+                    f"(details: {node.details})",
+                    f"Rule: {rule.name} [{rule.rule_id}]",
+                    f"Required: {[ft.value for ft in rule.required_followups]}",
+                    f"Deadline: {deadline.isoformat()} ({rule.deadline_days} days)",
+                    f"Found follow-ups: {[fn.event_type for fn in followup_nodes]}",
+                    f"Status: {hyperedge.status}",
+                ]
+
+                self.hyperedges[edge_id] = hyperedge
+
+    def _find_followup_nodes(
+        self,
+        trigger: ClinicalNode,
+        required_types: List[EventType],
+        deadline: datetime,
+        all_nodes: List[ClinicalNode],
+    ) -> List[ClinicalNode]:
+        """Find follow-up nodes that match the required types after the trigger."""
+        followups = []
+        required_values = {ft.value for ft in required_types}
+
+        for node in all_nodes:
+            if node.timestamp <= trigger.timestamp:
+                continue
+            if node.patient_id != trigger.patient_id:
+                continue
+            if node.event_type in required_values:
+                followups.append(node)
+
+        return followups
+
+    def detect_open_loops(self) -> List[TemporalHyperedge]:
+        """Return all hyperedges representing unclosed clinical loops."""
+        return [
+            he for he in self.hyperedges.values()
+            if he.status in (LoopStatus.OPEN.value, LoopStatus.DELAYED.value)
+        ]
+
+    def detect_closed_loops(self) -> List[TemporalHyperedge]:
+        """Return all properly closed loops."""
+        return [
+            he for he in self.hyperedges.values()
+            if he.status == LoopStatus.CLOSED.value
+        ]
+
+    def get_all_loops(self) -> List[TemporalHyperedge]:
+        """Return all detected obligation chains."""
+        return list(self.hyperedges.values())
+
+    def get_temporal_gaps(self) -> List[Dict]:
+        """Calculate time gaps between trigger events and their follow-ups."""
+        gaps = []
+        for he in self.hyperedges.values():
+            for fn in he.actual_followup_nodes:
+                gap_days = (fn.timestamp - he.trigger_node.timestamp).total_seconds() / 86400
+                gaps.append({
+                    "edge_id": he.edge_id,
+                    "rule_id": he.obligation_rule.rule_id,
+                    "trigger_type": he.trigger_node.event_type,
+                    "followup_type": fn.event_type,
+                    "gap_days": gap_days,
+                    "deadline_days": he.obligation_rule.deadline_days,
+                    "within_deadline": gap_days <= he.obligation_rule.deadline_days,
+                })
+        return gaps
+
+    def get_graph_stats(self) -> Dict:
+        """Return summary statistics of the hypergraph."""
+        statuses = {}
+        for he in self.hyperedges.values():
+            statuses[he.status] = statuses.get(he.status, 0) + 1
+
+        return {
+            "total_nodes": len(self.nodes),
+            "total_hyperedges": len(self.hyperedges),
+            "status_distribution": statuses,
+            "total_graph_edges": self.graph.number_of_edges(),
+        }
+
+    def export_causal_json(self) -> Dict:
+        """
+        GRAPH ENGINEERING EXTENSION:
+        Export the temporal hypergraph with explicit causal weights, 
+        bilingual localized node labels, and temporal decay properties 
+        ready for advanced D3.js / React-Force-Graph rendering.
+        """
+        export_data = {"nodes": [], "hyperedges": []}
+        
+        # Bilingual mapping for nodes
+        bilingual_map = {
+            "lab_result": {"en": "Lab Result", "ko": "검사결과"},
+            "radiology_report": {"en": "Radiology CT", "ko": "영상판독"},
+            "imaging_order": {"en": "CT Order", "ko": "영상오더"},
+            "medication_change": {"en": "Rx Modification", "ko": "처방변경"},
+            "patient_notification": {"en": "Patient Notice", "ko": "환자안내"},
+            "specialist_referral": {"en": "Referral Placed", "ko": "전문의 의뢰"},
+            "referral_visit": {"en": "Specialist Visit", "ko": "전문의 진료"},
+            "closure_action": {"en": "Loop Resolved", "ko": "루프 종결"}
+        }
+        
+        for node_id, node in self.nodes.items():
+            labels = bilingual_map.get(node.event_type, {"en": node.event_type.upper(), "ko": node.event_type.upper()})
+            export_data["nodes"].append({
+                "id": node.node_id,
+                "type": node.event_type,
+                "timestamp": node.timestamp.isoformat(),
+                "label_en": labels["en"],
+                "label_ko": labels["ko"]
+            })
+            
+        for edge_id, he in self.hyperedges.items():
+            # Causal weight increases as deadline approaches/passes (Temporal Decay)
+            base_weight = 1.0
+            if he.status == LoopStatus.OPEN.value and he.deadline:
+                days_left = (he.deadline - self.evaluation_time).total_seconds() / 86400
+                if days_left < 0:
+                    base_weight = min(5.0, 1.0 + abs(days_left) * 0.2)
+                elif days_left < 14:
+                    base_weight = 1.0 + ((14 - days_left) * 0.1)
+                    
+            export_data["hyperedges"].append({
+                "id": he.edge_id,
+                "rule": he.obligation_rule.rule_id,
+                "trigger_node": he.trigger_node.node_id,
+                "followup_nodes": [n.node_id for n in he.actual_followup_nodes],
+                "status": he.status,
+                "causal_weight": round(base_weight, 2),
+                "is_overdue": he.is_overdue
+            })
+            
+        return export_data

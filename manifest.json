@@ -1,0 +1,23 @@
+{
+  "name": "ClinLoop AI - Clinical Safety Cockpit",
+  "short_name": "ClinLoop AI",
+  "description": "Neuro-Symbolic Closed-Loop Clinical Safety Platform",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#03060c",
+  "theme_color": "#00f0ff",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
