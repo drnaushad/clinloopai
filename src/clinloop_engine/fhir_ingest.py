@@ -420,7 +420,10 @@ def _map_imaging_study(r: Dict) -> List[Tuple[str, str, Dict]]:
                            f" [{', '.join(regions) or 'region unknown'}]"]}
     events: List[Tuple[str, str, Dict]] = []
     etype_for = {"ct": EventType.IMAGING_CT, "mri": EventType.IMAGING_MRI, "ultrasound": EventType.IMAGING_ULTRASOUND,
-                 "xray": EventType.IMAGING_XRAY, "pet": EventType.IMAGING_PET}
+                 "xray": EventType.IMAGING_XRAY, "pet": EventType.IMAGING_PET, "mammography": EventType.IMAGING_XRAY}
+    if "MG" in {m.upper() for m in modalities} and "breast" not in regions:
+        regions = sorted(set(regions) | {"breast"})       # a mammogram is breast imaging whatever the body part says
+        details["body_regions"] = regions
     for m in sorted(modalities):
         kind = DICOM_MODALITY.get(m.upper())
         if kind in etype_for:
@@ -428,6 +431,9 @@ def _map_imaging_study(r: Dict) -> List[Tuple[str, str, Dict]]:
             events.append((etype, ts, {**details, "mapping": details["mapping"] + [f"→{etype}"]}))
             if kind in ("ct", "pet") and "chest" in regions:
                 events.append((EventType.FOLLOWUP_CT.value, ts, {**details, "mapping": details["mapping"] + ["chest CT→followup_ct"]}))
+            if kind == "ultrasound" and re.search(r"echo|cardiac|heart|\btte\b|\btee\b|심장|심초음파",
+                                                  " ".join(descriptions + body), re.I):
+                events.append((EventType.ECHOCARDIOGRAM.value, ts, {**details, "mapping": details["mapping"] + ["→echocardiogram"]}))
             if kind in ("ct", "mri", "ultrasound") and ("liver" in regions or _LIVER.search(" ".join(descriptions))):
                 events.append((EventType.LIVER_IMAGING.value, ts, {**details, "mapping": details["mapping"] + ["→liver_imaging"]}))
     return events
@@ -469,7 +475,8 @@ def _map_appointment(r: Dict) -> List[Tuple[str, str, Dict]]:
     if "colposcopy" in text or "질확대경" in text:
         return [(EventType.COLPOSCOPY_VISIT.value, ts, {"mapping": ["Appointment(colposcopy)→colposcopy_visit"]})]
     if _CHEST_CT.search(text):
-        return [(EventType.FOLLOWUP_CT.value, ts, {"mapping": ["Appointment(chest CT)→followup_ct"]})]
+        return [(EventType.FOLLOWUP_CT.value, ts, {"body_regions": ["chest", "lung"],
+                                                    "mapping": ["Appointment(chest CT)→followup_ct"]})]
     if "colonoscopy" in text or "대장내시경" in text:
         return [(EventType.COLONOSCOPY.value, ts, {"mapping": ["Appointment(colonoscopy)→colonoscopy"]})]
     if _PSYCH.search(text):
@@ -540,9 +547,14 @@ def _map_condition(r: Dict) -> List[Tuple[str, str, Dict]]:
     clinical = _codes(r.get("clinicalStatus")) or {"active"}
     if not clinical & {"active", "recurrence", "relapse"}:
         return []
+    verification = next(iter(_codes(r.get("verificationStatus"))), None)
+    if verification in ("refuted", "entered-in-error"):
+        return []
     text = _concept_text(r.get("code"))
     codes = _codes(r.get("code"))
     details: Dict[str, Any] = {"diagnosis": text, "codes": sorted(codes)}
+    if verification:
+        details["verification"] = verification
     mapping: List[str] = []
     if any(c.startswith(HCC_RISK_ICD10) for c in codes) or HCC_RISK_TEXT.search(text):
         details["hcc_risk"] = True
@@ -630,13 +642,15 @@ def _map_document_reference(r: Dict) -> List[Tuple[str, str, Dict]]:
     A clinician's note: each concrete plan in it ("repeat potassium in 1 week", "refer to cardiology",
     "3개월 후 흉부 CT") becomes an obligation (R048–R051), closed by the matching event.
     """
-    if str(r.get("docStatus") or "").lower() in ("preliminary", "entered-in-error"):
-        return []
+    if str(r.get("docStatus") or "").lower() in ("preliminary", "entered-in-error") \
+            or str(r.get("status") or "").lower() in ("superseded", "entered-in-error"):
+        return []                                 # a superseded version: its replacement carries the plans
     ts = _first(r.get("date"), ((r.get("context") or {}).get("period") or {}).get("start"))
     text = note_text(r)
     if not text.strip():
         return []
     note_type = _concept_text(r.get("type")) or r.get("description") or "Clinical note"
+    setting = specialty_of(_concept_text((r.get("context") or {}).get("practiceSetting")) + " " + note_type)
     found = find_plans(text)
     out = []
     for i, p in enumerate(found["plans"]):
@@ -655,6 +669,14 @@ def _map_document_reference(r: Dict) -> List[Tuple[str, str, Dict]]:
                 d["followup_match"] = {rule: {"analyte": p["target"]}}
             if p["kind"] == "referral" and p["target"]:
                 d["followup_match"] = {rule: {"specialty": p["target"]}}
+            if p["kind"] == "visit":
+                # A visit long before the planned interval is another visit, not this one ("RTC 6 months" is not
+                # closed by tomorrow's dermatology appointment); a specialty, when known, must not differ.
+                if p["interval_stated"] and p["interval_days"] >= 14:
+                    d["followup_not_before_days"] = {rule: round(0.5 * p["interval_days"], 1)}
+                spec = p["target"] or setting
+                if spec:
+                    d["followup_match"] = {rule: {"specialty": spec, "_lenient": True}}
             if p["kind"] == "imaging":
                 d["followup_types"] = {rule: MODALITY_EVENTS.get(p["target"], [])}
                 if p.get("regions"):

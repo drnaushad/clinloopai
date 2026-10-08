@@ -33,7 +33,7 @@ from .safety_clock import normalize_timestamp, utc_now
 # Imaging events whose body region is checked against what the obligation asks for
 REGION_CHECKED_TYPES = {
     EventType.IMAGING_CT.value, EventType.IMAGING_MRI.value, EventType.IMAGING_ULTRASOUND.value,
-    EventType.IMAGING_XRAY.value, EventType.IMAGING_PET.value,
+    EventType.IMAGING_XRAY.value, EventType.IMAGING_PET.value, EventType.FOLLOWUP_CT.value,
 }
 
 
@@ -53,7 +53,9 @@ def _details_match(trigger: "ClinicalNode", rule: ObligationRule, node: "Clinica
     only_for = want.get("_only_for")          # the match applies to these follow-up types only
     if only_for and node.event_type not in only_for:
         return True
-    return all(node.details.get(k) == v for k, v in want.items() if k != "_only_for")
+    lenient = want.get("_lenient")            # a follow-up that does not say (e.g. no specialty) still counts
+    return all(node.details.get(k) == v or (lenient and node.details.get(k) is None)
+               for k, v in want.items() if k not in ("_only_for", "_lenient"))
 
 
 def _type_ok(trigger: "ClinicalNode", rule: ObligationRule, node: "ClinicalNode") -> bool:
@@ -473,6 +475,9 @@ class DynamicTemporalHypergraph:
                         and not _region_ok(required_regions, node)):
                     continue
                 if rule is not None and not (_details_match(trigger, rule, node) and _type_ok(trigger, rule, node)):
+                    continue
+                not_before = (trigger.details.get("followup_not_before_days") or {}).get(rule.rule_id) if rule else None
+                if not_before and node.timestamp < trigger.timestamp + timedelta(days=not_before):
                     continue
                 followups.append(node)
 

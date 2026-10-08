@@ -176,16 +176,16 @@ class TestNotePlanLoops(unittest.TestCase):
 class TestLLMSuggestions(unittest.TestCase):
 
     def test_suggestions_must_quote_the_note_and_are_never_tracked(self):
-        answer = ('{"plans": [{"kind": "lab", "target": "magnesium", "interval": "1 week", "quote": "check Mg next week"},'
+        answer = ('{"plans": [{"kind": "lab", "target": "zinc", "interval": "1 week", "quote": "check zinc next week"},'
                   ' {"kind": "imaging", "target": "MRI brain", "quote": "MRI brain to be arranged"},'
                   ' {"kind": "lab", "target": "potassium", "quote": "Repeat potassium in 1 week"}]}')
-        note = "Plan: Repeat potassium in 1 week. Also check Mg next week."
+        note = "Plan: Repeat potassium in 1 week. Also check zinc next week."
         with mock.patch("src.clinloop_engine.local_llm_engine.generate_clinical_text",
                         return_value={"text": answer, "model": "local"}):
             out = llm_suggestions(note, find_plans(note)["plans"])
         self.assertTrue(out["available"])
         quotes = [s["quote"] for s in out["suggestions"]]
-        self.assertEqual(quotes, ["check Mg next week"])        # invented MRI dropped; potassium already found
+        self.assertEqual(quotes, ["check zinc next week"])        # invented MRI dropped; potassium already found
 
     def test_unavailable_llm_is_reported(self):
         with mock.patch("src.clinloop_engine.local_llm_engine.generate_clinical_text",

@@ -34,6 +34,22 @@ evaluated at the moment it became complete, using only the events up to then.
 - **Only the matching event closes the loop.** A dermatology referral does not close R052, and a
   head CT does not close R055.
 
+## Independent review (2026-10-08): fixed
+
+- **R054 (AF)** was judged only at the AF diagnosis date. A man whose risk rose later (a new
+  hypertension diagnosis, his 75th birthday) was never flagged.
+  - It is now judged at every moment the score could have risen.
+  - Cancelled or stopped anticoagulant orders no longer count.
+  - Ruled-out, suspected or refuted AF no longer fires.
+  - Pulmonary or portal hypertension, and diabetes insipidus or gestational diabetes, no longer
+    score.
+- **R053 (creatinine)** missed AKI when units were spelled differently ("umol/L" and "µmol/L", or mg/dL
+  mixed with µmol/L). All values are now converted to mg/dL.
+- **R055 (haematuria)** ignored text results such as "10-20" (common in Korean labs). It also compared
+  automated counts per µL against the per-high-power-field threshold. Text results are now read, and a
+  per-µL count counts only when the lab flags it.
+- **R052 (iron-deficiency anaemia):** haemoglobin in mmol/L is converted.
+
 ## Limits
 
 - **Built from coded data,** so a pattern can only be as good as that data. A haemoglobin with no

@@ -60,9 +60,53 @@ on-premise Ollama model. The model is asked which plans the rules missed.
 - **The model has not been run here.** No local LLM was available in the build environment, and the
   page reports this. The parsing and the quote check are tested with recorded answers.
 
+## Independent review (2026-10-08)
+
+A separate reviewer ran realistic notes in English and Korean through the reader. It confirmed these
+problems, all now fixed and kept as tests in `tests/test_review_notes_patterns.py`:
+
+- **Intervals.** Letters inside words were read as intervals: in "CT head in 3 months" the "ad" of
+  "head" became 1 day, and in "today" the "ay" became a year.
+  - Intervals now need a real number (digits, or "a", "two" and so on) before a full unit.
+  - "3 months ago" and "3개월 전" are history, not plans.
+  - Hours ("4 hrs"), "in AM", "tomorrow" and "q3mo" are understood.
+- **Sections.**
+  - A "Follow-up:" line was treated as the whole plan section, so the plans under "Assessment"
+    were lost.
+  - A history section hid the plan lines after it.
+  - Now every plan section is read. A history section ends at a heading, a blank line, or a line that
+    starts a plan.
+- **Cues apply to their own clause.** Before, one cue cancelled every plan in the sentence. These are
+  now tracked:
+  - "Recheck K in 3 days, sooner if symptomatic";
+  - "No further imaging needed, repeat CBC in 2 weeks";
+  - "와파린 보류, 3일 후 INR 재검" (hold warfarin, recheck INR in 3 days).
+  
+  "If fever recurs, repeat CBC" is still conditional.
+- **"Already scheduled", "ordered" and "booked" are tracked** until the test is done; before, they
+  counted as done.
+- **Identifier removal.**
+  - A patient named "Li" turned "lipid" into "[이름 삭제]pid".
+  - "Refer to ID clinic" was removed.
+  - Addresses, relatives' names, short birth dates and international phone numbers were kept.
+  - Names now match whole words only, and the other identifiers are removed.
+  - If removing identifiers would change the plans found, filing warns.
+- **Specimens and matching.**
+  - A urine potassium closed a blood potassium plan; tests on other specimens are now kept apart.
+  - An HIV viral load closed an HCV RNA plan.
+  - An abdominal ultrasound closed an echo plan.
+  - "CT A/P" had no region.
+  - A chest-CT appointment closed an abdominal CT plan.
+  - Mammograms could never close a plan.
+- **Visits.** "RTC 6 months" was closed by the next day's dermatology appointment.
+  - A visit now counts only after half the stated interval.
+  - When the note's department is known, the visit must be in the same department.
+- **Missed phrasings:** "Refer to GI", "f/u with cardiology in 3 months", "Recheck K tomorrow",
+  magnesium, calcium and WBC.
+
 ## Limits, honestly
 
-- **Rules, not understanding.** The reader knows 18 lab tests, 7 imaging modalities and 19
+- **Rules, not understanding.** The reader knows 22 lab tests, 7 imaging modalities and 19
   specialties, in English and Korean. Plans outside that vocabulary are not found; this is what the
   LLM suggestions are for.
 - **Not yet measured on real notes.** Before clinical use, measure precision and recall on a sample of

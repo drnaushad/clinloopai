@@ -165,11 +165,20 @@ _ID_PATTERNS = [
     (re.compile(r"\b\d{6}\s*-\s*[1-4]\d{6}\b"), "[주민번호 삭제]"),                       # resident registration no.
     (re.compile(r"\b01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}\b|\b0\d{1,2}-\d{3,4}-\d{4}\b"), "[전화 삭제]"),
     (re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+"), "[email 삭제]"),
-    (re.compile(r"(?i)\b(?:MRN|patient\s*(?:no|number|id)|hospital\s*(?:no|number)|chart\s*no|ID)\s*[:#.]?\s*[A-Z0-9-]{4,}"), "[ID 삭제]"),
+    (re.compile(r"(?i)\b(?:MRN|patient\s*(?:no|number|id)|hospital\s*(?:no|number)|chart\s*no)\s*[:#.]?\s*[A-Z0-9-]{4,}"), "[ID 삭제]"),
+    # A bare "ID" only in capitals and followed by a code with a digit ("Refer to ID clinic" is clinical text)
+    (re.compile(r"\bID\s*[:#.]?\s*(?=[A-Za-z0-9-]*\d)[A-Za-z0-9-]{4,}"), "[ID 삭제]"),
+    (re.compile(r"\+\d{1,3}[\s.-]?\(?\d{1,4}\)?(?:[\s.-]?\d{2,4}){2,4}"), "[전화 삭제]"),     # international
+    (re.compile(r"(?i)\b(?:home\s+)?(?:address|addr\.?)\s*[:：][^\n]*|(?:주소|거주지)\s*[:：][^\n]*"), "[주소 삭제]"),
+    (re.compile(r"(?i)\b(daughter|son|wife|husband|mother|father|sister|brother|guardian|caregiver|next of kin|nok|"
+                r"emergency contact)(\s*(?:[:：]|is|,)?\s*)(?:(?:mr|mrs|ms|dr)\.?\s+)?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?"),
+     r"\1\2[이름 삭제]"),
+    (re.compile(r"(보호자|배우자|남편|아내|딸|아들)(\s*[:：]\s*|\s+)(?=[가-힣]{2,4}(?:\s|님|씨|,|$|\())[가-힣]{2,4}"
+                r"(?<!동반)(?<!내원)(?<!면담)(?<!설명)"), r"\1\2[이름 삭제]"),
     (re.compile(r"(?:등록\s*번호|병록\s*번호|환자\s*번호|차트\s*번호)\s*[:：]?\s*[A-Za-z0-9-]{4,}"), "[ID 삭제]"),
     (re.compile(r"(?i)\b(?:patient(?:'s)?\s*name|patient|name)\s*[:：]\s*[^\n,;]{1,40}"), "[이름 삭제]"),
     (re.compile(r"(?:환자\s*명|성\s*명|이\s*름)\s*[:：]\s*[^\s,;]{1,20}"), "[이름 삭제]"),
-    (re.compile(r"(?i)\b(?:DOB|date of birth|birth\s*date)\s*[:：]?\s*[\d./-]{8,10}"), "[생년월일 삭제]"),
+    (re.compile(r"(?i)\b(?:DOB|D\.O\.B\.?|date of birth|birth\s*date)\s*[:：]?\s*[\d./-]{6,10}"), "[생년월일 삭제]"),
     (re.compile(r"생년월일\s*[:：]?\s*[\d년월일./\s-]{6,16}"), "[생년월일 삭제]"),
 ]
 _HEADER_LINE = re.compile(r"(?i)^\s*(?:patient|name|dob|date of birth|mrn|address|phone|tel|sex|age|"
@@ -187,7 +196,13 @@ def scrub_identifiers(text: str, names: Optional[List[str]] = None) -> str:
     for rx, repl in _ID_PATTERNS:
         text = rx.sub(repl, text)
     for n in sorted({n.strip() for n in (names or []) if n and len(n.strip()) >= 2}, key=len, reverse=True):
-        text = re.sub(re.escape(n), "[이름 삭제]", text, flags=re.I)
+        # Whole words only: a patient called "Li" must not turn "lipid" or "clinic" into "[이름 삭제]pid".
+        # Korean names may carry a particle (홍길동님, 홍길동은), so only the start is bounded for Hangul.
+        pattern = re.escape(n).replace(r"\ ", r"\s+")
+        if re.search(r"[가-힣]", n):
+            text = re.sub(r"(?<![가-힣])" + pattern, "[이름 삭제]", text)
+        else:
+            text = re.sub(r"(?<![A-Za-z])" + pattern + r"(?![A-Za-z])", "[이름 삭제]", text, flags=re.I)
     return text
 
 

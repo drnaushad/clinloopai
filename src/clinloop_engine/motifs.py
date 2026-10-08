@@ -38,10 +38,13 @@ ANTICOAGULANT_NAMES = re.compile(
     r"와파린|아픽사반|엘리퀴스|리바록사반|자렐토|에독사반|릭시아나|다비가트란|프라닥사", re.I)
 
 _AF = re.compile(r"atrial fibrillation|atrial flutter|\baf(?:ib)?\b|심방\s*세동|심방\s*조동", re.I)
+_UNCERTAIN = re.compile(r"rule[- ]?out|\br/o\b|suspected|possible|probable|\?|의심|배제|가능성", re.I)
 _CHA2DS2 = [  # (points, ICD-10 prefixes, text)
     ("chf", 1, ("I50", "I11.0", "I13.0", "I13.2"), r"heart failure|cardiomyopathy|lvef|심부전"),
-    ("hypertension", 1, ("I10", "I11", "I12", "I13", "I15"), r"hypertension|고혈압"),
-    ("diabetes", 1, ("E10", "E11", "E13", "E14"), r"diabet|당뇨"),
+    ("hypertension", 1, ("I10", "I11", "I12", "I13", "I15"),
+     r"(?<!pulmonary )(?<!portal )(?<!intracranial )(?<!ocular )(?<!gestational )hypertension|(?<!폐)(?<!문맥)고혈압"),
+    ("diabetes", 1, ("E10", "E11", "E13", "E14"),
+     r"(?<!pre)(?<!pre-)(?<!gestational )diabetes(?!\s+insipidus)|\bdiabetic\b|\bt[12]dm\b|(?<!임신성\s)(?<!임신성)당뇨(?!붕증)"),
     ("stroke_tia", 2, ("I63", "I64", "G45", "I69.3", "Z86.73"), r"stroke|cerebral infarct|\btia\b|transient ischaemic|"
                                                                r"transient ischemic|뇌경색|뇌졸중|일과성\s*허혈"),
     ("vascular", 1, ("I21", "I22", "I25.2", "I70", "I73.9"), r"myocardial infarction|peripheral arter|aortic plaque|"
@@ -94,6 +97,8 @@ def _hb_low(e: Dict[str, Any], sex: Optional[str]) -> bool:
     unit = str(d.get("unit") or "").lower()
     if unit in ("g/l",):
         v = v / 10.0
+    elif unit in ("mmol/l",):
+        v = v * 1.611                                     # mmol/L (Fe4) → g/dL
     limit = 13.0 if sex == "male" else 12.0           # WHO anaemia thresholds (g/dL)
     return v < limit or d.get("flag") in ("LOW", "CRITICAL")
 
@@ -142,33 +147,44 @@ def pattern_ida(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dic
 
 # ── R053 creatinine rise (AKI warning) ──────────────────────────────────────
 
+def creatinine_mg_dl(e: Dict[str, Any]) -> Optional[float]:
+    """Serum creatinine in mg/dL whatever the unit (µmol/L ÷ 88.4); a unitless value > 20 is taken as µmol/L."""
+    v = _num(e["details"].get("value"))
+    if v is None:
+        return None
+    unit = str(e["details"].get("unit") or "").lower().replace("µ", "u").replace("μ", "u")
+    if "mol" in unit or (not unit and v > 20):
+        return v / 88.4
+    return v
+
+
 def pattern_creatinine(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict[str, Any]]) -> None:
     labs = _labs(events, "creatinine")
-    labs = [e for e in labs if not re.search(r"urine|소변|egfr|clearance", e["details"].get("test") or "", re.I)]
+    labs = [e for e in labs if not re.search(r"urine|소변|egfr|clearance|ratio", e["details"].get("test") or "", re.I)
+            and creatinine_mg_dl(e) is not None]
     last: Optional[datetime] = None
     for i, e in enumerate(labs):
         when = _t(e)
-        unit = str(e["details"].get("unit") or "").lower()
-        prior = [p for p in labs[:i] if str(p["details"].get("unit") or "").lower() == unit and _t(p) < when]
-        recent = [_num(p["details"]["value"]) for p in prior if when - _t(p) <= timedelta(days=7)]
-        older = [_num(p["details"]["value"]) for p in prior if timedelta(days=7) < when - _t(p) <= timedelta(days=365)]
+        prior = [p for p in labs[:i] if _t(p) < when]
+        recent = [creatinine_mg_dl(p) for p in prior if when - _t(p) <= timedelta(days=7)]
+        older = [creatinine_mg_dl(p) for p in prior if timedelta(days=7) < when - _t(p) <= timedelta(days=365)]
         if recent:
             baseline, basis = min(recent), "lowest in the previous 7 days"
         elif older:
             baseline, basis = statistics.median(older), "median of the previous 8–365 days"
         else:
             continue
-        value = _num(e["details"]["value"])
-        min_rise = 26.5 if "mol" in unit else 0.3          # µmol/L vs mg/dL (KDIGO 0.3 mg/dL)
-        if baseline <= 0 or value < 1.5 * baseline or value - baseline < min_rise:
+        value = creatinine_mg_dl(e)
+        if baseline <= 0 or value < 1.5 * baseline or value - baseline < 0.3:     # KDIGO: ≥ 0.3 mg/dL
             continue
         if last and when - last < timedelta(days=30):
             continue
         ratio = value / baseline
         stage = 3 if ratio >= 3 else 2 if ratio >= 2 else 1
         out.append(_derived(e, "creatinine-rise", "pattern_creatinine_rise", "R053", 3.0,
-                            [e] + [p for p in prior if _num(p["details"]["value"]) == baseline][-1:],
-                            f"Creatinine {value:g} {e['details'].get('unit') or ''} = {ratio:.1f} × baseline {baseline:g} "
+                            [e] + [p for p in prior if creatinine_mg_dl(p) == baseline][-1:],
+                            f"Creatinine {e['details'].get('value')} {e['details'].get('unit') or ''} = {ratio:.1f} × baseline "
+                            f"{baseline:.2f} mg/dL "
                             f"({basis}): AKI warning stage {stage}",
                             [f"pattern: creatinine {ratio:.1f} × baseline ({basis}) → AKI stage {stage}: repeat creatinine "
                              f"(and clinical review) within 3 days"],
@@ -200,39 +216,68 @@ def cha2ds2_vasc(events: List[Dict[str, Any]], ctx: Dict[str, Any], when: dateti
 
 
 def pattern_af(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict[str, Any]]) -> None:
+    """
+    Judged at every moment the risk could have been reached: the AF diagnosis, each later diagnosis
+    (e.g. hypertension added in 2026), and the 65th and 75th birthdays, up to now.
+    """
+    from .safety_clock import utc_now
     af = sorted((e for e in events if e["event_type"] == EventType.DIAGNOSIS.value
+                 and e["details"].get("verification") not in ("unconfirmed", "provisional", "differential", "refuted")
+                 and not _UNCERTAIN.search(e["details"].get("diagnosis") or "")
                  and (_AF.search(e["details"].get("diagnosis") or "")
                       or any(str(c).startswith("I48") for c in e["details"].get("codes") or []))), key=_t)
     if not af:
         return
-    e = af[0]
-    when = _t(e)
-    on_oac = [m for m in events if m["event_type"] == EventType.MEDICATION_CHANGE.value and m["details"].get("anticoagulant")
-              and _t(m) <= when]
-    if on_oac:
-        return
-    s = cha2ds2_vasc(events, ctx, when)
+    first = af[0]
+    now = utc_now()
+    candidates = {_t(first)} | {_t(e) for e in events if e["event_type"] == EventType.DIAGNOSIS.value and _t(e) > _t(first)}
+    b = ctx.get("birth_date")
+    if b:
+        for years in (65, 75):
+            try:
+                candidates.add(b.replace(year=b.year + years))
+            except ValueError:                            # 29 February
+                candidates.add(b.replace(year=b.year + years, day=28))
     needed = 3 if ctx.get("sex") == "female" else 2
-    if not s["age_known"] or s["score"] < needed:
+    for when in sorted(t for t in candidates if _t(first) <= t <= now):
+        on_oac = [m for m in events if m["event_type"] == EventType.MEDICATION_CHANGE.value
+                  and m["details"].get("anticoagulant") and is_fulfilling_status(m.get("status")) and _t(m) <= when]
+        if on_oac:
+            return
+        s = cha2ds2_vasc(events, ctx, when)
+        if not s["age_known"] or s["score"] < needed:
+            continue
+        anchor = {**first, "timestamp": when.isoformat(), "event_id": first["event_id"]}
+        out.append(_derived(anchor, "af-oac", "pattern_af_no_anticoagulation", "R054", 30.0, [first],
+                            f"Atrial fibrillation with CHA₂DS₂-VASc {s['score']} ({', '.join(s['items'])}) on "
+                            f"{when.date()} and no anticoagulant",
+                            [f"pattern: AF, CHA₂DS₂-VASc {s['score']} (≥ {needed}) and no anticoagulant → anticoagulation "
+                             f"decision within 30 days (a documented contraindication closes it)"],
+                            {"cha2ds2_vasc": s["score"], "followup_match": {"R054": {"anticoagulant": True}}}))
         return
-    out.append(_derived(e, "af-oac", "pattern_af_no_anticoagulation", "R054", 30.0, [e],
-                        f"Atrial fibrillation with CHA₂DS₂-VASc {s['score']} ({', '.join(s['items'])}) and no anticoagulant",
-                        [f"pattern: AF, CHA₂DS₂-VASc {s['score']} (≥ {needed}) and no anticoagulant → anticoagulation decision "
-                         f"within 30 days (a documented contraindication closes it)"],
-                        {"cha2ds2_vasc": s["score"],
-                         "followup_match": {"R054": {"anticoagulant": True}}}))
 
 
 # ── R055 persistent microscopic haematuria ─────────────────────────────────
 
 def _rbc_positive(e: Dict[str, Any]) -> bool:
+    """≥ 3 RBC/hpf on microscopy. Automated counts per µL (other scale) count only when the lab flags them."""
     d = e["details"]
+    flagged = d.get("flag") in ("HIGH", "ABNORMAL", "CRITICAL")
+    unit = str(d.get("unit") or "").lower().replace("µ", "u").replace("μ", "u")
+    if re.search(r"/\s*u?l\b|/\s*ml\b", unit):
+        return flagged
     v = _num(d.get("value"))
-    return (v is not None and v >= 3.0) or d.get("flag") in ("HIGH", "ABNORMAL", "CRITICAL")
+    if v is None:                                      # text results: "10-20", ">50", "many", "다수"
+        text = str(d.get("result") or "")
+        m = re.search(r"(\d+(?:\.\d+)?)", text)
+        v = float(m.group(1)) if m else (50.0 if re.search(r"many|numerous|tntc|too numerous|다수|많", text, re.I) else None)
+    return (v is not None and v >= 3.0) or flagged
 
 
 def pattern_haematuria(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict[str, Any]]) -> None:
-    pos = [e for e in _labs(events, "urine_rbc") if _rbc_positive(e)]
+    pos = sorted((e for e in events if e["event_type"] == EventType.LAB_RESULT.value
+                  and (e["details"] or {}).get("analyte") == "urine_rbc" and is_fulfilling_status(e.get("status"))
+                  and _rbc_positive(e)), key=_t)
     last: Optional[datetime] = None
     for i, e in enumerate(pos):
         when = _t(e)

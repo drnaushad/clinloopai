@@ -120,6 +120,7 @@ def _patient_names(patient: Dict[str, Any]) -> List[str]:
         names += [n.get("text") or "", n.get("family") or ""] + list(n.get("given") or [])
         names.append(" ".join(list(n.get("given") or []) + [n.get("family") or ""]).strip())
         names.append(((n.get("family") or "") + "".join(n.get("given") or [])).strip())   # 홍길동
+        names.append(((n.get("family") or "") + " " + " ".join(n.get("given") or [])).strip())   # 홍 길동
     return [x for x in names if x and len(x) >= 2]
 
 
@@ -216,7 +217,7 @@ def extract_clinical_note(req: ClinicalNote, user: User = Depends(require_role("
         p["label"] = plan_label(p)
     out = {"method": got["method"], "confidence": got.get("confidence"), **found}
     if req.suggest_with_llm:
-        out["llm"] = llm_suggestions(got["text"], found["plans"])
+        out["llm"] = llm_suggestions(got["text"], found["plans"], _patient_names(_patient_resource(req.patient_id)))
     return out
 
 
@@ -233,6 +234,12 @@ def file_clinical_note(req: ClinicalNote, user: User = Depends(require_role("nav
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", when):
         raise HTTPException(422, "date must be YYYY-MM-DD")
     text = scrub_identifiers(got["text"], _patient_names(patient))
+    # Plans are read from the note as written: identifier removal must never change what is tracked
+    before = {(p["kind"], p["target"], p["tracked"]) for p in find_plans(got["text"])["plans"]}
+    after = {(p["kind"], p["target"], p["tracked"]) for p in find_plans(text)["plans"]}
+    scrub_warning = None if before == after else (
+        "Removing identifiers changed which plans are found: check the note "
+        f"(lost: {sorted(map(str, before - after))}, new: {sorted(map(str, after - before))})")
     sha = hashlib.sha256(got["text"].encode("utf-8")).hexdigest()
     resource = {
         "resourceType": "DocumentReference",
@@ -250,7 +257,10 @@ def file_clinical_note(req: ClinicalNote, user: User = Depends(require_role("nav
     store = get_store()
     store.add_external_resource(resource, "clinical-note", user.name, user.role, source_sha256=sha,
                                 summary=f"{resource['type']['text']} {when}: {found['tracked']} plan(s) tracked")
-    return {"resource_id": resource["id"], "plans": found["plans"], **evaluate_patient(req.patient_id, user.name)}
+    result = {"resource_id": resource["id"], "plans": found["plans"], **evaluate_patient(req.patient_id, user.name)}
+    if scrub_warning:
+        result["warnings"] = [scrub_warning] + list(result.get("warnings") or [])
+    return result
 
 
 # ── DICOM images ────────────────────────────────────────────────────────────

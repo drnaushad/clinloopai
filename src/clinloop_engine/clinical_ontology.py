@@ -1098,6 +1098,7 @@ NON_FULFILLING_STATUSES = frozenset({
     "entered-in-error", "entered_in_error", "not-done", "not_done",
     "revoked", "declined", "refused", "failed", "rejected",
     "scheduled", "booked", "planned", "proposed", "pending", "draft",
+    "stopped", "on-hold", "on_hold", "suspended", "superseded",
 })
 
 
