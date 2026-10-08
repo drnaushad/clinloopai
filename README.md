@@ -42,6 +42,7 @@ with transparent, rule-grounded logic and an audit trail.
    | R034–R036 | Lung-RADS 3 → 6-month LDCT; critical imaging finding (from the hospital-approved list) → documented clinician communication within its window; radiologist-recommended biopsy/FNA |
    | R037–R046 | ACR incidental findings without a written recommendation: adrenal nodule (1–4 cm → CT/MRI; ≥4 cm or with cancer → work-up), renal mass (solid/Bosniak III–IV → urology; IIF or indeterminate → CT/MRI), pancreatic cyst (size-based MRI; worrisome features → EUS), thyroid nodule on CT/MRI/PET (→ ultrasound), abdominal aortic aneurysm (diameter-based surveillance; ≥5.5 cm, ≥5.0 cm in women → vascular surgery); growing or suspicious lung nodule → work-up |
    | R047 | Imaging-AI finding (approved product or ClinLoop's model runner) that the radiology report does not address → radiologist review (1 day for critical findings, 7 days otherwise) |
+   | R052–R055 | Diagnostic patterns across events: iron-deficiency anaemia → GI investigation; creatinine rise (AKI warning) → repeat creatinine; atrial fibrillation with high CHA₂DS₂-VASc and no anticoagulant → anticoagulation decision; persistent microscopic haematuria → urology. See [`docs/DIAGNOSTIC_PATTERNS.md`](docs/DIAGNOSTIC_PATTERNS.md) |
    | R048–R051 | Plans written in clinicians' notes (English and Korean): repeat a lab test, imaging, a specialist referral, a follow-up visit. Each closes only on the matching event (same test, same modality and region, same specialty). Conditional, cancelled and already-done plans are not tracked |
 2. **Temporal hypergraph** (`temporal_hypergraph.py`): builds one hyperedge per triggered rule and
    marks it `closed`, `open` or `delayed`.
@@ -114,6 +115,7 @@ clinloopai/
 │       ├── imaging_api.py            # Imaging and outside-report endpoints
 │       ├── patient_graph.py          # Patient knowledge graph from the temporal hypergraph
 │       ├── note_reader.py            # Plans in clinicians' notes (EN/KO) → tracked follow-ups (R048–R051)
+│       ├── motifs.py                 # Diagnostic patterns across events (R052–R055)
 │       ├── config/critical_findings.json # Example critical-finding list (each hospital approves its own)
 │       ├── fhir_sync.py              # Scheduled read-only sync from a FHIR server
 │       ├── outreach.py               # Patient messages: draft → approval → provider (outbox / webhook)
@@ -564,6 +566,7 @@ synthetic event, so results are identical on every run.
 | CT organ measurement | **Implemented, research use**: TotalSegmentator on a whole CT series; aortic diameter, spleen length and organ volumes. Run live here on a public sample CT and a synthetic aneurysm phantom; not validated on hospital CTs |
 | Vision-language model | **Adapter implemented**, for MedGemma or similar on an on-premise Ollama/OpenAI-compatible server. Tested against a stand-in server only: the model weights could not be downloaded in the build environment |
 | Patient knowledge graph | **Implemented** (`patient.html`): API and bilingual SVG view of events and obligations |
+| Diagnostic patterns | **Implemented**: R052–R055 as graph motifs over each patient's events, with evidence links on the patient graph. Synthetic tests only; positive predictive value not yet measured |
 | Clinical notes | **Implemented, rule-based**: FHIR `DocumentReference` notes and pasted notes (`patient.html`); plans → R048–R051 with the source sentence. Optional on-premise LLM suggestions, shown for review only. Tested on synthetic notes; extraction accuracy on real notes not yet measured — see [`docs/CLINICAL_NOTES.md`](docs/CLINICAL_NOTES.md) |
 | EHR connector (MCP demo) | **Mock**: responses are labelled `simulated` |
 | PubMed / Europe PMC | **Live** through the ClinLoop server: per-rule literature search and health checks. Only rule-level search terms are sent; never patient data |

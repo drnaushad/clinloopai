@@ -82,6 +82,10 @@ EVIDENCE_QUERIES: Dict[str, str] = {
     "R049": "failure to complete planned follow-up imaging ambulatory",
     "R050": "referral loop closure outpatient specialist referral not completed",
     "R051": "missed follow-up appointments primary care patient safety",
+    "R052": "iron deficiency anaemia gastrointestinal investigation delay colorectal cancer",
+    "R053": "acute kidney injury electronic alert creatinine follow-up",
+    "R054": "atrial fibrillation anticoagulation underuse CHA2DS2-VASc",
+    "R055": "microscopic hematuria evaluation urology referral delay bladder cancer",
 }
 
 

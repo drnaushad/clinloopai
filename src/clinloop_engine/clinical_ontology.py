@@ -60,6 +60,7 @@ class EventType(Enum):
     AI_FINDING = "ai_finding"                     # positive finding from an imaging-AI product (second reader)
     AI_FINDING_REVIEWED = "ai_finding_reviewed"   # a radiologist addressed the AI finding (report/addendum)
     CLINICAL_NOTE_PLAN = "clinical_note_plan"     # a concrete plan written in a clinician's note (note_reader)
+    DIAGNOSTIC_PATTERN = "diagnostic_pattern"     # a dangerous combination across events (motifs.py)
 
 
 # ── Severity Classification ─────────────────────────────────────────────────
@@ -889,6 +890,76 @@ OBLIGATION_RULES: List[ObligationRule] = [
         references=["Joint Commission Sentinel Event Alert 47 (diagnostic error, follow-up)"],
         evidence_note="Closed by a follow-up appointment that took place. Booked-but-not-attended visits do not count.",
     ),
+    # ── Diagnostic patterns across events (motifs.py) ────────────────────────
+    ObligationRule(
+        rule_id="R052",
+        name="Iron-Deficiency Anaemia → GI Investigation",
+        description=("Low haemoglobin and low ferritin within 90 days in a man ≥ 18 or a woman ≥ 50, with no colonoscopy "
+                     "or GI referral in the past year: investigate for gastrointestinal (colorectal) cancer"),
+        trigger_event=EventType.DIAGNOSTIC_PATTERN,
+        trigger_condition="pattern_ida",
+        required_followups=[EventType.COLONOSCOPY, EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT],
+        followup_logic="any",
+        deadline_days=60.0,
+        severity=Severity.HIGH,
+        clinical_domain="diagnostic safety",
+        ltl_formula="□(Hb↓ ∧ ferritin↓ within 90d ∧ (male ∨ age ≥ 50) → ◇_{≤60d (14d if ≥60)} (COLONOSCOPY ∨ GI_REFERRAL))",
+        references=["Snook J et al. BSG guidelines for the management of iron deficiency anaemia in adults. Gut 2021;70:2030-51",
+                    "NICE NG12: Suspected cancer: recognition and referral (IDA ≥ 60 years)"],
+        evidence_note=("Thresholds: Hb < 13 g/dL (men) / < 12 g/dL (women), ferritin < 30 µg/L. Women under 50 are excluded "
+                       "(menstrual loss is the usual cause); clinicians may still investigate. Age ≥ 60: 14 days."),
+    ),
+    ObligationRule(
+        rule_id="R053",
+        name="Creatinine Rise (AKI Warning) → Repeat Creatinine",
+        description="Creatinine ≥ 1.5 × baseline and ≥ 0.3 mg/dL higher: acute kidney injury until shown otherwise",
+        trigger_event=EventType.DIAGNOSTIC_PATTERN,
+        trigger_condition="pattern_creatinine_rise",
+        required_followups=[EventType.LAB_RESULT],
+        followup_logic="any",
+        deadline_days=3.0,
+        severity=Severity.HIGH,
+        clinical_domain="diagnostic safety",
+        ltl_formula="□(Cr ≥ 1.5 × baseline → ◇_{≤3d} Cr)",
+        references=["KDIGO Clinical Practice Guideline for Acute Kidney Injury. Kidney Int Suppl 2012;2:1-138",
+                    "NICE NG148: Acute kidney injury (AKI detection algorithm)"],
+        evidence_note=("Baseline: lowest creatinine in the previous 7 days, else the median of the previous 8–365 days "
+                       "(NHS England AKI algorithm). Same unit only. Closed by a repeat creatinine."),
+    ),
+    ObligationRule(
+        rule_id="R054",
+        name="Atrial Fibrillation, High Stroke Risk → Anticoagulation Decision",
+        description=("Atrial fibrillation with CHA₂DS₂-VASc ≥ 2 (men) / ≥ 3 (women) and no anticoagulant: decide on "
+                     "anticoagulation (or document why not)"),
+        trigger_event=EventType.DIAGNOSTIC_PATTERN,
+        trigger_condition="pattern_af_no_anticoagulation",
+        required_followups=[EventType.MEDICATION_CHANGE],
+        followup_logic="any",
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="diagnostic safety",
+        ltl_formula="□(AF ∧ CHA₂DS₂-VASc ≥ 2♂/3♀ ∧ ¬OAC → ◇_{≤30d} OAC ∨ documented decision)",
+        references=["Hindricks G et al. 2020 ESC Guidelines for atrial fibrillation. Eur Heart J 2021;42:373-498"],
+        evidence_note=("CHA₂DS₂-VASc from the problem list (heart failure, hypertension, diabetes, stroke/TIA, vascular "
+                       "disease), age and sex. A clinician closes the loop with evidence when anticoagulation is "
+                       "contraindicated or declined."),
+    ),
+    ObligationRule(
+        rule_id="R055",
+        name="Persistent Microscopic Haematuria → Urology Evaluation",
+        description="≥ 3 RBC/hpf on two urine tests within 12 months at age ≥ 35: urological evaluation",
+        trigger_event=EventType.DIAGNOSTIC_PATTERN,
+        trigger_condition="pattern_haematuria",
+        required_followups=[EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT, EventType.FOLLOWUP_APPOINTMENT,
+                            EventType.IMAGING_CT],
+        followup_logic="any",
+        deadline_days=90.0,
+        severity=Severity.MODERATE,
+        clinical_domain="diagnostic safety",
+        ltl_formula="□(RBC ≥ 3/hpf twice in 12mo ∧ age ≥ 35 → ◇_{≤90d} (UROLOGY ∨ CT[kidney ∨ bladder]))",
+        references=["Barocas DA et al. Microhematuria: AUA/SUFU Guideline. J Urol 2020;204:778-86"],
+        evidence_note="Two positive tests reduce false alarms (menstruation, exercise). Closed by a urology referral or visit, or a CT covering the urinary tract.",
+    ),
 ]
 
 
@@ -946,6 +1017,10 @@ RULE_NAMES_KO: Dict[str, str] = {
     "R049": "진료기록 계획: 영상 검사",
     "R050": "진료기록 계획: 타과 의뢰",
     "R051": "진료기록 계획: 외래 재방문",
+    "R052": "철결핍성 빈혈 → 위장관 검사",
+    "R053": "크레아티닌 상승(급성 신손상 경고) → 재검",
+    "R054": "심방세동 고위험 → 항응고 치료 결정",
+    "R055": "지속 현미경적 혈뇨 → 비뇨의학과 평가",
 }
 assert set(RULE_NAMES_KO) == {r.rule_id for r in OBLIGATION_RULES}, "every rule needs a Korean name"
 

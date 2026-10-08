@@ -48,7 +48,12 @@ def _details_match(trigger: "ClinicalNode", rule: ObligationRule, node: "Clinica
     """A trigger may require its follow-up to carry matching details (e.g. the same AI finding)."""
     spec = trigger.details.get("followup_match")
     want = spec.get(rule.rule_id) if isinstance(spec, dict) else None
-    return not want or all(node.details.get(k) == v for k, v in want.items())
+    if not want:
+        return True
+    only_for = want.get("_only_for")          # the match applies to these follow-up types only
+    if only_for and node.event_type not in only_for:
+        return True
+    return all(node.details.get(k) == v for k, v in want.items() if k != "_only_for")
 
 
 def _type_ok(trigger: "ClinicalNode", rule: ObligationRule, node: "ClinicalNode") -> bool:

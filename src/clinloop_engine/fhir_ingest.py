@@ -34,6 +34,7 @@ from .imaging_fhir import (
     CLINLOOP_TAG_SYSTEM, DEFAULT_AI_THRESHOLD, DICOM_MODALITY, OCR_CONFIDENCE_URL, REGULATORY_URL,
     ai_finding_key, dicom_regions, norm_ref, regulatory_unverified, study_uid_from,
 )
+from .motifs import ANTICOAGULANT_NAMES, apply_patterns
 from .note_reader import analyte_of, find_plans, plan_label, specialty_of, MODALITY_EVENTS
 from .radiology import _CHEST_CT, _LIVER, decide_obligations, map_radiology_report
 from .report_text import affirmed as _affirmed, first_affirmed as _first_affirmed
@@ -541,7 +542,7 @@ def _map_condition(r: Dict) -> List[Tuple[str, str, Dict]]:
         return []
     text = _concept_text(r.get("code"))
     codes = _codes(r.get("code"))
-    details: Dict[str, Any] = {"diagnosis": text}
+    details: Dict[str, Any] = {"diagnosis": text, "codes": sorted(codes)}
     mapping: List[str] = []
     if any(c.startswith(HCC_RISK_ICD10) for c in codes) or HCC_RISK_TEXT.search(text):
         details["hcc_risk"] = True
@@ -570,6 +571,8 @@ def _map_medication_request(r: Dict) -> List[Tuple[str, str, Dict]]:
     ts = r.get("authoredOn")
     name = _drug_name(r)
     details: Dict[str, Any] = {"medication": name or None}
+    if ANTICOAGULANT_NAMES.search(name or ""):
+        details["anticoagulant"] = True       # closes R054 (AF anticoagulation decision)
     if any(a in name for a in ANTICOAGULANTS):
         details.update(drug="warfarin", condition="anticoagulant_dose_change")
     else:
@@ -744,6 +747,7 @@ def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], L
     for pid, events in by_patient.items():
         _derive_context(events)
         decide_obligations(events, patients.get(pid, {}))
+        apply_patterns(events, patients.get(pid, {}))
         apply_ai_review(events)
     return dict(by_patient), warnings
 

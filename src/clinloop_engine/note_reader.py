@@ -41,6 +41,9 @@ RULE_FOR = {"lab": "R048", "imaging": "R049", "referral": "R050", "visit": "R051
 # ── Vocabularies ────────────────────────────────────────────────────────────
 
 ANALYTES: List[Tuple[str, str]] = [
+    ("urine_rbc", r"(?:\brbcs?\b|red (?:blood )?cells?|erythrocytes?)\W+(?:\S+\W+){0,3}(?:urine|urinary|sediment)|"
+                  r"(?:urine|urinary|sediment)\W+(?:\S+\W+){0,3}(?:\brbcs?\b|red (?:blood )?cells?|erythrocytes?)|"
+                  r"13945-1|5821-4|소변\s*적혈구|요\s*적혈구"),
     ("hba1c", r"hb\s?a1c|\ba1c\b|glycated h(?:a)?emoglobin|당화혈색소|4548-4"),
     ("potassium", r"potassium|\bk\+|\bk\b(?=\s*(?:level|recheck|in\b))|칼륨|2823-3|6298-4"),
     ("sodium", r"sodium|\bna\+?\b(?=\s*(?:level|recheck|in\b))|나트륨|2951-2"),
