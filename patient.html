@@ -250,7 +250,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
       llmTitle: 'Local AI suggestions (for review, never tracked automatically)', llmNone: 'No further suggestions', llmOff: (r) => `Local AI unavailable: ${r}`, source: 'Read from',
     },
   };
-  const LANE_COLOR = { notes: '#4f46e5', diagnoses: '#7c3aed', labs: '#0891b2', orders: '#ca8a04', medications: '#db2777', appointments: '#64748b', imaging: '#0284c7', reports: '#059669', ai: '#ea580c' };
+  const LANE_COLOR = { patterns: '#b91c1c', notes: '#4f46e5', diagnoses: '#7c3aed', labs: '#0891b2', orders: '#ca8a04', medications: '#db2777', appointments: '#64748b', imaging: '#0284c7', reports: '#059669', ai: '#ea580c' };
   const store = { get(k, s = sessionStorage) { try { return s.getItem(k) || ''; } catch { return ''; } },
                   set(k, v, s = sessionStorage) { try { s.setItem(k, v); } catch {} } };
   let lang = store.get('clinloop_lang', localStorage) || ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');

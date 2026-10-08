@@ -14,7 +14,8 @@ Node      = one clinical event (a FHIR resource can yield several), in a lane
 Hyperedge = one obligation: trigger → follow-up(s) | expected follow-up (missing)
 Edge      = a direct relation: "same study" (study ↔ report ↔ AI finding), "same record"
             (several facts read from one FHIR resource),
-            "derived from" (an AI-review event from the AI finding that caused it)
+            "derived from" (an AI-review event from the AI finding that caused it,
+            a diagnostic pattern from each event it was built from)
 
 The graph is built by the same code that opens the loops, so what is drawn is
 exactly what the engine decided, with the evidence chain of each obligation.
@@ -40,6 +41,7 @@ LANES = [
     ("reports", "Radiology reports", "영상 판독"),
     ("ai", "Imaging AI", "영상 AI"),
     ("notes", "Clinical notes: plans", "진료기록 계획"),
+    ("patterns", "Diagnostic patterns", "진단 패턴"),
 ]
 _E = EventType
 LANE_OF = {
@@ -59,6 +61,7 @@ LANE_OF = {
     **{e.value: "reports" for e in (_E.RADIOLOGY_REPORT, _E.IMAGING_RESULT)},
     **{e.value: "ai" for e in (_E.AI_FINDING, _E.AI_FINDING_REVIEWED)},
     _E.CLINICAL_NOTE_PLAN.value: "notes",
+    _E.DIAGNOSTIC_PATTERN.value: "patterns",
 }
 
 
@@ -93,6 +96,10 @@ def node_label(event_type: str, d: Dict[str, Any]) -> str:
         return f"Smoking: {d['smoking']}" if d.get("smoking") else "Risk factor"
     if t == _E.MEDICATION_CHANGE.value:
         return str(d.get("medication") or d.get("drug") or "Medication change")
+    if t == _E.DIAGNOSTIC_PATTERN.value:
+        return {"ida": "Pattern: iron-deficiency anaemia", "creatinine-rise": "Pattern: creatinine rise (AKI warning)",
+                "af-oac": "Pattern: AF without anticoagulation", "haematuria": "Pattern: persistent haematuria"
+                }.get(d.get("pattern"), "Diagnostic pattern")
     if t == _E.CLINICAL_NOTE_PLAN.value:
         plan = d.get("plan") or {}
         label = d.get("plan_label") or "Plan in a note"
@@ -121,7 +128,7 @@ def build_patient_graph(patient_id: str, events: List[Dict[str, Any]],
     nodes: List[Dict[str, Any]] = []
     for n in sorted(g.nodes.values(), key=lambda x: x.timestamp):
         d = n.details or {}
-        derived = ":discrepancy" in n.node_id or ":ai-review:" in n.node_id
+        derived = ":discrepancy" in n.node_id or ":ai-review:" in n.node_id or n.node_id.startswith("pattern:")
         detail = d.get("conclusion") or d.get("evidence_span") or ""
         nodes.append({
             "id": n.node_id, "type": n.event_type, "lane": LANE_OF.get(n.event_type, "appointments"),
@@ -183,8 +190,12 @@ def build_patient_graph(patient_id: str, events: List[Dict[str, Any]],
         for other in members[1:]:          # several facts read from one record
             if (min(members[0], other), max(members[0], other)) not in seen:
                 edges.append({"source": members[0], "target": other, "kind": "same_record"})
+    for n in nodes:                       # a pattern node hangs off every event it was built from
+        for origin in (g.nodes[n["id"]].details.get("evidence_events") or []):
+            if origin in g.nodes:
+                edges.append({"source": origin, "target": n["id"], "kind": "derived_from"})
     for n in nodes:
-        if n["derived"]:
+        if n["derived"] and not n["id"].startswith("pattern:"):
             origin = n["id"].split(":ai-review:")[-1] if ":ai-review:" in n["id"] else n["id"].rsplit(":discrepancy", 1)[0]
             if origin in g.nodes and origin != n["id"]:
                 edges.append({"source": origin, "target": n["id"], "kind": "derived_from"})

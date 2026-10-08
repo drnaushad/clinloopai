@@ -200,3 +200,13 @@ promises.
   person to review.
 
 See [`CLINICAL_NOTES.md`](CLINICAL_NOTES.md).
+
+**Diagnostic motifs, first four (R052–R055).** Idea 1 above, built for the patterns with the
+clearest guideline basis:
+- iron-deficiency anaemia → GI work-up;
+- creatinine rise → repeat creatinine;
+- AF with high CHA₂DS₂-VASc → anticoagulation decision;
+- persistent haematuria → urology.
+
+Each pattern node links to the events it came from. See
+[`DIAGNOSTIC_PATTERNS.md`](DIAGNOSTIC_PATTERNS.md).
