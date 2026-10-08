@@ -60,25 +60,25 @@ const CLINLOOP_I18N = {
     auditTrailTitle: '설명 가능한 AI 감사 추적 (Audit Trail)',
     dockLblTheme: '테마:',
     dockLblLang: '언어:',
-    apiKeysBtn: '🔑 API 설정',
-    apiModalTitle: '프로토타입 API 설정 (연결 안 됨)',
-    apiModalSub: 'API 자격 증명 입력 기능이 비활성화되어 있습니다. 실제 API 키나 환자 정보를 입력하지 마십시오.',
-    apiNobilityTitle: '⚠️ 연결 및 자격 증명 입력 비활성화',
-    apiNobilityDesc: '이 프로토타입은 외부 AI, PubMed 또는 병원 EHR에 연결되지 않습니다. API 키는 저장되거나 전송되지 않으며, 임상 데이터나 환자 정보를 입력하지 마십시오.',
+    apiKeysBtn: '🔌 연결 상태',
+    apiModalTitle: '실제 연결 상태',
+    apiModalSub: 'ClinLoop 서버가 직접 확인한 연결만 표시합니다.',
+    apiNobilityTitle: '🔒 자격 증명은 브라우저에 입력하지 않습니다',
+    apiNobilityDesc: 'API 키와 FHIR 토큰은 ClinLoop 서버의 환경 변수(NCBI_API_KEY, CLINLOOP_FHIR_BASE·CLINLOOP_FHIR_TOKEN)로만 설정합니다. PubMed·Europe PMC에는 규칙 단위 검색어만 전송되며 환자 정보는 외부로 전송되지 않습니다.',
     lblGemini: 'Google Gemini / 임상 파운데이션 모델 API',
-    descGemini: '로컬 노드 및 MCP를 통해 자연어 환자 설명문 생성, 다국어 의학 번역, 복합 질환 임상 요약이 실시간으로 활성화되어 있습니다.',
+    descGemini: '이 버전에서는 클라우드 AI를 사용하지 않습니다.',
     lblAnthropic: 'Anthropic Claude (클로드 3.5 소넷 / 오퍼스)',
-    descAnthropic: 'MCP 연동 완료. 최고 수준의 임상 의학 추론 및 의료 윤리 검증이 실시간으로 적용되고 있습니다.',
+    descAnthropic: '이 버전에서는 클라우드 AI를 사용하지 않습니다.',
     lblOpenAI: 'OpenAI (프로젝트 아스트라 / o1 / GPT-4o 실시간)',
-    descOpenAI: '실시간 다중모달 환자 공감 소통 및 심층 감별진단(o1)이 MCP를 통해 활성화 및 연결 완료 상태입니다.',
+    descOpenAI: '이 버전에서는 클라우드 AI를 사용하지 않습니다.',
     lblNcbi: 'NCBI / PubMed / Europe PMC / ClinVar via BioMCP API',
-    descNcbi: 'PubMed, Europe PMC, NCBI 통합 데이터베이스가 MCP를 통해 성공적으로 연결되었으며, 최신 의학 가이드라인 검증이 실시간으로 실행 중입니다.',
+    descNcbi: 'ClinLoop 서버가 실행 중일 때 PubMed·Europe PMC 공개 API로 최신 문헌을 조회합니다.',
     lblFhir: '원내 EMR / SMART on FHIR OAuth 토큰',
-    descFhir: '원내 전자의무기록(EMR/EHR) 및 PACS 시스템에 성공적으로 연동되었으며, 실시간 양방향 오더 및 이미지 분석이 활성화되어 있습니다.',
-    txtTestPing: '연결 확인 (Verify)',
+    descFhir: 'ClinLoop 서버가 병원 FHIR 서버에서 읽기 전용으로 데이터를 가져옵니다.',
+    txtTestPing: '상태 확인',
     txtResetKeys: '키 초기화 (GPU 전용 복귀)',
     txtSaveKeys: 'API 설정 저장 & 적용 (Save Keys)',
-    lblActiveEngine: '🤖 Active Clinical Foundation Model (활성 AI 추론 엔진 선택):',
+    lblActiveEngine: '🤖 환자 메시지 초안 엔진:',
     descEngineAnthropic: '최고 임상 추론 & 의료 윤리 정렬',
     descEngineOpenai: '실시간 다중모달 & 심층 CoT 추론',
     descEngineGemini: '초고속 다국어 건강 문해력 요약',
@@ -140,25 +140,25 @@ const CLINLOOP_I18N = {
     auditTrailTitle: 'Explainable AI Audit Trail',
     dockLblTheme: 'Theme:',
     dockLblLang: 'Language:',
-    apiKeysBtn: '🔑 API Keys',
-    apiModalTitle: 'System API settings (disconnected)',
-    apiModalSub: 'API credential entry is disabled. Do not enter real API keys or patient information.',
-    apiNobilityTitle: '⚠️ Connections and credential entry disabled',
-    apiNobilityDesc: 'This system securely connects to external AI, PubMed, or a hospital EHR. API keys are not stored or transmitted. Do not enter clinical or patient information.',
+    apiKeysBtn: '🔌 Connections',
+    apiModalTitle: 'Live connection status',
+    apiModalSub: 'Shows only connections the ClinLoop server has verified.',
+    apiNobilityTitle: '🔒 Credentials are never entered in the browser',
+    apiNobilityDesc: 'API keys and FHIR tokens are set only as ClinLoop server environment variables (NCBI_API_KEY, CLINLOOP_FHIR_BASE / CLINLOOP_FHIR_TOKEN). PubMed and Europe PMC receive rule-level search terms only; no patient information leaves the server.',
     lblGemini: 'Google Gemini / Medical Foundation Model API',
-    descGemini: 'Generative clinical LLM API key for plain-language patient explanations, multilingual translation, and complex discharge summaries.',
+    descGemini: 'Cloud AI is not used in this build.',
     lblAnthropic: 'Anthropic Claude (Claude 3.5 Sonnet / Opus)',
-    descAnthropic: 'State-of-the-art clinical safety reasoning, medical ethics alignment, and complex multi-morbid discharge summarization.',
+    descAnthropic: 'Cloud AI is not used in this build.',
     lblOpenAI: 'OpenAI (Project Astra / o1 / GPT-4o Realtime)',
-    descOpenAI: 'Deep chain-of-thought clinical diagnosis (o1) and real-time multimodal voice/video empathy interaction (Astra / GPT-4o).',
+    descOpenAI: 'Cloud AI is not used in this build.',
     lblNcbi: 'NCBI / PubMed / Europe PMC / ClinVar via BioMCP API',
-    descNcbi: 'Enables 10 requests/sec high-throughput PubMed literature and clinical guideline verification.',
+    descNcbi: 'When the ClinLoop server is running, it queries the public PubMed and Europe PMC APIs for current literature.',
     lblFhir: 'Hospital EHR / SMART on FHIR OAuth Token',
-    descFhir: 'HL7 FHIR R4 token for bi-directional live clinical order dispatch into hospital EHR (Epic, Cerner, Global OCS).',
-    txtTestPing: 'Verify Connection',
+    descFhir: 'The ClinLoop server reads hospital data from the FHIR server, read-only.',
+    txtTestPing: 'Check status',
     txtResetKeys: 'Reset to GPU Only',
     txtSaveKeys: 'Save & Apply Keys',
-    lblActiveEngine: '🤖 Active Clinical Foundation Model:',
+    lblActiveEngine: '🤖 Patient-message drafting engine:',
     descEngineAnthropic: 'State-of-the-Art Reasoning & Ethics',
     descEngineOpenai: 'Real-time Multimodal & Deep CoT',
     descEngineGemini: 'High-speed Multilingual Summarization',
@@ -769,126 +769,30 @@ class ClinLoopApp {
     }
 
     // -----------------------------------------------------------------------
-    // API Key & Hospital Security Credentials Modal Integration
+    // Connection status: shows only what the ClinLoop server has verified
+    // (GET /api/v1/connections/status). Without a reachable server (e.g. the
+    // public demo site) every live connection reads "not connected".
     // -----------------------------------------------------------------------
-    // Active Clinical Foundation Model Switcher (Anthropic Claude 3.5, OpenAI Astra, Gemini 2.5, Local GPU)
-    const engineCards = document.querySelectorAll('.engine-opt-card');
-    const activeModelBadge = document.getElementById('active-model-badge');
+    // Patient-message drafts use only the on-premise LLM; cloud models are not used.
+    this.activeEngine = 'local';
+    localStorage.setItem('clinloop_active_engine', 'local');
 
-    const updateEngineSelectionUI = (engine) => {
-      this.activeEngine = engine;
-      localStorage.setItem('clinloop_active_engine', engine);
-
-      engineCards.forEach(card => {
-        const isMatch = card.dataset.engine === engine;
-        card.classList.toggle('active', isMatch);
-        if (isMatch) {
-          card.style.borderColor = (engine === 'anthropic') ? '#a78bfa' : (engine === 'openai') ? '#38bdf8' : (engine === 'gemini') ? 'var(--emerald-safe)' : 'var(--amber-warning)';
-          card.style.background = (engine === 'anthropic') ? 'rgba(139, 92, 246, 0.18)' : (engine === 'openai') ? 'rgba(56, 189, 248, 0.18)' : (engine === 'gemini') ? 'rgba(5, 150, 105, 0.18)' : 'rgba(245, 158, 11, 0.18)';
-        } else {
-          card.style.borderColor = 'var(--border-subtle)';
-          card.style.background = 'rgba(30, 41, 59, 0.5)';
-        }
-      });
-
-      if (activeModelBadge) {
-        activeModelBadge.textContent = 'Active AI Generation via MCP';
-        activeModelBadge.style.color = 'var(--text-muted)';
-      }
-      if (apiStatusPill) apiStatusPill.textContent = 'MCP / LLM ONLINE'; apiStatusPill.style.color = '#059669'; apiStatusPill.style.borderColor = 'rgba(5,150,105,0.4)';
-
-      // Sync outreach simulator engine buttons if open
-      const outreachBtns = document.querySelectorAll('.btn-outreach-engine');
-      outreachBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.engine === engine));
-      const outreachPill = document.getElementById('outreach-model-pill');
-      if (outreachPill) outreachPill.textContent = 'Active AI Generation via MCP';
-
-      if (this.updateOutreachModal) this.updateOutreachModal();
-    };
-
-    engineCards.forEach(card => {
-      card.addEventListener('click', () => {
-        const engine = card.dataset.engine;
-        updateEngineSelectionUI(engine);
-        this._playTelemetrySound(880, 'sine', 0.1);
-      });
-    });
-
-    // Outreach Engine Persona Buttons in #outreach-modal
-    const outreachBtns = document.querySelectorAll('.btn-outreach-engine');
-    outreachBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const engine = btn.dataset.engine;
-        updateEngineSelectionUI(engine);
-        this._playTelemetrySound(920, 'sine', 0.08);
-      });
-    });
-
-    const btnApiKeys = document.getElementById('btn-api-keys');
     const apiModal = document.getElementById('api-keys-modal');
+    const btnApiKeys = document.getElementById('btn-api-keys');
     const btnCloseApiModal = document.getElementById('btn-close-api-modal');
     const btnCancelApiModal = document.getElementById('btn-cancel-api-modal');
-    const btnSaveApiKeys = document.getElementById('btn-save-api-keys');
-    const btnResetApiKeys = document.getElementById('btn-reset-api-keys');
+    const btnConnRefresh = document.getElementById('btn-conn-refresh');
 
-    const inputGemini = document.getElementById('input-key-gemini');
-    const inputAnthropic = document.getElementById('input-key-anthropic');
-    const inputOpenAI = document.getElementById('input-key-openai');
-    const inputNcbi = document.getElementById('input-key-ncbi');
-    const inputFhir = document.getElementById('input-key-fhir');
-
-    const btnTestGemini = document.getElementById('btn-test-gemini');
-    const btnTestAnthropic = document.getElementById('btn-test-anthropic');
-    const btnTestOpenAI = document.getElementById('btn-test-openai');
-    const btnTestNcbi = document.getElementById('btn-test-ncbi');
-    const btnTestFhir = document.getElementById('btn-test-fhir');
-
-    const feedGemini = document.getElementById('feedback-gemini');
-    const feedAnthropic = document.getElementById('feedback-anthropic');
-    const feedOpenAI = document.getElementById('feedback-openai');
-    const feedNcbi = document.getElementById('feedback-ncbi');
-    const feedFhir = document.getElementById('feedback-fhir');
-
-    const apiStatusPill = document.getElementById('api-status-pill');
-
-    const loadSavedKeys = () => {
-      for (const input of [inputGemini, inputAnthropic, inputOpenAI, inputNcbi, inputFhir]) {
-        if (input) {
-          input.value = '••••••••••••••••••••••••••••••••';
-          input.disabled = true;
-          input.style.border = '1px solid rgba(5, 150, 105, 0.4)';
-          input.style.background = 'rgba(5, 150, 105, 0.05)';
-        }
-      }
-      for (const button of [btnTestGemini, btnTestAnthropic, btnTestOpenAI, btnTestNcbi, btnTestFhir]) {
-        if (button) {
-          button.disabled = false;
-          button.style.background = 'rgba(5, 150, 105, 0.1)';
-          button.style.color = '#059669';
-          button.style.border = '1px solid rgba(5, 150, 105, 0.3)';
-          button.innerHTML = '⚡ 연동 완료 (Online)';
-        }
-      }
-      if (btnSaveApiKeys) btnSaveApiKeys.disabled = false;
-      if (btnResetApiKeys) btnResetApiKeys.disabled = false;
-      if (apiStatusPill) {
-        apiStatusPill.textContent = 'MCP / LLM ONLINE';
-        apiStatusPill.style.color = '#059669';
-        apiStatusPill.style.borderColor = 'rgba(5,150,105,0.4)';
-      }
+    const openConnections = () => {
+      if (!apiModal) return;
+      apiModal.classList.add('open');
+      this.refreshConnections(true);
     };
-
-    loadSavedKeys();
-    setTimeout(() => {
-      const storedEngine = localStorage.getItem('clinloop_active_engine') || 'local';
-      updateEngineSelectionUI(storedEngine);
-    }, 100);
 
     // Auto-open modal if specified in query string (?modal=api-keys or ?modal=outreach)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('modal') === 'api-keys' && apiModal) {
-      loadSavedKeys();
-      apiModal.classList.add('open');
+      openConnections();
     } else if (urlParams.get('modal') === 'outreach') {
       setTimeout(() => {
         if (this.updateOutreachModal) this.updateOutreachModal();
@@ -909,13 +813,8 @@ class ClinLoopApp {
       }
     }
 
-    if (btnApiKeys && apiModal) {
-      btnApiKeys.addEventListener('click', () => {
-        loadSavedKeys();
-        apiModal.classList.add('open');
-      });
-    }
-
+    if (btnApiKeys) btnApiKeys.addEventListener('click', openConnections);
+    if (btnConnRefresh) btnConnRefresh.addEventListener('click', () => this.refreshConnections(true));
     if (btnCloseApiModal && apiModal) {
       btnCloseApiModal.addEventListener('click', () => apiModal.classList.remove('open'));
     }
@@ -928,91 +827,7 @@ class ClinLoopApp {
       });
     }
 
-    // Ping Test helper
-    const testKeyConnection = (provider, inputEl, feedbackEl, btnEl) => {
-      inputEl.value = '';
-      feedbackEl.className = 'api-feedback-msg error';
-      feedbackEl.textContent = this.currentLang === 'en'
-        ? 'API connected and secured.'
-        : '프로토타입에서 API 연결 테스트는 비활성화되어 있습니다.';
-    };
-
-    if (btnTestGemini && inputGemini && feedGemini) {
-      btnTestGemini.addEventListener('click', () => testKeyConnection('gemini', inputGemini, feedGemini, btnTestGemini));
-    }
-    if (btnTestAnthropic && inputAnthropic && feedAnthropic) {
-      btnTestAnthropic.addEventListener('click', () => testKeyConnection('anthropic', inputAnthropic, feedAnthropic, btnTestAnthropic));
-    }
-    if (btnTestOpenAI && inputOpenAI && feedOpenAI) {
-      btnTestOpenAI.addEventListener('click', () => testKeyConnection('openai', inputOpenAI, feedOpenAI, btnTestOpenAI));
-    }
-    if (btnTestNcbi && inputNcbi && feedNcbi) {
-      btnTestNcbi.addEventListener('click', () => testKeyConnection('ncbi', inputNcbi, feedNcbi, btnTestNcbi));
-    }
-    if (btnTestFhir && inputFhir && feedFhir) {
-      btnTestFhir.addEventListener('click', () => testKeyConnection('fhir', inputFhir, feedFhir, btnTestFhir));
-    }
-
-    if (btnSaveApiKeys) {
-      btnSaveApiKeys.addEventListener('click', async () => {
-        // ─── BAA Compliance Gate (HIPAA + Korean PIPA) ───
-        const _aKey = inputAnthropic ? inputAnthropic.value.trim() : '';
-        const _oKey = inputOpenAI ? inputOpenAI.value.trim() : '';
-        const _gKey = inputGemini ? inputGemini.value.trim() : '';
-        if (_aKey || _oKey || _gKey) {
-          const isKo = (this.currentLang === 'ko');
-          const baaMsg = isKo
-            ? '⚖️ HIPAA BAA 규정 준수 확인 필요\n\n클라우드 API 키 저장 전 반드시 확인하십시오:\n\n✅ 해당 클라우드 제공업체(Anthropic/OpenAI/Google)와 HIPAA 업무위탁계약(BAA)이 체결되었음\n\n✅ 한국 개인정보보호법 제17조에 따른 환자 동의(외부 AI 서비스 이용)가 문서화됨\n\n✅ ClinLoop AI PHI 비식별화 필터가 상시 활성화 상태임\n\n온프레미스 GPU는 언제든지 무위험 기본 엔진으로 즉시 복귀 가능합니다.\n\n확인을 클릭하여 BAA 준수 사실을 인정하고 키를 저장합니다.'
-            : '⚖️ HIPAA BAA Compliance Confirmation Required\n\nBefore saving cloud API keys, please confirm:\n\n✅ A HIPAA Business Associate Agreement has been signed with this cloud provider (Anthropic / OpenAI / Google)\n\n✅ Korean PIPA Article 17 patient consent for external AI services is documented\n\n✅ ClinLoop AI PHI De-identification Filter will remain ACTIVE at all times\n\nThe On-Premise GPU remains the zero-risk sovereign default engine at all times.\n\nClick OK to confirm BAA compliance and save keys.';
-          const baaOk = confirm(baaMsg);
-          if (!baaOk) {
-            this.showNotification(
-              isKo ? '⚠️ 저장 취소됨. 클라우드 모델 사용을 위해 BAA 확인이 필요합니다.' : '⚠️ Save cancelled. BAA confirmation is required for cloud model access.',
-              'warning'
-            );
-            return;
-          }
-        }
-        // ─────────────────────────────────────────────────
-        const keys = {
-          gemini: inputGemini ? inputGemini.value.trim() : '',
-          anthropic: inputAnthropic ? inputAnthropic.value.trim() : '',
-          openai: inputOpenAI ? inputOpenAI.value.trim() : '',
-          ncbi: inputNcbi ? inputNcbi.value.trim() : '',
-          fhir: inputFhir ? inputFhir.value.trim() : ''
-        };
-
-        loadSavedKeys();
-        if (apiModal) apiModal.classList.remove('open');
-        alert((this.currentLang === 'en') ? 'API credentials secured and active.' : 'API 자격 증명이 안전하게 연결되었습니다.');
-      });
-    }
-
-    if (btnResetApiKeys) {
-      btnResetApiKeys.addEventListener('click', () => {
-        if (inputGemini) inputGemini.value = '';
-        if (inputAnthropic) inputAnthropic.value = '';
-        if (inputOpenAI) inputOpenAI.value = '';
-        if (inputNcbi) inputNcbi.value = '';
-        if (inputFhir) inputFhir.value = '';
-        localStorage.removeItem('clinloop_api_keys');
-
-        const badgeGemini = document.getElementById('badge-gemini-status');
-        const badgeAnthropic = document.getElementById('badge-anthropic-status');
-        const badgeOpenAI = document.getElementById('badge-openai-status');
-        const badgeNcbi = document.getElementById('badge-ncbi-status');
-        const badgeFhir = document.getElementById('badge-fhir-status');
-        if (badgeGemini) badgeGemini.textContent = 'Connected (MCP)';
-        if (badgeAnthropic) badgeAnthropic.textContent = 'Connected (MCP)';
-        if (badgeOpenAI) badgeOpenAI.textContent = 'Connected (MCP)';
-        if (badgeNcbi) badgeNcbi.textContent = 'Connected (PubMed, PMC, NCBI via MCP)';
-        if (badgeFhir) badgeFhir.textContent = 'Connected (Epic FHIR via MCP)';
-
-        if (apiStatusPill) {
-          apiStatusPill.textContent = 'MCP / LLM ONLINE'; apiStatusPill.style.color = '#059669'; apiStatusPill.style.borderColor = 'rgba(5,150,105,0.4)';
-        }
-      });
-    }
+    this.refreshConnections();
 
     
     // Summary View One-Click Action Buttons
@@ -1105,6 +920,7 @@ class ClinLoopApp {
 
 
       this.applyI18nText(this.currentLang);
+      if (this.renderConnections) this.renderConnections();
 
       this.outreachLang = this.currentLang;
       const btnOutreachKo = document.getElementById('btn-lang-ko');
@@ -1588,6 +1404,182 @@ class ClinLoopApp {
     if (this._clockInterval) clearInterval(this._clockInterval); this._clockInterval = setInterval(update, 1000);
   }
 
+  async refreshConnections(force = false) {
+    if (this._connLoading && !force) return this._connLoading;
+    this.connStatus = undefined;          // undefined = checking
+    this.renderConnections();
+    this._connLoading = (async () => {
+      let status = null;                  // null = ClinLoop server not reachable
+      if (CLINLOOP_API_BASE) {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 8000);
+          const resp = await fetch(`${CLINLOOP_API_BASE}/api/v1/connections/status`, { signal: ctrl.signal });
+          clearTimeout(timer);
+          if (resp.ok) status = await resp.json();
+        } catch (e) { status = null; }
+      }
+      this.connStatus = status;
+      this.renderConnections();
+      this._connLoading = null;
+    })();
+    return this._connLoading;
+  }
+
+  _connText() {
+    const ko = this.currentLang === 'ko';
+    return ko ? {
+      checking: '확인 중…', summaryNone: 'ClinLoop 서버에 연결되지 않음 (공개 데모): 실시간 연결 0개',
+      summary: (n) => `실시간 연결 ${n}개 (서버에서 직접 확인)`, live: '실시간 연결',
+      names: { clinloop_api: 'ClinLoop API 서버', pubmed: 'PubMed (NCBI E-utilities)', europe_pmc: 'Europe PMC',
+        fhir_server: '병원 FHIR 서버 (Epic·Cerner 등)', local_llm: '원내 LLM (Ollama)', cloud_llm: '클라우드 LLM (Claude·GPT·Gemini)',
+        omop_cdm: 'OMOP CDM 데이터베이스', ehr_writeback: 'EHR 오더 기록 (writeback)', guideline_library: '가이드라인 라이브러리 (BioMCP)' },
+      notRunning: '실행 중 아님', needsServer: '알 수 없음 (ClinLoop 서버 필요)', connected: '연결됨', unreachable: '연결 실패',
+      disabled: '꺼짐', notConfigured: '설정 안 됨', feed: (f) => `데이터 수신 ${f}`, notUsed: '이 버전에서는 사용 안 함',
+      notConnected: '연결 안 됨', readOnly: '연결 안 됨 (설계상 읽기 전용)', static: (n) => `정적 데이터${n ? ` · 규칙 ${n}개` : ''}`,
+      pillApi: 'API 연결됨', pillDemo: '데모 · 서버 없음', pillPubmed: 'PUBMED 실시간', pillStatic: '정적 라이브러리',
+      llmOn: (m) => `🧬 원내 LLM: ${m}`, llmOff: '🧬 원내 LLM 꺼짐 · 기본 문구 사용',
+      litTitle: 'PubMed 실시간 문헌', litNeedsServer: 'PubMed 실시간 검색은 ClinLoop 서버가 실행 중이고 PubMed에 연결되어 있을 때 사용할 수 있습니다.',
+      litLoading: 'PubMed 검색 중…', litNone: '검색 결과가 없습니다.', litError: 'PubMed 검색 실패: ',
+      litQuery: '검색어 (규칙 단위, 환자 정보 없음): ',
+    } : {
+      checking: 'Checking…', summaryNone: 'Not connected to a ClinLoop server (public demo): 0 live connections',
+      summary: (n) => `${n} live connection${n === 1 ? '' : 's'} (verified by the server)`, live: 'Live connections',
+      names: { clinloop_api: 'ClinLoop API server', pubmed: 'PubMed (NCBI E-utilities)', europe_pmc: 'Europe PMC',
+        fhir_server: 'Hospital FHIR server (Epic, Cerner, …)', local_llm: 'On-premise LLM (Ollama)', cloud_llm: 'Cloud LLMs (Claude, GPT, Gemini)',
+        omop_cdm: 'OMOP CDM database', ehr_writeback: 'EHR order writeback', guideline_library: 'Guideline library (BioMCP)' },
+      notRunning: 'Not running', needsServer: 'Unknown (needs the ClinLoop server)', connected: 'Connected', unreachable: 'Unreachable',
+      disabled: 'Disabled', notConfigured: 'Not configured', feed: (f) => `data feed ${f}`, notUsed: 'Not used in this build',
+      notConnected: 'Not connected', readOnly: 'Not connected (read-only by design)', static: (n) => `Static data${n ? ` · ${n} rules` : ''}`,
+      pillApi: 'API ONLINE', pillDemo: 'DEMO · NO SERVER', pillPubmed: 'PUBMED LIVE', pillStatic: 'STATIC LIBRARY',
+      llmOn: (m) => `🧬 On-prem LLM: ${m}`, llmOff: '🧬 On-prem LLM offline · template text',
+      litTitle: 'Live PubMed literature', litNeedsServer: 'Live PubMed search is available when the ClinLoop server is running and connected to PubMed.',
+      litLoading: 'Searching PubMed…', litNone: 'No results.', litError: 'PubMed search failed: ',
+      litQuery: 'Query (rule-level, no patient data): ',
+    };
+  }
+
+  _connRows() {
+    const t = this._connText();
+    const s = this.connStatus;
+    const keys = ['clinloop_api', 'pubmed', 'europe_pmc', 'fhir_server', 'local_llm', 'cloud_llm', 'omop_cdm', 'ehr_writeback', 'guideline_library'];
+    return keys.map((key) => {
+      const row = { key, name: t.names[key], tone: 'off', text: t.notConnected };
+      if (s === undefined) return { ...row, text: t.checking };
+      if (s === null) {
+        if (key === 'clinloop_api') return { ...row, text: t.notRunning };
+        if (key === 'guideline_library') return { ...row, tone: 'static', text: t.static() };
+        if (key === 'cloud_llm') return { ...row, text: t.notUsed };
+        if (key === 'omop_cdm') return { ...row, text: t.notConnected };
+        if (key === 'ehr_writeback') return { ...row, text: t.readOnly };
+        return { ...row, text: t.needsServer };
+      }
+      const v = s[key] || {};
+      switch (key) {
+        case 'clinloop_api': return { ...row, tone: 'ok', text: t.connected };
+        case 'pubmed': case 'europe_pmc':
+          if (v.status === 'ok') return { ...row, tone: 'ok', text: `${t.connected} · ${v.latency_ms} ms` };
+          return { ...row, tone: v.status === 'disabled' ? 'off' : 'warn', text: v.status === 'disabled' ? t.disabled : t.unreachable };
+        case 'fhir_server':
+          if (v.status !== 'configured') return { ...row, text: t.notConfigured };
+          return { ...row, tone: v.feed === 'OK' ? 'ok' : 'warn', text: `${t.connected} · ${t.feed(v.feed)}` };
+        case 'local_llm':
+          return v.status === 'ok' ? { ...row, tone: 'ok', text: `${t.connected} · ${v.model}` } : { ...row, text: t.notRunning };
+        case 'cloud_llm': return { ...row, text: t.notUsed };
+        case 'ehr_writeback': return { ...row, text: t.readOnly };
+        case 'guideline_library': return { ...row, tone: 'static', text: t.static(v.rules) };
+        default: return row;
+      }
+    });
+  }
+
+  renderConnections() {
+    const t = this._connText();
+    const rows = this._connRows();
+    const live = rows.filter((r) => r.tone === 'ok').length;
+    const colors = { ok: 'var(--emerald-safe)', warn: 'var(--amber-warning)', off: 'var(--text-dim)', static: 'var(--text-muted)' };
+    const style = (el, tone) => { if (el) { el.style.color = colors[tone]; el.style.borderColor = tone === 'ok' ? 'rgba(5,150,105,0.4)' : 'var(--border-card)'; } };
+
+    const list = document.getElementById('conn-list');
+    if (list) {
+      list.replaceChildren(...rows.map((r) => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.6rem 0.8rem;border:1px solid var(--border-subtle);border-radius:8px;background:var(--bg-card);flex-wrap:wrap;';
+        const name = document.createElement('span');
+        name.style.cssText = 'font-size:0.82rem;font-weight:600;color:var(--text-main);';
+        name.textContent = r.name;
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.style.cssText = 'font-size:0.68rem;';
+        badge.textContent = `${r.tone === 'ok' ? '● ' : r.tone === 'warn' ? '▲ ' : '○ '}${r.text}`;
+        style(badge, r.tone);
+        item.append(name, badge);
+        return item;
+      }));
+    }
+    const refreshLbl = document.getElementById('txt-conn-refresh');
+    if (refreshLbl) refreshLbl.textContent = this.currentLang === 'ko' ? '상태 확인' : 'Check status';
+    const summary = document.getElementById('conn-summary');
+    if (summary) summary.textContent = this.connStatus === undefined ? t.checking : this.connStatus === null ? t.summaryNone : t.summary(live);
+
+    const imp = document.getElementById('imp-connections');
+    if (imp) { imp.textContent = this.connStatus === undefined ? '–' : String(live); imp.style.color = live ? 'var(--emerald-safe)' : 'var(--text-dim)'; }
+    const impLbl = document.getElementById('imp-connections-lbl');
+    if (impLbl) impLbl.textContent = t.live;
+
+    const s = this.connStatus;
+    const apiPill = document.getElementById('api-status-pill');
+    if (apiPill && s !== undefined) { apiPill.textContent = s ? t.pillApi : t.pillDemo; style(apiPill, s ? 'ok' : 'off'); }
+    const bioPill = document.getElementById('biomcp-status-pill');
+    if (bioPill && s !== undefined) {
+      const pubmedLive = !!(s && s.pubmed && s.pubmed.status === 'ok');
+      bioPill.textContent = pubmedLive ? t.pillPubmed : t.pillStatic; style(bioPill, pubmedLive ? 'ok' : 'off');
+    }
+    const llmPill = document.getElementById('outreach-model-pill');
+    if (llmPill && s !== undefined) {
+      const llmOn = !!(s && s.local_llm && s.local_llm.status === 'ok');
+      llmPill.textContent = llmOn ? t.llmOn(s.local_llm.model) : t.llmOff; style(llmPill, llmOn ? 'ok' : 'off');
+    }
+  }
+
+  async renderLiveLiterature(ruleId) {
+    const t = this._connText();
+    const title = document.getElementById('biomcp-live-lit-title');
+    const body = document.getElementById('biomcp-live-lit-body');
+    if (!body) return;
+    if (title) title.textContent = t.litTitle;
+    if (this._connLoading) await this._connLoading;
+    const s = this.connStatus;
+    if (!s || !s.pubmed || s.pubmed.status !== 'ok' || !ruleId) { body.textContent = t.litNeedsServer; return; }
+    body.textContent = t.litLoading;
+    try {
+      const resp = await fetch(`${CLINLOOP_API_BASE}/api/v1/evidence/${encodeURIComponent(ruleId)}?source=pubmed&limit=3`);
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
+      const items = data.articles.map((a) => {
+        const li = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = a.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+        link.textContent = a.title;
+        li.append(link, document.createTextNode(` · ${a.journal} ${a.year} · PMID ${a.pmid}`));
+        return li;
+      });
+      const query = document.createElement('div');
+      query.style.cssText = 'font-size:0.7rem;color:var(--text-dim);margin-top:0.35rem;';
+      query.textContent = t.litQuery + data.query;
+      if (items.length) {
+        const ul = document.createElement('ul');
+        ul.style.cssText = 'margin:0.3rem 0 0 1rem;padding:0;';
+        ul.append(...items);
+        body.replaceChildren(ul, query);
+      } else {
+        body.replaceChildren(document.createTextNode(t.litNone), query);
+      }
+    } catch (e) {
+      body.textContent = t.litError + e.message;
+    }
+  }
+
   populateBioMcpModal() {
     if (!this.currentCase || !this.currentCase.biomcp_evidence) return;
     const ev = this.currentCase.biomcp_evidence;
@@ -1631,7 +1623,10 @@ class ClinLoopApp {
 
     // Latency & Grade
     const latEl = document.getElementById('biomcp-latency-tag');
-    if (latEl) latEl.textContent = `Latency: ${ev.latency_ms}ms (Cached)`;
+    if (latEl) latEl.textContent = this.currentLang === 'ko' ? '정적 데이터' : 'Static data';
+    const srcNote = document.getElementById('biomcp-source-note');
+    if (srcNote) srcNote.textContent = this.currentLang === 'ko' ? '선별된 가이드라인 인용 (정적 라이브러리)' : 'Curated guideline citation (static library)';
+    this.renderLiveLiterature(this.currentCase.applicable_rule_id);
 
     const gradeEl = document.getElementById('biomcp-evidence-grade');
     if (gradeEl) gradeEl.textContent = ev.evidence_grade.split('(')[0].trim();
@@ -2016,7 +2011,7 @@ class ClinLoopApp {
 
     const guideEl = document.getElementById('cf-guideline-grade');
     if (guideEl && c.biomcp_evidence) {
-      guideEl.textContent = 'Live sample citation · validated via MCP';
+      guideEl.textContent = this.currentLang === 'ko' ? '예시 인용 (정적 라이브러리)' : 'Sample citation (static library)';
     }
 
     const evText = document.getElementById('cf-evidence-text');
@@ -2201,8 +2196,8 @@ class ClinLoopApp {
     setText('kakao-outreach-body', message);
     setText('kakao-dept-slot', isEnglish ? 'No appointment reserved' : '예약된 일정 없음');
     setText('kakao-btn-label', isEnglish ? 'Simulate local workflow (not booked)' : '로컬 시뮬레이션 (예약되지 않음)');
-    setText('outreach-fhir-id', isEnglish ? 'Message securely dispatched via FHIR MCP' : 'FHIR MCP 서버를 통한 암호화 메시지 전송 완료');
-    setText('outreach-model-pill', isEnglish ? 'Active AI Generation via MCP' : 'MCP를 통한 AI 생성 활성화');
+    setText('outreach-fhir-id', isEnglish ? 'Not sent: local preview only' : '전송되지 않음: 로컬 미리보기');
+    this.renderConnections();
     setText('outreach-status-tag', isEnglish ? 'No message sent · no appointment booked' : '메시지 전송 안 됨 · 예약 안 됨');
 
     const bookingButton = document.getElementById('btn-kakao-book');

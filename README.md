@@ -89,6 +89,7 @@ clinloopai/
 │       ├── fhir_ingest.py            # FHIR R4 → ClinLoop event adapter
 │       ├── fhir_sync.py              # Scheduled read-only sync from a FHIR server
 │       ├── outreach.py               # Patient messages: draft → approval → provider (outbox / webhook)
+│       ├── literature.py             # Live PubMed / Europe PMC search and service health checks
 │       ├── loop_store.py             # SQLite loop registry, workflow, escalation, audit, open-loop rate
 │       ├── clinical_api.py           # Pilot endpoints: ingest, worklist, actions, metrics
 │       ├── auth.py                   # Bearer-token roles: viewer / navigator / clinician / admin
@@ -162,7 +163,7 @@ Run every command from the **repository root**. The code imports modules as `src
 ### 1. Tests
 
 ```bash
-python -m pytest tests/ src/tests/ -v            # 131 tests
+python -m pytest tests/ src/tests/ -v            # 141 tests
 ```
 
 The API tests are skipped automatically when `requirements-api.txt` is not installed.
@@ -265,6 +266,8 @@ Key endpoints (all except `/rules` and `/health` require a token):
 | `GET /api/v1/feed/status` | viewer | Data feed `OK` / `STALE` / `FAILING` / `NEVER` |
 | `POST /api/v1/fhir/sync` | admin | Run one sync from the configured FHIR server now |
 | `GET /api/v1/audit/verify` | admin | Verify the audit hash chain |
+| `GET /api/v1/connections/status` | public | What is really connected, checked live (no hostnames, secrets or patient data) |
+| `GET /api/v1/evidence/{rule_id}?source=pubmed\|europepmc` | public | Live literature for a rule (rule-level search terms only) |
 
 Overdue loops nobody has acknowledged escalate automatically: owner → department lead → patient
 safety officer. Each step waits a severity-specific grace period (1 hour for critical).
@@ -286,6 +289,8 @@ Configuration:
 | `CLINLOOP_OUTREACH_WEBHOOK_URL` | Hospital integration endpoint for KakaoTalk/SMS delivery | — |
 | `CLINLOOP_OUTBOX` | Outbox file path | `data/outbox.jsonl` |
 | `CLINLOOP_CORS_ORIGINS` | Allowed browser origins | cockpit origins |
+| `NCBI_API_KEY` | Optional NCBI key (10 instead of 3 PubMed requests/s) | — |
+| `CLINLOOP_LITERATURE` | `off` disables all outbound PubMed / Europe PMC calls | on |
 
 One-off sync from the command line: `python -m src.clinloop_engine.fhir_sync --once`.
 
@@ -366,7 +371,10 @@ synthetic event, so results are identical on every run.
 | Patient outreach | **Implemented** with clinician approval. Real delivery requires the hospital's KakaoTalk/SMS integration behind the webhook |
 | Stage 1 validation toolkit | **Implemented**; awaits IRB approval and real data |
 | Synthetic data generator, benchmark, figures | **Implemented** (seeded) |
-| BioMCP guideline tools | Static guideline lookup; no live PubMed/guideline retrieval |
+| BioMCP guideline tools | Static, curated guideline citations in code |
+| PubMed / Europe PMC | **Live** through the ClinLoop server: per-rule literature search and health checks. Only rule-level search terms are sent; never patient data |
+| Connection status | The cockpit's badges, the "Live connections" count and the Connections panel show only what the server has verified. On the public site, with no server, they read "not connected" |
+| OMOP CDM, EHR writeback, cloud LLMs | **Not connected** (OMOP: no database; EHR: read-only by design; cloud LLMs: not used) |
 | EHR / PACS MCP servers | **Mock**: return canned text and do not connect to any EHR |
 | Counterfactual engine | **Fixed lookup table** of hand-written, illustrative trajectories for specific case IDs; no Markov simulation runs. The API and cockpit label them as not clinically validated |
 | GPU engine | PyTorch network with **untrained random weights**; its "confidence" output has no clinical meaning |
