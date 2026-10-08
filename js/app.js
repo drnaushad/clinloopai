@@ -1431,9 +1431,9 @@ class ClinLoopApp {
     return ko ? {
       checking: '확인 중…', summaryNone: 'ClinLoop 서버에 연결되지 않음 (공개 데모): 실시간 연결 0개',
       summary: (n) => `실시간 연결 ${n}개 (서버에서 직접 확인)`, live: '실시간 연결',
-      names: { clinloop_api: 'ClinLoop API 서버', pubmed: 'PubMed (NCBI E-utilities)', europe_pmc: 'Europe PMC',
+      names: { clinloop_api: 'ClinLoop API 서버', biomcp: 'BioMCP 서버 (MCP)', pubmed: 'PubMed (NCBI E-utilities)', europe_pmc: 'Europe PMC',
         fhir_server: '병원 FHIR 서버 (Epic·Cerner 등)', local_llm: '원내 LLM (Ollama)', cloud_llm: '클라우드 LLM (Claude·GPT·Gemini)',
-        omop_cdm: 'OMOP CDM 데이터베이스', ehr_writeback: 'EHR 오더 기록 (writeback)', guideline_library: '가이드라인 라이브러리 (BioMCP)' },
+        omop_cdm: 'OMOP CDM 데이터베이스', ehr_writeback: 'EHR 오더 기록 (writeback)', guideline_library: '내장 가이드라인 라이브러리' },
       notRunning: '실행 중 아님', needsServer: '알 수 없음 (ClinLoop 서버 필요)', connected: '연결됨', unreachable: '연결 실패',
       disabled: '꺼짐', notConfigured: '설정 안 됨', feed: (f) => `데이터 수신 ${f}`, notUsed: '이 버전에서는 사용 안 함',
       notConnected: '연결 안 됨', readOnly: '연결 안 됨 (설계상 읽기 전용)', static: (n) => `정적 데이터${n ? ` · 규칙 ${n}개` : ''}`,
@@ -1442,12 +1442,13 @@ class ClinLoopApp {
       litTitle: 'PubMed 실시간 문헌', litNeedsServer: 'PubMed 실시간 검색은 ClinLoop 서버가 실행 중이고 PubMed에 연결되어 있을 때 사용할 수 있습니다.',
       litLoading: 'PubMed 검색 중…', litNone: '검색 결과가 없습니다.', litError: 'PubMed 검색 실패: ',
       litQuery: '검색어 (규칙 단위, 환자 정보 없음): ',
+      tools: (n) => `도구 ${n}개`, notInstalled: '설치 안 됨', pillBiomcp: 'BIOMCP 실시간', bioTitle: 'BioMCP 실시간 검색',
     } : {
       checking: 'Checking…', summaryNone: 'Not connected to a ClinLoop server (public demo): 0 live connections',
       summary: (n) => `${n} live connection${n === 1 ? '' : 's'} (verified by the server)`, live: 'Live connections',
-      names: { clinloop_api: 'ClinLoop API server', pubmed: 'PubMed (NCBI E-utilities)', europe_pmc: 'Europe PMC',
+      names: { clinloop_api: 'ClinLoop API server', biomcp: 'BioMCP server (MCP)', pubmed: 'PubMed (NCBI E-utilities)', europe_pmc: 'Europe PMC',
         fhir_server: 'Hospital FHIR server (Epic, Cerner, …)', local_llm: 'On-premise LLM (Ollama)', cloud_llm: 'Cloud LLMs (Claude, GPT, Gemini)',
-        omop_cdm: 'OMOP CDM database', ehr_writeback: 'EHR order writeback', guideline_library: 'Guideline library (BioMCP)' },
+        omop_cdm: 'OMOP CDM database', ehr_writeback: 'EHR order writeback', guideline_library: 'Built-in guideline library' },
       notRunning: 'Not running', needsServer: 'Unknown (needs the ClinLoop server)', connected: 'Connected', unreachable: 'Unreachable',
       disabled: 'Disabled', notConfigured: 'Not configured', feed: (f) => `data feed ${f}`, notUsed: 'Not used in this build',
       notConnected: 'Not connected', readOnly: 'Not connected (read-only by design)', static: (n) => `Static data${n ? ` · ${n} rules` : ''}`,
@@ -1456,13 +1457,14 @@ class ClinLoopApp {
       litTitle: 'Live PubMed literature', litNeedsServer: 'Live PubMed search is available when the ClinLoop server is running and connected to PubMed.',
       litLoading: 'Searching PubMed…', litNone: 'No results.', litError: 'PubMed search failed: ',
       litQuery: 'Query (rule-level, no patient data): ',
+      tools: (n) => `${n} tools`, notInstalled: 'Not installed', pillBiomcp: 'BIOMCP LIVE', bioTitle: 'BioMCP live search',
     };
   }
 
   _connRows() {
     const t = this._connText();
     const s = this.connStatus;
-    const keys = ['clinloop_api', 'pubmed', 'europe_pmc', 'fhir_server', 'local_llm', 'cloud_llm', 'omop_cdm', 'ehr_writeback', 'guideline_library'];
+    const keys = ['clinloop_api', 'biomcp', 'pubmed', 'europe_pmc', 'fhir_server', 'local_llm', 'cloud_llm', 'omop_cdm', 'ehr_writeback', 'guideline_library'];
     return keys.map((key) => {
       const row = { key, name: t.names[key], tone: 'off', text: t.notConnected };
       if (s === undefined) return { ...row, text: t.checking };
@@ -1477,6 +1479,9 @@ class ClinLoopApp {
       const v = s[key] || {};
       switch (key) {
         case 'clinloop_api': return { ...row, tone: 'ok', text: t.connected };
+        case 'biomcp':
+          if (v.status === 'ok') return { ...row, tone: 'ok', text: `${t.connected} · ${t.tools(v.tools)}` };
+          return { ...row, tone: v.status === 'unreachable' ? 'warn' : 'off', text: v.status === 'unreachable' ? t.unreachable : t.notInstalled };
         case 'pubmed': case 'europe_pmc':
           if (v.status === 'ok') return { ...row, tone: 'ok', text: `${t.connected} · ${v.latency_ms} ms` };
           return { ...row, tone: v.status === 'disabled' ? 'off' : 'warn', text: v.status === 'disabled' ? t.disabled : t.unreachable };
@@ -1532,8 +1537,10 @@ class ClinLoopApp {
     if (apiPill && s !== undefined) { apiPill.textContent = s ? t.pillApi : t.pillDemo; style(apiPill, s ? 'ok' : 'off'); }
     const bioPill = document.getElementById('biomcp-status-pill');
     if (bioPill && s !== undefined) {
+      const biomcpLive = !!(s && s.biomcp && s.biomcp.status === 'ok');
       const pubmedLive = !!(s && s.pubmed && s.pubmed.status === 'ok');
-      bioPill.textContent = pubmedLive ? t.pillPubmed : t.pillStatic; style(bioPill, pubmedLive ? 'ok' : 'off');
+      bioPill.textContent = biomcpLive ? t.pillBiomcp : pubmedLive ? t.pillPubmed : t.pillStatic;
+      style(bioPill, biomcpLive || pubmedLive ? 'ok' : 'off');
     }
     const llmPill = document.getElementById('outreach-model-pill');
     if (llmPill && s !== undefined) {
@@ -1550,8 +1557,36 @@ class ClinLoopApp {
     if (title) title.textContent = t.litTitle;
     if (this._connLoading) await this._connLoading;
     const s = this.connStatus;
-    if (!s || !s.pubmed || s.pubmed.status !== 'ok' || !ruleId) { body.textContent = t.litNeedsServer; return; }
+    const biomcpLive = !!(s && s.biomcp && s.biomcp.status === 'ok');
+    const pubmedLive = !!(s && s.pubmed && s.pubmed.status === 'ok');
+    if (!ruleId || (!biomcpLive && !pubmedLive)) { body.textContent = t.litNeedsServer; return; }
     body.textContent = t.litLoading;
+    let bioNote = null;
+    if (biomcpLive) {
+      try {
+        const resp = await fetch(`${CLINLOOP_API_BASE}/api/v1/evidence/${encodeURIComponent(ruleId)}?source=biomcp`);
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
+        const text = typeof data.result === 'string' ? data.result : (Array.isArray(data.result) && data.result.length ? JSON.stringify(data.result, null, 2) : '');
+        if (text) {
+          if (title) title.textContent = t.bioTitle;
+          const pre = document.createElement('pre');
+          pre.style.cssText = 'white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto;margin:0.3rem 0 0;font-size:0.72rem;';
+          pre.textContent = text.slice(0, 4000);
+          const query = document.createElement('div');
+          query.style.cssText = 'font-size:0.7rem;color:var(--text-dim);margin-top:0.35rem;';
+          query.textContent = t.litQuery + data.query;
+          body.replaceChildren(pre, query);
+          return;
+        }
+        bioNote = data.note || null;
+      } catch (e) { bioNote = 'BioMCP: ' + e.message; }
+    }
+    if (!pubmedLive) {
+      if (title) title.textContent = t.bioTitle;
+      body.textContent = bioNote || t.litNone;
+      return;
+    }
     try {
       const resp = await fetch(`${CLINLOOP_API_BASE}/api/v1/evidence/${encodeURIComponent(ruleId)}?source=pubmed&limit=3`);
       const data = await resp.json();

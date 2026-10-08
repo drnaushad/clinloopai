@@ -1,14 +1,25 @@
 """
 ClinLoop AI — Local LLM Engine (Ollama Integration)
 ====================================================
-Wraps the best available local model for clinical text generation.
-Priority order: deepseek-r1:70b > deepseek-r1:32b > llama3:latest
+Talks to an Ollama server inside the hospital network. Inference stays on
+premise; nothing is sent to a cloud model.
 
-All prompts are pre-filtered through PHI De-identifier before generation.
-All inference stays 100% on-premise — zero cloud egress.
+Configuration (environment):
+  CLINLOOP_OLLAMA_URL   Ollama address (default http://localhost:11434;
+                        http://ollama:11434 in docker-compose)
+  CLINLOOP_LLM_MODEL    force a specific installed model (e.g. exaone3.5:7.8b)
+
+Model choice: an explicitly configured model, else the first installed model
+from PREFERRED_MODELS (Korean-capable instruction models first, since the
+main use is short patient messages), else any installed model.
+
+Callers are responsible for what they put in a prompt: patient outreach
+sends only diagnosis-free, approved facts (see outreach.py).
 """
 
 import json
+import os
+import re
 import time
 import logging
 import requests
@@ -16,10 +27,43 @@ from typing import Any, Dict, Optional, Tuple
 
 logger = logging.getLogger("clinloop.local_llm")
 
-OLLAMA_BASE_URL = "http://localhost:11434"
+OLLAMA_BASE_URL = os.environ.get("CLINLOOP_OLLAMA_URL", "http://localhost:11434").rstrip("/")
 
-# ── Model priority: best clinical reasoning first ──
+# Reasoning models (e.g. DeepSeek-R1) emit their chain of thought in <think>
+# tags; it must never reach a clinician or a patient.
+_THINK = re.compile(r"<think>.*?</think>\s*", re.S | re.I)
+
+
+def _strip_reasoning(text: str) -> str:
+    text = _THINK.sub("", text or "")
+    if "<think>" in text.lower():          # unterminated (truncated) reasoning block
+        text = text[:text.lower().index("<think>")]
+    return text.strip()
+
+
+# ── Model priority: Korean-capable instruction models first ──
 PREFERRED_MODELS = [
+    {
+        "name": "exaone3.5:32b",
+        "label": "EXAONE 3.5 32B (Korean/English)",
+        "context_window": 32768,
+        "strengths": ["Korean", "instruction-following"],
+        "vram_gb": 20,
+    },
+    {
+        "name": "exaone3.5:7.8b",
+        "label": "EXAONE 3.5 7.8B (Korean/English)",
+        "context_window": 32768,
+        "strengths": ["Korean", "instruction-following"],
+        "vram_gb": 5,
+    },
+    {
+        "name": "qwen2.5:7b",
+        "label": "Qwen 2.5 7B (multilingual)",
+        "context_window": 32768,
+        "strengths": ["multilingual", "instruction-following"],
+        "vram_gb": 5,
+    },
     {
         "name": "deepseek-r1:70b",
         "label": "DeepSeek-R1 70B (Best Clinical Reasoning)",
@@ -59,14 +103,21 @@ PREFERRED_MODELS = [
 
 
 def get_available_models() -> list:
-    """Query Ollama for installed models and return sorted by preference."""
+    """Installed Ollama models, best first: configured model, preferred list, then any other."""
     try:
         resp = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
         if resp.status_code != 200:
             return []
-        installed = {m["name"] for m in resp.json().get("models", [])}
-        available = [m for m in PREFERRED_MODELS if m["name"] in installed]
-        logger.info(f"Local LLMs available: {[m['name'] for m in available]}")
+        installed = [m["name"] for m in resp.json().get("models", []) if m.get("name")]
+        known = {m["name"]: m for m in PREFERRED_MODELS}
+        ordered = [n for n in (m["name"] for m in PREFERRED_MODELS) if n in installed]
+        ordered += [n for n in installed if n not in ordered]
+        forced = os.environ.get("CLINLOOP_LLM_MODEL")
+        if forced and forced in installed:
+            ordered = [forced] + [n for n in ordered if n != forced]
+        available = [known.get(n, {"name": n, "label": n, "context_window": None,
+                                   "strengths": [], "vram_gb": None}) for n in ordered]
+        logger.info(f"Local LLMs available: {ordered}")
         return available
     except Exception as e:
         logger.warning(f"Ollama unreachable: {e}")
@@ -132,7 +183,7 @@ def generate_clinical_text(
         latency_ms = (time.perf_counter() - t0) * 1000
 
         return {
-            "text": data.get("response", "").strip(),
+            "text": _strip_reasoning(data.get("response", "")),
             "model": model,
             "latency_ms": round(latency_ms, 1),
             "tokens_generated": data.get("eval_count", 0),

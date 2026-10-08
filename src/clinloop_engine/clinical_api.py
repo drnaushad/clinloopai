@@ -104,7 +104,7 @@ def connections_status():
     What ClinLoop is really connected to, checked live (cached for 5 minutes).
     Only service health is returned: no hostnames, credentials or patient data.
     """
-    from . import literature
+    from . import biomcp_client, literature
     from .local_llm_engine import get_available_models
 
     cached = literature._cache.get("health|local_llm", literature.HEALTH_TTL)
@@ -117,6 +117,7 @@ def connections_status():
     fhir_configured = bool(os.environ.get("CLINLOOP_FHIR_BASE"))
     return {
         "clinloop_api": {"status": "ok"},
+        "biomcp": {k: v for k, v in biomcp_client.status().items() if k != "error"},
         "pubmed": literature.pubmed_status(),
         "europe_pmc": literature.europepmc_status(),
         "fhir_server": {"status": "configured" if fhir_configured else "not_configured",
@@ -126,17 +127,22 @@ def connections_status():
         "omop_cdm": {"status": "not_connected", "note": "No OMOP database is connected"},
         "ehr_writeback": {"status": "not_connected", "note": "Read-only by design; FHIR Tasks are previews"},
         "guideline_library": {"status": "static", "rules": len(OBLIGATION_RULES),
-                              "note": "Curated rule library in code; live literature via PubMed / Europe PMC"},
+                              "note": "Curated rule and guideline library in code"},
     }
 
 
 @router.get("/evidence/{rule_id}", tags=["Connections"])
-def rule_evidence(rule_id: str, source: str = Query("pubmed", pattern="^(pubmed|europepmc)$"),
+def rule_evidence(rule_id: str, source: str = Query("pubmed", pattern="^(pubmed|europepmc|biomcp)$"),
                   limit: int = Query(5, ge=1, le=20)):
-    """Live literature for one rule from PubMed or Europe PMC (rule-level query only)."""
+    """Live literature for one rule from PubMed, Europe PMC or BioMCP (rule-level query only)."""
     from .literature import LiteratureError, evidence_for_rule
+    from .biomcp_client import BioMCPError, rule_articles
     try:
+        if source == "biomcp":
+            return rule_articles(rule_id)
         return evidence_for_rule(rule_id, source, limit)
+    except BioMCPError as e:
+        raise HTTPException(502, f"BioMCP unreachable: {e}")
     except KeyError:
         raise HTTPException(404, f"Unknown rule {rule_id}")
     except LiteratureError as e:

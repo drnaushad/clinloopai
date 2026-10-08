@@ -19,7 +19,7 @@ from src.clinloop_engine.local_llm_engine import (
     generate_clinical_text,
 )
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
@@ -33,7 +33,9 @@ from src.clinloop_engine.evidence_agent import run_evidence_synthesis
 from src.clinloop_engine.safety_clock import safety_clock_loop, get_clock_status
 import asyncio
 from contextlib import asynccontextmanager
-from src.clinloop_engine.biomcp_server import handle_call_tool as handle_biomcp
+from src.clinloop_engine.biomcp_server import handle_call_tool as handle_guideline_library
+from src.clinloop_engine import biomcp_client
+from src.clinloop_engine.auth import User, require_role
 from src.clinloop_engine.ehr_mcp_server import handle_call_tool as handle_ehr
 from src.clinloop_engine.pacs_mcp_server import handle_call_tool as handle_pacs
 from src.clinloop_engine.clinical_api import router as clinical_router, escalation_loop, get_store
@@ -115,8 +117,7 @@ def health_check():
         "status": "online",
         "service": "ClinLoop AI Production Core",
         "version": "2.0.0",
-        "standard_support": ["OHDSI OMOP-CDM v5.4", "HL7 FHIR R4", "MCP v1.2 (BioMCP + EHR + PACS)"],
-        "telemetry": "active"
+        "standard_support": ["HL7 FHIR R4 (read-only ingest)", "MCP client (BioMCP)"],
     }
 
 @app.get("/api/v1/cases", tags=["Triage Worklist"])
@@ -210,46 +211,61 @@ class McpToolCallRequest(BaseModel):
     tool: str = Field(..., description="MCP tool name (e.g. biomcp_query_guidelines, ehr_query_encounters, pacs_fetch_dicom_metadata)")
     arguments: Dict[str, Any] = Field(default_factory=dict, description="Tool arguments")
 
-@app.post("/api/v1/biomcp/call", tags=["BioMCP Knowledge Server"])
-def biomcp_call(req: McpToolCallRequest):
-    """Route a BioMCP tool call to the appropriate guideline handler."""
+@app.post("/api/v1/biomcp/call", tags=["BioMCP (MCP server)"])
+def biomcp_call(req: McpToolCallRequest, user: User = Depends(require_role("viewer"))):
+    """
+    Call a read-only tool on the connected BioMCP server over MCP (PubMed/PubTator3,
+    ClinicalTrials.gov, openFDA, MyGene/MyVariant …). Never put patient data in a query.
+    """
     try:
-        result = handle_biomcp(req.tool, req.arguments)
-        return {"status": "grounded", "tool": req.tool, "result": result}
+        return {"status": "ok", **biomcp_client.call_tool(req.tool, req.arguments)}
+    except biomcp_client.BioMCPError as e:
+        raise HTTPException(status_code=502, detail=f"BioMCP: {e}")
+
+@app.get("/api/v1/biomcp/status", tags=["BioMCP (MCP server)"])
+def biomcp_status(user: User = Depends(require_role("viewer"))):
+    """Connection status of the BioMCP server, including the tools ClinLoop may call."""
+    return biomcp_client.status(force=True)
+
+@app.post("/api/v1/guidelines/call", tags=["Guideline Library (static)"])
+def guideline_library_call(req: McpToolCallRequest):
+    """Curated, static guideline lookups built into ClinLoop (not a live connection)."""
+    try:
+        return {"status": "static", "tool": req.tool, "result": handle_guideline_library(req.tool, req.arguments)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.post("/api/v1/ehr/call", tags=["EHR MCP Server (Epic/Cerner)"])
+@app.post("/api/v1/ehr/call", tags=["EHR connector (mock)"])
 def ehr_mcp_call(req: McpToolCallRequest):
-    """Route an EHR MCP tool call (e.g. query_patient_encounters, push_fhir_task)."""
+    """MOCK: returns canned responses; no EHR is connected and nothing is written anywhere."""
     try:
         result = handle_ehr(req.tool, req.arguments)
-        return {"status": "success", "tool": req.tool, "result": result}
+        return {"status": "simulated", "simulated": True, "tool": req.tool, "result": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.post("/api/v1/pacs/call", tags=["PACS MCP Server (Radiology/DICOM)"])
+@app.post("/api/v1/pacs/call", tags=["PACS connector (mock)"])
 def pacs_mcp_call(req: McpToolCallRequest):
-    """Route a PACS MCP tool call (e.g. fetch_dicom_metadata)."""
+    """MOCK: returns canned responses; no PACS is connected."""
     try:
         result = handle_pacs(req.tool, req.arguments)
-        return {"status": "success", "tool": req.tool, "result": result}
+        return {"status": "simulated", "simulated": True, "tool": req.tool, "result": result}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/api/v1/mcp/tools", tags=["MCP Protocol Registry"])
 def list_all_mcp_tools():
-    """Returns a unified registry of all available MCP tools across all servers."""
-    from src.clinloop_engine.biomcp_server import TOOLS as BIOMCP_TOOLS
+    """Tools by server, with each server's real connection type."""
+    from src.clinloop_engine.biomcp_server import TOOLS as LIBRARY_TOOLS
     from src.clinloop_engine.ehr_mcp_server import TOOLS as EHR_TOOLS
     from src.clinloop_engine.pacs_mcp_server import TOOLS as PACS_TOOLS
+    bio = biomcp_client.status()
     return {
-        "protocol_version": "2024-11-05",
-        "total_tools": len(BIOMCP_TOOLS) + len(EHR_TOOLS) + len(PACS_TOOLS),
         "servers": [
-            {"name": "BioMCP (Clinical Guidelines)", "tools": BIOMCP_TOOLS},
-            {"name": "EHR MCP (Epic/Cerner)", "tools": EHR_TOOLS},
-            {"name": "PACS MCP (Radiology/DICOM)", "tools": PACS_TOOLS},
+            {"name": "BioMCP", "connection": bio["status"], "tools": bio.get("allowed_tools", [])},
+            {"name": "ClinLoop guideline library", "connection": "static", "tools": LIBRARY_TOOLS},
+            {"name": "EHR connector", "connection": "mock", "tools": EHR_TOOLS},
+            {"name": "PACS connector", "connection": "mock", "tools": PACS_TOOLS},
         ]
     }
 

@@ -90,6 +90,7 @@ clinloopai/
 │       ├── fhir_sync.py              # Scheduled read-only sync from a FHIR server
 │       ├── outreach.py               # Patient messages: draft → approval → provider (outbox / webhook)
 │       ├── literature.py             # Live PubMed / Europe PMC search and service health checks
+│       ├── biomcp_client.py          # MCP client for the BioMCP server (stdio or streamable HTTP)
 │       ├── loop_store.py             # SQLite loop registry, workflow, escalation, audit, open-loop rate
 │       ├── clinical_api.py           # Pilot endpoints: ingest, worklist, actions, metrics
 │       ├── auth.py                   # Bearer-token roles: viewer / navigator / clinician / admin
@@ -151,7 +152,8 @@ pip install pytest                 # to run the test suite
 | --- | --- |
 | REST API, worklist, FHIR ingest | `pip install -r requirements-api.txt` |
 | GPU demo endpoints | `pip install torch` (optional; without it those endpoints return 503) |
-| Local LLM text generation | Install [Ollama](https://ollama.com) and pull a model, e.g. `ollama pull llama3.1`. Without it, LLM endpoints return an "unavailable" result. |
+| Local LLM (patient-message drafts) | Install [Ollama](https://ollama.com), then `./scripts/setup_local_llm.sh` (pulls `exaone3.5:7.8b`). Without it, messages use a fixed safe template |
+| BioMCP | Included in `requirements-api.txt` (`biomcp-python`); ClinLoop starts it automatically |
 | Word monograph scripts | `pip install python-docx` and `mkdir ClinLoop_AI_Package` |
 
 ---
@@ -163,7 +165,7 @@ Run every command from the **repository root**. The code imports modules as `src
 ### 1. Tests
 
 ```bash
-python -m pytest tests/ src/tests/ -v            # 141 tests
+python -m pytest tests/ src/tests/ -v            # 151 tests
 ```
 
 The API tests are skipped automatically when `requirements-api.txt` is not installed.
@@ -265,6 +267,8 @@ Key endpoints (all except `/rules` and `/health` require a token):
 | `POST /api/v1/outreach/{id}/decision` | clinician | Approve (optionally edited) and send, or reject |
 | `GET /api/v1/feed/status` | viewer | Data feed `OK` / `STALE` / `FAILING` / `NEVER` |
 | `POST /api/v1/fhir/sync` | admin | Run one sync from the configured FHIR server now |
+| `GET /api/v1/biomcp/status` | viewer | BioMCP connection and the tools ClinLoop may call |
+| `POST /api/v1/biomcp/call` | viewer | Call a read-only BioMCP tool (articles, trials, openFDA, genes, variants) |
 | `GET /api/v1/audit/verify` | admin | Verify the audit hash chain |
 | `GET /api/v1/connections/status` | public | What is really connected, checked live (no hostnames, secrets or patient data) |
 | `GET /api/v1/evidence/{rule_id}?source=pubmed\|europepmc` | public | Live literature for a rule (rule-level search terms only) |
@@ -291,10 +295,39 @@ Configuration:
 | `CLINLOOP_CORS_ORIGINS` | Allowed browser origins | cockpit origins |
 | `NCBI_API_KEY` | Optional NCBI key (10 instead of 3 PubMed requests/s) | — |
 | `CLINLOOP_LITERATURE` | `off` disables all outbound PubMed / Europe PMC calls | on |
+| `CLINLOOP_BIOMCP_URL` | BioMCP over streamable HTTP, e.g. `http://biomcp:8000/mcp` | stdio: runs `biomcp run` |
+| `CLINLOOP_BIOMCP_COMMAND` | Command used for stdio BioMCP | `biomcp run` |
+| `CLINLOOP_OLLAMA_URL` | Ollama address | `http://localhost:11434` |
+| `CLINLOOP_LLM_MODEL` | Force a specific installed model | best installed (EXAONE 3.5 first) |
 
 One-off sync from the command line: `python -m src.clinloop_engine.fhir_sync --once`.
 
-Docker (on-premise; publish the port on localhost only):
+#### BioMCP and the local LLM
+
+**BioMCP** is the open-source biomedical MCP server (PubMed/PubTator3, ClinicalTrials.gov, openFDA,
+MyGene/MyVariant). ClinLoop connects to it as an MCP client: by default it launches `biomcp run`
+over stdio, or it connects to `CLINLOOP_BIOMCP_URL` (streamable HTTP). Only read-only tools on an
+allowlist can be called, and only rule-level search terms are sent. When BioMCP's upstream sources
+are unreachable it returns an empty list; ClinLoop labels that explicitly so that "no results" is
+never mistaken for "no evidence".
+
+**The local LLM** is an Ollama server inside the hospital network. It drafts patient messages from
+diagnosis-free facts, and a clinician approves every message. EXAONE 3.5 (Korean/English) is
+preferred, any installed model is used as a fallback, and reasoning text from models such as
+DeepSeek-R1 (`<think>…</think>`) is removed before anyone sees it.
+
+Both appear in the Connections panel with their live status.
+
+#### Docker: the whole stack
+
+```bash
+export CLINLOOP_API_TOKENS="$(openssl rand -hex 16):dr.lee:admin"
+export CLINLOOP_SIGNING_KEY="$(openssl rand -hex 32)"
+docker compose up -d          # API + BioMCP (HTTP) + Ollama + one-off model download
+```
+
+The API is published on `127.0.0.1:8124` only; BioMCP and Ollama stay inside the compose network.
+For an NVIDIA GPU, uncomment the `deploy` block of the `ollama` service. API only:
 
 ```bash
 docker build -t clinloop-api .
@@ -371,15 +404,16 @@ synthetic event, so results are identical on every run.
 | Patient outreach | **Implemented** with clinician approval. Real delivery requires the hospital's KakaoTalk/SMS integration behind the webhook |
 | Stage 1 validation toolkit | **Implemented**; awaits IRB approval and real data |
 | Synthetic data generator, benchmark, figures | **Implemented** (seeded) |
-| BioMCP guideline tools | Static, curated guideline citations in code |
+| BioMCP | **Connected** over MCP (stdio or streamable HTTP) to the open-source BioMCP server: 36 tools, read-only allowlist |
+| Built-in guideline library | Static, curated guideline citations in code (`biomcp_server.py`, `/api/v1/guidelines/call`) |
+| EHR / PACS connectors | **Mock**: responses are labelled `simulated` |
 | PubMed / Europe PMC | **Live** through the ClinLoop server: per-rule literature search and health checks. Only rule-level search terms are sent; never patient data |
 | Connection status | The cockpit's badges, the "Live connections" count and the Connections panel show only what the server has verified. On the public site, with no server, they read "not connected" |
 | OMOP CDM, EHR writeback, cloud LLMs | **Not connected** (OMOP: no database; EHR: read-only by design; cloud LLMs: not used) |
-| EHR / PACS MCP servers | **Mock**: return canned text and do not connect to any EHR |
 | Counterfactual engine | **Fixed lookup table** of hand-written, illustrative trajectories for specific case IDs; no Markov simulation runs. The API and cockpit label them as not clinically validated |
 | GPU engine | PyTorch network with **untrained random weights**; its "confidence" output has no clinical meaning |
 | Safety-clock watchdog | **Implemented**: runs the detection engine over the demo cases and escalates deadline violations |
-| Patient outreach agent | Drafts messages with a local LLM (Ollama) from diagnosis-free facts. It blocks definitive clinical claims and falls back to a fixed safe message |
+| Patient outreach agent | Drafts messages with the local LLM (Ollama, configurable address and model) from diagnosis-free facts. It strips model reasoning, blocks definitive clinical claims, and falls back to a fixed safe message |
 | PHI de-identifier | Pseudonymises structured fields and scrubs embedded names, MRNs, resident numbers, phone numbers, dates and Korean addresses from free text. It **cannot** detect names of people absent from the structured record, so human review is still required before any external transmission |
 | API health-economics / ethics-charter endpoints | Report the planned evaluation and the honest status of each safety pillar. No outcomes have been measured |
 | API key test endpoint | Not implemented; reports `not_verified` |
