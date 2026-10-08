@@ -522,7 +522,7 @@ def _map_encounter(r: Dict) -> List[Tuple[str, str, Dict]]:
 
 
 def _map_condition(r: Dict) -> List[Tuple[str, str, Dict]]:
-    """Active problem-list entries that carry an obligation (HCC risk) or radiology context (cancer, immunocompromise)."""
+    """Active problem-list entries: all as context; HCC risk carries an obligation, cancer and immunocompromise inform radiology."""
     clinical = _codes(r.get("clinicalStatus")) or {"active"}
     if not clinical & {"active", "recurrence", "relapse"}:
         return []
@@ -541,8 +541,8 @@ def _map_condition(r: Dict) -> List[Tuple[str, str, Dict]]:
     if any(c.startswith(_IMMUNO_ICD10) for c in codes) or _IMMUNO_TEXT.search(text):
         details["immunocompromised"] = True
         mapping.append("Condition(immunocompromise)→diagnosis, context for radiology decisions")
-    if not mapping:
-        return []
+    if not mapping:      # every active diagnosis is context (patient graph); only the flags above carry obligations
+        mapping.append("Condition→diagnosis (context, no obligation of its own)")
     details["mapping"] = mapping
     ts = _first(r.get("onsetDateTime"), r.get("recordedDate"))
     return [(EventType.DIAGNOSIS.value, ts, details)]

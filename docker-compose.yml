@@ -46,6 +46,11 @@ services:
       CLINLOOP_IMAGING_MODELS: ${CLINLOOP_IMAGING_MODELS:-}
       CLINLOOP_IMAGING_MODELS_CONFIG: ${CLINLOOP_IMAGING_MODELS_CONFIG:-}
       CLINLOOP_IMAGING_RESEARCH_AI: ${CLINLOOP_IMAGING_RESEARCH_AI:-0}
+      # Vision-language model (add "vlm" to CLINLOOP_IMAGING_MODELS), e.g. MedGemma pulled into the ollama service
+      CLINLOOP_VLM_URL: ${CLINLOOP_VLM_URL:-http://ollama:11434}
+      CLINLOOP_VLM_MODEL: ${CLINLOOP_VLM_MODEL:-}
+      # CT organ measurement (add "totalseg"; image built with WITH_CT_SEGMENTATION=1); 0 = full 1.5 mm model
+      CLINLOOP_CT_SEG_FAST: ${CLINLOOP_CT_SEG_FAST:-1}
       # DICOM dates/times are local: the hospital's time zone (IANA name)
       CLINLOOP_LOCAL_TZ: ${CLINLOOP_LOCAL_TZ:-Asia/Seoul}
     volumes:

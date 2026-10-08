@@ -109,7 +109,9 @@ clinloopai/
 │       ├── ai_review.py              # Imaging AI as second reader: findings the report does not address (R047)
 │       ├── imaging_ai.py             # DICOM analysis: header safety checks, study record, imaging models
 │       ├── document_reader.py        # Outside reports: PDF text and OCR (Korean/English)
+│       ├── ct_organs.py              # CT series: organ segmentation (TotalSegmentator) and measurements
 │       ├── imaging_api.py            # Imaging and outside-report endpoints
+│       ├── patient_graph.py          # Patient knowledge graph from the temporal hypergraph
 │       ├── config/critical_findings.json # Example critical-finding list (each hospital approves its own)
 │       ├── fhir_sync.py              # Scheduled read-only sync from a FHIR server
 │       ├── outreach.py               # Patient messages: draft → approval → provider (outbox / webhook)
@@ -140,7 +142,8 @@ clinloopai/
 ├── index.html, css/, js/         # Static web cockpit (served at clinloopai.app)
 ├── worklist.html                 # Clinician worklist (talks to the API)
 ├── governance.html               # Specialist rule sign-off and critical-finding list approval
-├── imaging.html                  # Outside reports (PDF/OCR) and DICOM analysis
+├── imaging.html                  # Outside reports (PDF/OCR), DICOM analysis, CT organ measurement
+├── patient.html                  # Patient knowledge graph: events, obligations, missing follow-ups
 ├── data/cases.json               # 5 curated synthetic demo cases used by the web cockpit
 ├── data/fhir_example_bundle.json # Synthetic FHIR R4 bundle: 7 patients, the main failure modes
 ├── requirements-api.txt          # API dependencies
@@ -438,6 +441,20 @@ See [`docs/IMAGING.md`](docs/IMAGING.md). In short:
 - **DICOM analysis** (`imaging.html`): header safety checks (a wrong-patient image is refused), a
   study record, and imaging models. The built-in research chest-X-ray model is TorchXRayVision;
   approved vendor models can be added for any modality. Pixel data is never stored.
+- **CT organ measurement** (`imaging.html`, `CLINLOOP_IMAGING_MODELS=totalseg`): a whole CT series
+  is segmented by TotalSegmentator (research use). ClinLoop measures the aorta's short-axis
+  diameter (abdominal ≥ 3.0 cm, thoracic ≥ 4.0 cm) and the spleen's length (> 13 cm). An abnormal
+  measurement that the report does not mention asks a radiologist to look again (R047).
+- **Vision-language model** (`vlm`): for example MedGemma on the hospital's own Ollama or
+  OpenAI-compatible server. It gives a draft description, shown but never stored, and findings
+  limited to a fixed list. Images are never sent outside the hospital network.
+- **Approved vendor products**: see [`docs/VENDOR_IMAGING_AI.md`](docs/VENDOR_IMAGING_AI.md) and the
+  placeholder template [`docs/imaging_models.example.json`](docs/imaging_models.example.json).
+- **Patient knowledge graph** (`patient.html`, `GET /api/v1/patients/{id}/graph`): every event the
+  engine read (diagnoses, lab values, orders, medications, appointments, imaging studies,
+  radiology reports, AI findings) on one time axis. Each obligation is drawn as a hyperedge from
+  the event that created it to the follow-up that fulfilled it, or to the missing follow-up at
+  its deadline, with its evidence chain and worklist state.
 
 ### 7. Governance: specialist sign-off and the critical-finding list
 
@@ -536,7 +553,10 @@ synthetic event, so results are identical on every run.
 | PACS | **Implemented**: study labels over DICOMweb QIDO-RS, with body-region matching. Tested against a stand-in DICOMweb server; not yet against a hospital PACS |
 | Imaging AI | **Implemented** as a second reader (R047): approved products' results (FHIR or DICOM SR), plus an on-premise runner. Built-in model: TorchXRayVision (chest X-ray, **research use only**); vendor models over HTTP for any modality. Research findings open no loops by default |
 | Outside reports | **Implemented**: PDF text and OCR (Tesseract kor+eng) with a human check before filing |
-| DICOM analysis | **Implemented**: header safety checks (wrong patient refused), study record, model plug-ins, preview. No built-in CT/MRI/US model |
+| DICOM analysis | **Implemented**: header safety checks (wrong patient refused), study record, model plug-ins, preview |
+| CT organ measurement | **Implemented, research use**: TotalSegmentator on a whole CT series; aortic diameter, spleen length and organ volumes. Run live here on a public sample CT and a synthetic aneurysm phantom; not validated on hospital CTs |
+| Vision-language model | **Adapter implemented**, for MedGemma or similar on an on-premise Ollama/OpenAI-compatible server. Tested against a stand-in server only: the model weights could not be downloaded in the build environment |
+| Patient knowledge graph | **Implemented** (`patient.html`): API and bilingual SVG view of events and obligations |
 | EHR connector (MCP demo) | **Mock**: responses are labelled `simulated` |
 | PubMed / Europe PMC | **Live** through the ClinLoop server: per-rule literature search and health checks. Only rule-level search terms are sent; never patient data |
 | Connection status | The cockpit's badges, the "Live connections" count and the Connections panel show only what the server has verified. On the public site, with no server, they read "not connected" |

@@ -38,11 +38,24 @@ RUN if [ "$WITH_IMAGING_AI" = "1" ]; then \
       && python -c "import torchxrayvision as x; x.models.DenseNet(weights='densenet121-res224-all', cache_dir='/opt/clinloop/models')"; \
     fi
 
+# Optional CT organ segmentation (research use only): docker build --build-arg WITH_CT_SEGMENTATION=1
+# Installs CPU PyTorch + TotalSegmentator and bakes the 3 mm "total_fast" weights into the image.
+# Its usage statistics are switched off by ClinLoop before every run (config on the data volume).
+ARG WITH_CT_SEGMENTATION=0
+ENV TOTALSEG_WEIGHTS_PATH=/opt/clinloop/totalseg \
+    TOTALSEG_HOME_DIR=/var/lib/clinloop/totalseg
+RUN if [ "$WITH_CT_SEGMENTATION" = "1" ]; then \
+      pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+      && pip install --no-cache-dir TotalSegmentator \
+      && TOTALSEG_HOME_DIR=/tmp/totalseg totalseg_download_weights -t total_fast \
+      && rm -rf /tmp/totalseg; \
+    fi
+
 COPY src ./src
 COPY data/cases.json data/fhir_example_bundle.json ./data/
 
 # Web UI, served by the API at / (only these files are exposed)
-COPY index.html worklist.html governance.html imaging.html config.js manifest.json sw.js ./web/
+COPY index.html worklist.html governance.html imaging.html patient.html config.js manifest.json sw.js ./web/
 COPY css ./web/css
 COPY js ./web/js
 COPY icons ./web/icons

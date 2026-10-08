@@ -4,6 +4,7 @@ imaging_api.py — Imaging endpoints: outside reports, DICOM analysis, imaging-A
   POST /api/v1/documents/outside-report/extract   read a PDF/image report (nothing stored)
   POST /api/v1/documents/outside-report           file the (checked) report and re-evaluate the patient
   POST /api/v1/imaging/analyze                    DICOM: header checks, study record, imaging models
+  POST /api/v1/imaging/ct-organs                  CT series: organ segmentation and measurements (3-D)
   POST /api/v1/imaging/ai-results                 results from an approved imaging-AI product (FHIR or DICOM SR)
   GET  /api/v1/imaging/models                     imaging models and their regulatory status (public)
   GET  /api/v1/patients/{id}/documents            what was added for a patient outside the FHIR feed
@@ -30,6 +31,7 @@ from .loop_detector import ClinLoopDetector
 
 router = APIRouter(prefix="/api/v1")
 MAX_UPLOAD_BYTES = 60 * 1024 * 1024
+MAX_CT_UPLOAD_BYTES = 400 * 1024 * 1024     # a zipped CT series
 
 
 FHIR_ID = r"^[A-Za-z0-9\-.]{1,64}$"
@@ -59,14 +61,14 @@ class AIResults(BaseModel):
     regulatory: str = Field("not stated", description="Regulatory status of the product, e.g. 'MFDS approved (Class II)'")
 
 
-def _decode(b64: str) -> bytes:
+def _decode(b64: str, limit: int = MAX_UPLOAD_BYTES) -> bytes:
     try:
         data = base64.b64decode(b64.split(",", 1)[-1], validate=False)
     except (binascii.Error, ValueError):
         raise HTTPException(422, "content_base64 is not valid base64")
     if not data:
         raise HTTPException(422, "Empty file")
-    if len(data) > MAX_UPLOAD_BYTES:
+    if len(data) > limit:
         raise HTTPException(413, "File too large")
     return data
 
@@ -205,6 +207,39 @@ def analyze_image(req: DicomUpload, user: User = Depends(require_role("navigator
     return result
 
 
+@router.post("/imaging/ct-organs", tags=["Imaging & Documents"])
+def measure_ct_series(req: FileUpload, user: User = Depends(require_role("navigator"))):
+    """
+    One CT series (zip of its DICOM files, or NIfTI): organ segmentation (TotalSegmentator, research use),
+    organ volumes, aortic diameter and spleen length. An abnormal measurement is a second-reader finding
+    compared with the radiologist's report (R047). A NIfTI volume has no PatientID: shown, never filed.
+    """
+    from . import ct_organs as ct
+    from .imaging_ai import ImagingError
+    if not ct.enabled():
+        raise HTTPException(503, "CT organ measurement is not enabled (CLINLOOP_IMAGING_MODELS=totalseg)")
+    patient = _patient_resource(req.patient_id)
+    data = _decode(req.content_base64, MAX_CT_UPLOAD_BYTES)
+    try:
+        result = ct.analyze_ct_series(data, req.filename, req.patient_id, _patient_ids(patient))
+    except ImagingError as e:
+        raise HTTPException(422, str(e))
+    store = get_store()
+    if result["filed"]:
+        for r in result["resources"]:
+            kind = "dicom-study" if r["resourceType"] == "ImagingStudy" else "imaging-ai"
+            store.add_external_resource(r, kind, user.name, user.role, source_sha256=result["sha256"],
+                                        summary=(r.get("description") if kind == "dicom-study"
+                                                 else f"{r['device']['display']}: {r['code']['text']}"))
+        result.update(evaluate_patient(req.patient_id, user.name))
+    else:
+        store._audit(user.name, user.role, "ct_organs_not_filed", None,
+                     {"patient_id": req.patient_id, "sha256": result["sha256"],
+                      "qa": [c["code"] for c in result["qa"] if c["level"] == "critical"]})
+        store._db.commit()
+    return result
+
+
 @router.post("/imaging/ai-results", tags=["Imaging & Documents"])
 def receive_ai_results(req: AIResults, user: User = Depends(require_role("admin"))):
     """
@@ -270,7 +305,11 @@ def imaging_models():
         dicom = True
     except ImportError:
         dicom = False
-    return {"models": [m.describe() for m in registered_models()],
+    from . import ct_organs
+    models = [m.describe() for m in registered_models()]
+    if ct_organs.enabled():
+        models.append(ct_organs.describe())
+    return {"models": models,
             "research_findings_open_loops": research_ai_enabled(),
             "dicom_reader": "ready" if dicom else "not installed (pip install pydicom)",
             "ocr": "ready (Tesseract kor+eng)" if ocr_available() else "not installed (apt install tesseract-ocr tesseract-ocr-kor)"}
