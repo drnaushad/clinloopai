@@ -127,12 +127,12 @@ Run every command from the **repository root**. The code imports modules as `src
 ### 1. Tests
 
 ```bash
-python -m pytest tests/ -v                       # core engine: 32 tests
-python -m pytest src/tests/ -v                   # agent / counterfactual modules
+python -m pytest tests/ src/tests/ -v            # 54 tests
 ```
 
-Known issue: `src/tests/test_noble_engine.py::test_cases_json_grounding` fails because it reads
-`demo/data/cases.json`, but the file lives at `data/cases.json`.
+`tests/test_clinloop.py` includes patient-safety regression tests. Each one pins a failure mode
+that would silently drop a patient: a partially completed follow-up counted as closed, a cancelled
+CT counted as done, an overdue critical alert downgraded, a wrong guideline window applied.
 
 ### 2. Benchmark
 
@@ -166,8 +166,10 @@ for det in model.detect_loops("P001", events, scenario_id="demo-1"):
 
 Valid `event_type` values are listed in `EventType` in `src/clinloop_engine/clinical_ontology.py`.
 Give a rule's trigger condition explicitly with `details["condition"]` (for example
-`"abnormal_cervical_cytology"`, `"anticoagulant_dose_change"`). Use timestamps that are either all
-timezone-naive or all timezone-aware. Mixing the two raises a `TypeError`.
+`"abnormal_cervical_cytology"`, `"anticoagulant_dose_change"`). Timestamps may be timezone-aware
+(`+09:00`, `Z`) or naive; aware values are converted to UTC and naive values are treated as UTC.
+Give each event a `status`: only follow-ups that actually happened close a loop. `cancelled`,
+`no_show`, `scheduled`, `pending` and similar statuses do not.
 
 ### 4. REST API
 
@@ -176,13 +178,13 @@ uvicorn src.clinloop_engine.api:app --host 127.0.0.1 --port 8124
 # Interactive docs: http://127.0.0.1:8124/docs
 ```
 
-Start the API with `uvicorn` as shown. Do **not** run `python src/clinloop_engine/api.py`: in that
-file `uvicorn.run()` comes before the GPU and API-key routes are declared, so those routes never
-register.
+`/api/v1/agent/safety-clock/status` reports the background watchdog. Every 10 seconds it runs the
+full detection engine over `data/cases.json` and lists every obligation past its deadline.
 
-Known issues: the case and safety-clock endpoints read `demo/data/cases.json`, which does not exist,
-so `/api/v1/cases` returns an empty list. The API has **no authentication** and allows CORS from
-any origin. Keep it bound to `127.0.0.1`.
+Set `CLINLOOP_SIGNING_KEY` to sign agent audit envelopes with a stable key. Without it, a random
+per-process key is used.
+
+The API has **no authentication** and allows CORS from any origin. Keep it bound to `127.0.0.1`.
 
 ### 5. Web cockpit (static demo)
 
@@ -198,31 +200,26 @@ the API is running.
 
 ## Benchmark results (synthetic, n = 300)
 
-These numbers come from `python src/run_benchmark.py` with the current code, run on 2026-10-08:
+From `python src/run_benchmark.py`. The evaluation clock is fixed at 2027-01-01, after the last
+synthetic event, so results are identical on every run.
 
 | Metric | EMR inbox (simulated) | LLM zero-shot (simulated) | **ClinLoop AI** |
 | --- | :---: | :---: | :---: |
-| Sensitivity | 0.259 | 0.790 | **1.000** |
-| Specificity | 0.684 | 0.895 | 0.842 |
-| Precision | 0.639 | 0.942 | 0.932 |
-| F1 | 0.368 | 0.859 | **0.965** |
-| False alerts / 100 patients | 10.0 | 3.3 | 5.0 |
-| AUROC | 0.498 | 0.972 | 0.983 |
-| PR-AUC | 0.732 | 0.985 | 0.992 |
+| Sensitivity | 0.259 | 0.790 | 1.000 |
+| Specificity | 0.684 | 0.895 | 1.000 |
+| Precision | 0.639 | 0.942 | 1.000 |
+| F1 | 0.368 | 0.859 | 1.000 |
+| False alerts / 100 patients | 10.0 | 3.3 | 0.0 |
 
-**Read these numbers with care:**
+**This is a rule-conformance test, not an accuracy result.**
 
-- **Labels and detector share the same rules.** The synthetic generator writes ground-truth labels
-  from the same obligation rules the detector checks. Perfect sensitivity therefore shows the code
-  is internally consistent. It is not evidence of real-world accuracy.
-- **The baselines are not real models.** `EMRInboxBaseline` and `LLMBaseline` read the
-  ground-truth label and add random errors at hard-coded rates. They are illustrative and are not
+- **Labels and detector share the same rules.** The generator writes its ground-truth labels from
+  the guideline rules the detector implements. A perfect score shows only that the engine
+  implements its specification without error. Clinical accuracy can only be measured against
+  clinician chart review of real records.
+- **The baselines are not real models.** `EMRInboxBaseline` and `LLMBaseline` read the ground-truth
+  label and add random errors at hard-coded rates. They illustrate known failure modes and are not
   measured comparators.
-- **ClinLoop is scored more leniently than the baselines.** Its `needs_human_review` outputs count as
-  positive predictions; 73% of scenarios abstain. The baselines get no such option.
-- **AUROC and PR-AUC depend on the run date.** The benchmark evaluates at the wall-clock time, so
-  ClinLoop's AUROC was 0.944, 0.983 and 0.992 when evaluated at 2026-03-01, 2026-10-08 and
-  2027-10-08. Labels and sensitivity stay fixed.
 
 ---
 
@@ -234,20 +231,28 @@ These numbers come from `python src/run_benchmark.py` with the current code, run
 | Synthetic data generator, benchmark, figures | **Implemented** (seeded) |
 | BioMCP guideline tools | Static guideline lookup; no live PubMed/guideline retrieval |
 | EHR / PACS MCP servers | **Mock**: return canned text and do not connect to any EHR |
-| Counterfactual engine | **Fixed lookup table** of hand-written trajectories for specific case IDs; no Markov simulation runs |
+| Counterfactual engine | **Fixed lookup table** of hand-written, illustrative trajectories for specific case IDs; no Markov simulation runs. The API and cockpit label them as not clinically validated |
 | GPU engine | PyTorch network with **untrained random weights**; its "confidence" output has no clinical meaning |
-| Patient outreach agent | Calls a local LLM through Ollama. Currently it always returns the fallback text "Please contact the clinic." (it reads the wrong response key) |
-| PHI de-identifier | Pseudonymises structured name/MRN fields. Free-text scrubbing misses names, MRNs, Korean dates and addresses, so it is **not** sufficient as a gate before cloud LLM calls |
-| API health-economics / ethics-charter / key-test endpoints | Return **hard-coded** values |
+| Safety-clock watchdog | **Implemented**: runs the detection engine over the demo cases and escalates deadline violations |
+| Patient outreach agent | Drafts messages with a local LLM (Ollama). It blocks drafts containing definitive diagnoses, falls back to a fixed safe message, and always requires human review |
+| PHI de-identifier | Pseudonymises structured fields and scrubs embedded names, MRNs, resident numbers, phone numbers, dates and Korean addresses from free text. It **cannot** detect names of people absent from the structured record, so human review is still required before any external transmission |
+| API health-economics / ethics-charter endpoints | Report the planned evaluation and the honest status of each safety pillar. No outcomes have been measured |
+| API key test endpoint | Not implemented; reports `not_verified` |
 
 ---
+
+## Roadmap
+
+[`docs/LIFE_SAVING_ROADMAP.md`](docs/LIFE_SAVING_ROADMAP.md) sets out how ClinLoop moves from a
+synthetic-data prototype to a system proven to save lives: clinical scope, scientific
+contributions, validation studies and deployment.
 
 ## Data protection
 
 - Commit only synthetic data. Never commit real patient records, exports, or credentials.
 - `data/cases.json` contains synthetic demo patients only.
-- `digital_signature.py` uses a hard-coded HMAC key for the demo. Replace it with a managed secret
-  before any real deployment.
+- Audit signatures use `CLINLOOP_SIGNING_KEY`; supply it from a managed secret store in any real
+  deployment.
 
 ## Key references
 
