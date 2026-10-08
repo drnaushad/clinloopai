@@ -44,6 +44,15 @@ class EventType(Enum):
     COLONOSCOPY = "colonoscopy"
     BREAST_BIOPSY = "breast_biopsy"
     CRITICAL_VALUE_NOTIFICATION = "critical_value_notification"
+    DIAGNOSIS = "diagnosis"                       # active problem-list entry (FHIR Condition)
+    BP_CHECK = "bp_check"
+    POSTPARTUM_GLUCOSE_TEST = "postpartum_glucose_test"
+    HCV_RNA_TEST = "hcv_rna_test"
+    LIVER_IMAGING = "liver_imaging"               # ultrasound (or multiphase CT/MRI) of the liver
+    MENTAL_HEALTH_FOLLOWUP = "mental_health_followup"
+    IMAGING_CT = "imaging_ct"                     # any completed CT study
+    IMAGING_MRI = "imaging_mri"                   # any completed MRI study
+    IMAGING_ULTRASOUND = "imaging_ultrasound"     # any completed ultrasound study
 
 
 # ── Severity Classification ─────────────────────────────────────────────────
@@ -107,6 +116,9 @@ class ObligationRule:
     # has signed it off (see docs/LIFE_SAVING_ROADMAP.md §3.1, §6).
     review_status: str = "pending_specialist_review"
     evidence_note: str = ""          # caveats on the deadline, shown to reviewers
+    # False for loops a clinician must handle personally (e.g. after self-harm):
+    # ClinLoop never drafts a patient message for them.
+    patient_outreach: bool = True
 
 
 # ── Complete Rule Set ────────────────────────────────────────────────────────
@@ -410,6 +422,150 @@ OBLIGATION_RULES: List[ObligationRule] = [
         references=["CLSI GP47 Management of Critical- and Significant-Risk Results",
                     "The Joint Commission NPSG.02.03.01"],
         evidence_note="Institutions set the exact window; 1 hour is a common upper limit.",
+        patient_outreach=False,
+    ),
+
+    # ── Wave 2 (docs/LIFE_SAVING_ROADMAP.md §2) ──────────────────────────────
+    ObligationRule(
+        rule_id="R023",
+        name="Heart Failure Discharge → Clinic Visit ≤7 Days",
+        description="Patients discharged after heart failure hospitalisation need an early follow-up visit",
+        trigger_event=EventType.DISCHARGE,
+        trigger_condition="heart_failure_discharge",
+        required_followups=[EventType.FOLLOWUP_APPOINTMENT],
+        deadline_days=7.0,
+        severity=Severity.HIGH,
+        clinical_domain="cardiology",
+        ltl_formula="□(DISCHARGE[heart_failure] → ◇_{≤7d} FOLLOWUP_APPOINTMENT)",
+        references=["Heidenreich PA et al. 2022 AHA/ACC/HFSA Heart Failure Guideline. Circulation 2022"],
+    ),
+    ObligationRule(
+        rule_id="R024",
+        name="Hypertensive Disorder of Pregnancy → Postpartum BP Check",
+        description="Postpartum blood pressure evaluation: within 72 hours if severe, otherwise within 7–10 days",
+        trigger_event=EventType.DISCHARGE,
+        trigger_condition="hypertensive_disorder_pregnancy",
+        required_followups=[EventType.BP_CHECK],
+        deadline_days=10.0,
+        severity=Severity.HIGH,
+        clinical_domain="maternal",
+        ltl_formula="□(DISCHARGE[HDP] → ◇_{≤10d (≤72h if severe)} BP_CHECK)",
+        references=["ACOG Committee Opinion No. 736: Optimizing Postpartum Care (2018)"],
+    ),
+    ObligationRule(
+        rule_id="R025",
+        name="Gestational Diabetes → Postpartum Glucose Test (4–12 Weeks)",
+        description="Women with gestational diabetes need a 75 g OGTT 4–12 weeks after delivery",
+        trigger_event=EventType.DISCHARGE,
+        trigger_condition="gestational_diabetes_delivery",
+        required_followups=[EventType.POSTPARTUM_GLUCOSE_TEST],
+        deadline_days=84.0,
+        severity=Severity.MODERATE,
+        clinical_domain="maternal",
+        ltl_formula="□(DISCHARGE[GDM delivery] → ◇_{≤12w} POSTPARTUM_GLUCOSE_TEST)",
+        references=["ADA Standards of Care in Diabetes 2024, Section 15", "ACOG Practice Bulletin No. 190"],
+    ),
+    ObligationRule(
+        rule_id="R026",
+        name="HCV Antibody Positive → HCV RNA Test",
+        description="A reactive hepatitis C antibody needs an RNA test to establish current infection",
+        trigger_event=EventType.LAB_RESULT,
+        trigger_condition="hcv_antibody_positive",
+        required_followups=[EventType.HCV_RNA_TEST],
+        deadline_days=30.0,
+        severity=Severity.MODERATE,
+        clinical_domain="infectious_disease",
+        ltl_formula="□(LAB_RESULT[HCV Ab+] → ◇_{≤30d} HCV_RNA_TEST)",
+        references=["CDC Recommendations for Hepatitis C Screening Among Adults, MMWR 2020;69(RR-2)"],
+        evidence_note="CDC recommends reflex RNA testing on the same specimen; 30 days is a proposed outer limit.",
+    ),
+    ObligationRule(
+        rule_id="R027",
+        name="HCC Risk (Chronic HBV / Cirrhosis) → Liver Surveillance Imaging",
+        description="Patients at high risk of hepatocellular carcinoma need liver ultrasound every 6 months",
+        trigger_event=EventType.DIAGNOSIS,
+        trigger_condition="hcc_risk",
+        required_followups=[EventType.LIVER_IMAGING],
+        deadline_days=213.0,
+        severity=Severity.HIGH,
+        clinical_domain="hepatology",
+        ltl_formula="□(DIAGNOSIS[HBV ∨ cirrhosis] → ◇_{≤6m} LIVER_IMAGING)",
+        references=["KASL-NCC 2022 HCC Practice Guideline", "AASLD 2023 HCC Practice Guidance"],
+        evidence_note="6-month interval plus 1 month scheduling tolerance.",
+    ),
+    ObligationRule(
+        rule_id="R028",
+        name="HCC Surveillance Imaging → Next Imaging in 6 Months",
+        description="Each surveillance ultrasound in a high-risk patient starts the next 6-month interval",
+        trigger_event=EventType.LIVER_IMAGING,
+        trigger_condition="hcc_surveillance",
+        required_followups=[EventType.LIVER_IMAGING],
+        deadline_days=213.0,
+        severity=Severity.HIGH,
+        clinical_domain="hepatology",
+        ltl_formula="□(LIVER_IMAGING[surveillance] → ◇_{≤6m} LIVER_IMAGING)",
+        references=["KASL-NCC 2022 HCC Practice Guideline", "AASLD 2023 HCC Practice Guidance"],
+        evidence_note="6-month interval plus 1 month scheduling tolerance.",
+    ),
+    ObligationRule(
+        rule_id="R029",
+        name="Self-Harm or Psychiatric Discharge → Mental-Health Follow-up ≤7 Days",
+        description="After an ED visit for self-harm or a psychiatric admission, follow-up within 7 days",
+        trigger_event=EventType.DISCHARGE,
+        trigger_condition="mental_health_discharge",
+        required_followups=[EventType.MENTAL_HEALTH_FOLLOWUP],
+        deadline_days=7.0,
+        severity=Severity.CRITICAL,
+        clinical_domain="mental_health",
+        ltl_formula="□(DISCHARGE[self_harm ∨ psychiatric] → ◇_{≤7d} MENTAL_HEALTH_FOLLOWUP)",
+        references=["NCQA HEDIS FUH / FUM 7-day follow-up measures"],
+        evidence_note=("Deploy only with psychiatry co-design and crisis protocols. Clinician-handled: "
+                       "ClinLoop never contacts the patient for this rule."),
+        patient_outreach=False,
+    ),
+
+    # ── Radiologist-recommended follow-up (deadline taken from the report) ───
+    ObligationRule(
+        rule_id="R030",
+        name="Radiologist-Recommended CT",
+        description="Follow-up CT recommended in the radiology report, within the stated interval",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="radiologist_rec_ct",
+        required_followups=[EventType.IMAGING_CT],
+        deadline_days=90.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend CT in T] → ◇_{≤T+grace} IMAGING_CT)",
+        references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
+        evidence_note="Interval from the report plus a grace period (25%, 7–30 days). Matches modality, not body region.",
+    ),
+    ObligationRule(
+        rule_id="R031",
+        name="Radiologist-Recommended MRI",
+        description="Follow-up MRI recommended in the radiology report, within the stated interval",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="radiologist_rec_mri",
+        required_followups=[EventType.IMAGING_MRI],
+        deadline_days=90.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend MRI in T] → ◇_{≤T+grace} IMAGING_MRI)",
+        references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
+        evidence_note="Interval from the report plus a grace period (25%, 7–30 days). Matches modality, not body region.",
+    ),
+    ObligationRule(
+        rule_id="R032",
+        name="Radiologist-Recommended Ultrasound",
+        description="Follow-up ultrasound recommended in the radiology report, within the stated interval",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="radiologist_rec_ultrasound",
+        required_followups=[EventType.IMAGING_ULTRASOUND],
+        deadline_days=90.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend US in T] → ◇_{≤T+grace} IMAGING_ULTRASOUND)",
+        references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
+        evidence_note="Interval from the report plus a grace period (25%, 7–30 days). Matches modality, not body region.",
     ),
 ]
 
@@ -446,7 +602,23 @@ def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
         drug = str(details.get("drug", "")).strip().lower()
         if drug in MONITORING_WINDOW_DAYS:
             return MONITORING_WINDOW_DAYS[drug]
+    if rule.rule_id == "R024" and details.get("severe_hypertension") is True:
+        return 3.0   # severe hypertension: BP check within 72 hours (ACOG CO 736)
+    if rule.rule_id in RADIOLOGIST_REC_RULES:
+        try:
+            interval = float(details["recommended_interval_days"])
+            return interval + radiology_grace_days(interval)
+        except (KeyError, TypeError, ValueError):
+            pass
     return rule.deadline_days
+
+
+RADIOLOGIST_REC_RULES = {"R030", "R031", "R032"}
+
+
+def radiology_grace_days(interval_days: float) -> float:
+    """Scheduling tolerance after a radiologist's stated interval: 25%, at least 7 and at most 30 days."""
+    return min(30.0, max(7.0, 0.25 * interval_days))
 
 
 # ── Follow-up event statuses ────────────────────────────────────────────────

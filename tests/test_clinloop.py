@@ -810,5 +810,67 @@ class TestWaveOneRules(unittest.TestCase):
             self.assertEqual(rule.review_status, "pending_specialist_review", rule.rule_id)
 
 
+
+class TestWaveTwoRules(unittest.TestCase):
+    """Wave 2 and radiologist-recommendation rules."""
+
+    def _discharge(self, dx, **extra):
+        return _evt("d", "discharge", "2026-03-01T09:00:00", {"primary_diagnosis": dx, **extra})
+
+    def test_heart_failure_discharge_needs_visit_within_7_days(self):
+        late = _loop_statuses([self._discharge("acute_on_chronic_heart_failure"),
+                               _evt("v", "followup_appointment", "2026-03-12T09:00:00")])
+        self.assertEqual(late["R023"], LoopStatus.DELAYED.value)
+        on_time = _loop_statuses([self._discharge("chf_exacerbation"),
+                                  _evt("v", "followup_appointment", "2026-03-06T09:00:00")])
+        self.assertEqual(on_time["R023"], LoopStatus.CLOSED.value)
+
+    def test_postpartum_bp_check_window_depends_on_severity(self):
+        mild = _loop_statuses([self._discharge("gestational_hypertension"),
+                               _evt("b", "bp_check", "2026-03-06T09:00:00")])
+        self.assertEqual(mild["R024"], LoopStatus.CLOSED.value)
+        severe = _loop_statuses([self._discharge("preeclampsia_with_severe_features", severe_hypertension=True),
+                                 _evt("b", "bp_check", "2026-03-06T09:00:00")])
+        self.assertEqual(severe["R024"], LoopStatus.DELAYED.value)
+
+    def test_gestational_diabetes_postpartum_glucose_test(self):
+        self.assertEqual(_loop_statuses([self._discharge("vaginal_delivery_gestational_diabetes")])["R025"],
+                         LoopStatus.OPEN.value)
+
+    def test_hcv_antibody_needs_rna(self):
+        statuses = _loop_statuses([
+            _evt("a", "lab_result", "2026-03-01T09:00:00", {"condition": "hcv_antibody_positive"}),
+            _evt("b", "hcv_rna_test", "2026-03-10T09:00:00"),
+        ])
+        self.assertEqual(statuses["R026"], LoopStatus.CLOSED.value)
+
+    def test_hcc_surveillance_chain(self):
+        """Diagnosis → first ultrasound; each surveillance ultrasound starts the next 6-month clock."""
+        statuses = _loop_statuses([
+            _evt("dx", "diagnosis", "2025-01-01T09:00:00", {"hcc_risk": True}),
+            _evt("us1", "liver_imaging", "2025-03-01T09:00:00", {"hcc_surveillance": True}),
+        ], evaluation_time=datetime(2026, 1, 1))
+        self.assertEqual(statuses["R027"], LoopStatus.CLOSED.value)
+        self.assertEqual(statuses["R028"], LoopStatus.OPEN.value)   # next scan overdue
+
+    def test_self_harm_discharge_is_critical_and_clinician_only(self):
+        from src.clinloop_engine.clinical_ontology import get_rule_by_id
+        statuses = _loop_statuses([self._discharge("intentional_self_harm_overdose")])
+        self.assertEqual(statuses["R029"], LoopStatus.OPEN.value)
+        self.assertFalse(get_rule_by_id("R029").patient_outreach)
+
+    def test_radiologist_recommendation_deadline_comes_from_report(self):
+        from src.clinloop_engine.clinical_ontology import get_rule_by_id, get_deadline_days
+        rule = get_rule_by_id("R031")
+        self.assertAlmostEqual(get_deadline_days(rule, {"recommended_interval_days": 182.6}), 182.6 + 30)
+        self.assertAlmostEqual(get_deadline_days(rule, {"recommended_interval_days": 14}), 14 + 7)
+        statuses = _loop_statuses([
+            _evt("r", "radiology_report", "2026-01-01T09:00:00",
+                 {"recommended_modality": "mri", "recommended_interval_days": 90}),
+            _evt("m", "imaging_mri", "2026-03-20T09:00:00"),
+        ])
+        self.assertEqual(statuses["R031"], LoopStatus.CLOSED.value)
+
+
 if __name__ == "__main__":
     unittest.main()

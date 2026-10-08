@@ -273,6 +273,30 @@ class DynamicTemporalHypergraph:
         elif lung_rads in ("4B", "4X"):
             conditions.append("lung_rads_4b_4x")
 
+        modality = str(details.get("recommended_modality", "")).lower()
+        if modality in ("ct", "mri", "ultrasound") and details.get("recommended_interval_days"):
+            conditions.append(f"radiologist_rec_{modality}")
+
+        if details.get("hcc_risk") is True:
+            conditions.append("hcc_risk")
+        if details.get("hcc_surveillance") is True:
+            conditions.append("hcc_surveillance")
+
+        # Discharge diagnoses (whole-token matching, as for MI above)
+        dx = str(details.get("primary_diagnosis", "")).lower()
+        if dx:
+            tokens = set(re.split(r"[^a-z0-9]+", dx))
+            if "heart_failure" in dx or tokens & {"chf", "hfref", "hfpef"}:
+                conditions.append("heart_failure_discharge")
+            if tokens & {"preeclampsia", "eclampsia", "hellp"} or "gestational_hypertension" in dx \
+                    or "hypertensive_disorder_of_pregnancy" in dx:
+                conditions.append("hypertensive_disorder_pregnancy")
+            if "gestational_diabetes" in dx or tokens & {"gdm"}:
+                conditions.append("gestational_diabetes_delivery")
+            if ("self_harm" in dx or "suicid" in dx or "intentional_overdose" in dx
+                    or "intentional_self" in dx or details.get("psychiatric_admission") is True):
+                conditions.append("mental_health_discharge")
+
         return [c for c in dict.fromkeys(conditions) if c]
 
     def _build_obligation_hyperedges(self, nodes_list: List[ClinicalNode]) -> None:

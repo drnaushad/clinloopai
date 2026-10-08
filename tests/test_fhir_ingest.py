@@ -128,5 +128,86 @@ class TestFHIRMappingRules(unittest.TestCase):
         self.assertEqual({d.rule_id: d.loop_status for d in dets}["R010"], "closed")
 
 
+
+def _rad(rid, pid, when, title, conclusion, status="final"):
+    return {"resourceType": "DiagnosticReport", "id": rid, "status": status,
+            "category": [{"coding": [{"code": "RAD"}]}], "code": {"text": title},
+            "subject": {"reference": f"Patient/{pid}"}, "effectiveDateTime": when, "conclusion": conclusion}
+
+
+class TestFHIRWaveTwoMapping(unittest.TestCase):
+
+    def _rules(self, resources, when=EVAL):
+        events, warnings = bundle_to_events(resources)
+        self.assertEqual(warnings, [])
+        pid = next(iter(events))
+        dets = ClinLoopDetector(evaluation_time=when).process_patient("fhir", pid, events[pid])
+        return {d.rule_id: d.loop_status for d in dets}, events[pid]
+
+    def test_radiologist_recommendation_becomes_a_loop(self):
+        statuses, events = self._rules([
+            _rad("r1", "P", "2026-01-10T09:00:00Z", "CT abdomen and pelvis",
+                 "Indeterminate 1.8 cm left adrenal nodule. Recommend adrenal protocol CT in 3 months."),
+        ])
+        self.assertEqual(statuses, {"R030": "open"})
+        report = next(e for e in events if e["event_type"] == "radiology_report")
+        self.assertIn("Recommend adrenal protocol CT in 3 months", report["details"]["evidence_span"])
+
+    def test_completed_study_of_same_modality_closes_recommendation(self):
+        statuses, _ = self._rules([
+            _rad("r1", "P", "2026-01-10T09:00:00Z", "CT abdomen", "Recommend CT in 3 months."),
+            _rad("r2", "P", "2026-04-01T09:00:00Z", "CT adrenal protocol", "Stable adrenal adenoma."),
+        ])
+        self.assertEqual(statuses["R030"], "closed")
+
+    def test_nodule_with_tighter_radiologist_interval_is_one_loop(self):
+        statuses, _ = self._rules([
+            _rad("r1", "P", "2026-01-10T09:00:00Z", "CT chest",
+                 "7 mm solid nodule in the right upper lobe. Recommend follow-up CT in 3 months."),
+        ])
+        self.assertEqual(set(statuses), {"R030"})   # not both R003 and R030
+
+    def test_vital_signs_are_not_lab_results(self):
+        statuses, events = self._rules([
+            {"resourceType": "Observation", "id": "bp", "status": "final",
+             "category": [{"coding": [{"code": "vital-signs"}]}],
+             "code": {"coding": [{"system": "http://loinc.org", "code": "85354-9"}], "text": "Blood pressure"},
+             "interpretation": [{"coding": [{"code": "H"}]}],
+             "subject": {"reference": "Patient/P"}, "effectiveDateTime": "2026-03-01T09:00:00Z"}])
+        self.assertEqual([e["event_type"] for e in events], ["bp_check"])
+        self.assertEqual(statuses, {})
+
+    def test_hbv_condition_and_surveillance_ultrasound(self):
+        statuses, events = self._rules([
+            {"resourceType": "Condition", "id": "c", "subject": {"reference": "Patient/P"},
+             "clinicalStatus": {"coding": [{"code": "active"}]},
+             "code": {"coding": [{"system": "http://hl7.org/fhir/sid/icd-10", "code": "B18.1"}],
+                      "text": "Chronic hepatitis B"}, "recordedDate": "2024-05-01"},
+            _rad("us", "P", "2025-02-01T09:00:00Z", "US abdomen", "Coarse liver echotexture. No focal lesion."),
+        ], when=datetime(2026, 1, 1))
+        self.assertEqual(statuses["R027"], "delayed")   # first scan 9 months after diagnosis
+        self.assertEqual(statuses["R028"], "open")      # 6-month rescan overdue
+
+    def test_hcv_antibody_and_rna(self):
+        statuses, _ = self._rules([
+            {"resourceType": "Observation", "id": "ab", "status": "final", "subject": {"reference": "Patient/P"},
+             "effectiveDateTime": "2026-03-01T09:00:00Z", "valueCodeableConcept": {"text": "Reactive"},
+             "code": {"coding": [{"system": "http://loinc.org", "code": "16128-1"}], "text": "HCV Ab"}},
+        ])
+        self.assertEqual(statuses, {"R026": "open"})
+
+    def test_psychiatric_admission_and_followup(self):
+        statuses, _ = self._rules([
+            {"resourceType": "Encounter", "id": "e", "status": "finished", "subject": {"reference": "Patient/P"},
+             "class": {"code": "IMP"}, "serviceType": {"text": "Psychiatry"},
+             "period": {"start": "2026-03-01T09:00:00Z", "end": "2026-03-10T09:00:00Z"},
+             "reasonCode": [{"text": "Major depressive disorder"}]},
+            {"resourceType": "Appointment", "id": "a", "status": "fulfilled", "start": "2026-03-14T09:00:00Z",
+             "serviceType": [{"text": "Psychiatry outpatient"}],
+             "participant": [{"actor": {"reference": "Patient/P"}}]},
+        ])
+        self.assertEqual(statuses["R029"], "closed")
+
+
 if __name__ == "__main__":
     unittest.main()

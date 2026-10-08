@@ -56,8 +56,9 @@ class TestClinicalAPI(unittest.TestCase):
                                          headers={"Authorization": "Bearer wrong"}).status_code, 401)
 
     def test_rule_library_is_public(self):
+        from src.clinloop_engine.clinical_ontology import OBLIGATION_RULES
         rules = self.client.get("/api/v1/rules").json()["rules"]
-        self.assertEqual(len(rules), 22)
+        self.assertEqual(len(rules), len(OBLIGATION_RULES))
         self.assertEqual(next(r for r in rules if r["rule_id"] == "R022")["deadline"], "1 hour")
 
     def test_only_admin_can_ingest(self):
