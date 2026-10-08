@@ -59,10 +59,10 @@ _ANATOMY = [
     ("head", r"\b(head|brain|skull|cranial|intracranial)\b|두부|뇌|머리"),
     ("neck", r"\bneck\b|경부"),
     ("thyroid", r"\bthyroid\b|갑상선"),
-    ("chest", r"\b(chest|thorax|thoracic|lungs?|pulmonary|ldct|cxr)\b|흉부|폐"),
+    ("chest", r"\b(chest|thorax|thoracic|lungs?|pulmonary|ldct|cxr)\b|흉부|(?:(?<![가-힣])|(?<=[좌우양]))폐(?!경)"),
     ("abdomen", r"\b(abdomen|abdominal)\b|복부"),
     ("pelvis", r"\b(pelvis|pelvic)\b|골반"),
-    ("liver", r"\b(liver|hepatic)\b|간\s*(?:초음파|CT|MRI)|간(?=[의에내])"),
+    ("liver", r"\b(liver|hepatic)\b|(?<![가-힣])간(?=\s*(?:초음파|CT|MRI)|[의에내])"),
     ("adrenal", r"\badrenals?\b|부신"),
     ("kidney", r"\b(renal|kidneys?|urogra\w*)\b|신장"),
     ("pancreas", r"\b(pancrea\w*|mrcp)\b|췌장"),
@@ -78,9 +78,23 @@ _WHOLE_BODY = re.compile(r"whole[- ]body|skull base to (?:mid[- ]?)?thigh|\bpet\
 _CAP = re.compile(r"\bcap\b|chest[,/ ]+abdomen[,/ ]+(?:and )?pelvis", re.I)
 
 
+# Anatomical descriptors that are not body regions: "pancreatic head", "femoral neck", "renal pelvis"
+_DESCRIPTORS = [
+    (re.compile(r"\b(pancreatic|femoral|humeral|radial|fibular|metatarsal|metacarpal|caudate|epididymal)\s+(head|neck)\b", re.I),
+     lambda m: m.group(1)),
+    (re.compile(r"\b(head|neck|body|tail|uncinate process) of the (pancreas|femur|humerus|gallbladder|radius)\b", re.I),
+     lambda m: m.group(2)),
+    (re.compile(r"\b(gallbladder|bladder|tooth)\s+neck\b", re.I), lambda m: m.group(1)),
+    (re.compile(r"\brenal pelvis\b", re.I), lambda m: "renal"),
+    (re.compile(r"췌장\s*(?:두부|경부)", re.I), lambda m: "췌장"),
+]
+
+
 def regions_in(text: str) -> set:
     """Body regions and organs named in a text (unexpanded)."""
     text = text or ""
+    for rx, keep in _DESCRIPTORS:
+        text = rx.sub(keep, text)
     found = set()
     plain = _SPINE_LEVEL.sub(" spine ", text)
     for key, rx in _ANATOMY_RE:
@@ -115,16 +129,29 @@ def regions_compatible(required, covered) -> bool:
 _SIZE = (r"(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?(?:\s*[x×]\s*\d+(?:\.\d+)?)?\s*"
          r"(mm|cm|밀리미터|밀리|센티미터|센티)(?![a-zA-Z])")
 _SIZE_RE = re.compile(_SIZE, re.I)
+# Gap inside a sentence: any character except a sentence break ("2.5" is not one)
+_GAP = r"(?:[^.;]|(?<=\d)\.(?=\d))"
 
 
-def _size_mm(a: str, b: Optional[str], unit: str) -> float:
+def _size_mm(a: str, b: Optional[str], unit: str, longest: bool = False) -> float:
+    """Average of two axes (Fleischner, lung nodules) or the longest axis (ACR organ findings, TI-RADS, aorta)."""
     dims = [float(a)] + ([float(b)] if b else [])
     factor = 10.0 if unit.lower().startswith(("cm", "센티")) else 1.0
-    return round(sum(dims) / len(dims) * factor, 1)
+    value = max(dims) if longest else sum(dims) / len(dims)
+    return round(value * factor, 1)
+
+
+_SIZE_ALL_AXES = re.compile(r"(\d+(?:\.\d+)?)((?:\s*[x×]\s*\d+(?:\.\d+)?)*)\s*(mm|cm|밀리미터|밀리|센티미터|센티)(?![a-zA-Z])", re.I)
 
 
 def _sizes(text: str) -> List[float]:
-    return [_size_mm(m.group(1), m.group(2), m.group(3)) for m in _SIZE_RE.finditer(text)]
+    """Longest axis of every size in the text, in mm."""
+    out = []
+    for m in _SIZE_ALL_AXES.finditer(text):
+        dims = [float(m.group(1))] + [float(x) for x in re.findall(r"\d+(?:\.\d+)?", m.group(2))]
+        factor = 10.0 if m.group(3).lower().startswith(("cm", "센티")) else 1.0
+        out.append(round(max(dims) * factor, 1))
+    return out
 
 
 def _sentences(text: str) -> List[Tuple[int, str]]:
@@ -138,29 +165,31 @@ def _sentences(text: str) -> List[Tuple[int, str]]:
 
 _LUNG_RADS = re.compile(r"lung-?rads\s*(?:category\s*)?:?\s*(\d[ABXS]?)", re.I)
 _BIRADS = re.compile(r"bi-?rads\s*(?:category\s*)?:?\s*(\d[ABC]?)", re.I)
-_TIRADS = re.compile(r"(?:ti-?rads\s*(?:category\s*)?:?\s*(?:TR\s*)?|\bTR\s*)(\d)\b", re.I)
+_TIRADS = re.compile(r"\bTR\s*([1-5])\b|(?<!K-)(?<!K)ti-?rads\s*(?:category\s*)?:?\s*([1-5])\b(?!\s*points?)", re.I)
+_KTIRADS = re.compile(r"K-?TI-?RADS\s*(?:category\s*)?:?\s*([2-5])\b", re.I)
 _CHEST_CT = re.compile(r"\b(ct|ldct|computed tomography)\b.*\b(chest|thorax|lung)\b|\b(chest|thorax|lung)\b.*\b(ct|ldct)\b"
-                       r"|흉부\s*ct|\bpet[/-]?ct\b", re.I)
+                       r"|(?:흉부|폐)\s*(?:저선량\s*)?ct|\bpet[/-]?ct\b", re.I)
 
 # ── Lung nodules ─────────────────────────────────────────────────────────────
 
 _NODULE_SIZE_FIRST = re.compile(rf"{_SIZE}[^.;]{{0,40}}?(nodules?|결절)", re.I)
 _NODULE_WORD_FIRST = re.compile(rf"(nodules?|결절)[^.;]{{0,40}}?{_SIZE}", re.I)
 _LUNG_SITE = re.compile(r"\b(lungs?|pulmonary|(?:upper|middle|lower)\s+lobes?|lingula\w*|perifissural|subpleural)\b"
-                        r"|폐|[우좌][상중하]엽|설상엽", re.I)
+                        r"|(?:(?<![가-힣])|(?<=[좌우양]))폐(?!경)|[우좌][상중하]엽|설상엽", re.I)
 _OTHER_SITE = re.compile(r"\b(adrenal|thyroid|renal|kidneys?|liver|hepatic|pancrea\w*|splen\w*|breast|ovar\w*|"
                          r"prostat\w*|parotid|lymph\s+nodes?|subcutaneous|skin)\b"
-                         r"|부신|갑상선|신장|췌장|유방|비장|전립선|간(?=[\s의에내])", re.I)
+                         r"|부신|갑상선|신장|췌장|유방|비장|전립선|(?<![가-힣])간(?=[\s의에내])", re.I)
 _CHEST_STUDY = re.compile(r"chest|thora\w*|lung|ldct|흉부|폐", re.I)
 _GGN = re.compile(r"ground[- ]glass|\bggn\b|\bggo\b|non-?solid|간유리", re.I)
 _PART_SOLID = re.compile(r"part[- ]solid|semi-?solid|sub-?solid|mixed (?:attenuation|density)|부분\s*고형", re.I)
-_SOLID_COMPONENT = re.compile(rf"solid component[^.;]{{0,20}}?{_SIZE}|{_SIZE}\s*solid component|고형\s*성분[^.;]{{0,10}}?{_SIZE}", re.I)
+_SOLID_COMPONENT = re.compile(rf"solid component{_GAP}{{0,20}}?{_SIZE}|{_SIZE}\s*solid component|고형\s*성분{_GAP}{{0,10}}?{_SIZE}", re.I)
 _MULTIPLE = re.compile(r"\b(multiple|numerous|several|nodules)\b|다발성|여러\s*개", re.I)
 _BENIGN_NODULE = re.compile(r"(?<!non-)(?<!non )\b(calcified|granulomas?|hamartoma|intrapulmonary lymph node)\b"
                             r"|benign (?:pattern of )?calcification|(?<!비)석회화", re.I)
 _PERIFISSURAL = re.compile(r"perifissural", re.I)
-_GROWING = re.compile(r"\b(increas\w*|enlarg\w*|grow\w*|grew|larger|new(?:ly)?\s+(?:developed\s+)?solid component)\b"
-                      r"|증가|커[졌짐]", re.I)
+_GROWING = re.compile(r"\b(increas\w*|enlarg(?:ed|ing|ement)(?!\s+(?:\w+\s+){0,2}(?:lymph|nodes?|heart|cardiac|liver|spleen|thyroid))"
+                      r"|grow\w*|grew|grown|larger|new(?:ly)?\s+(?:developed\s+)?solid component)\b|증가|커[졌짐]", re.I)
+_PRIOR_SIZE = re.compile(rf"(?:previously|was|were|from|prior(?:ly)?|이전|과거)\s*(?:measur\w*\s*)?(?:about\s+)?{_SIZE}", re.I)
 _STABLE = re.compile(r"\b(stable|unchanged|redemonstrat\w*|again (?:seen|noted|demonstrated)|previously "
                      r"(?:seen|noted|described|reported)|persistent|persists)\b|no\s+(?:significant\s+|interval\s+)*change"
                      r"|변화\s*없|안정", re.I)
@@ -197,6 +226,9 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
                 continue
             if re.search(r"component", m.group(0), re.I) or re.match(r"\s*(?:solid\s+)?component", text[m.end():], re.I):
                 continue   # "nodule with a 7 mm solid component" is one nodule
+            if re.search(r"(?:previously|was|were|from|prior(?:ly)?|이전)\s*(?:measur\w*\s*)?(?:about\s+)?$",
+                         text[max(0, m.start(a) - 25):m.start(a)], re.I):
+                continue   # "now 9 mm, previously 6 mm": the earlier size, not a second nodule
             s = sentence(text, m.start(), m.end())
             size = _size_mm(m.group(a), m.group(b), m.group(unit))
             comp = _SOLID_COMPONENT.search(s)
@@ -205,10 +237,15 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
                 g = [x for x in comp.groups() if x is not None]
                 comp_mm = _size_mm(g[0], g[1] if len(g) > 2 else None, g[-1])
             typ = "part_solid" if (_PART_SOLID.search(s) or comp) else "ggn" if _GGN.search(s) else "solid"
-            change = ("growing" if (_GROWING.search(s) and not re.search(r"\bno\s+(?:\w+\s+)?(?:increase|growth|enlargement)", s, re.I))
-                      else "decreasing" if _DECREASING.search(s)
-                      else "stable" if _STABLE.search(s)
-                      else "new" if _NEW.search(s) else None)
+            prior = _PRIOR_SIZE.search(s)
+            if prior:
+                before = _size_mm(prior.group(1), prior.group(2), prior.group(3))
+                change = "growing" if size - before >= 2 else "decreasing" if before - size >= 2 else "stable"
+            else:
+                change = ("growing" if first_affirmed(_GROWING, s)
+                          else "decreasing" if _DECREASING.search(s)
+                          else "stable" if _STABLE.search(s)
+                          else "new" if _NEW.search(s) else None)
             stable_since = None
             sf = _STABLE_FOR.search(s)
             if sf:
@@ -247,29 +284,29 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
 # ── ACR incidental findings: adrenal, renal, pancreas, thyroid, aorta ───────
 
 _LESION = r"(?:nodules?|mass(?:es)?|lesions?|adenoma|incidentaloma|cysts?|tumou?r|neoplasm|결절|종괴|종양|병변|낭종)"
-_ADRENAL = re.compile(rf"(?:\badrenal|부신)[^.;]{{0,40}}?{_LESION}|{_LESION}[^.;]{{0,60}}?(?:adrenal|부신)", re.I)
-_ADRENAL_BENIGN = re.compile(r"\b(adenoma|myelolipoma|macroscopic fat|lipid[- ]rich|cyst|h(?:a)?emorrhage|calcified)\b"
+_ADRENAL = re.compile(rf"(?:\badrenal|부신){_GAP}{{0,40}}?{_LESION}|{_LESION}{_GAP}{{0,60}}?(?:adrenal|부신)", re.I)
+_ADRENAL_BENIGN = re.compile(r"\b(adenoma|myelolipoma|macroscopic fat|lipid[- ]rich|cyst)\b"
                              r"|선종|골수지방종", re.I)
 _UNCERTAIN = re.compile(r"indeterminate|cannot be (?:excluded|characteri[sz]ed)|possibl\w*|versus|\bvs\.?\b|metasta\w*|"
                         r"not characteri[sz]ed|불확정|감별", re.I)
 _HU = re.compile(r"(-?\d+(?:\.\d+)?)\s*(?:HU|hounsfield)", re.I)
 _STABLE_YEAR = re.compile(r"(?:stable|unchanged)[^.;]{0,40}?(?:\b(?:for|over|since)\b[^.;]{0,20}?(?:year|(?:19|20)\d{2}))", re.I)
 
-_RENAL = re.compile(rf"(?:\brenal|\bkidneys?|신장)[^.;]{{0,40}}?{_LESION}|{_LESION}[^.;]{{0,60}}?(?:\brenal|\bkidneys?|신장)", re.I)
+_RENAL = re.compile(rf"(?:\brenal|\bkidneys?|신장){_GAP}{{0,40}}?{_LESION}|{_LESION}{_GAP}{{0,60}}?(?:\brenal|\bkidneys?|신장)", re.I)
 _BOSNIAK = re.compile(r"bosniak\s*(?:class(?:ification)?|category|type)?\s*:?\s*(II-?F|2F|IV|III|II|I|[1-4])\b", re.I)
 _RENAL_SUSPICIOUS = re.compile(r"\b(?:solid|enhancing)\s+(?:\w+\s+){0,2}(?:mass|lesion|nodule|component)|renal cell carcinoma|\brcc\b|"
                                r"(?:suspicious|concerning) for (?:malignan\w*|neoplasm|carcinoma)|신세포암", re.I)
 _RENAL_BENIGN = re.compile(r"simple (?:renal )?cysts?|angiomyolipoma|macroscopic fat|too small to characteri[sz]e|"
                            r"\btstc\b|hyperdense cyst|단순\s*낭종|혈관근지방종", re.I)
 
-_PANCREAS = re.compile(r"(?:pancrea\w*|췌장)[^.;]{0,40}?(?:cyst\w*|ipmn|intraductal papillary|낭종|낭성)|"
-                       r"(?:cyst\w*|ipmn|낭종|낭성)[^.;]{0,60}?(?:pancrea\w*|췌장)", re.I)
+_PANCREAS = re.compile(r"(?:pancrea\w*|췌장)(?:[^.;]|(?<=\d)\.(?=\d)){0,40}?(?:cyst\w*|ipmn|intraductal papillary|낭종|낭성)|"
+                       r"(?:cyst\w*|ipmn|낭종|낭성)(?:[^.;]|(?<=\d)\.(?=\d)){0,60}?(?:pancrea\w*|췌장)", re.I)
 _PSEUDOCYST = re.compile(r"pseudocyst|가성낭종", re.I)
-_MAIN_DUCT = re.compile(rf"main (?:pancreatic )?duct[^.;]{{0,40}}?{_SIZE}|주췌관[^.;]{{0,20}}?{_SIZE}", re.I)
+_MAIN_DUCT = re.compile(rf"main (?:pancreatic )?duct{_GAP}{{0,40}}?{_SIZE}|주췌관{_GAP}{{0,20}}?{_SIZE}", re.I)
 _PANCREAS_WORRISOME = re.compile(r"mural nodule|enhancing (?:solid )?component|solid component|"
                                  r"thick(?:ened)?,? (?:enhancing )?(?:cyst )?wall|obstructive jaundice|벽결절", re.I)
 
-_THYROID = re.compile(rf"(?:thyroid|갑상선)[^.;]{{0,40}}?{_LESION}|{_LESION}[^.;]{{0,60}}?(?:thyroid|갑상선)", re.I)
+_THYROID = re.compile(rf"(?:thyroid|갑상선){_GAP}{{0,40}}?{_LESION}|{_LESION}{_GAP}{{0,60}}?(?:thyroid|갑상선)", re.I)
 _THYROID_SUSPICIOUS = re.compile(r"invasi\w*|invad\w*|extrathyroidal|abnormal (?:cervical )?lymph nodes?|suspicious", re.I)
 _PET_AVID = re.compile(r"fdg[- ]avid|hypermetabolic|increased (?:fdg )?uptake|\bsuv\b|대사\s*증가", re.I)
 
@@ -325,9 +362,11 @@ def _incidental_findings(text: str, code_text: str, study_modality: Optional[str
             m = re.search(r"nodules?|결절", s, re.I)
         if m and affirmed(s, m) and (sizes or _PET_AVID.search(s)):
             t = _TIRADS.search(s) or _TIRADS.search(text)
+            k = _KTIRADS.search(s) or _KTIRADS.search(text)
             out.append({"kind": "thyroid_us" if thyroid_us else "thyroid_incidental", "organ": "thyroid",
                         "size_mm": max(sizes) if sizes else None,
-                        "tirads": int(t.group(1)) if t else None,
+                        "tirads": int(t.group(1) or t.group(2)) if t else None,
+                        "ktirads": int(k.group(1)) if k else None,
                         "suspicious": bool(_THYROID_SUSPICIOUS.search(s)),
                         "pet_avid": bool(_PET_AVID.search(s)), "evidence_span": s.strip()})
         # Abdominal aorta
@@ -347,12 +386,29 @@ _WORD_NUM = {"one": 1, "two": 2, "three": 3, "four": 4, "six": 6, "twelve": 12}
 _UNIT_DAYS = {"day": 1, "week": 7, "month": MONTH, "year": YEAR, "일": 1, "주": 7, "개월": MONTH, "년": YEAR}
 _NUM = r"(\d+(?:\.\d+)?|one|two|three|four|six|twelve)"
 # Bare "MR" is excluded: "recommend Mr Kim return in 2 weeks" is not an MRI
-_MOD = r"(cta|ct|mri|(?-i:US)|ultrasound|ultrasonograph\w*|sonograph\w*|radiographs?|x-?rays?|cxr)"
+_MOD = r"(cta|(?<!PET/)(?<!PET-)ct|mri|(?-i:US)|(?<!endoscopic )ultrasound|ultrasonograph\w*|sonograph\w*|radiographs?|x-?rays?|cxr)"
 _INTERVAL = rf"(?:in|within|at|after)\s+(?:{_NUM}\s*(?:-|–|to)\s*)?{_NUM}\s*(day|week|month|year)s?"
+_REC_VERB = r"(?:recommend\w*|suggest\w*|advis\w*|repeat|follow[- ]?up)"
+# Each pattern yields (modality, low, high, unit) through named groups
 _REC_PATTERNS = [
-    re.compile(rf"recommend\w*[^.;]{{0,40}}?\b{_MOD}\b[^.;]{{0,50}}?\b{_INTERVAL}", re.I),
-    re.compile(rf"\b{_MOD}\b[^.;]{{0,40}}?\b{_INTERVAL}[^.;]{{0,30}}?\brecommend", re.I),
+    # "Recommend follow-up chest CT in 3 months", "Repeat CT in 3 months", "Follow-up ultrasound in 6 months"
+    re.compile(rf"{_REC_VERB}{_GAP}{{0,40}}?\b(?P<mod>{_MOD[1:-1]})\b{_GAP}{{0,50}}?\b"
+               rf"(?:in|within|at|after)\s+(?:(?P<lo>{_NUM[1:-1]})\s*(?:-|–|to)\s*)?(?P<hi>{_NUM[1:-1]})\s*(?P<unit>day|week|month|year)s?", re.I),
+    # "Follow-up CT in 3 months is recommended"
+    re.compile(rf"\b(?P<mod>{_MOD[1:-1]})\b{_GAP}{{0,40}}?\b(?:in|within|at|after)\s+(?:(?P<lo>{_NUM[1:-1]})\s*(?:-|–|to)\s*)?"
+               rf"(?P<hi>{_NUM[1:-1]})\s*(?P<unit>day|week|month|year)s?{_GAP}{{0,30}}?\b(?:recommend|suggest|advis)", re.I),
+    # "Recommend 6-month follow-up CT", "A 6 month follow-up CT is recommended"
+    re.compile(rf"(?:(?P<lo>{_NUM[1:-1]})\s*(?:-|–|to)\s*)?(?P<hi>{_NUM[1:-1]})[- ]?(?P<unit>day|week|month|year)s?[- ]"
+               rf"(?:follow[- ]?up|repeat|surveillance|interval)?\s*(?:\w+\s+){{0,2}}?(?P<mod>{_MOD[1:-1]})\b", re.I),
+    # "Recommend follow-up in 6 months with CT"
+    re.compile(rf"{_REC_VERB}{_GAP}{{0,30}}?\b(?:in|within|at|after)\s+(?:(?P<lo>{_NUM[1:-1]})\s*(?:-|–|to)\s*)?"
+               rf"(?P<hi>{_NUM[1:-1]})\s*(?P<unit>day|week|month|year)s?{_GAP}{{0,20}}?\b(?:with|by|using)\s+(?:\w+\s+)?"
+               rf"(?P<mod>{_MOD[1:-1]})\b", re.I),
 ]
+_REC_CUE = re.compile(r"recommend|suggest|advis|권고|권장", re.I)
+# A description of a study that already happened is not a recommendation
+_PAST_STUDY = re.compile(r"\b(showed|shows|demonstrat\w*|revealed|was performed|were performed|performed on|dated)\b", re.I)
+MAX_REC_INTERVAL_DAYS = 10 * 365.25
 _KO_MOD = r"(CT|MRI|초음파|X선|엑스레이)"
 _REC_KO = re.compile(rf"(\d+)\s*(?:[-~]\s*(\d+))?\s*(개월|주|일|년)\s*(?:후|뒤|이내|내)?\s*(?:에\s*)?(?:추적\s*)?(?:검사\s*)?"
                      rf"{_KO_MOD}[^.]{{0,20}}?(?:권고|권장|필요)", re.I)
@@ -361,7 +417,8 @@ _REC_NO_INTERVAL = [
     re.compile(rf"recommend\w*[^.;]{{0,40}}?\b{_MOD}\b{_NOT_GUIDED}", re.I),
     re.compile(rf"\b{_MOD}\b{_NOT_GUIDED}[^.;]{{0,40}}?\b(?:recommend\w*|advised|suggested|warranted)", re.I),
 ]
-_REC_KO_NO_INTERVAL = re.compile(rf"(?:추가|추적|정밀)\s*(?:검사\s*)?(?:로\s*)?{_KO_MOD}[^.]{{0,15}}?(?:권고|권장)", re.I)
+_REC_KO_NO_INTERVAL = re.compile(rf"(?:추가|추적|정밀)\s*(?:검사\s*)?(?:로\s*)?{_KO_MOD}[^.]{{0,15}}?(?:권고|권장)"
+                                 rf"|{_KO_MOD}\s*(?:추가|추적|정밀)\s*(?:검사|촬영)?\s*(?:를|을)?\s*(?:권고|권장)", re.I)
 DEFAULT_REC_INTERVAL_DAYS = 30.0
 _BIOPSY = r"(biops(?:y|ies)|tissue sampling|fine[-\s]needle aspiration|\bFNA\b|core[-\s]needle|조직검사|세침\s*흡인)"
 _BIOPSY_REC = [
@@ -370,7 +427,7 @@ _BIOPSY_REC = [
     re.compile(rf"{_BIOPSY}[^.]{{0,15}}?(?:권고|권장|필요)", re.I),
 ]
 _HEDGE = re.compile(r"if clinically|as clinically indicated|if (?:desired|needed|warranted)|could be considered|"
-                    r"may be considered|can be considered|\boptional", re.I)
+                    r"may be considered|can be considered|\boptional|필요\s*시|임상적으로\s*필요", re.I)
 _NOT_A_REC = re.compile(r"\b(no|not|without|prior|previous|outside|comparison|compared)\b", re.I)
 REC_RULE = {"ct": "R030", "mri": "R031", "ultrasound": "R032", "xray": "R033"}
 
@@ -410,27 +467,33 @@ def _extract_recommendation(text: str, code_text: str = "") -> Optional[Dict[str
     (``recommended_interval_stated`` False), so "CT for further evaluation" is not lost.
     """
     def result(m, modality, days, stated):
+        if days is not None and not (0 < days <= MAX_REC_INTERVAL_DAYS):
+            return None       # "in 0 months" or "in 99999 years": not a usable interval
         return {"recommended_modality": modality, "recommended_interval_days": days,
                 "recommended_interval_stated": stated, "regions": _rec_regions(text, m, code_text),
                 "evidence_span": span(text, m)}
 
-    for pattern in _REC_PATTERNS:
+    for i, pattern in enumerate(_REC_PATTERNS):
         for m in pattern.finditer(text):
-            if not not_negated(text, m.start()):
+            s = sentence(text, m.start(), m.end())
+            # Imperative wording ("Repeat CT in 3 months.") counts when it opens the sentence
+            imperative = i == 0 and s.strip().lower().startswith(m.group(0).lower()[:12])
+            if not affirmed(text, m) or _HEDGE.search(s) or _PAST_STUDY.search(s) \
+                    or not (_REC_CUE.search(s) or imperative):
                 continue
-            modality = _norm_modality(m.group(1))
-            low, high, unit = m.group(2), m.group(3), m.group(4).lower()
-            value = high if high else low
+            modality = _norm_modality(m.group("mod"))
+            value = m.group("hi") or m.group("lo")
             number = float(_WORD_NUM.get(value.lower(), value)) if value else None
-            if modality and number:
-                return result(m, modality, round(number * _UNIT_DAYS[unit], 1), True)
-    m = _REC_KO.search(text)
-    if m:
-        number = float(m.group(2) or m.group(1))
-        return result(m, _norm_modality(m.group(4)), round(number * _UNIT_DAYS[m.group(3)], 1), True)
+            if modality and number is not None:
+                # An implausible interval ("in 0 months") is not replaced by a guessed default
+                return result(m, modality, round(number * _UNIT_DAYS[m.group("unit").lower()], 1), True)
+    for m in _REC_KO.finditer(text):
+        if affirmed(text, m) and not _HEDGE.search(sentence(text, m.start(), m.end())):
+            number = float(m.group(2) or m.group(1))
+            return result(m, _norm_modality(m.group(4)), round(number * _UNIT_DAYS[m.group(3)], 1), True)
     for pattern in _REC_NO_INTERVAL + [_REC_KO_NO_INTERVAL]:
         for m in pattern.finditer(text):
-            modality = _norm_modality(m.group(1))
+            modality = _norm_modality(next(g for g in m.groups() if g))
             if modality and _usable_rec(text, m):
                 return result(m, modality, DEFAULT_REC_INTERVAL_DAYS, False)
     return None
@@ -450,10 +513,20 @@ def _biopsy_recommendation(text: str) -> Optional[Dict[str, Any]]:
 
 DEFAULT_CRITICAL_FINDINGS = os.path.join(os.path.dirname(__file__), "config", "critical_findings.json")
 # Not a new emergent finding: chronic/known/resolving, or only the indication for the study
-_NOT_NEW = re.compile(r"\b(chronic|old|known|previously|prior|stable|resolv\w*|improv\w*|decreas\w*|residual|"
-                      r"evaluat\w*|assess\w*|protocol|rule out|r/o|exclude)\b[^.;]{0,30}$", re.I)
-_COMMUNICATED = re.compile(r"(discussed with|communicated (?:to|with)|called to|telephoned|notified|conveyed to|"
-                           r"relayed to|read back|에게\s*(?:전화로?\s*|구두로?\s*)?(?:통보|보고|전달))", re.I)
+_NOT_NEW = re.compile(r"\b(chronic|old|known|previously (?:seen|noted|described|reported)|stable|resol\w*|"
+                      r"improv\w*|decreas\w*|residual|post-?op\w*|post-?surgical|evaluat\w* for|assess\w* for|"
+                      r"protocol|rule out|r/o|to exclude)\b[^,:;.]{0,30}$", re.I)
+# ... or after it: "pneumothorax has decreased", "dissection, unchanged", "free air, expected", "PE: none"
+_NOT_NEW_AFTER = re.compile(r"^[^.;]{0,40}?\b(resolved|resolving|decreas\w*|unchanged|stable|improv\w*|expected|"
+                            r"chronic|smaller|less)\b|^\s*:\s*(?:none|negative|no|absent)\b", re.I)
+_EXPLICITLY_NEW = re.compile(r"\b(new|acute|interval development of|newly)\b[^,;.]{0,25}$", re.I)
+_COMMUNICATED = re.compile(
+    r"(?<!will be )(?<!to be )(?<!should be )(?:discussed with|communicated (?:to|with)|called to|telephoned|"
+    r"notified|conveyed to|relayed to)\s+(?:the\s+)?(?:(?:referring|ordering|treating|on-?call|covering|responsible|"
+    r"primary|ED|emergency|ICU)\s+)*(?:dr\.?\s|doctor|physician|clinician|provider|surgeon|team|ED\b|emergency|"
+    r"nurse practitioner|NP\b|PA\b|attending|house officer|intensivist|consultant)"
+    r"|(?:담당의|주치의|담당\s*의사|당직의|의료진|응급실|응급의학과|교수)\w*\s*에게\s*(?:전화로?\s*|구두로?\s*)?"
+    r"(?:통보|보고|전달)\s*(?:함|하였|했|됨|완료)", re.I)
 _critical_cache: Dict[str, Any] = {}
 
 
@@ -473,7 +546,7 @@ def load_critical_findings() -> Dict[str, Any]:
     canonical = json.dumps(data.get("findings", []), sort_keys=True, ensure_ascii=False)
     compiled = []
     for item in data.get("findings", []):
-        compiled.append((item, re.compile("(" + "|".join(item["patterns"]) + ")", re.I)))
+        compiled.append((item, re.compile("(?<![A-Za-z])(" + "|".join(item["patterns"]) + ")", re.I)))
     entry = {"path": path, "mtime": mtime, "data": data, "compiled": compiled,
              "hash": hashlib.sha256(canonical.encode("utf-8")).hexdigest()}
     _critical_cache[path] = entry
@@ -484,7 +557,10 @@ def _critical_findings(text: str) -> List[Dict[str, Any]]:
     found = []
     for item, rx in load_critical_findings()["compiled"]:
         for m in rx.finditer(text):
-            if affirmed(text, m) and not _NOT_NEW.search(text[max(0, m.start() - 60):m.start()]):
+            before = text[max(0, m.start() - 60):m.start()]
+            not_new = (_NOT_NEW.search(before) or _NOT_NEW_AFTER.search(text[m.end():])) \
+                and not _EXPLICITLY_NEW.search(before)
+            if affirmed(text, m) and not not_new:
                 found.append({"id": item["id"], "label": item.get("label", {}).get("en", item["id"]),
                               "category": item.get("category", 1), "window_minutes": float(item.get("window_minutes", 60)),
                               "match": m.group(0), "evidence_span": span(text, m)})
@@ -494,12 +570,12 @@ def _critical_findings(text: str) -> List[Dict[str, Any]]:
 
 # ── Study modality ──────────────────────────────────────────────────────────
 
-_MOD_PET = re.compile(r"\bpet\b", re.I)
-_MOD_CT = re.compile(r"\b(ct|cta|ldct|computed tomography)\b", re.I)
-_MOD_MRI = re.compile(r"\b(mri|mr|mrcp|magnetic resonance)\b", re.I)
-_MOD_US = re.compile(r"\b(?-i:US)\b|ultrasound|sonograph|초음파", re.I)
+_MOD_PET = re.compile(r"(?<![A-Za-z])pet(?![A-Za-z])", re.I)
+_MOD_CT = re.compile(r"(?<![A-Za-z])(ct|cta|ldct|computed tomography)(?![A-Za-z])", re.I)
+_MOD_MRI = re.compile(r"(?<![A-Za-z])(mri|mr|mrcp|magnetic resonance)(?![A-Za-z])", re.I)
+_MOD_US = re.compile(r"(?<![A-Za-z])(?-i:US)(?![A-Za-z])|(?<!endoscopic )ultrasound|sonograph|초음파", re.I)
 _MOD_XRAY = re.compile(r"radiograph|\bx-?rays?\b|\bcxr\b|\bxr\b|x선|엑스레이|단순\s*촬영", re.I)
-_LIVER = re.compile(r"liver|hepat|abdom|간|복부", re.I)
+_LIVER = re.compile(r"liver|hepat|abdom|(?<![가-힣])간|복부", re.I)
 
 
 def study_modality(code_text: str) -> Optional[str]:
@@ -526,11 +602,12 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
     rad: Dict[str, Any] = {"study_regions": covered, "modality": modality}
 
     for key, pattern, label in (("lung_rads", _LUNG_RADS, "Lung-RADS"), ("birads", _BIRADS, "BI-RADS"),
-                                ("tirads", _TIRADS, "TI-RADS TR")):
+                                ("tirads", _TIRADS, "TI-RADS TR"), ("ktirads", _KTIRADS, "K-TIRADS")):
         m = pattern.search(conclusion)
         if m:
-            details[key] = m.group(1).upper()
-            mapping.append(f"{label} {m.group(1).upper()}")
+            value = next(g for g in m.groups() if g).upper()
+            details[key] = value
+            mapping.append(f"{label} {value}")
     nodules = _lung_nodules(conclusion, code_text)
     if nodules:
         dominant = max(nodules, key=lambda n: (n["size_mm"], n["type"] != "ggn"))
@@ -795,6 +872,14 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,
             return plan("R043", "incidental_thyroid_nodule", 90,
                         f"incidental thyroid nodule ≥{threshold / 10:g} cm ({basis}) → thyroid ultrasound (ACR 2015; 90 days proposed)")
         return {"none": f"incidental thyroid nodule <{threshold / 10:g} cm → no ultrasound (ACR 2015)"}
+
+    if kind == "thyroid_us" and f.get("ktirads") and size:
+        # Korean Thyroid Association K-TIRADS (2021) FNA size thresholds
+        kt = f["ktirads"]
+        fna = {5: 10, 4: 10, 3: 15, 2: 20}.get(kt)
+        if fna and size >= fna:
+            return {"biopsy": f"K-TIRADS {kt} nodule {size / 10:g} cm meets FNA criteria (≥{fna / 10:g} cm, K-TIRADS 2021)"}
+        return {"none": f"K-TIRADS {kt} nodule {size / 10:g} cm → below the FNA size threshold (K-TIRADS 2021)"}
 
     if kind == "thyroid_us":
         tr = f.get("tirads")

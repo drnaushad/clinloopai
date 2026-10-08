@@ -533,7 +533,8 @@ def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], L
             mapped = [(explicit, ts, {**base, "mapping": [f"explicit extension→{explicit}"]})]
         for etype, ts, details in mapped:
             if not ts:
-                warnings.append(f"{rtype}/{rid}: no timestamp; skipped")
+                if f"{rtype}/{rid}: no timestamp; skipped" not in warnings:
+                    warnings.append(f"{rtype}/{rid}: no timestamp; skipped")
                 continue
             # Deterministic id: the same resource yields the same loop key on
             # every ingest, whatever order the bundle lists resources in.

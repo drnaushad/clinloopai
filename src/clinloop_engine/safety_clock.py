@@ -27,6 +27,11 @@ def normalize_timestamp(ts: Any) -> datetime:
         text = ts.strip()
         if text.endswith("Z"):
             text = text[:-1] + "+00:00"
+        # FHIR allows partial dates ("2026", "2026-01"): use the first day
+        if len(text) == 4 and text.isdigit():
+            text += "-01-01"
+        elif len(text) == 7 and text[4] == "-":
+            text += "-01"
         try:
             ts = datetime.fromisoformat(text)
         except ValueError:

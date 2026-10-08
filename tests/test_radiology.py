@@ -328,5 +328,114 @@ class TestLiveRunBundle(unittest.TestCase):
             self.assertEqual(got, expected, pid)
 
 
+class TestIndependentReviewCases(unittest.TestCase):
+    """Report wordings from an independent review that the first version got wrong."""
+
+    CASES = [
+     # 1 decimal sizes
+     ("CT abdomen","Right kidney 2.5 cm lesion, Bosniak IIF.",{"R040"}),
+     ("CT abdomen","Left adrenal 4.5 cm mass.",{"R038"}),
+     ("CT abdomen","Left adrenal gland: 1.8 cm nodule, 30 HU.",{"R037"}),
+     ("CT neck","Left thyroid lobe 1.6 cm nodule.",{"R043"}),
+     # 2 longest axis
+     ("CT abdomen","AAA measuring 5.6 x 5.2 cm.",{"R045"}),
+     ("US thyroid","Thyroid nodule 1.6 x 0.8 x 1.0 cm, TR4.",{"R036"}),
+     ("CT abdomen","Left adrenal mass 4 x 3 cm.",{"R038"}),
+     # 3 critical with prior/known
+     ("Chest radiograph","Compared to prior, new large left pneumothorax.",{"R035"}),
+     ("CTA chest","Compared with the prior CT, there is new acute pulmonary embolism.",{"R035"}),
+     ("Chest radiograph","In this patient with known COPD, new large right pneumothorax.",{"R035"}),
+     ("Chest radiograph","Assessment: large right tension pneumothorax.",{"R035"}),
+     # 4 list negation
+     ("Chest radiograph","Lungs: no consolidation, large right pneumothorax.",{"R035"}),
+     ("CT chest","Lungs: no consolidation, 9 mm solid nodule in the right lower lobe.",{"R003"}),
+     ("CT abdomen","Kidneys: no hydronephrosis, 3 cm enhancing solid mass in the left kidney.",{"R039"}),
+     ("Chest radiograph","Without prior studies, recommend CT chest in 3 months.",{"R030"}),
+     ("CT abdomen","No acute findings, recommend CT in 3 months.",{"R030"}),
+     # 5 Korean 간
+     ("흉부 CT","추적 기간 중 새로 생긴 9 mm 결절.",{"R003"}),
+     ("흉부 CT","6개월간 새로 생긴 9 mm 결절.",{"R003"}),
+     # 7 growth wording
+     ("CT chest","Right lower lobe nodule now 9 mm, was 6 mm.",{"R046"}),
+     ("CT chest","Right lower lobe nodule measures 9 mm, previously 6 mm.",{"R046"}),
+     # 8 wording
+     ("CT chest","Suggest follow-up CT in 3 months.",{"R030"}),
+     ("CT chest","Advise repeat CT in 3 months.",{"R030"}),
+     ("CT chest","Repeat CT in 3 months.",{"R030"}),
+     ("US abdomen","Follow-up ultrasound in 6 months.",{"R032"}),
+     ("CT abdomen","MRI 추가 검사 권고.",{"R031"}),
+     # 9 communication
+     ("CT head","Acute subdural hematoma. Results will be called to Dr Lee.",{"R035"}),
+     ("CT head","Acute subdural hematoma. Findings were discussed with the patient.",{"R035"}),
+     ("CT head","Acute subdural hematoma. Findings discussed with radiology resident.",{"R035"}),
+     # 10 Korean negation
+     ("두부 CT","뇌출혈은 보이지 않음.",set()),
+     ("두부 CT","급성 뇌경색은 관찰되지 않음.",set()),
+     ("흉부 X선","기흉은 보이지 않음.",set()),
+     ("흉부 CT","7 mm 폐결절은 보이지 않음.",set()),
+     ("US thyroid","조직검사는 필요하지 않음.",set()),
+     ("CT abdomen","1년 후 CT 권고 안 함.",set()),
+     # 11
+     ("CT chest","Previously described 7 mm nodule is no longer seen.",set()),
+     # 12
+     ("CT head","There is no intracranial hemorrhage, mass effect, hydrocephalus, extra-axial collection, or acute infarct.",set()),
+     # 13
+     ("Chest radiograph","Pneumothorax resolved.",set()),
+     ("Chest radiograph","Interval resolution of the pneumothorax.",set()),
+     ("Chest radiograph","Left pneumothorax has decreased in size.",set()),
+     ("CTA chest","Type B aortic dissection, unchanged from prior.",set()),
+     ("CTA chest","Pulmonary embolism decreased in burden.",set()),
+     ("CT abdomen","Postoperative free air, expected.",set()),
+     ("CTA chest","Pulmonary embolism: none.",set()),
+     ("MRI brain","Subacute infarct in the left MCA territory.",set()),
+     # 14 negated growth
+     ("CT chest","7 mm nodule in the right lower lobe without growth.",{"R003"}),
+     ("CT chest","7 mm right lower lobe nodule, not increased.",{"R003"}),
+     ("CT chest","7 mm right lower lobe nodule has not grown.",{"R003"}),
+     ("CT chest","No significant interval growth of the 7 mm right lower lobe nodule.",{"R003"}),
+     ("CT chest","7 mm right lower lobe nodule adjacent to enlarged lymph nodes.",{"R003"}),
+     # 15
+     ("CT chest","Recommend 6-month follow-up CT.",{"R030"}),
+     ("CT chest","A 6 month follow-up CT is recommended.",{"R030"}),
+     ("CT abdomen","Recommend follow-up in 6 months with CT.",{"R030"}),
+     ("CT chest","The 6-month follow-up CT showed a stable appearance.",set()),
+     # 16 hedges
+     ("CT abdomen","Recommend CT in 1 year if clinically indicated.",set()),
+     ("복부 CT","임상적으로 필요시 6개월 후 CT 권고.",set()),
+     # 19
+     ("US thyroid","1.2 cm solid nodule, TI-RADS: 7 points (TR5).",{"R036"}),
+     ("US thyroid","1.2 cm solid nodule, K-TIRADS 4.",{"R036"}),
+     # 21 cap
+     ("CT chest","Recommend CT in 99999999999 years.",set()),
+     ("CT chest","Recommend CT in 0 months.",set()),
+    ]
+
+    def test_cases(self):
+        for title, text, expected in self.CASES:
+            with self.subTest(text=text):
+                statuses, _, _ = run([patient(), rad("a", T0, title, text)])
+                self.assertEqual(set(statuses), expected)
+
+    def test_anatomical_descriptors_are_not_regions(self):
+        statuses, _, _ = run([patient(), rad("a", T0, "CT abdomen", "Pancreatic head cyst 2 cm. Recommend MRI in 1 month."),
+                              rad("b", "2026-01-20T09:00:00Z", "MRI brain", "Normal.")], when=datetime(2026, 3, 1))
+        self.assertEqual(statuses["R031"], "open")
+        statuses, _, _ = run([patient(), rad("a", T0, "US abdomen", "Gallbladder neck stone. Recommend ultrasound in 2 weeks."),
+                              rad("b", "2026-01-15T09:00:00Z", "US thyroid", "Normal.")], when=datetime(2026, 3, 1))
+        self.assertEqual(statuses["R032"], "open")
+        self.assertNotIn("pelvis", regions_in("CT renal pelvis"))
+
+    def test_korean_title_without_space(self):
+        statuses, _, _ = run([patient(), rad("a", T0, "복부CT", "Recommend CT in 1 month."),
+                              rad("b", "2026-01-25T09:00:00Z", "복부CT", "Normal.")], when=datetime(2026, 3, 1))
+        self.assertEqual(statuses, {"R030": "closed"})
+        self.assertNotIn("chest", regions_in("장폐색 의심 복부 CT"))
+        self.assertNotIn("chest", regions_in("폐경 후 골반 초음파"))
+
+    def test_partial_fhir_date(self):
+        events, _ = bundle_to_events([patient(), rad("a", "2026-01", "CT chest", "9 mm solid nodule in the right lower lobe.")])
+        self.assertTrue(events["P"])
+
+
 if __name__ == "__main__":
     unittest.main()

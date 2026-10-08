@@ -103,6 +103,40 @@ shadow:
 
 ![Worklist in shadow mode](images/worklist_shadow_mode.png)
 
+## Independent review
+
+A separate reviewer ran awkward but realistic report wording through the new code. They
+confirmed 22 problems, and all of them are fixed. Their 59 inputs are now permanent tests
+(`TestIndependentReviewCases`). The most important ones:
+
+- **Missed findings:**
+  - A decimal size broke the organ match: "Right kidney 2.5 cm lesion, Bosniak IIF".
+  - Sizes were averaged where guidelines use the longest axis: a 5.6 × 5.2 cm AAA fell below the surgical threshold.
+  - "Compared to prior, new large pneumothorax" was dropped.
+  - "No consolidation, large right pneumothorax" was read as negated.
+  - The Korean 기간/6개월간 was read as 간 (liver).
+  - "now 9 mm, was 6 mm" was not recognised as growth.
+  - "Repeat CT in 3 months" and "Suggest follow-up CT" were not tracked.
+- **False alarms:**
+  - Korean negation 보이지 않음 was not recognised.
+  - "no longer seen" was not read as a negation.
+  - A normal head CT ("no haemorrhage, …, or acute infarct") was read as a stroke.
+  - Resolving or chronic findings raised critical alerts.
+  - Negated growth ("without growth") was counted as growth.
+  - Hedged recommendations that had an interval were tracked.
+  - "Pancreatic head" or "femoral neck" was read as a body region, so an MRI of the brain could close a pancreatic follow-up.
+- **Communication:** "will be called to Dr Lee" and "discussed with the patient" no longer close a critical-finding loop. The communication must be in the past tense and to a clinician.
+- **Crashes:** a partial FHIR date ("2026-01") or an absurd interval no longer crashes ingestion.
+- **Additions:**
+  - K-TIRADS (Korean Thyroid Association 2021) FNA thresholds.
+  - Korean study titles without a space ("복부CT").
+
+Still open from the review:
+- Pancreatic cyst intervals are not adjusted by age.
+- "CT or MRI" recommendations accept only the first modality.
+- A recommended PET/CT or endoscopic ultrasound is not tracked as its own modality.
+- Very long reports (>50 KB) take a few seconds to read.
+
 ## What still needs people, not code
 
 1. **Specialist sign-off of all 46 rules** in `governance.html`, by radiologists and the relevant
