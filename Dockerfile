@@ -55,7 +55,7 @@ COPY src ./src
 COPY data/cases.json data/fhir_example_bundle.json ./data/
 
 # Web UI, served by the API at / (only these files are exposed)
-COPY index.html worklist.html governance.html imaging.html patient.html config.js manifest.json sw.js ./web/
+COPY index.html worklist.html governance.html imaging.html patient.html quality.html config.js manifest.json sw.js ./web/
 COPY css ./web/css
 COPY js ./web/js
 COPY icons ./web/icons

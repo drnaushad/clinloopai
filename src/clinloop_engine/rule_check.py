@@ -58,7 +58,9 @@ def _produces_event(src: str, event_value: str, enum_name: str) -> bool:
 
 
 def check_rules() -> Dict[str, object]:
+    from .governance import guideline_alerts, load_guidelines
     from .literature import EVIDENCE_QUERIES
+    registry = load_guidelines()
     real, events_src, synthetic = _source(CONDITION_PRODUCERS), _source(EVENT_PRODUCERS), _source(SYNTHETIC)
     issues: List[Dict[str, str]] = []
 
@@ -99,6 +101,10 @@ def check_rules() -> Dict[str, object]:
             add(r.rule_id, "warning", "no formal (LTL) statement")
         if r.rule_id not in RULE_NAMES_KO:
             add(r.rule_id, "warning", "no Korean name for the worklist")
+        for a in guideline_alerts(r, registry):
+            if not a["accepted"]:
+                add(r.rule_id, "warning", f"cites {a['title']} {a['cited']}; the current edition is {a['current']}"
+                                          f"{' (' + a['change'] + ')' if a.get('change') else ''}: specialist re-review")
         if r.rule_id not in EVIDENCE_QUERIES:
             add(r.rule_id, "warning", "no literature query for live evidence")
     errors = [i for i in issues if i["level"] == "error"]

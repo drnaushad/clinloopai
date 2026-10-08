@@ -213,9 +213,20 @@ def cha2ds2_vasc(events: List[Dict[str, Any]], ctx: Dict[str, Any], when: dateti
         score, items = score + 2, items + ["age ≥ 75 +2"]
     elif age is not None and age >= 65:
         score, items = score + 1, items + ["age 65–74 +1"]
-    if ctx.get("sex") == "female":
+    if ctx.get("sex") == "female" and af_score_variant() == "cha2ds2_vasc":
         score, items = score + 1, items + ["female +1"]
     return {"score": score, "items": items, "age_known": age is not None}
+
+
+def af_score_variant() -> str:
+    """
+    'cha2ds2_vasc' (ACC/AHA 2023; ESC 2020): anticoagulate at ≥ 2 (men) / ≥ 3 (women).
+    'cha2ds2_va'   (ESC 2024): sex no longer scores; anticoagulate at ≥ 2 for everyone.
+    The hospital's cardiologists choose (CLINLOOP_AF_SCORE); the guideline registry flags R054 until they do.
+    """
+    import os
+    v = (os.environ.get("CLINLOOP_AF_SCORE") or "cha2ds2_vasc").strip().lower().replace("-", "_").replace("₂", "2")
+    return "cha2ds2_va" if v in ("cha2ds2_va", "cha2ds2va", "va") else "cha2ds2_vasc"
 
 
 def pattern_af(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict[str, Any]]) -> None:
@@ -241,7 +252,8 @@ def pattern_af(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict
                 candidates.add(b.replace(year=b.year + years))
             except ValueError:                            # 29 February
                 candidates.add(b.replace(year=b.year + years, day=28))
-    needed = 3 if ctx.get("sex") == "female" else 2
+    needed = 3 if (ctx.get("sex") == "female" and af_score_variant() == "cha2ds2_vasc") else 2
+    score_name = "CHA₂DS₂-VA" if af_score_variant() == "cha2ds2_va" else "CHA₂DS₂-VASc"
     for when in sorted(t for t in candidates if _t(first) <= t <= now):
         on_oac = [m for m in events if m["event_type"] == EventType.MEDICATION_CHANGE.value
                   and m["details"].get("anticoagulant") and is_fulfilling_status(m.get("status")) and _t(m) <= when]
@@ -252,9 +264,9 @@ def pattern_af(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict
             continue
         anchor = {**first, "timestamp": when.isoformat(), "event_id": first["event_id"]}
         out.append(_derived(anchor, "af-oac", "pattern_af_no_anticoagulation", "R054", 30.0, [first],
-                            f"Atrial fibrillation with CHA₂DS₂-VASc {s['score']} ({', '.join(s['items'])}) on "
+                            f"Atrial fibrillation with {score_name} {s['score']} ({', '.join(s['items'])}) on "
                             f"{when.date()} and no anticoagulant",
-                            [f"pattern: AF, CHA₂DS₂-VASc {s['score']} (≥ {needed}) and no anticoagulant → anticoagulation "
+                            [f"pattern: AF, {score_name} {s['score']} (≥ {needed}) and no anticoagulant → anticoagulation "
                              f"decision within 30 days (a documented contraindication closes it)"],
                             {"cha2ds2_vasc": s["score"], "followup_match": {"R054": {"anticoagulant": True}}}))
         return

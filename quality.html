@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClinLoop Follow-up Gaps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --border-strong: #cbd5e1;
+  --text: #0f172a; --muted: #475569; --dim: #64748b;
+  --accent: #0284c7; --accent-soft: rgba(2,132,199,.10);
+  --critical: #be123c; --critical-soft: rgba(225,29,72,.10);
+  --high: #c2410c; --high-soft: rgba(234,88,12,.10);
+  --moderate: #a16207; --moderate-soft: rgba(202,138,4,.12);
+  --low: #475569; --low-soft: rgba(71,85,105,.10);
+  --ok: #047857; --ok-soft: rgba(5,150,105,.10);
+  --radius: 12px; --shadow: 0 4px 14px rgba(15,23,42,.06);
+  --font-head: 'Outfit', 'Noto Sans KR', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+    --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+    --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+    --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+    --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+    --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+    --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+    --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+  --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+  --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+  --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+  --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+  --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+  --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+  --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 64px; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; }
+header nav { display: flex; gap: 12px; align-items: center; }
+h1 { font: 800 1.6rem/1.2 var(--font-head); margin: 0; letter-spacing: -.01em; }
+h1 span { color: var(--accent); }
+.sub { color: var(--muted); margin: 4px 0 0; }
+a { color: var(--accent); font-weight: 600; }
+.banner { margin: 16px 0; padding: 10px 14px; border-radius: var(--radius); background: var(--moderate-soft);
+  border: 1px solid var(--border); font-size: .9rem; }
+.feed { margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius); font-size: .9rem; font-weight: 600;
+  border: 1px solid var(--border); }
+.feed.ok { background: var(--ok-soft); color: var(--ok); font-weight: 500; }
+.feed.alarm { background: var(--critical); color: #fff; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.connect { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 10px; padding: 14px; align-items: end; }
+label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+input, select, textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; }
+textarea { min-height: 72px; resize: vertical; }
+button { font: 600 .88rem var(--font-body); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { color: var(--critical); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+.status-line { padding: 0 14px 12px; font-size: .85rem; color: var(--muted); min-height: 1.4em; }
+.status-line.error { color: var(--critical); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+.kpi { padding: 12px 14px; }
+.kpi .v { font: 700 1.6rem/1.1 var(--font-head); font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: .8rem; color: var(--muted); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 12px; }
+.toolbar .spacer { flex: 1; }
+.check { display: flex; gap: 6px; align-items: center; margin: 0; color: var(--text); font-weight: 500; font-size: .88rem; }
+.check input { width: auto; }
+.loop { padding: 14px; margin-bottom: 10px; border-left: 4px solid var(--low); }
+.loop.critical { border-left-color: var(--critical); }
+.loop.high { border-left-color: var(--high); }
+.loop.moderate { border-left-color: var(--moderate); }
+.loop-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.loop-title { font-weight: 700; flex: 1 1 260px; }
+.chip { font: 600 .72rem var(--font-mono); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.critical { background: var(--critical-soft); color: var(--critical); }
+.chip.high { background: var(--high-soft); color: var(--high); }
+.chip.moderate { background: var(--moderate-soft); color: var(--moderate); }
+.chip.low, .chip.neutral { background: var(--low-soft); color: var(--low); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.overdue { background: var(--critical); color: #fff; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: .85rem; margin: 6px 0; }
+.meta b { color: var(--text); font-weight: 600; }
+.missing { font-weight: 600; margin: 4px 0; }
+.action { color: var(--muted); font-size: .9rem; }
+details { margin-top: 8px; }
+summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
+.evidence { font: .78rem/1.5 var(--font-mono); color: var(--muted); background: var(--bg); padding: 10px; margin-top: 6px;
+  border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.form { display: none; gap: 8px; margin-top: 10px; padding: 12px; border-radius: 8px; background: var(--bg); }
+.form.open { display: grid; }
+.form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.msg { border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 8px; background: var(--surface); }
+.msg-text { white-space: pre-wrap; margin: 6px 0; }
+.empty { text-align: center; color: var(--muted); padding: 40px 16px; }
+.rate-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.rate-table th, .rate-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.rate-table td.num, .rate-table th.num { font-variant-numeric: tabular-nums; text-align: right; }
+footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
+@media (max-width: 720px) {
+  .connect { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .form .row { grid-template-columns: 1fr; }
+}
+</style>
+<style>
+.pane { padding: 16px; margin-top: 16px; }
+.pane h2 { font: 700 1.1rem var(--font-head); margin: 0 0 4px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.tbl th, .tbl td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; overflow-wrap: anywhere; }
+.tbl td.num, .tbl th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.scroll { overflow-x: auto; }
+.rate { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+.rate .track { flex: 1; height: 8px; border-radius: 4px; background: var(--border); position: relative; }
+.rate .fill { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--accent); }
+.rate .v { font: 600 .8rem var(--font-mono); color: var(--text); min-width: 42px; text-align: right; }
+.gap { color: var(--critical); font-weight: 600; }
+.bn { padding: 10px 12px; border-left: 4px solid var(--critical); margin: 8px 0; background: var(--surface); border-radius: 8px; }
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>ClinLoop <span data-i18n="title"></span></h1>
+      <p class="sub" data-i18n="subtitle"></p>
+    </div>
+    <nav>
+      <button type="button" id="btn-lang" aria-label="Language">English</button>
+      <a href="worklist.html" data-i18n="worklist"></a>
+      <a href="governance.html" data-i18n="governance"></a>
+    </nav>
+  </header>
+  <div class="banner" role="note" data-i18n="note"></div>
+  <section class="card" aria-label="Connection">
+    <form class="connect" id="connect-form">
+      <div><label for="api-base" data-i18n="api"></label><input id="api-base" type="url" placeholder="http://localhost:8124" required></div>
+      <div><label for="token" data-i18n="token"></label><input id="token" type="password" autocomplete="off" required></div>
+      <button class="primary" type="submit" data-i18n="signin"></button>
+    </form>
+    <div class="status-line" id="status" aria-live="polite"></div>
+  </section>
+  <div id="app" hidden>
+    <div class="kpis" id="kpis"></div>
+    <section class="card pane" aria-labelledby="h-bn"><h2 id="h-bn" data-i18n="bottlenecks"></h2><p class="sub" data-i18n="bnHelp"></p><div id="bn"></div></section>
+    <section class="card pane" aria-labelledby="h-rules"><h2 id="h-rules" data-i18n="byRule"></h2><div class="scroll" id="rules"></div></section>
+    <section class="card pane" aria-labelledby="h-eq"><h2 id="h-eq" data-i18n="equity"></h2><p class="sub" data-i18n="eqHelp"></p><div id="eq"></div></section>
+    <section class="card pane" aria-labelledby="h-own"><h2 id="h-own" data-i18n="owners"></h2><p class="sub" data-i18n="ownHelp"></p><div class="scroll" id="owners"></div></section>
+  </div>
+  <footer data-i18n="footer"></footer>
+</div>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const T = {
+    ko: {
+      title: '후속 조치가 끊기는 곳', subtitle: '병원 전체에서 어떤 규칙, 어떤 단계, 어떤 환자군에서 진료 루프가 닫히지 않는지 보여줍니다.',
+      worklist: '작업 목록 →', governance: '규칙 승인 →', api: 'ClinLoop API', token: '접근 토큰', signin: '로그인',
+      note: '절차를 고치기 위한 화면입니다. 의료진 개인의 순위를 매기지 않습니다. 담당자별 표는 업무량 분배를 위한 것입니다.',
+      loops: '전체 루프', active: '진행 중', overdue: '기한 초과', ontime: '기한 내 종결률',
+      bottlenecks: '병목 (기한 초과 × 중증도)', bnHelp: '가장 많이 끊기는 규칙과 가장 자주 빠지는 단계. 한 번의 절차 개선으로 많은 루프가 닫힙니다.',
+      byRule: '규칙별', rule: '규칙', missingStep: '가장 자주 빠진 단계', ontimeCol: '기한 내 종결', closedLate: '늦게 종결', byClin: '의료진 종결', deferred: '보류',
+      equity: '환자군별 놓친 비율', eqHelp: '기한이 지난 루프 중 닫히지 않은 비율. 전체보다 10%p 이상 높은 군(5건 이상)은 표시됩니다.',
+      age_group: '연령대', language: '언어', sex: '성별', group: '군', n: '기한 경과', missed: '놓침', rate: '놓친 비율', above: (d) => `전체보다 ${d}%p 높음`,
+      owners: '담당자별 업무량', ownHelp: '진행 중·기한 초과 루프 수. 업무를 나누기 위한 것이며 평가가 아닙니다.', owner: '담당자', escalated: '상향 보고',
+      none: '없음', noBn: '기한을 넘긴 루프가 없습니다.', working: '불러오는 중…',
+      footer: 'ClinLoop AI · 절차의 빈틈을 찾습니다. 사람을 탓하지 않습니다.',
+    },
+    en: {
+      title: 'Where follow-up breaks', subtitle: 'Hospital-wide: which rules, which steps and which patient groups lose their care loops.',
+      worklist: 'Worklist →', governance: 'Rule sign-off →', api: 'ClinLoop API', token: 'Access token', signin: 'Sign in',
+      note: 'For fixing processes, not ranking clinicians. The owner table is for balancing workload.',
+      loops: 'Loops', active: 'Active', overdue: 'Overdue', ontime: 'Closed on time',
+      bottlenecks: 'Bottlenecks (overdue × severity)', bnHelp: 'The rules that break most and the step most often missing: one process fix closes many loops.',
+      byRule: 'By rule', rule: 'Rule', missingStep: 'Step most often missing', ontimeCol: 'On time', closedLate: 'Closed late', byClin: 'Closed by clinician', deferred: 'Deferred',
+      equity: 'Missed rate by patient group', eqHelp: 'Share of loops past their deadline that were not closed. A group ≥ 10 points above the overall rate (≥ 5 loops) is marked.',
+      age_group: 'Age group', language: 'Language', sex: 'Sex', group: 'Group', n: 'Past deadline', missed: 'Missed', rate: 'Missed rate', above: (d) => `${d} points above overall`,
+      owners: 'Workload by owner', ownHelp: 'Active and overdue loops: to share work, not to judge.', owner: 'Owner', escalated: 'Escalated',
+      none: 'none', noBn: 'No loop is past its deadline.', working: 'Loading…',
+      footer: 'ClinLoop AI · Finds gaps in the process. Blames no one.',
+    },
+  };
+  const store = { get(k, s = sessionStorage) { try { return s.getItem(k) || ''; } catch { return ''; } },
+                  set(k, v, s = sessionStorage) { try { s.setItem(k, v); } catch {} } };
+  let lang = store.get('clinloop_lang', localStorage) || ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');
+  const t = () => T[lang];
+  const state = { base: '', token: '', data: null };
+  const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+  $('api-base').value = store.get('clinloop_api') || window.CLINLOOP_API_BASE || (isLocal ? 'http://localhost:8124' : '');
+  $('token').value = store.get('clinloop_token');
+  function setStatus(m, err = false) { $('status').textContent = m; $('status').classList.toggle('error', err); }
+  async function api(path) {
+    const res = await fetch(state.base + path, { headers: { 'Authorization': `Bearer ${state.token}` } });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.detail || `HTTP ${res.status}`);
+    return body;
+  }
+  const pct = (x) => x == null ? '–' : `${Math.round(x * 100)}%`;
+  const bar = (x, label) => x == null ? '<span class="sub">–</span>'
+    : `<div class="rate" title="${esc(label)}: ${pct(x)}"><div class="track"><div class="fill" style="width:${Math.round(x * 100)}%"></div></div><span class="v">${pct(x)}</span></div>`;
+
+  function render() {
+    document.documentElement.lang = lang;
+    $('btn-lang').textContent = lang === 'ko' ? 'English' : '한국어';
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t()[el.dataset.i18n]; });
+    const d = state.data;
+    if (!d) return;
+    const active = d.rules.reduce((a, r) => a + r.active, 0), overdue = d.rules.reduce((a, r) => a + r.overdue, 0);
+    const due = d.rules.reduce((a, r) => a + r.due_passed, 0), missed = d.rules.reduce((a, r) => a + r.overdue + r.closed_late, 0);
+    const overall = due ? 1 - missed / due : null;
+    $('kpis').innerHTML = [[d.loops, t().loops], [active, t().active], [overdue, t().overdue], [pct(overall), t().ontime]]
+      .map(([v, l]) => `<div class="card kpi"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join('');
+    $('bn').innerHTML = d.bottlenecks.length ? d.bottlenecks.map((b) => `<div class="bn"><b>${esc(b.rule_id)}</b> ${esc(b.rule_name)}
+      · <span class="chip overdue">${esc(t().overdue)} ${esc(b.overdue)}</span> <span class="chip ${esc(b.severity)}">${esc(b.severity)}</span>
+      ${b.top_missing ? `<div class="sub" style="margin-top:4px;">${esc(t().missingStep)}: <b>${esc(b.top_missing)}</b></div>` : ''}</div>`).join('')
+      : `<p class="sub">${esc(t().noBn)}</p>`;
+    $('rules').innerHTML = `<table class="tbl"><thead><tr><th>${esc(t().rule)}</th><th class="num">${esc(t().active)}</th><th class="num">${esc(t().overdue)}</th>
+      <th>${esc(t().ontimeCol)}</th><th class="num">${esc(t().closedLate)}</th><th class="num">${esc(t().byClin)}</th><th class="num">${esc(t().deferred)}</th><th>${esc(t().missingStep)}</th></tr></thead><tbody>
+      ${d.rules.map((r) => `<tr><td><b>${esc(r.rule_id)}</b> ${esc(r.rule_name)}</td><td class="num">${r.active}</td>
+        <td class="num">${r.overdue ? `<span class="gap">${r.overdue}</span>` : 0}</td><td>${bar(r.on_time_rate, t().ontimeCol)}</td>
+        <td class="num">${r.closed_late}</td><td class="num">${r.closed_by_clinician}</td><td class="num">${r.deferred}</td>
+        <td class="sub">${esc(r.top_missing || t().none)}</td></tr>`).join('')}</tbody></table>`;
+    const overallMissed = due ? missed / due : null;
+    $('eq').innerHTML = Object.entries(d.strata).map(([key, groups]) => `<h3 class="sub" style="margin:12px 0 4px;"><b>${esc(t()[key] || key)}</b></h3>
+      <div class="scroll"><table class="tbl"><thead><tr><th>${esc(t().group)}</th><th class="num">${esc(t().n)}</th><th class="num">${esc(t().missed)}</th><th>${esc(t().rate)}</th><th></th></tr></thead><tbody>
+      ${Object.entries(groups).sort((a, b) => b[1].due_passed - a[1].due_passed).map(([g, c]) => {
+        const diff = overallMissed == null || c.missed_rate == null ? 0 : Math.round((c.missed_rate - overallMissed) * 100);
+        return `<tr><td>${esc(g)}</td><td class="num">${c.due_passed}</td><td class="num">${c.missed}</td><td>${bar(c.missed_rate, t().rate)}</td>
+          <td>${diff >= 10 && c.due_passed >= 5 ? `<span class="gap">⚠ ${esc(t().above(diff))}</span>` : ''}</td></tr>`;
+      }).join('')}</tbody></table></div>`).join('');
+    $('owners').innerHTML = `<table class="tbl"><thead><tr><th>${esc(t().owner)}</th><th class="num">${esc(t().active)}</th><th class="num">${esc(t().overdue)}</th><th class="num">${esc(t().escalated)}</th></tr></thead><tbody>
+      ${d.owners.map((o) => `<tr><td>${esc(o.owner)}</td><td class="num">${o.active}</td><td class="num">${o.overdue}</td><td class="num">${o.escalated}</td></tr>`).join('')}</tbody></table>`;
+  }
+  $('connect-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    state.base = $('api-base').value.replace(/\/+$/, '');
+    state.token = $('token').value.trim();
+    try {
+      setStatus(t().working);
+      const me = await api('/api/v1/me');
+      state.data = await api('/api/v1/metrics/breakdowns');
+      store.set('clinloop_api', state.base); store.set('clinloop_token', state.token);
+      $('app').hidden = false;
+      setStatus(`${me.user} (${me.role}) · ${state.data.as_of.slice(0, 16)}`);
+      render();
+    } catch (err) { $('app').hidden = true; setStatus(err.message, true); }
+  });
+  $('btn-lang').addEventListener('click', () => { lang = lang === 'ko' ? 'en' : 'ko'; store.set('clinloop_lang', lang, localStorage); render(); });
+  render();
+  if ($('api-base').value && $('token').value) $('connect-form').requestSubmit();
+})();
+</script>
+</body>
+</html>

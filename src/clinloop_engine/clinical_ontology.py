@@ -939,7 +939,8 @@ OBLIGATION_RULES: List[ObligationRule] = [
         severity=Severity.HIGH,
         clinical_domain="diagnostic safety",
         ltl_formula="□(AF ∧ CHA₂DS₂-VASc ≥ 2♂/3♀ ∧ ¬OAC → ◇_{≤30d} OAC ∨ documented decision)",
-        references=["Hindricks G et al. 2020 ESC Guidelines for atrial fibrillation. Eur Heart J 2021;42:373-498"],
+        references=["Hindricks G et al. 2020 ESC Guidelines for atrial fibrillation. Eur Heart J 2021;42:373-498",
+                    "Joglar JA et al. 2023 ACC/AHA/ACCP/HRS Guideline for Atrial Fibrillation. Circulation 2024;149:e1-e156"],
         evidence_note=("CHA₂DS₂-VASc from the problem list (heart failure, hypertension, diabetes, stroke/TIA, vascular "
                        "disease), age and sex. A clinician closes the loop with evidence when anticoagulation is "
                        "contraindicated or declined."),

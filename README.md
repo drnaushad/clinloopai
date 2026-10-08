@@ -118,6 +118,7 @@ clinloopai/
 │       ├── note_reader.py            # Plans in clinicians' notes (EN/KO) → tracked follow-ups (R048–R051)
 │       ├── motifs.py                 # Diagnostic patterns across events (R052–R056, incl. lesion tracking)
 │       ├── rule_check.py             # Static check: every rule can fire and every loop can close
+│       ├── config/guidelines.json    # Guideline registry: rules citing an outdated edition are flagged
 │       ├── config/critical_findings.json # Example critical-finding list (each hospital approves its own)
 │       ├── fhir_sync.py              # Scheduled read-only sync from a FHIR server
 │       ├── outreach.py               # Patient messages: draft → approval → provider (outbox / webhook)
@@ -150,6 +151,7 @@ clinloopai/
 ├── governance.html               # Specialist rule sign-off and critical-finding list approval
 ├── imaging.html                  # Outside reports (PDF/OCR), DICOM analysis, CT organ measurement
 ├── patient.html                  # Patient knowledge graph: events, obligations, missing follow-ups
+├── quality.html                  # Where follow-up breaks: bottlenecks, missing steps, equity gaps, workload
 ├── data/cases.json               # 5 curated synthetic demo cases used by the web cockpit
 ├── data/fhir_example_bundle.json # Synthetic FHIR R4 bundle: 7 patients, the main failure modes
 ├── requirements-api.txt          # API dependencies
@@ -568,6 +570,8 @@ synthetic event, so results are identical on every run.
 | CT organ measurement | **Implemented, research use**: TotalSegmentator on a whole CT series; aortic diameter, spleen length and organ volumes. Run live here on a public sample CT and a synthetic aneurysm phantom; not validated on hospital CTs |
 | Vision-language model | **Adapter implemented**, for MedGemma or similar on an on-premise Ollama/OpenAI-compatible server. Tested against a stand-in server only: the model weights could not be downloaded in the build environment |
 | Patient knowledge graph | **Implemented** (`patient.html`): API and bilingual SVG view of events and obligations |
+| Follow-up breakdowns | **Implemented** (`quality.html`): bottlenecks by rule and missing step, equity gaps, workload by owner |
+| Guideline versions | **Implemented**: registry of current editions. Rules citing an older one are flagged for re-review (today: R013, R025, R054) |
 | Diagnostic patterns | **Implemented**: R052–R055 as graph motifs over each patient's events, with evidence links on the patient graph. Synthetic tests only; positive predictive value not yet measured |
 | Clinical notes | **Implemented, rule-based**: FHIR `DocumentReference` notes and pasted notes (`patient.html`); plans → R048–R051 with the source sentence. Optional on-premise LLM suggestions, shown for review only. Tested on synthetic notes; extraction accuracy on real notes not yet measured — see [`docs/CLINICAL_NOTES.md`](docs/CLINICAL_NOTES.md) |
 | EHR connector (MCP demo) | **Mock**: responses are labelled `simulated` |
