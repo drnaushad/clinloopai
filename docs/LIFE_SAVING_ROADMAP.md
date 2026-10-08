@@ -18,7 +18,7 @@ dangerous, the patient is not lost on the way to treatment. This document sets o
 | Strength | Gap |
 | --- | --- |
 | Deterministic, guideline-cited rules with a full evidence chain for every alert | Runs on synthetic data only; no real-world accuracy has been measured |
-| Formal temporal semantics (`□(trigger → ◇≤T follow-up)`) | 32 rules, none yet signed off by a specialist |
+| Formal temporal semantics (`□(trigger → ◇≤T follow-up)`) | 36 rules, none yet signed off by a specialist |
 | FHIR R4 ingestion, loop registry, clinician worklist, escalation, audit | Not yet connected to a hospital system or SSO |
 | 131 tests, including patient-safety regression tests | The comparison baselines are simulations, not real systems |
 | Read-only design: never orders, never auto-closes | Counterfactual survival figures are hand-written illustrations |
@@ -308,6 +308,7 @@ everything else, and the only one we should ever put on a slide about saving liv
 - [x] Wave 2 rules R023–R029 (heart failure, postpartum BP, gestational diabetes, HCV, HCC
       surveillance, self-harm follow-up as a clinician-only rule)
 - [x] Radiologist-recommended follow-up (R030–R032): deadline taken from the report, with evidence span
+- [x] Radiology report reading hardened after a radiologist live-run (`docs/RADIOLOGY_LIVE_RUN.md`): sizes in cm, organ-aware nodules, radiographs (R033), Lung-RADS 3 (R034), critical findings (R035), biopsy/FNA recommendations (R036)
 - [x] Live FHIR server sync (changed patients → full history); fail-loud feed monitoring (§6)
 - [x] Patient outreach: diagnosis-free drafts, clinician approval, hospital messaging webhook (§5)
 - [x] Korean/English worklist with assignment and "my loops"
@@ -315,7 +316,7 @@ everything else, and the only one we should ever put on a slide about saving liv
 ### 90 days
 - Clinical advisory board: radiology, pathology, oncology, primary care, psychiatry, nursing
   navigation, a patient representative, an ethicist and a medical lawyer
-- Specialist sign-off on all 32 rules; map the local LOINC and report vocabularies into the FHIR adapter
+- Specialist sign-off on all 36 rules; map the local LOINC and report vocabularies into the FHIR adapter
 - Hospital SSO integration for the worklist; EMR in-basket integration
 - COL specification v0.1; FHIR PlanDefinition export
 - IRB submission for Stage 1; NHIS data access application for delay–harm curves

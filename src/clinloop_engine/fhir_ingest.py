@@ -22,7 +22,7 @@ Appointment, Communication, Encounter, MedicationRequest, Procedure, Condition.
 
 import re
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from .clinical_ontology import (
@@ -173,10 +173,22 @@ def _span(text: str, match: re.Match, pad: int = 40) -> str:
     return text[max(0, match.start() - pad): match.end() + pad].strip()
 
 
+# Negation after the finding: "pneumothorax has resolved", "carcinoma is not identified", "결절 없음"
+_NEGATION_AFTER = re.compile(
+    r"^[^.;]{0,25}?(\b(?:is|are|was|were)\s+not\s+(?:seen|identified|present|demonstrated|visualized)\b"
+    r"|\b(?:has|have)\s+resolved\b|\b(?:excluded|ruled out)\b|없|음성|아님|배제)",
+    re.IGNORECASE,
+)
+
+
+def _affirmed(text: str, match: re.Match) -> bool:
+    return _not_negated(text, match.start()) and not _NEGATION_AFTER.search(text[match.end():])
+
+
 def _first_affirmed(pattern: re.Pattern, text: str) -> Optional[re.Match]:
-    """First match not preceded by a negation ("negative for X; Y present" finds Y)."""
+    """First affirmed match ("negative for X; Y present" finds Y; "X is not identified" is skipped)."""
     for m in pattern.finditer(text):
-        if _not_negated(text, m.start()):
+        if _affirmed(text, m):
             return m
     return None
 
@@ -276,15 +288,27 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
     return events
 
 
-_NODULE = re.compile(r"(\d+(?:\.\d+)?)\s*(?:mm|밀리)[^.;]{0,40}?(nodule|결절)|(nodule|결절)[^.;]{0,40}?(\d+(?:\.\d+)?)\s*mm", re.I)
+# Size: "14 mm", "1.4 cm", "14 x 11 mm" (Fleischner 2017: average of long and short axis)
+_SIZE = (r"(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?(?:\s*[x×]\s*\d+(?:\.\d+)?)?\s*"
+         r"(mm|cm|밀리미터|밀리|센티미터|센티)(?![a-zA-Z])")
+_NODULE_SIZE_FIRST = re.compile(rf"{_SIZE}[^.;]{{0,40}}?(nodules?|결절)", re.I)
+_NODULE_WORD_FIRST = re.compile(rf"(nodules?|결절)[^.;]{{0,40}}?{_SIZE}", re.I)
+_LUNG_SITE = re.compile(r"\b(lungs?|pulmonary|(?:upper|middle|lower)\s+lobes?|lingula\w*|perifissural|subpleural)\b"
+                        r"|폐|[우좌][상중하]엽|설상엽", re.I)
+_OTHER_SITE = re.compile(r"\b(adrenal|thyroid|renal|kidneys?|liver|hepatic|pancrea\w*|splen\w*|breast|ovar\w*|"
+                         r"prostat\w*|parotid|lymph\s+nodes?|subcutaneous|skin)\b"
+                         r"|부신|갑상선|신장|췌장|유방|비장|전립선|간(?=[\s의에내])", re.I)
+_CHEST_STUDY = re.compile(r"chest|thora\w*|lung|ldct|흉부|폐", re.I)
 _LUNG_RADS = re.compile(r"lung-?rads\s*(?:category\s*)?:?\s*(\d[ABXS]?)", re.I)
 _BIRADS = re.compile(r"bi-?rads\s*(?:category\s*)?:?\s*(\d[ABC]?)", re.I)
-_CHEST_CT = re.compile(r"\b(ct|ldct|computed tomography)\b.*\b(chest|thorax|lung)\b|\b(chest|thorax|lung)\b.*\b(ct|ldct)\b|흉부\s*ct", re.I)
+_TIRADS = re.compile(r"ti-?rads\s*(?:category\s*)?:?\s*(?:TR\s*)?(\d)", re.I)
+_CHEST_CT = re.compile(r"\b(ct|ldct|computed tomography)\b.*\b(chest|thorax|lung)\b|\b(chest|thorax|lung)\b.*\b(ct|ldct)\b"
+                       r"|흉부\s*ct|\bpet[/-]?ct\b", re.I)
 _WORD_NUM = {"one": 1, "two": 2, "three": 3, "four": 4, "six": 6, "twelve": 12}
 _UNIT_DAYS = {"day": 1, "week": 7, "month": 30.44, "year": 365.25, "일": 1, "주": 7, "개월": 30.44, "년": 365.25}
 _NUM = r"(\d+(?:\.\d+)?|one|two|three|four|six|twelve)"
 # Bare "MR" is excluded: "recommend Mr Kim return in 2 weeks" is not an MRI
-_MOD = r"(cta|ct|mri|(?-i:US)|ultrasound|ultrasonograph\w*|sonograph\w*)"
+_MOD = r"(cta|ct|mri|(?-i:US)|ultrasound|ultrasonograph\w*|sonograph\w*|radiographs?|x-?rays?|cxr)"
 _INTERVAL = rf"(?:in|within|at|after)\s+(?:{_NUM}\s*(?:-|–|to)\s*)?{_NUM}\s*(day|week|month|year)s?"
 _REC_PATTERNS = [
     # "Recommend follow-up chest CT in 3 months" / "recommended: MRI within 6-12 months"
@@ -292,8 +316,44 @@ _REC_PATTERNS = [
     # "Follow-up CT in 3 months is recommended"
     re.compile(rf"\b{_MOD}\b[^.;]{{0,40}}?\b{_INTERVAL}[^.;]{{0,30}}?\brecommend", re.I),
 ]
-_REC_KO = re.compile(r"(\d+)\s*(?:[-~]\s*(\d+))?\s*(개월|주|일|년)\s*(?:후|뒤|이내|내)?\s*(?:에\s*)?(?:추적\s*)?(?:검사\s*)?"
-                     r"(CT|MRI|초음파)[^.]{0,20}?(?:권고|권장|필요)", re.I)
+_KO_MOD = r"(CT|MRI|초음파|X선|엑스레이)"
+_REC_KO = re.compile(rf"(\d+)\s*(?:[-~]\s*(\d+))?\s*(개월|주|일|년)\s*(?:후|뒤|이내|내)?\s*(?:에\s*)?(?:추적\s*)?(?:검사\s*)?"
+                     rf"{_KO_MOD}[^.]{{0,20}}?(?:권고|권장|필요)", re.I)
+# Recommendation without an interval: "Recommend contrast-enhanced CT chest for further evaluation".
+# "US-guided biopsy" is a biopsy, not an imaging follow-up.
+_NOT_GUIDED = r"(?![\s-]*guided)"
+_REC_NO_INTERVAL = [
+    re.compile(rf"recommend\w*[^.;]{{0,40}}?\b{_MOD}\b{_NOT_GUIDED}", re.I),
+    re.compile(rf"\b{_MOD}\b{_NOT_GUIDED}[^.;]{{0,40}}?\b(?:recommend\w*|advised|suggested|warranted)", re.I),
+]
+_REC_KO_NO_INTERVAL = re.compile(rf"(?:추가|추적|정밀)\s*(?:검사\s*)?(?:로\s*)?{_KO_MOD}[^.]{{0,15}}?(?:권고|권장)", re.I)
+DEFAULT_REC_INTERVAL_DAYS = 30.0
+_BIOPSY = r"(biops(?:y|ies)|tissue sampling|fine[-\s]needle aspiration|\bFNA\b|core[-\s]needle|조직검사|세침\s*흡인)"
+_BIOPSY_REC = [
+    re.compile(rf"recommend\w*[^.;]{{0,40}}?{_BIOPSY}", re.I),
+    re.compile(rf"{_BIOPSY}[^.;]{{0,40}}?\b(?:recommend\w*|advised|suggested|warranted|indicated)", re.I),
+    re.compile(rf"{_BIOPSY}[^.]{{0,15}}?(?:권고|권장|필요)", re.I),
+]
+# Hedged or backward-looking wording is not a follow-up recommendation
+_HEDGE = re.compile(r"if clinically|as clinically indicated|if (?:desired|needed|warranted)|could be considered|"
+                    r"may be considered|can be considered|\boptional", re.I)
+_NOT_A_REC = re.compile(r"\b(no|not|without|prior|previous|outside|comparison|compared)\b", re.I)
+
+# Emergent findings that need direct, documented communication (ACR Practice Parameter
+# for Communication of Diagnostic Imaging Findings). Institutions maintain their own list.
+_CRITICAL = re.compile(
+    r"(critical (?:result|finding)|pulmonary (?:embolism|emboli|embolus)|saddle embol\w*|aortic dissection|"
+    r"(?:tension )?pneumothorax|intracranial h(?:a)?emorrhage|"
+    r"(?:subarachnoid|subdural|epidural|intraparenchymal) h(?:a)?(?:emorrhage|ematoma)|pneumoperitoneum|"
+    r"free (?:intraperitoneal )?air|(?:ruptured|leaking) (?:abdominal )?aortic aneurysm|"
+    r"(?:testicular|ovarian) torsion|cord compression|"
+    r"폐색전증|대동맥\s*박리|기흉|뇌출혈|두개내\s*출혈|지주막하\s*출혈|기복증|위급\s*소견)", re.I)
+# Not a new emergent finding: chronic/known/resolving, or only the indication for the study
+_NOT_NEW = re.compile(r"\b(chronic|old|known|previously|prior|stable|resolv\w*|improv\w*|decreas\w*|residual|"
+                      r"evaluat\w*|assess\w*|protocol|rule out|r/o|exclude)\b[^.;]{0,30}$", re.I)
+# Communication documented in the report itself
+_COMMUNICATED = re.compile(r"(discussed with|communicated (?:to|with)|called to|telephoned|notified|conveyed to|"
+                           r"relayed to|read back|에게\s*(?:전화로?\s*|구두로?\s*)?(?:통보|보고|전달))", re.I)
 
 
 def _norm_modality(text: str) -> Optional[str]:
@@ -304,11 +364,30 @@ def _norm_modality(text: str) -> Optional[str]:
         return "mri"
     if t == "us" or "sonograph" in t or "ultrasound" in t or t == "초음파":
         return "ultrasound"
+    if "radiograph" in t or t.replace("-", "").rstrip("s") in ("xray", "cxr") or t in ("x선", "엑스레이"):
+        return "xray"
     return None
 
 
+def _sentence(text: str, start: int, end: int) -> str:
+    """The sentence around a match ('1.4 cm' is not a sentence break)."""
+    left = max(text.rfind(". ", 0, start), text.rfind(";", 0, start), text.rfind("\n", 0, start))
+    rights = [i for i in (text.find(". ", end), text.find(";", end), text.find("\n", end)) if i != -1]
+    return text[left + 1: min(rights) if rights else len(text)]
+
+
+def _usable_rec(text: str, m: re.Match) -> bool:
+    """Affirmed, not hedged, and not about a prior study."""
+    return (_affirmed(text, m) and not _HEDGE.search(_sentence(text, m.start(), m.end()))
+            and not _NOT_A_REC.search(m.group(0)))
+
+
 def _extract_recommendation(text: str) -> Optional[Dict[str, Any]]:
-    """Radiologist follow-up recommendation: modality, interval (upper bound of a range) and evidence span."""
+    """Radiologist follow-up recommendation: modality, interval (upper bound of a range) and evidence span.
+
+    A recommendation that names a modality but no interval gets a 30-day default
+    (``recommended_interval_stated`` False), so "CT for further evaluation" is not lost.
+    """
     for pattern in _REC_PATTERNS:
         for m in pattern.finditer(text):
             if not _not_negated(text, m.start()):
@@ -320,19 +399,63 @@ def _extract_recommendation(text: str) -> Optional[Dict[str, Any]]:
             if modality and number:
                 return {"recommended_modality": modality,
                         "recommended_interval_days": round(number * _UNIT_DAYS[unit], 1),
+                        "recommended_interval_stated": True,
                         "evidence_span": _span(text, m)}
     m = _REC_KO.search(text)
     if m:
         number = float(m.group(2) or m.group(1))
         return {"recommended_modality": _norm_modality(m.group(4)),
                 "recommended_interval_days": round(number * _UNIT_DAYS[m.group(3)], 1),
+                "recommended_interval_stated": True,
                 "evidence_span": _span(text, m)}
+    for pattern in _REC_NO_INTERVAL + [_REC_KO_NO_INTERVAL]:
+        for m in pattern.finditer(text):
+            modality = _norm_modality(m.group(1))
+            if modality and _usable_rec(text, m):
+                return {"recommended_modality": modality,
+                        "recommended_interval_days": DEFAULT_REC_INTERVAL_DAYS,
+                        "recommended_interval_stated": False,
+                        "evidence_span": _span(text, m)}
+    return None
+
+
+def _find_nodule(text: str) -> Optional[Tuple[re.Match, float]]:
+    """First affirmed nodule with a size, in mm."""
+    best = None
+    for pattern, (a, b, unit) in ((_NODULE_SIZE_FIRST, (1, 2, 3)), (_NODULE_WORD_FIRST, (2, 3, 4))):
+        m = _first_affirmed(pattern, text)
+        if m and (best is None or m.start() < best[0].start()):
+            dims = [float(m.group(a))] + ([float(m.group(b))] if m.group(b) else [])
+            factor = 10.0 if m.group(unit).lower().startswith(("cm", "센티")) else 1.0
+            best = (m, round(sum(dims) / len(dims) * factor, 1))
+    return best
+
+
+def _nodule_site(text: str, m: re.Match, code_text: str) -> str:
+    """'lung', another organ, or 'lung' by default (unstated site on a chest study, or unknown)."""
+    sentence = _sentence(text, m.start(), m.end())
+    if _LUNG_SITE.search(sentence):
+        return "lung"
+    other = _OTHER_SITE.search(sentence)
+    if other:
+        return other.group(0).lower()
+    other = _OTHER_SITE.search(code_text)
+    if other and not _CHEST_STUDY.search(code_text):
+        return other.group(0).lower()
+    return "lung"
+
+
+def _critical_finding(text: str) -> Optional[re.Match]:
+    for m in _CRITICAL.finditer(text):
+        if _affirmed(text, m) and not _NOT_NEW.search(text[max(0, m.start() - 60):m.start()]):
+            return m
     return None
 
 
 _MOD_CT = re.compile(r"\b(ct|cta|ldct|computed tomography)\b", re.I)
 _MOD_MRI = re.compile(r"\b(mri|mr|magnetic resonance)\b", re.I)
 _MOD_US = re.compile(r"\b(?-i:US)\b|ultrasound|sonograph|초음파", re.I)
+_MOD_XRAY = re.compile(r"radiograph|\bx-?rays?\b|\bcxr\b|\bxr\b|x선|엑스레이|단순\s*촬영", re.I)
 _LIVER = re.compile(r"liver|hepat|abdom|간|복부", re.I)
 
 
@@ -343,10 +466,117 @@ def _study_modality(code_text: str) -> Optional[str]:
         return "mri"
     if _MOD_US.search(code_text):
         return "ultrasound"
+    if _MOD_XRAY.search(code_text):
+        return "xray"
     return None
 
 
 _MALIGNANT = re.compile(r"(adenocarcinoma|carcinoma|malignan\w*|high-grade dysplasia|melanoma|lymphoma|sarcoma|암)", re.I)
+
+
+def _map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
+                          details: Dict[str, Any]) -> List[Tuple[str, str, Dict]]:
+    mapping = ["DiagnosticReport(RAD)→radiology_report"]
+    spans: List[str] = []
+    events: List[Tuple[str, str, Dict]] = []
+
+    found = _find_nodule(conclusion)
+    if found:
+        m, size = found
+        site = _nodule_site(conclusion, m, code_text)
+        details["nodule_size_mm"] = size
+        spans.append(_span(conclusion, m))
+        if site == "lung":
+            details["finding"] = "incidental_pulmonary_nodule"
+            mapping.append(f"lung nodule {size:g} mm")
+        else:
+            details.update(finding="incidental_nodule", nodule_site=site)
+            mapping.append(f"{site} nodule {size:g} mm: not a lung nodule, Fleischner (R003) not applied")
+    for key, pattern, label in (("lung_rads", _LUNG_RADS, "Lung-RADS"), ("birads", _BIRADS, "BI-RADS"),
+                                ("tirads", _TIRADS, "TI-RADS TR")):
+        m = pattern.search(conclusion)
+        if m:
+            details[key] = m.group(1).upper()
+            spans.append(_span(conclusion, m))
+            mapping.append(f"{label} {m.group(1).upper()}")
+    if details.get("lung_rads") and details.get("finding") == "incidental_pulmonary_nodule":
+        details["finding"] = "screening_nodule"
+        mapping.append("screening LDCT: Lung-RADS governs follow-up, Fleischner (R003) not applied")
+
+    rec = _extract_recommendation(conclusion)
+    if rec and rec["recommended_modality"]:
+        stated = rec["recommended_interval_stated"]
+        mapping.append(f"radiologist recommends {rec['recommended_modality']} in "
+                       f"{rec['recommended_interval_days']:g} days"
+                       + ("" if stated else " (no interval stated: 30-day default)"))
+        rec_span = rec.pop("evidence_span")
+        if details.get("lung_rads") and rec["recommended_modality"] == "ct":
+            mapping.append("Lung-RADS rule tracks this CT: recommendation not tracked separately")
+        elif details.get("finding") == "incidental_pulmonary_nodule" and rec["recommended_modality"] == "ct":
+            # One finding, one loop: keep whichever deadline is tighter. A defaulted
+            # interval never overrides the Fleischner window.
+            nodule_deadline = FLEISCHNER_LARGE_NODULE_DAYS if details["nodule_size_mm"] > 8 else 180.0
+            rec_deadline = rec["recommended_interval_days"] + radiology_grace_days(rec["recommended_interval_days"])
+            if stated and rec_deadline < nodule_deadline:
+                details["finding"] = "pulmonary_nodule_with_radiologist_recommendation"
+                details.update(rec)
+                spans.append(rec_span)
+                mapping.append("radiologist interval is tighter than Fleischner default: tracked as R030")
+            else:
+                mapping.append("Fleischner window (R003) governs: recommendation not tracked separately")
+        else:
+            details.update(rec)
+            spans.append(rec_span)
+
+    for pattern in _BIOPSY_REC:
+        m = next((x for x in pattern.finditer(conclusion) if _usable_rec(conclusion, x)), None)
+        if not m:
+            continue
+        governed_by = ("R018" if str(details.get("birads", ""))[:1] in ("4", "5") else
+                       "R020" if details.get("lung_rads") in ("4B", "4X") else
+                       "R003" if details.get("finding") == "incidental_pulmonary_nodule" else None)
+        if governed_by:
+            mapping.append(f"tissue sampling recommended: covered by {governed_by}")
+        else:
+            details["biopsy_recommended"] = True
+            spans.append(_span(conclusion, m))
+            mapping.append("radiologist recommends tissue sampling")
+        break
+
+    m = _critical_finding(conclusion)
+    if m:
+        details.update(critical_imaging=True, critical_finding=m.group(1))
+        spans.append(_span(conclusion, m))
+        mapping.append(f"critical finding: '{m.group(1)}'")
+    m = _first_affirmed(_COMMUNICATED, conclusion)
+    if m:
+        # Follow-ups must come after their trigger, so the documented call is placed one
+        # minute after the report time (the report text rarely gives a parseable time)
+        try:
+            notified = (datetime.fromisoformat(str(ts).replace("Z", "+00:00")) + timedelta(minutes=1)).isoformat()
+        except ValueError:
+            notified = ts
+        events.append((EventType.CRITICAL_VALUE_NOTIFICATION.value, notified,
+                       {"evidence_span": _span(conclusion, m),
+                        "mapping": ["communication documented in the radiology report→critical_value_notification",
+                                    "time: report time + 1 minute"]}))
+        mapping.append("communication to clinician documented in report")
+
+    if spans:
+        details["evidence_span"] = " … ".join(dict.fromkeys(spans))
+    details["mapping"] = mapping
+    events.insert(0, (EventType.RADIOLOGY_REPORT.value, ts, details))
+    # A completed study fulfils outstanding follow-up imaging obligations
+    if _CHEST_CT.search(code_text):
+        events.append((EventType.FOLLOWUP_CT.value, ts, {"mapping": ["chest CT report→followup_ct"]}))
+    modality = _study_modality(code_text)
+    if modality:
+        etype = {"ct": EventType.IMAGING_CT, "mri": EventType.IMAGING_MRI,
+                 "ultrasound": EventType.IMAGING_ULTRASOUND, "xray": EventType.IMAGING_XRAY}[modality].value
+        events.append((etype, ts, {"mapping": [f"{modality} report→{etype}"]}))
+        if modality != "xray" and _LIVER.search(code_text):
+            events.append((EventType.LIVER_IMAGING.value, ts, {"mapping": [f"{modality} liver/abdomen→liver_imaging"]}))
+    return events
 
 
 def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
@@ -356,53 +586,9 @@ def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
     conclusion = " ".join(filter(None, [r.get("conclusion", ""),
                                         " ".join(_concept_text(c) for c in r.get("conclusionCode", []))]))
     details: Dict[str, Any] = {"report": code_text or None, "conclusion": conclusion or None}
-    events: List[Tuple[str, str, Dict]] = []
 
     if "rad" in category or "imaging" in category or "radiology" in category:
-        mapping = ["DiagnosticReport(RAD)→radiology_report"]
-        m = _first_affirmed(_NODULE, conclusion)
-        if m:
-            size = float(m.group(1) or m.group(4))
-            details.update(finding="incidental_pulmonary_nodule", nodule_size_mm=size,
-                           evidence_span=_span(conclusion, m))
-            mapping.append(f"nodule {size} mm")
-        m = _LUNG_RADS.search(conclusion)
-        if m:
-            details.update(lung_rads=m.group(1).upper(), evidence_span=_span(conclusion, m))
-            mapping.append(f"Lung-RADS {m.group(1).upper()}")
-        m = _BIRADS.search(conclusion)
-        if m:
-            details.update(birads=m.group(1).upper(), evidence_span=_span(conclusion, m))
-            mapping.append(f"BI-RADS {m.group(1).upper()}")
-        rec = _extract_recommendation(conclusion)
-        if rec and rec["recommended_modality"]:
-            mapping.append(f"radiologist recommends {rec['recommended_modality']} in "
-                           f"{rec['recommended_interval_days']:g} days")
-            if details.get("finding") == "incidental_pulmonary_nodule" and rec["recommended_modality"] == "ct":
-                # One finding, one loop: keep whichever deadline is tighter
-                nodule_deadline = FLEISCHNER_LARGE_NODULE_DAYS if details["nodule_size_mm"] > 8 else 180.0
-                rec_deadline = rec["recommended_interval_days"] + radiology_grace_days(rec["recommended_interval_days"])
-                if rec_deadline < nodule_deadline:
-                    details["finding"] = "pulmonary_nodule_with_radiologist_recommendation"
-                    details.update(rec)
-                    mapping.append("radiologist interval is tighter than Fleischner default: tracked as R030")
-                else:
-                    mapping.append("Fleischner window (R003) is tighter: recommendation not tracked separately")
-            else:
-                details.update(rec)
-        details["mapping"] = mapping
-        events.append((EventType.RADIOLOGY_REPORT.value, ts, details))
-        # A completed study fulfils outstanding follow-up imaging obligations
-        if _CHEST_CT.search(code_text):
-            events.append((EventType.FOLLOWUP_CT.value, ts, {"mapping": ["chest CT report→followup_ct"]}))
-        modality = _study_modality(code_text)
-        if modality:
-            etype = {"ct": EventType.IMAGING_CT, "mri": EventType.IMAGING_MRI,
-                     "ultrasound": EventType.IMAGING_ULTRASOUND}[modality].value
-            events.append((etype, ts, {"mapping": [f"{modality} report→{etype}"]}))
-            if _LIVER.search(code_text):
-                events.append((EventType.LIVER_IMAGING.value, ts, {"mapping": [f"{modality} liver/abdomen→liver_imaging"]}))
-        return events
+        return _map_radiology_report(ts, code_text, conclusion, details)
 
     if "pat" in category or "pathology" in category or "sp" in category.split():
         mapping = ["DiagnosticReport(PAT)→pathology_result"]
@@ -422,7 +608,8 @@ def _map_service_request(r: Dict) -> List[Tuple[str, str, Dict]]:
     details = {"order": _concept_text(r.get("code")) or None}
     if "colposcopy" in text or "질확대경" in text:
         etype = EventType.COLPOSCOPY_REFERRAL.value
-    elif "biopsy" in text or "조직검사" in text:
+    elif ("biopsy" in text or "aspiration" in text or re.search(r"\bfna\b", text)
+          or "조직검사" in text or "세침" in text):
         etype = EventType.BIOPSY_ORDER.value
     elif "referral" in text or "3457005" in text or "consult" in text or "의뢰" in text or "협진" in text:
         etype = EventType.SPECIALIST_REFERRAL.value
@@ -552,7 +739,7 @@ def _map_procedure(r: Dict) -> List[Tuple[str, str, Dict]]:
         etype = EventType.ECHOCARDIOGRAM.value
     elif "colposcopy" in text:
         etype = EventType.COLPOSCOPY_VISIT.value
-    elif "biopsy" in text:
+    elif "biopsy" in text or "aspiration" in text or re.search(r"\bfna\b", text) or "조직검사" in text or "세침" in text:
         etype = EventType.BIOPSY_RESULT.value
     else:
         return []

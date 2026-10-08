@@ -28,7 +28,7 @@ with transparent, rule-grounded logic and an audit trail.
                                                                   Patient outreach: draft → clinician approval → send
 ```
 
-1. **Obligation rules** (`clinical_ontology.py`): 32 guideline-based rules, each with a trigger, its
+1. **Obligation rules** (`clinical_ontology.py`): 36 guideline-based rules, each with a trigger, its
    required follow-ups (all or any), a deadline, a severity, references, a Korean name, and a
    `review_status` (all currently `pending_specialist_review`). Example:
    `□(LAB_RESULT[abnormal_pap] → ◇≤30d COLPOSCOPY_REFERRAL)`.
@@ -38,7 +38,8 @@ with transparent, rule-grounded logic and an audit trail.
    | R001–R016 | Abnormal labs, incidental lung nodules (size-aware Fleischner windows), cervical cytology, post-discharge cultures, anticoagulation and drug monitoring, referrals, pathology, post-MI and new heart failure |
    | R017–R022 (Wave 1) | Positive FIT → colonoscopy, BI-RADS 4/5 → biopsy, Lung-RADS 4A and 4B/4X, abnormal result after discharge, critical value → clinician notified within 1 hour |
    | R023–R029 (Wave 2) | Heart-failure discharge → visit ≤7 days; postpartum BP check after hypertensive disorder of pregnancy (≤72 h if severe); gestational diabetes → postpartum glucose test; HCV antibody → RNA; HCC surveillance imaging every 6 months for chronic HBV or cirrhosis; self-harm or psychiatric discharge → mental-health follow-up ≤7 days (clinician-handled only) |
-   | R030–R032 | Follow-up CT / MRI / ultrasound **recommended in the radiology report**, with the deadline taken from the report itself |
+   | R030–R033 | Follow-up CT / MRI / ultrasound / radiograph **recommended in the radiology report**, with the deadline taken from the report itself (30-day default when no interval is stated) |
+   | R034–R036 | Lung-RADS 3 → 6-month LDCT; critical imaging finding (acute PE, dissection, haemorrhage, pneumothorax, free air) → documented clinician communication within 1 hour; radiologist-recommended biopsy/FNA |
 2. **Temporal hypergraph** (`temporal_hypergraph.py`): builds one hyperedge per triggered rule and
    marks it `closed`, `open` or `delayed`.
 3. **Safety clock** (`safety_clock.py`): converts elapsed time against the deadline into a time-risk

@@ -63,6 +63,10 @@ EVIDENCE_QUERIES: Dict[str, str] = {
     "R030": "radiologist follow-up imaging recommendations adherence",
     "R031": "radiologist recommended follow-up MRI completion",
     "R032": "radiologist recommended follow-up ultrasound completion",
+    "R033": "follow-up chest radiograph pneumonia resolution lung cancer",
+    "R034": "Lung-RADS category 3 adherence follow-up",
+    "R035": "critical imaging findings communication radiology",
+    "R036": "radiologist recommended biopsy completion follow-up",
 }
 
 

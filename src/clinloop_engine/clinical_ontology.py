@@ -53,6 +53,7 @@ class EventType(Enum):
     IMAGING_CT = "imaging_ct"                     # any completed CT study
     IMAGING_MRI = "imaging_mri"                   # any completed MRI study
     IMAGING_ULTRASOUND = "imaging_ultrasound"     # any completed ultrasound study
+    IMAGING_XRAY = "imaging_xray"                 # any completed radiograph
 
 
 # ── Severity Classification ─────────────────────────────────────────────────
@@ -156,13 +157,17 @@ OBLIGATION_RULES: List[ObligationRule] = [
         description="Incidental pulmonary nodule ≥6mm on CT requires follow-up CT within 6 months",
         trigger_event=EventType.RADIOLOGY_REPORT,
         trigger_condition="incidental_nodule_ge_6mm",
-        required_followups=[EventType.FOLLOWUP_CT],
+        required_followups=[EventType.FOLLOWUP_CT, EventType.BIOPSY_ORDER, EventType.BIOPSY_RESULT],
         deadline_days=180.0,
         severity=Severity.HIGH,
         clinical_domain="radiology",
-        ltl_formula="□(RADIOLOGY_REPORT[nodule≥6mm] → ◇_{≤180d} FOLLOWUP_CT)",
+        ltl_formula="□(RADIOLOGY_REPORT[lung nodule≥6mm] → ◇_{≤180d} (FOLLOWUP_CT ∨ BIOPSY))",
         references=["Fleischner Society 2017 Guidelines",
                      "Lacson R et al. JACR 2020"],
+        followup_logic="any",
+        evidence_note=("Lung nodules only: a nodule in another organ (adrenal, thyroid, …) is not tracked "
+                       "by this rule. Not applied to screening LDCT with a Lung-RADS category. "
+                       ">8 mm: 90 days. Tissue sampling also closes the loop (Fleischner >8 mm option)."),
     ),
     ObligationRule(
         rule_id="R004",
@@ -376,8 +381,9 @@ OBLIGATION_RULES: List[ObligationRule] = [
         deadline_days=90.0,
         severity=Severity.HIGH,
         clinical_domain="cancer_screening",
-        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 4A] → ◇_{≤90d} FOLLOWUP_CT)",
+        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 4A] → ◇_{≤90d+grace} FOLLOWUP_CT)",
         references=["ACR Lung-RADS v2022"],
+        evidence_note="Scheduled interval plus a grace period (25%, 7–30 days), as for R030–R033.",
     ),
     ObligationRule(
         rule_id="R020",
@@ -567,6 +573,72 @@ OBLIGATION_RULES: List[ObligationRule] = [
         references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
         evidence_note="Interval from the report plus a grace period (25%, 7–30 days). Matches modality, not body region.",
     ),
+    ObligationRule(
+        rule_id="R033",
+        name="Radiologist-Recommended Radiograph",
+        description="Follow-up radiograph (e.g. chest X-ray to document resolution) recommended in the report",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="radiologist_rec_xray",
+        required_followups=[EventType.IMAGING_XRAY],
+        deadline_days=90.0,
+        severity=Severity.MODERATE,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend radiograph in T] → ◇_{≤T+grace} IMAGING_XRAY)",
+        references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558",
+                    "BTS Guidelines for community-acquired pneumonia in adults (2009): repeat CXR ~6 weeks"],
+        evidence_note=("Interval from the report plus a grace period. A recommendation without an interval "
+                       "uses a 30-day default. Matches modality, not body region."),
+    ),
+    ObligationRule(
+        rule_id="R034",
+        name="Lung-RADS 3 → 6-Month LDCT",
+        description="Lung-RADS category 3 on screening LDCT requires 6-month LDCT",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="lung_rads_3",
+        required_followups=[EventType.FOLLOWUP_CT],
+        deadline_days=182.6,
+        severity=Severity.MODERATE,
+        clinical_domain="cancer_screening",
+        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 3] → ◇_{≤6mo+grace} FOLLOWUP_CT)",
+        references=["ACR Lung-RADS v2022"],
+        evidence_note="Scheduled interval plus a grace period (25%, 7–30 days).",
+    ),
+    ObligationRule(
+        rule_id="R035",
+        name="Critical Imaging Finding → Documented Clinician Communication ≤1 Hour",
+        description=("An emergent imaging finding (e.g. acute PE, aortic dissection, intracranial haemorrhage, "
+                     "pneumothorax, free air) must be communicated directly to a responsible clinician"),
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="critical_imaging_finding",
+        required_followups=[EventType.CRITICAL_VALUE_NOTIFICATION],
+        deadline_days=1.0 / 24.0,
+        severity=Severity.CRITICAL,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[critical finding] → ◇_{≤1h} CRITICAL_VALUE_NOTIFICATION)",
+        references=["ACR Practice Parameter for Communication of Diagnostic Imaging Findings (2020)",
+                    "The Joint Commission NPSG.02.03.01"],
+        evidence_note=("Closed by a documented communication: a FHIR Communication, or a statement in the "
+                       "report itself ('discussed with Dr …', 'communicated to …'). Institutions set the "
+                       "window and the list of critical findings."),
+        patient_outreach=False,
+    ),
+    ObligationRule(
+        rule_id="R036",
+        name="Radiologist-Recommended Tissue Sampling → Biopsy/FNA",
+        description="Biopsy or fine-needle aspiration recommended in the radiology report (e.g. TI-RADS, renal or liver mass)",
+        trigger_event=EventType.RADIOLOGY_REPORT,
+        trigger_condition="radiologist_rec_biopsy",
+        required_followups=[EventType.BIOPSY_ORDER, EventType.BIOPSY_RESULT, EventType.PATHOLOGY_RESULT],
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="radiology",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend biopsy/FNA] → ◇_{≤30d} (BIOPSY ∨ PATHOLOGY))",
+        references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558",
+                    "ACR TI-RADS, JACR 2017;14:587-595"],
+        followup_logic="any",
+        evidence_note=("30 days is a proposed target. Not applied when BI-RADS, Lung-RADS or the lung-nodule "
+                       "rule already governs the same finding."),
+    ),
 ]
 
 
@@ -605,6 +677,10 @@ RULE_NAMES_KO: Dict[str, str] = {
     "R030": "영상의학과 권고 → 추적 CT",
     "R031": "영상의학과 권고 → 추적 MRI",
     "R032": "영상의학과 권고 → 추적 초음파",
+    "R033": "영상의학과 권고 → 추적 X선 촬영",
+    "R034": "Lung-RADS 3 → 6개월 저선량 CT",
+    "R035": "영상 위급 소견 → 1시간 내 의료진 직접 보고",
+    "R036": "영상의학과 권고 → 조직검사/세침흡인",
 }
 assert set(RULE_NAMES_KO) == {r.rule_id for r in OBLIGATION_RULES}, "every rule needs a Korean name"
 
@@ -643,6 +719,8 @@ def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
             return MONITORING_WINDOW_DAYS[drug]
     if rule.rule_id == "R024" and details.get("severe_hypertension") is True:
         return 3.0   # severe hypertension: BP check within 72 hours (ACOG CO 736)
+    if rule.rule_id in LUNG_RADS_INTERVAL_RULES:
+        return rule.deadline_days + radiology_grace_days(rule.deadline_days)
     if rule.rule_id in RADIOLOGIST_REC_RULES:
         try:
             interval = float(details["recommended_interval_days"])
@@ -652,7 +730,9 @@ def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
     return rule.deadline_days
 
 
-RADIOLOGIST_REC_RULES = {"R030", "R031", "R032"}
+RADIOLOGIST_REC_RULES = {"R030", "R031", "R032", "R033"}
+# Scheduled screening intervals: a few days' slip is on time, not a missed follow-up
+LUNG_RADS_INTERVAL_RULES = {"R019", "R034"}
 
 
 def radiology_grace_days(interval_days: float) -> float:

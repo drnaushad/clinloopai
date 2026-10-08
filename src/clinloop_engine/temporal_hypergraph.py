@@ -268,14 +268,20 @@ class DynamicTemporalHypergraph:
             conditions.append("birads_4_5")
 
         lung_rads = str(details.get("lung_rads", "")).strip().upper()
-        if lung_rads == "4A":
+        if lung_rads == "3":
+            conditions.append("lung_rads_3")
+        elif lung_rads == "4A":
             conditions.append("lung_rads_4a")
         elif lung_rads in ("4B", "4X"):
             conditions.append("lung_rads_4b_4x")
 
         modality = str(details.get("recommended_modality", "")).lower()
-        if modality in ("ct", "mri", "ultrasound") and details.get("recommended_interval_days"):
+        if modality in ("ct", "mri", "ultrasound", "xray") and details.get("recommended_interval_days"):
             conditions.append(f"radiologist_rec_{modality}")
+        if details.get("biopsy_recommended") is True:
+            conditions.append("radiologist_rec_biopsy")
+        if details.get("critical_imaging") is True:
+            conditions.append("critical_imaging_finding")
 
         if details.get("hcc_risk") is True:
             conditions.append("hcc_risk")
