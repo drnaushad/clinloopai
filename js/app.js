@@ -197,7 +197,7 @@ const CLINLOOP_I18N = {
     q2Title: '2. Why is this dangerous? (The Unclosed Loop Failure)',
     q3Title: '3. What is the recommended action? (Clinical Guideline)',
     compTitle: 'Platform Comparison · Active Surveillance',
-    compSub: 'Real-time causal survival, treatment, and cost-benefit estimates active.',
+    compSub: 'Survival, treatment, and cost-benefit estimates are illustrative and not clinically validated.',
     negCardBadge: '❌ Traditional Hospital EMR Inbox',
     negMetric1: 'Estimated Clinical Outcome',
     negMetric2: 'Estimated Survival Rate',

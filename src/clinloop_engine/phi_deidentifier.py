@@ -3,8 +3,8 @@ ClinLoop AI — PHI De-identification Engine
 HIPAA Safe Harbor (45 CFR §164.514(b)) + Korean PIPA compliant
 """
 import re, hashlib, secrets, logging
-from datetime import datetime
-from typing import Any, Dict, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("clinloop.phi_deidentifier")
 
@@ -19,11 +19,13 @@ PHI_PATTERNS = {
     "phone_kr":  re.compile(r"\b01[016789]-?\d{3,4}-?\d{4}\b"),
     "phone_intl":re.compile(r"\+?\d[\d\s\-\(\)]{7,15}\d"),
     "email":     re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Z|a-z]{2,}\b"),
-    "mrn":       re.compile(r"\b(?:MRN|mrn|차트번호|등록번호)[-:\s]?[A-Z0-9\-]{4,20}\b"),
+    "mrn":       re.compile(r"(?:\bMRN|\bmrn|차트번호|등록번호)[-:#\s]*[A-Z0-9\-]{4,20}\b"),
     "date_kr":   re.compile(r"\d{4}년\s*\d{1,2}월\s*\d{1,2}일"),
     "date_iso":  re.compile(r"\b(19|20)\d{2}[-/\.]\d{2}[-/\.]\d{2}\b"),
     "ip_address":re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
     "url":       re.compile(r"https?://[^\s]+"),
+    # Korean street / lot addresses: "...로 123", "...길 45", "...동 12-3"
+    "address_kr":re.compile(r"[가-힣]+(?:로|길)\s*\d+(?:-\d+)?|[가-힣]+동\s*\d+(?:-\d+)?(?:번지)?"),
 }
 
 def _generalize_age(age: int) -> str:
@@ -60,7 +62,7 @@ class PHIDeidentifier:
 
     def deidentify_patient(self, patient: Dict[str,Any]) -> Tuple[Dict[str,Any], Dict[str,Any]]:
         safe, log = {}, {
-            "timestamp": datetime.utcnow().isoformat()+"Z",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "salt_hash": hashlib.sha256(self.ledger._salt.encode()).hexdigest()[:12],
             "substitutions": [], "phi_fields_removed": [],
             "compliance": ["HIPAA Safe Harbor 45 CFR §164.514(b)","Korean PIPA Article 23-24"],
@@ -96,15 +98,21 @@ class PHIDeidentifier:
             pmrtn = self.ledger.pseudonymize(str(mrn),"MRN")
             safe["case_ref"] = pmrtn; log["phi_fields_removed"].append("mrn")
 
-        # 7. Clinical text — scrub embedded PHI
+        # 7. Clinical text — scrub embedded PHI, including the patient's own
+        #    known identifiers wherever they reappear in free text
+        known = {}
+        if name: known[str(name)] = pname
+        if mrn: known[str(mrn)] = safe["case_ref"]
         clinical_fields = ["diagnosis","진단","finding","소견","medication","약물",
             "icd_code","imaging_summary","clinical_context","risk_score","guidelines_triggered","nodule_size"]
         safe["clinical"] = {}
+        residual: List[str] = []
         for f in clinical_fields:
             if patient.get(f):
-                cleaned, subs = self._scrub_text(str(patient[f]))
+                cleaned, subs = self._scrub_text(str(patient[f]), known)
                 safe["clinical"][f] = cleaned
                 log["substitutions"].extend(subs)
+                residual.extend(self._residual_identifiers(cleaned, known))
 
         # 8. Hard-remove direct identifiers
         for f in ["phone","전화번호","email","이메일","address","주소","fax","팩스",
@@ -113,20 +121,48 @@ class PHIDeidentifier:
 
         log["ledger_size"] = self.ledger.ledger_size
         log["phi_fields_removed_total"] = len(log["phi_fields_removed"])
-        log["safe_to_send_cloud"] = True
+        # Regex scrubbing cannot find names of people who are not in the
+        # structured record (relatives, other patients) or unusual address
+        # formats, so this is only a gate against *known* identifier patterns.
+        log["residual_identifiers"] = residual
+        log["safe_to_send_cloud"] = not residual
+        log["limitations"] = ("Free-text names not present in the structured record are not detected; "
+                              "human review is required before any external transmission.")
         return safe, log
 
-    def _scrub_text(self, text: str) -> Tuple[str,list]:
+    def _scrub_text(self, text: str, known: Optional[Dict[str,str]] = None) -> Tuple[str,list]:
         subs = []
-        for name, pat in [("jumin","jumin_no"),("phone_kr","phone_kr"),
-                          ("email","email"),("ip","ip_address"),("url","url")]:
+        # The patient's own name / MRN, replaced by their pseudonyms
+        for value, pseudonym in (known or {}).items():
+            if value and len(value) >= 2 and value in text:
+                text = text.replace(value, pseudonym)
+                subs.append({"field":"embedded_known_identifier","action":"pseudonymized_in_text"})
+        # Order matters: structured patterns (dates, MRNs) before the broad
+        # international-phone pattern, which would otherwise swallow them.
+        for name, pat in [("jumin","jumin_no"),("mrn","mrn"),("email","email"),("url","url"),
+                          ("ip","ip_address"),("phone_kr","phone_kr")]:
             if PHI_PATTERNS[pat].search(text):
                 text = PHI_PATTERNS[pat].sub(f"[{name} 삭제]", text)
                 subs.append({"field":f"embedded_{name}","action":"removed_in_text"})
         if PHI_PATTERNS["date_iso"].search(text):
             text = PHI_PATTERNS["date_iso"].sub(lambda m: _generalize_date(m.group(0)), text)
             subs.append({"field":"embedded_date","action":"year_only_in_text"})
+        if PHI_PATTERNS["date_kr"].search(text):
+            text = PHI_PATTERNS["date_kr"].sub(lambda m: m.group(0).split("년")[0] + "년", text)
+            subs.append({"field":"embedded_date_kr","action":"year_only_in_text"})
+        for name, pat in [("phone","phone_intl"),("address","address_kr")]:
+            if PHI_PATTERNS[pat].search(text):
+                text = PHI_PATTERNS[pat].sub(f"[{name} 삭제]", text)
+                subs.append({"field":f"embedded_{name}","action":"removed_in_text"})
         return text, subs
+
+    def _residual_identifiers(self, text: str, known: Dict[str,str]) -> List[str]:
+        """Identifier patterns still present after scrubbing (should be empty)."""
+        found = ["known_identifier" for v in known if v and len(v) >= 2 and v in text]
+        for pat in ["jumin_no","mrn","email","url","ip_address","phone_kr","phone_intl","date_kr","address_kr"]:
+            if PHI_PATTERNS[pat].search(text):
+                found.append(pat)
+        return found
 
     def build_llm_prompt(self, safe_patient: Dict[str,Any], task: str) -> str:
         c = safe_patient.get("clinical",{})

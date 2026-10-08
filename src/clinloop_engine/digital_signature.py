@@ -1,5 +1,7 @@
 import hashlib
 import json
+import os
+import secrets
 import uuid
 import logging
 from typing import Any
@@ -7,10 +9,15 @@ from .agent_execution import AgentExecutionContext
 
 logger = logging.getLogger("clinloop.digital_signature")
 
-# In a real ISO 27001 production environment, this would use the cryptography library
-# and actual RSA-2048 keys. For the standalone demo environment without extra dependencies,
-# we use an HMAC-SHA256 fallback simulating an RSA signature.
-SECRET_KEY = b"CLINLOOP_MEDICAL_NOBILITY_SECRET_2026"
+# HMAC-SHA256 signing of agent execution envelopes. The key comes from the
+# CLINLOOP_SIGNING_KEY environment variable (use a managed secret in any real
+# deployment). A key committed to source control would let anyone forge audit
+# signatures, so without the variable a random per-process key is used and
+# signatures only verify within the running process.
+_env_key = os.environ.get("CLINLOOP_SIGNING_KEY")
+SECRET_KEY = _env_key.encode("utf-8") if _env_key else secrets.token_bytes(32)
+if not _env_key:
+    logger.warning("CLINLOOP_SIGNING_KEY not set; using an ephemeral signing key for this process.")
 
 def sign_agent_context(ctx: AgentExecutionContext) -> str:
     """Signs the AgentExecutionContext, proving provenance and immutability."""

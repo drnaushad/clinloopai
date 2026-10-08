@@ -1,3 +1,11 @@
+"""
+ClinLoop AI - FastAPI Backend Service (research prototype)
+Exposes REST endpoints for the web cockpit. Runs on synthetic data only.
+
+Run from the repository root:
+    uvicorn src.clinloop_engine.api:app --host 127.0.0.1 --port 8124
+"""
+
 from src.clinloop_engine.gpu_engine import gpu_engine
 from src.clinloop_engine.local_llm_engine import (
     get_engine_status as get_local_llm_status,
@@ -7,10 +15,6 @@ from src.clinloop_engine.local_llm_engine import (
     generate_ethics_review as llm_generate_ethics,
     generate_clinical_text,
 )
-"""
-ClinLoop AI - Production-Grade FastAPI Backend Service
-Exposes RESTful & FHIR-compliant endpoints for Web Cockpit and Mobile Applications.
-"""
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -54,7 +58,7 @@ app.add_middleware(
 )
 
 # Load Cases Data
-DATA_PATH = os.path.join(os.path.dirname(__file__), "../../demo/data/cases.json")
+DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "cases.json")
 
 def load_cases() -> List[Dict[str, Any]]:
     if os.path.exists(DATA_PATH):
@@ -125,7 +129,12 @@ def get_case_counterfactual(scenario_id: str):
         "liability_avoided_krw": f"{cf.malpractice_cost_avoidance_krw:,} KRW",
         "neglected_path": [vars(s) for s in cf.neglected_path],
         "intervened_path": [vars(s) for s in cf.intervened_path],
-        "evidence_rationale": cf.clinical_evidence_rationale
+        "evidence_rationale": cf.clinical_evidence_rationale,
+        "evidence_type": "illustrative_scenario",
+        "disclaimer": (
+            "Hand-written illustrative trajectory based on published stage-specific survival. "
+            "Not a patient-level prediction and not a measured effect of ClinLoop AI."
+        ),
     }
 
 
@@ -226,67 +235,61 @@ def list_all_mcp_tools():
 
 @app.get("/api/v1/ethics/hippocratic-charter", tags=["Medical Nobility & Ethics"])
 def get_hippocratic_charter():
-    """Returns the 5-Pillar Digital Hippocratic Safety Charter compliance metrics."""
+    """Returns the 5-pillar safety charter with the honest implementation status of each pillar."""
     return {
         "charter_name": "Digital Hippocratic 5-Pillar Safety Charter (Primum Non Nocere)",
-        "version": "2026.1-PROD",
-        "institutional_sponsor": "ClinLoop Global Medical Consortium",
+        "version": "2026.2-research",
         "pillars": [
             {
                 "id": 1,
-                "name": "Clinician Autonomy & Dual-Attending Signoff",
-                "mechanism": "Bayesian Failsafe (p < 0.995 requires dual signoff)",
-                "compliance": "100% Enforced"
+                "name": "Clinician Autonomy",
+                "mechanism": "ClinLoop never places orders or closes loops itself; FHIR Tasks are previews a clinician must act on.",
+                "status": "implemented",
             },
             {
                 "id": 2,
-                "name": "Cognitive Ergonomics & Alert Fatigue Mitigation",
-                "mechanism": "Contextual Bandit Reinforcement Learning Dynamic Governor",
-                "noise_reduction": "89.2% Non-Actionable Alarms Suppressed"
+                "name": "Alert Fatigue Mitigation",
+                "mechanism": "Risk-ranked worklist; per-clinician alert budget and precision-first thresholds.",
+                "status": "ranking implemented; alert budget planned",
             },
             {
                 "id": 3,
-                "name": "Social Determinants of Health (SDoH) Equity",
-                "mechanism": "Health-Literacy-Adapted Multilingual Patient Outreach",
-                "vulnerable_population_priority": "Active"
+                "name": "Equity Monitoring",
+                "mechanism": "Detection-rate disparity ratio across vulnerable groups (sdoh_monitor).",
+                "status": "implemented; not yet evaluated on real patient data",
             },
             {
                 "id": 4,
-                "name": "Zero Data Leakage & On-Premise EMR Isolation",
-                "mechanism": "HL7 FHIR R4 & OHDSI OMOP-CDM v5.4 Air-Gapped Compatibility",
-                "phi_exposure": "0% Outside Hospital Firewall"
+                "name": "On-Premise Data Isolation",
+                "mechanism": "Local LLM inference (Ollama); regex-based PHI scrubbing before any text generation.",
+                "status": "partial: PHI scrubbing cannot detect free-text names and is not a sufficient sole safeguard",
             },
             {
                 "id": 5,
-                "name": "Deterministic Causal Auditability (Zero Hallucination)",
-                "mechanism": "Neuro-Symbolic Guideline Verification (Fleischner 2017, ASCCP 2020)",
-                "hallucination_rate": "0.00%"
-            }
-        ]
+                "name": "Deterministic Auditability",
+                "mechanism": "Guideline-cited rules decide every alert; each detection carries its evidence chain.",
+                "status": "implemented",
+            },
+        ],
     }
 
 @app.get("/api/v1/health-economics", tags=["Medical Nobility & Ethics"])
 def get_health_economics():
-    """Returns health economics, Markov state transition, and ICER/QALY metrics."""
+    """Returns the planned health-economic evaluation framework. No outcomes have been measured yet."""
     return {
         "framework": "Markov Health-State Transition Model (Annual Cycles)",
         "states": ["Healthy/Controlled", "Localized Neoplasm (Stage I)", "Regional Spread (Stage II-III)", "Distant Metastasis (Stage IV)", "Mortality"],
-        "metrics": {
-            "incremental_qaly_per_patient": 2.84,
-            "incremental_cost_effectiveness_ratio": -14200.0,
-            "icer_currency": "USD/QALY",
-            "classification": "Dominant Strategy (Life-Saving & Cost-Decreasing)",
-            "nhis_direct_savings_per_stage1_lung_cancer": "68,500,000 KRW (~1,000 USD)",
-            "hospital_malpractice_liability_reduction": "90.4% Avoidance of Failure-to-Diagnose Claims",
-            "estimated_annual_hospital_risk_mitigation": "1,500,000,000 KRW / year / tertiary center"
+        "evidence_status": (
+            "No clinical or economic outcomes have been measured yet. "
+            "QALY, ICER and cost figures will be reported only after the validation studies below."
+        ),
+        "planned_evaluation": {
+            "stage_1": "Retrospective validation against blinded two-clinician chart review (IRB-approved)",
+            "stage_2": "Silent prospective deployment: alert burden and system reliability",
+            "stage_3": "Pre-registered stepped-wedge cluster-randomized trial",
+            "primary_endpoint": "Proportion of actionable findings closed within the guideline window",
+            "secondary_endpoints": ["Time to diagnosis", "Cancer stage at diagnosis", "Clinician alert burden"],
         },
-        "trial_protocol": {
-            "trial_id": "ClinLoop-SAFETY-1",
-            "design": "Multi-Center Cluster-Randomized Controlled Trial (cRCT)",
-            "participating_centers": ["ClinLoop General Hospital (Lead)", "Severance Hospital", "Seoul National University Bundang Hospital"],
-            "target_encounters": 12000,
-            "primary_endpoint": "Time-to-Loop-Closure (Days) & Hazard Ratio of Delayed Cancer Diagnosis (HR 0.18, p < 0.001)"
-        }
     }
 
 
@@ -327,14 +330,12 @@ def generate_with_local_llm(req: LocalLLMRequest):
     elif req.task == "custom":
         if not req.custom_prompt:
             raise HTTPException(status_code=400, detail="custom_prompt required for task='custom'")
-        prompt = req.custom_prompt.format(context=ctx)
+        # Plain substitution: str.format on user input fails on stray braces
+        prompt = req.custom_prompt.replace("{context}", ctx)
         return generate_clinical_text(prompt, model=req.model, temperature=req.temperature, max_tokens=req.max_tokens)
     else:
         raise HTTPException(status_code=400, detail=f"Unknown task: {req.task}. Use: kakao_message_ko | kakao_message_en | differential_diagnosis | ethics_review | custom")
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8124)
 
 
 # ---------------------------------------------------------------------------
@@ -430,64 +431,22 @@ def save_api_key_config(req: APIKeyConfigRequest):
         _configured_keys['active_mode'] = req.active_mode
 
     return {
-        'status': 'saved',
-        'message': 'API credentials verified and securely loaded.',
+        'status': 'recorded',
+        'message': 'Key presence recorded for this session only. Keys are not stored, transmitted or verified.',
         'active_mode': _configured_keys['active_mode']
     }
 
 @app.post('/api/v1/config/test-api-key', tags=['API Key & Credential Management'])
 def test_api_key(req: TestKeyRequest):
-    """Tests connectivity for the given provider key and measures roundtrip response time."""
+    """Connectivity testing is not implemented; reports that honestly instead of simulating success."""
     provider = req.provider.lower()
-    t0 = time.time()
-    
-    if provider == 'gemini':
-        latency_ms = round((time.time() - t0) * 1000 + 34.2, 1)
-        return {
-            'status': 'connected',
-            'provider': 'Google Gemini',
-            'latency_ms': latency_ms,
-            'model_ready': 'gemini-2.5-flash-medical',
-            'de_identification_filter': 'HIPAA Safe Harbor Active'
-        }
-    elif provider == 'anthropic':
-        latency_ms = round((time.time() - t0) * 1000 + 38.5, 1)
-        return {
-            'status': 'connected',
-            'provider': 'Anthropic Claude',
-            'latency_ms': latency_ms,
-            'model_ready': 'claude-3-5-sonnet-20241022 (Clinical Reasoning & Ethics)',
-            'de_identification_filter': 'HIPAA Safe Harbor Active'
-        }
-    elif provider in ('openai', 'astra'):
-        latency_ms = round((time.time() - t0) * 1000 + 31.8, 1)
-        return {
-            'status': 'connected',
-            'provider': 'OpenAI (Astra / o1 / GPT-4o)',
-            'latency_ms': latency_ms,
-            'model_ready': 'gpt-4o-realtime / o1-preview / Astra Multimodal',
-            'de_identification_filter': 'HIPAA Safe Harbor Active'
-        }
-    elif provider == 'ncbi':
-        latency_ms = round((time.time() - t0) * 1000 + 45.8, 1)
-        return {
-            'status': 'connected',
-            'provider': 'NCBI / PubMed',
-            'latency_ms': latency_ms,
-            'rate_limit': '10 requests/sec (Authenticated)',
-            'guidelines_cached': ['Fleischner 2017', 'ASCCP 2020', 'ACC/AHA 2020', 'IDSA Sepsis']
-        }
-    elif provider == 'fhir':
-        latency_ms = round((time.time() - t0) * 1000 + 28.5, 1)
-        return {
-            'status': 'connected',
-            'provider': 'HL7 FHIR R4 Endpoint',
-            'latency_ms': latency_ms,
-            'fhir_version': '4.0.1',
-            'capabilities': ['DiagnosticReport', 'Task', 'CommunicationRequest', 'Appointment']
-        }
-    else:
+    if provider not in ('gemini', 'anthropic', 'openai', 'astra', 'ncbi', 'fhir'):
         raise HTTPException(status_code=400, detail=f'Unknown provider: {provider}')
+    return {
+        'status': 'not_verified',
+        'provider': provider,
+        'message': 'Connectivity testing is not implemented in this prototype; no request was sent.',
+    }
 
 @app.post("/api/v1/agent/evidence-synthesis", tags=["Autonomous Evidence Synthesis Agent (RAG)"])
 def agent_evidence_synthesis(req: EvidenceSynthesisRequest):
@@ -534,3 +493,10 @@ def agent_generate_patient_outreach(req: DynamicOutreachRequest):
         return {"kakao_message_text": draft.message_text, "language": draft.language}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Must stay at the end of the module: uvicorn.run() blocks, so any route
+# declared below it would never be registered.
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8124)

@@ -29,7 +29,7 @@ class TestNobleEngine(unittest.TestCase):
         )
         with patch(
             "src.clinloop_engine.patient_outreach_agent.generate_kakao_message",
-            return_value={"kakao_message_text": "합성 안내문 초안"},
+            return_value={"text": "합성 안내문 초안"},
         ) as generate_message:
             draft = generate_dynamic_outreach(request)
 
@@ -49,7 +49,7 @@ class TestNobleEngine(unittest.TestCase):
         self.assertEqual(res["pmid"], "32243307")
 
     def test_cases_json_grounding(self):
-        with open("demo/data/cases.json", "r", encoding="utf-8") as f:
+        with open("data/cases.json", "r", encoding="utf-8") as f:
             cases = json.load(f)
         self.assertEqual(len(cases), 5)
         for c in cases:

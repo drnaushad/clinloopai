@@ -1,11 +1,19 @@
 import logging
 from typing import Dict, Any, Optional, List
-from src.clinloop_engine.safety.agent_guard import validate_agent_request, validate_agent_output
+from src.clinloop_engine.safety.agent_guard import (
+    validate_agent_request, validate_agent_output, CapabilityViolationError,
+)
 from dataclasses import dataclass, asdict
 from src.clinloop_engine.local_llm_engine import generate_kakao_message
 from src.clinloop_engine.causal_message import recommend_message_template
 
 logger = logging.getLogger("clinloop.patient_outreach_agent")
+
+# Used when no local LLM is available or its draft fails the safety check.
+FALLBACK_MESSAGES = {
+    "ko": "최근 검사 결과와 관련하여 추가 확인이 필요합니다. 병원에 연락하시어 후속 진료를 예약해 주세요.",
+    "en": "A recent test result needs a follow-up check. Please contact the clinic to book your follow-up visit.",
+}
 
 @dataclass
 class OutreachRequest:
@@ -55,15 +63,34 @@ def generate_dynamic_outreach(request: OutreachRequest) -> OutreachDraft:
     
     # Use the infrastructure LLM for translation/simplification
     raw_response = generate_kakao_message(context, lang=request.preferred_language)
-    
+    fallback = FALLBACK_MESSAGES.get(request.preferred_language, FALLBACK_MESSAGES["en"])
+    safety_flags: List[str] = []
+    unsupported: List[str] = []
+
+    message_text = (raw_response.get("text") or "").strip()
+    if not message_text:
+        safety_flags.append("llm_unavailable_fallback_used")
+        message_text = fallback
+    else:
+        # Output guard: an LLM draft must never reach a patient with a
+        # definitive diagnosis or a dangerous instruction in it.
+        try:
+            validate_agent_output("OutreachAgent", message_text)
+        except CapabilityViolationError as exc:
+            logger.warning(str(exc))
+            unsupported.append(message_text)
+            safety_flags.append("unsupported_claim_blocked_fallback_used")
+            message_text = fallback
+
     # Construct the strictly bounded OutreachDraft
     draft = OutreachDraft(
-        message_text=raw_response.get("kakao_message_text", "Please contact the clinic."),
+        message_text=message_text,
         language=request.preferred_language,
         facts_used=[str(k) for k in request.approved_facts.keys()],
-        safety_flags=[],
-        unsupported_claims_detected=[],
-        requires_human_review=True if request.urgency_level == "CRITICAL" else False
+        safety_flags=safety_flags,
+        unsupported_claims_detected=unsupported,
+        # A1 = DRAFT: every patient-facing message is reviewed before sending.
+        requires_human_review=True,
     )
     
     # Append the booking link if provided (but remember: click != closure)

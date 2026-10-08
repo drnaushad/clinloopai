@@ -1,6 +1,7 @@
 import logging
+import re
 from typing import Dict, Any, Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass, asdict
 from src.clinloop_engine.agent_execution import AgentExecutionContext
 from src.clinloop_engine.digital_signature import sign_agent_context
@@ -87,7 +88,12 @@ def run_evidence_synthesis(clinical_context: str, task: str = "differential_diag
         # Mocking the parameter extraction for the tools
         args = {}
         if tool == "biomcp_query_fleischner":
-            args = {"nodule_size_mm": 8.0}
+            # Fleischner intervals depend on nodule size; never assume one.
+            size_match = re.search(r"(\d+(?:\.\d+)?)\s*mm", clinical_context, re.IGNORECASE)
+            if not size_match:
+                plan.missing_context.append("nodule size (mm)")
+                continue
+            args = {"nodule_size_mm": float(size_match.group(1))}
         elif tool == "biomcp_query_guidelines":
             args = {"finding_category": "Pap Smear", "finding_value": "HSIL"}
         elif tool == "biomcp_query_clsi_critical_lab":
@@ -99,7 +105,7 @@ def run_evidence_synthesis(clinical_context: str, task: str = "differential_diag
                 source_name=res.get("source", "BioMCP"),
                 source_version=res.get("version", "1.0"),
                 source_uri=res.get("uri", None),
-                retrieved_at=datetime.utcnow().isoformat(),
+                retrieved_at=datetime.now(timezone.utc).isoformat(),
                 recommendation_text=res.get("guideline_text", "Follow standard care"),
                 applicability={"age": "all"},
                 exclusions=[],
