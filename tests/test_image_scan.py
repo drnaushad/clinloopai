@@ -14,12 +14,17 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.dirname(__file__))
 
-from src.clinloop_engine.imaging_scanner import ScanConfig, eligible_models, resolve_patient, scan_once  # noqa: E402
+from src.clinloop_engine.imaging_ai import ImagingError  # noqa: E402
+from src.clinloop_engine.imaging_scanner import (  # noqa: E402
+    MAX_ATTEMPTS, ScanConfig, eligible_models, resolve_patient, scan_once,
+)
 from src.clinloop_engine.loop_store import LoopStore  # noqa: E402
 from src.clinloop_engine.pacs_client import DICOMwebClient, PACSError  # noqa: E402
 from test_imaging import HAVE_DICOM, P, StubModel, make_dicom, phantom, rad  # noqa: E402
 
 NOW = datetime(2026, 1, 10, 12, 0, 0)          # local and UTC alike in these tests
+MRN = "urn:oid:1.2.410.99999.1"                 # the hospital's MRN system (CLINLOOP_PACS_ID_SYSTEM)
+PS = {**P, "identifier": [{"system": MRN, "type": {"coding": [{"code": "MR"}]}, "value": "MRN-0042"}]}
 
 
 class FakePACS:
@@ -30,11 +35,13 @@ class FakePACS:
         self.headers, self.headers_read = {}, []
 
     def add(self, study_uid, pacs_pid, modality, body, files, series_uid="1.2.3.1", desc="Chest PA",
-            date="20260110", time="080000", series_desc="PA"):
+            date="20260110", time="080000", series_desc="PA", count=False):
         st = self.by_uid.setdefault(study_uid, {
             "study_uid": study_uid, "pacs_patient_id": pacs_pid, "study_date": date, "study_time": time,
             "description": desc, "modalities": [modality], "accession": None, "n_series": 1,
-            "n_instances": len(files), "series": []})
+            "n_instances": None, "series": []})
+        if count:                                  # the PACS reports how many images the study has
+            st["n_instances"] = (st["n_instances"] or 0) + len(files)
         st["series"].append({"uid": series_uid, "modality": modality, "body_part": body, "description": series_desc})
         for i, f in enumerate(files):
             self.files[(study_uid, series_uid, f"{series_uid}.{i + 1}")] = f
@@ -111,10 +118,13 @@ def scan(store, pacs, fhir, models, **cfg):
 class TestImageScan(unittest.TestCase):
 
     def setUp(self):
+        env = mock.patch.dict(os.environ, {"CLINLOOP_PACS_ID_SYSTEM": MRN})
+        env.start()
+        self.addCleanup(env.stop)
         self.store = LoopStore()
         self.pacs = FakePACS()
         self.report = rad("r1", "2026-01-10T10:00:00Z", "Chest radiograph PA", "No acute cardiopulmonary abnormality.")
-        self.fhir = FakeFHIR([P], [self.report])
+        self.fhir = FakeFHIR([PS], [self.report])
 
     def cxr(self, uid="9.1", pid="MRN-0042", **kw):
         files = [make_dicom(phantom(), pid=pid, date="20260110",
@@ -150,11 +160,11 @@ class TestImageScan(unittest.TestCase):
 
     def test_unknown_or_ambiguous_patient_is_never_guessed(self):
         self.cxr(uid="9.3", pid="MRN-UNKNOWN")
-        twin = {**P, "id": "P2"}
-        scan(self.store, self.pacs, FakeFHIR([P]), [StubModel({"Nodule": 0.9})])
+        twin = {**PS, "id": "P2"}
+        scan(self.store, self.pacs, FakeFHIR([PS]), [StubModel({"Nodule": 0.9})])
         self.assertEqual(self.store.scan_study("9.3")["status"], "unmatched")
         self.cxr(uid="9.4")
-        scan(self.store, self.pacs, FakeFHIR([P, twin]), [StubModel({"Nodule": 0.9})])
+        scan(self.store, self.pacs, FakeFHIR([PS, twin]), [StubModel({"Nodule": 0.9})])
         row = self.store.scan_study("9.4")
         self.assertEqual(row["status"], "unmatched")
         self.assertIn("2 patients", row["detail"])
@@ -184,7 +194,7 @@ class TestImageScan(unittest.TestCase):
         self.assertEqual(eligible_models([m], ScanConfig())[0], [])
 
     def test_recent_study_waits_for_its_images(self):
-        self.cxr(time="115000")                            # 10 minutes before NOW
+        self.cxr(time="115800")                            # 2 minutes before NOW
         result = scan(self.store, self.pacs, self.fhir, [StubModel({"Nodule": 0.9})])
         self.assertEqual((result["waiting"], result["scanned"]), (1, 0))
         self.assertIsNone(self.store.scan_study("9.1"))
@@ -270,8 +280,101 @@ class TestImageScan(unittest.TestCase):
         not_mrn = {**P, "id": "P3", "identifier": [{"system": "urn:insurance", "value": "MRN-0042"}]}
         patient, why = resolve_patient("MRN-0042", FakeFHIR([not_mrn]), self.store)
         self.assertIsNone(patient)
-        self.assertIsNone(resolve_patient("MRN-*", FakeFHIR([P]), self.store)[0])
-        self.assertEqual(resolve_patient("MRN-0042", FakeFHIR([P]), self.store)[0]["id"], "P")
+        self.assertIsNone(resolve_patient("MRN-*", FakeFHIR([PS]), self.store)[0])
+        self.assertEqual(resolve_patient("MRN-0042", FakeFHIR([PS]), self.store)[0]["id"], "P")
+
+    # ── Defects found by the independent review ──
+
+    def test_scanning_refuses_to_run_without_the_identifier_system(self):
+        # Another site's MRN 12345 on a shared FHIR server must never match this hospital's PatientID 12345
+        self.cxr()
+        with mock.patch.dict(os.environ, {"CLINLOOP_PACS_ID_SYSTEM": ""}):
+            r = scan(self.store, self.pacs, FakeFHIR([P]), [StubModel({"Nodule": 0.9})])
+        self.assertFalse(r["ok"])
+        self.assertIn("CLINLOOP_PACS_ID_SYSTEM", r["error"])
+        self.assertEqual(self.pacs.retrieved, [])
+
+    def test_other_site_mrn_with_the_same_digits_is_not_this_patient(self):
+        other = {**P, "id": "B", "identifier": [{"system": "urn:other-hospital", "type": {"coding": [{"code": "MR"}]},
+                                                 "value": "MRN-0042"}]}
+        self.cxr()
+        scan(self.store, self.pacs, FakeFHIR([other]), [StubModel({"Nodule": 0.9})])
+        self.assertEqual(self.store.scan_study("9.1")["status"], "unmatched")
+        self.assertEqual(self.store.external_resource_list("B"), [])
+
+    def test_half_arrived_study_waits_and_new_images_reopen_it(self):
+        files = [make_dicom(phantom(), extra={"StudyInstanceUID": "9.50", "SeriesInstanceUID": "1.2.3.1"})]
+        self.pacs.add("9.50", "MRN-0042", "DX", "CHEST", files, count=True)
+        model = StubModel({"Nodule": 0.9})
+        self.assertEqual(scan(self.store, self.pacs, self.fhir, [model])["scanned"], 0)   # count first seen: wait
+        self.assertEqual(scan(self.store, self.pacs, self.fhir, [model])["scanned"], 1)   # unchanged: read
+        # A late series arrives: the study is read again, not left "scanned" for good
+        late = [make_dicom(phantom(), extra={"StudyInstanceUID": "9.50", "SeriesInstanceUID": "1.2.3.2"})]
+        self.pacs.add("9.50", "MRN-0042", "DX", "CHEST", late, series_uid="1.2.3.2", count=True)
+        r = scan(self.store, self.pacs, self.fhir, [model])
+        self.assertEqual(r["reopened"], 1)
+        self.assertEqual(self.store.scan_study("9.50")["status"], "pending")
+        self.assertEqual(scan(self.store, self.pacs, self.fhir, [model])["scanned"], 1)
+
+    def test_outages_do_not_use_up_retries_and_stop_the_run(self):
+        for i in range(4):
+            self.cxr(uid=f"9.6{i}", time=f"0{6 + i}0000")
+        for _ in range(MAX_ATTEMPTS + 2):
+            r = scan(self.store, self.pacs, self.fhir, [FailingStub({"Nodule": 0.9})])
+            self.assertFalse(r["ok"])
+            self.assertIn("in a row", r["error"])
+        # Vendor back: every study is still read
+        r = scan(self.store, self.pacs, self.fhir, [StubModel({"Nodule": 0.9})])
+        self.assertEqual(r["scanned"], 4)
+
+    def test_fhir_outage_stops_the_run_without_spending_retries(self):
+        class Down(FakeFHIR):
+            def search(self, *a):
+                raise ConnectionError("FHIR down")
+        self.cxr()
+        r = scan(self.store, self.pacs, Down([PS]), [StubModel({"Nodule": 0.9})])
+        self.assertFalse(r["ok"])
+        self.assertIsNone(self.store.scan_study("9.1"))
+        self.assertEqual(scan(self.store, self.pacs, self.fhir, [StubModel({"Nodule": 0.9})])["scanned"], 1)
+
+    def test_a_study_that_keeps_failing_is_abandoned_and_raises_an_alarm(self):
+        self.cxr()
+        broken = StubModel({"Nodule": 0.9})
+        with mock.patch("src.clinloop_engine.imaging_ai.read_dicom", side_effect=ImagingError("corrupt file")):
+            for _ in range(MAX_ATTEMPTS):
+                scan(self.store, self.pacs, self.fhir, [broken])
+        self.assertEqual(self.store.scan_study("9.1")["status"], "abandoned")
+        status = self.store.scan_status(now=NOW)
+        self.assertEqual(status["status"], "ATTENTION")
+        self.assertEqual(status["problems"][0]["status"], "abandoned")
+
+    def test_one_product_failing_keeps_the_study_open_for_it(self):
+        self.cxr()
+        ok, down = StubModel({"Nodule": 0.9}), FailingStub({"Pneumothorax": 0.9})
+        down.name = "Second CXR product"
+        scan(self.store, self.pacs, self.fhir, [ok, down])
+        row = self.store.scan_study("9.1")
+        self.assertEqual(row["status"], "failed")
+        self.assertIn("Second CXR product", row["detail"])
+        self.assertEqual(len([d for d in self.store.external_resource_list("P") if d["kind"] == "imaging-ai"]), 1)
+        scan(self.store, self.pacs, self.fhir, [ok, StubModel({"Pneumothorax": 0.9})])
+        self.assertEqual(self.store.scan_study("9.1")["status"], "scanned")
+
+    def test_hospital_time_zone_not_the_container_clock(self):
+        from src.clinloop_engine.imaging_scanner import _hospital_now
+        with mock.patch.dict(os.environ, {"CLINLOOP_LOCAL_TZ": "Asia/Seoul"}):
+            seoul = _hospital_now()
+        utc = datetime.utcnow()
+        self.assertAlmostEqual((seoul - utc).total_seconds() / 3600, 9, delta=0.1)
+
+    def test_lease_blocks_a_second_process(self):
+        self.cxr()
+        self.assertTrue(self.store.acquire_lease("image-scan", "other-host:123:x", 60, NOW))
+        r = scan(self.store, self.pacs, self.fhir, [StubModel({"Nodule": 0.9})])
+        self.assertTrue(r.get("busy"))
+        self.assertEqual(self.pacs.retrieved, [])
+        self.store.release_lease("image-scan", "other-host:123:x")
+        self.assertEqual(scan(self.store, self.pacs, self.fhir, [StubModel({"Nodule": 0.9})])["scanned"], 1)
 
 
 class FakeResponse:
@@ -299,7 +402,8 @@ class TestDICOMwebRetrieval(unittest.TestCase):
     def test_new_studies_queries_by_date_and_modality_and_pages(self):
         def study(uid):
             return {"0020000D": {"Value": [uid]}, "00100020": {"Value": ["MRN-1"]}, "00080020": {"Value": ["20260110"]}}
-        c, session = self.client([FakeResponse(json_data=[study("1"), study("2")]), FakeResponse(json_data=[study("3")])])
+        c, session = self.client([FakeResponse(json_data=[study("1"), study("2")]), FakeResponse(json_data=[study("3")]),
+                                  FakeResponse(json_data=[])])
         found = c.new_studies("20260108", "20260110", ["CT"], page=2)
         self.assertEqual([s["study_uid"] for s in found], ["1", "2", "3"])
         params = session.get.call_args_list[0].kwargs["params"]
@@ -309,10 +413,31 @@ class TestDICOMwebRetrieval(unittest.TestCase):
         self.assertEqual(session.get.call_args_list[1].kwargs["params"]["offset"], 2)
         self.assertEqual(found[0]["pacs_patient_id"], "MRN-1")
 
+    def test_paging_survives_small_pages_and_ignored_offsets_and_caps_per_modality(self):
+        def page(uids):
+            return FakeResponse(json_data=[{"0020000D": {"Value": [u]}, "00100020": {"Value": ["M"]}} for u in uids])
+        # A PACS whose pages are smaller than requested: keep going until an empty page
+        c, _ = self.client([page(["1", "2"]), page(["3"]), page([])])
+        self.assertEqual(len(c.new_studies("20260101", "20260102", ["CT"], page=100)), 3)
+        # A PACS that ignores offset: the same page again stops the loop
+        c, s = self.client([page(["1", "2"])] * 50)
+        self.assertEqual(len(c.new_studies("20260101", "20260102", ["CT"], page=2)), 2)
+        self.assertLessEqual(s.get.call_count, 2)
+        # Each modality has its own cap, and a cut-short list is reported
+        c, _ = self.client([page(["1", "2"]), page(["5"]), page([])])
+        found = c.new_studies("20260101", "20260102", ["CR", "CT"], page=2, max_per_modality=2)
+        self.assertEqual(c.truncated, ["CR"])
+        self.assertIn("5", {x["study_uid"] for x in found})        # CT still queried
+
     def test_retrieve_reads_the_dicom_part_of_a_multipart_response(self):
         body = (b"--XyZ\r\nContent-Type: application/dicom\r\n\r\n" + b"DICM-BYTES" + b"\r\n--XyZ--\r\n")
         c, _ = self.client([FakeResponse(content=body, content_type='multipart/related; type="application/dicom"; boundary=XyZ')])
         self.assertEqual(c.retrieve_instance("1", "2", "3"), b"DICM-BYTES")
+        # Binary content containing CRLFs and dashes is returned byte for byte
+        payload = bytes(range(256)) * 50 + b"\r\n--Xy" + bytes(range(256))
+        body = b"--XyZ\r\nContent-Type: application/dicom\r\n\r\n" + payload + b"\r\n--XyZ--\r\n"
+        c, _ = self.client([FakeResponse(content=body, content_type="multipart/related; boundary=XyZ")])
+        self.assertEqual(c.retrieve_instance("1", "2", "3"), payload)
 
     def test_uids_from_the_pacs_are_validated_before_use_in_a_url(self):
         c, session = self.client([])
@@ -341,6 +466,16 @@ class TestSeriesUpload(unittest.TestCase):
         self.assertIn("multipart/related", post.call_args.kwargs["headers"]["Content-Type"])
         self.assertEqual(out, [{"label": "ICH", "score": 0.9, "positive": None}])
         self.assertEqual(m.describe()["input"], "series")
+
+    def test_a_vendor_reply_without_findings_is_an_error_not_a_clean_read(self):
+        from src.clinloop_engine.imaging_ai import HTTPImagingModel, ImagingError
+        m = HTTPImagingModel({"name": "CXR AI", "url": "http://ai.local/cxr", "regulatory": "MFDS approved"})
+        for body in ({"job_id": "123"}, {"findings": [{"label": "Nodule", "probability": 0.9}]}, ["x"]):
+            with mock.patch("requests.post") as post:
+                post.return_value = mock.Mock(status_code=200, json=lambda b=body: b)
+                with self.assertRaises(ImagingError, msg=str(body)):
+                    m.predict(None, None, b"DICM")
+        self.assertFalse(m.needs_pixels)        # the product reads the DICOM bytes, any compression
 
 
 if __name__ == "__main__":

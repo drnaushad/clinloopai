@@ -182,11 +182,13 @@ finding, a radiologist-review loop opens (R047, 1 day for critical findings, 7 d
 CLINLOOP_IMAGE_SCAN=1                       # turn it on (needs CLINLOOP_PACS_DICOMWEB)
 CLINLOOP_IMAGING_MODELS_CONFIG=/config/imaging_models.json   # the approved products
 CLINLOOP_FHIR_BASE=…                        # to match each study's PatientID to one patient
+CLINLOOP_PACS_ID_SYSTEM=…                   # REQUIRED: FHIR identifier system of the PACS PatientID
+CLINLOOP_LOCAL_TZ=Asia/Seoul                # the hospital's time zone (DICOM dates and times are local)
 CLINLOOP_IMAGE_SCAN_MINUTES=10              # interval
 CLINLOOP_IMAGE_SCAN_LOOKBACK_DAYS=2         # how far back to look for new studies
 CLINLOOP_IMAGE_SCAN_MODALITIES=CR,DX,MG,CT,MR,US
 CLINLOOP_IMAGE_SCAN_MAX_STUDIES=50          # studies analysed per run; the rest wait for the next run
-CLINLOOP_IMAGE_SCAN_SETTLE_MINUTES=20       # leave a study this long after acquisition (images still arriving)
+CLINLOOP_IMAGE_SCAN_SETTLE_MINUTES=5        # minimum age of a study before it is read
 CLINLOOP_IMAGE_SCAN_MAX_IMAGES=4            # images per series sent to a single-image product
 CLINLOOP_IMAGE_SCAN_MAX_SERIES_MB=600       # largest series sent to a whole-series product
 CLINLOOP_IMAGE_SCAN_RESEARCH=1              # also run research models, in shadow mode (default off)
@@ -195,22 +197,36 @@ CLINLOOP_IMAGE_SCAN_RESEARCH=1              # also run research models, in shado
 **What happens to each study**
 
 1. **Found.** The PACS is asked (QIDO-RS) for studies acquired in the look-back window, by modality.
-2. **Matched to one patient.** The study's PatientID must match the MRN (or the identifier system in
-   `CLINLOOP_PACS_ID_SYSTEM`) of exactly one patient on the FHIR server. No match, or two patients:
-   the study is not analysed and is listed for a person to check. A patient is never guessed.
-3. **Checked against the products.** Only series that an enabled product applies to (modality and
+   - Paging runs until an empty page, and stops if the PACS returns the same page again.
+   - Each modality has its own cap, so a busy X-ray list can never crowd out CT or MRI.
+   - A list cut short is reported.
+2. **Complete.** A study is read only once its image count is the same on two runs. A half-arrived
+   study is never read. Images that arrive after a study was read (a late series) re-open it.
+3. **Matched to one patient.** The study's PatientID must match exactly one patient on the FHIR
+   server, by the identifier system in `CLINLOOP_PACS_ID_SYSTEM`.
+   - **Required:** without it, another site's MRN with the same digits on a shared FHIR server could
+     match, so scanning does not run.
+   - No match, or two patients: the study is not analysed and is listed for a person to check. A
+     patient is never guessed.
+4. **Checked against the products.** Only series that an enabled product applies to (modality and
    body part) are considered. When the PACS does not return the body part in its series list, one
    image header is read (metadata, no pixels). Localizers, dose reports, structured reports and
    screenshots are skipped. If no product applies, no image is retrieved.
-4. **Retrieved and checked.** Images are retrieved over WADO-RS, held in memory and never stored.
-   Every image's PatientID is checked. One image of another patient stops the whole study:
-   nothing is sent and nothing is filed.
-5. **Analysed.**
+5. **Retrieved and checked.** Images are retrieved over WADO-RS, held in memory and never stored.
+   - Every image's PatientID must be this patient's MRN in the configured system.
+   - One image of another patient stops the whole study: nothing is sent and nothing is filed.
+   - Vendor products receive the file as stored, whatever its compression; ClinLoop need not decode
+     it.
+6. **Analysed.**
    - **Single-image products** (chest X-ray, mammography) get each view, up to the image limit.
    - **Whole-series products** (CT, MRI; `"input": "series"` in the configuration) get every image
      of the series in one `multipart/related` request.
-6. **Filed.** The study (`ImagingStudy`) and each positive finding (`Observation`) are filed, and
-   the patient is re-checked.
+   - A product must answer with a `findings` list in which each finding has a numeric score or a
+     positive flag. Any other answer (an asynchronous job id, an error body) is a failure, not "read,
+     nothing found".
+7. **Filed.** The study (`ImagingStudy`) and each positive finding (`Observation`) are filed, and
+   the patient is re-checked. A critical finding on a study with no report yet opens R057 (read it
+   now).
 
 **Only approved products run automatically.** A product whose regulatory field is empty or says
 research use is not run, unless `CLINLOOP_IMAGE_SCAN_RESEARCH=1` is set for shadow-mode evaluation.
@@ -220,19 +236,41 @@ Even then its findings open no loops unless `CLINLOOP_IMAGING_RESEARCH_AI=1`.
 
 | Status | Meaning | Retried? |
 |---|---|---|
-| `scanned` | Analysed; findings filed | No |
-| `no_model` | No enabled product applies | No |
-| `unmatched` | PatientID matched no patient, or more than one | Yes, up to 5 times |
+| `pending` | Waiting for all its images to arrive | Yes, next run |
+| `scanned` | Analysed by every product that applies; findings filed | Only if more images arrive |
+| `no_model` | No enabled product applies | Only if more images arrive |
+| `unmatched` | PatientID matched no patient, or more than one | Yes, up to 5 times, then listed |
 | `refused` | A safety check failed (wrong patient, mixed series) | No: a person checks it |
-| `failed` | The PACS or the product failed, or no product produced a result | Yes, up to 5 times |
+| `failed` | A product or the PACS failed; findings from products that did read it are filed | Yes |
+| `abandoned` | The study itself failed 5 times (e.g. a corrupt file) | No: raises an alarm |
 
-A study no product could read is recorded as `failed`, never as "scanned, nothing found".
+**Retries:**
+- A study no product could read is recorded as `failed`, never as "scanned, nothing found".
+- **Outages cost no retries.** If the FHIR server is down, or three studies in a row fail on the PACS
+  or a product, the run stops and the studies wait for the next run.
+- A study that itself keeps failing is `abandoned`. The monitor then reads **ATTENTION**, as it does
+  when the last run's study list was cut short.
 
 **Monitoring.** `GET /api/v1/imaging/scan/status` and the panel on `imaging.html` show whether
 scanning is on, the products that may run, the last runs, the counts by status and the studies that
 need a person. Admins can run a scan now (`POST /api/v1/imaging/scan/run`). Scan runs are monitored
 apart from the FHIR data feed, so a working image scanner can never make a dead record feed look
-healthy. From the command line: `python -m src.clinloop_engine.imaging_scanner --once`.
+healthy. A database lease ensures only one scan runs at a time across processes: the API's
+background loop, several API workers, or the command line
+(`python -m src.clinloop_engine.imaging_scanner --once`).
+
+**Independent review.** A reviewer who had not written the code found 10 defects and reproduced 9;
+all are fixed and each has a test:
+- a study read while its images were still arriving was closed for good;
+- an outage used up every study's retries silently;
+- a busy X-ray list could hide CT and MRI, and a PACS ignoring `offset` hung the scanner;
+- a product that failed on a study left it "scanned";
+- another site's MRN with the same digits could match;
+- the container's UTC clock was used instead of the hospital's time zone;
+- any HTTP 200 counted as a clean read;
+- products were skipped when ClinLoop could not decode the compression;
+- a large image used about 11× its size in memory;
+- two processes could scan at once.
 
 **Tested against a real DICOMweb server.** Orthanc 1.12 with its DICOMweb plugin, synthetic
 studies and a stand-in vendor endpoint were used.
