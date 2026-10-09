@@ -18,7 +18,7 @@ from . import governance
 from .auth import ROLE_RANK, User, require_role
 from .clinical_ontology import OBLIGATION_RULES, RULE_NAMES_KO, format_window
 from .fhir_ingest import bundle_to_events, patient_strata
-from .loop_detector import ClinLoopDetector
+from .loop_detector import ClinLoopDetector, hospital_detector, lapse_after_death
 from .loop_store import DEFER_REASONS, LoopStore, WorkflowError
 from .safety_clock import normalize_timestamp
 
@@ -268,10 +268,10 @@ def ingest_fhir(bundle: Dict[str, Any] = Body(..., description="FHIR R4 Bundle")
     events_by_patient, warnings = bundle_to_events(resources)
     warnings += record_warnings
     strata = patient_strata(bundle)
-    detector = ClinLoopDetector(evaluation_time=when)
+    detector = hospital_detector(when)
     detections = []
     for pid, events in events_by_patient.items():
-        detections.extend(detector.process_patient("fhir-ingest", pid, events))
+        detections.extend(lapse_after_death(detector.process_patient("fhir-ingest", pid, events), resources))
     counts = store.upsert_detections(detections, strata=strata, actor=user.name)
     store.record_ingest("manual-upload", user.name, ok=True, patients=len(events_by_patient),
                         events=sum(len(v) for v in events_by_patient.values()), warnings=len(warnings))

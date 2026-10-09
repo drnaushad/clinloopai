@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field
 from .auth import User, require_role
 from .clinical_api import get_store
 from .fhir_ingest import bundle_to_events, patient_strata
-from .loop_detector import ClinLoopDetector
+from .loop_detector import ClinLoopDetector, hospital_detector, lapse_after_death
 
 router = APIRouter(prefix="/api/v1")
 MAX_UPLOAD_BYTES = 60 * 1024 * 1024
@@ -125,9 +125,9 @@ def evaluate_patient(patient_id: str, actor: str) -> Dict[str, Any]:
     resources, warnings = patient_record(patient_id, store, client_from_env(), pacs_from_env())
     events_by_patient, w2 = bundle_to_events(resources)
     detections = []
-    detector = ClinLoopDetector()
+    detector = hospital_detector()
     for pid, events in events_by_patient.items():
-        detections.extend(detector.process_patient("imaging", pid, events))
+        detections.extend(lapse_after_death(detector.process_patient("imaging", pid, events), resources))
     counts = store.upsert_detections(detections, strata=patient_strata(resources), actor=actor)
     return {"loops": counts, "warnings": warnings + w2,
             "active": [{"rule_id": d.rule_id, "rule_name": d.rule_name, "status": d.loop_status, "deadline": d.deadline}

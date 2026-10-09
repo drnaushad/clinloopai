@@ -7,7 +7,8 @@ and outputs prioritized open loops with full evidence chains.
 """
 
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from datetime import datetime, timedelta
+import os
 from typing import Dict, List, Optional
 import json
 
@@ -59,7 +60,13 @@ class ClinLoopDetector:
     6. Return prioritized list of detected loops
     """
 
-    def __init__(self, evaluation_time: Optional[datetime] = None):
+    def __init__(self, evaluation_time: Optional[datetime] = None, history_days: Optional[float] = None):
+        """
+        history_days: drop obligations whose deadline passed more than this many days before the
+        evaluation time. A hospital's full record reaches back decades; a PSA from 1977 that was never
+        followed up is history for a chart review, not today's worklist. None keeps everything.
+        """
+        self.history_days = history_days
         self.safety_clock = SafetyClock(steepness=8.0, threshold=1.0)
         self.risk_scorer = RiskScorer(
             abstention_threshold=0.7,
@@ -169,6 +176,11 @@ class ClinLoopDetector:
             detections.append(detection)
 
 
+        if self.history_days is not None:
+            cutoff = evaluation_time - timedelta(days=self.history_days)
+            detections = [d for d in detections
+                          if datetime.fromisoformat(d.deadline or d.trigger_time) >= cutoff]
+
         # Unresolved loops first, highest risk first. An overdue critical loop
         # must outrank a low-risk one that merely needs human review; ties go
         # to the human-review case so low-confidence items stay visible.
@@ -269,3 +281,29 @@ class ClinLoopDetector:
             })
 
         return predictions
+
+
+def hospital_detector(evaluation_time: Optional[datetime] = None) -> "ClinLoopDetector":
+    """
+    The detector for real hospital data: obligations whose deadline passed more than
+    CLINLOOP_HISTORY_DAYS (default 365; 0 = keep all) before the evaluation time are left out.
+    """
+    days = float(os.environ.get("CLINLOOP_HISTORY_DAYS", "365") or 0)
+    return ClinLoopDetector(evaluation_time=evaluation_time, history_days=days if days > 0 else None)
+
+
+def lapse_after_death(detections: List["LoopDetection"], resources) -> List["LoopDetection"]:
+    """
+    Leave out obligations that were not yet done or due when the patient died (Patient.deceasedDateTime):
+    they lapsed, they were not missed (anything recorded after the death cannot have fulfilled them). Obligations already overdue before the death are kept, since
+    they were missed while the patient was alive.
+    """
+    from .fhir_ingest import _resources
+    from .safety_clock import normalize_timestamp
+    died = {r.get("id"): normalize_timestamp(r["deceasedDateTime"]) for r in _resources(resources)
+            if r.get("resourceType") == "Patient" and r.get("deceasedDateTime")}
+    if not died:
+        return detections
+    return [d for d in detections
+            if not (d.patient_id in died and d.loop_status in ("open", "needs_human_review", "delayed")
+                    and d.deadline and datetime.fromisoformat(d.deadline) > died[d.patient_id])]

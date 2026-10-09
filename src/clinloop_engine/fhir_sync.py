@@ -37,7 +37,7 @@ from urllib.parse import urlencode
 import requests
 
 from .fhir_ingest import _patient_id, bundle_to_events, patient_strata
-from .loop_detector import ClinLoopDetector
+from .loop_detector import ClinLoopDetector, hospital_detector, lapse_after_death
 from .loop_store import LoopStore
 from .safety_clock import utc_now
 
@@ -147,7 +147,7 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
     since = store.get_cursor(source) or (now - timedelta(days=initial_days)).isoformat() + "Z"
     try:
         patients, newest = client.changed_patients(since)
-        detector = ClinLoopDetector(evaluation_time=now)
+        detector = hospital_detector(now)
         n_events, n_warnings, counts = 0, 0, {"new": 0, "updated": 0, "resolved_by_engine": 0}
         from . import second_reader
         budget = {"left": int(os.environ.get("CLINLOOP_SECOND_READER_MAX", "20"))}
@@ -164,7 +164,7 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
             strata = patient_strata(history)
             for p, events in events_by_patient.items():
                 n_events += len(events)
-                result = store.upsert_detections(detector.process_patient(source, p, events),
+                result = store.upsert_detections(lapse_after_death(detector.process_patient(source, p, events), history),
                                                  strata=strata, actor=source)
                 for k, v in result.items():
                     counts[k] += v

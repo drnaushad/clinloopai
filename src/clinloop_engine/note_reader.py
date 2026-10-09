@@ -60,7 +60,7 @@ ANALYTES: List[Tuple[str, str]] = [
     ("lipids", r"lipid panel|lipids|cholesterol|\bldl\b|지질|콜레스테롤|2093-3|13457-7"),
     ("psa", r"\bpsa\b|prostate[- ]specific antigen|2857-1"),
     ("glucose", r"fasting glucose|blood sugar|glucose|공복\s*혈당|혈당|2345-7|1558-6"),
-    ("cbc", r"\bcbc\b|complete blood count|blood count|h(?:a)?emoglobin\b|\bhgb\b|\bhb\b|platelets?|\bwbc\b|white (?:blood )?cell count|"
+    ("cbc", r"\bcbc\b|complete blood count|blood count|h(?:a)?emoglobin\b|\bhgb\b|\bhb\b|platelets?|\bwbc\b|white (?:blood )?cell count|leukocytes|"
             r"일반혈액|혈색소|718-7|26515-7|6690-2"),
     ("ferritin", r"ferritin|iron studies|페리틴|2276-4"),
     ("b12", r"\bb12\b|cobalamin|2132-9"),
@@ -68,6 +68,7 @@ ANALYTES: List[Tuple[str, str]] = [
     ("urinalysis", r"urinalysis|\bua\b|urine test|소변\s*검사|5767-9"),
     ("crp", r"\bcrp\b|c-reactive|1988-5"),
     ("troponin", r"troponin|트로포닌"),
+    ("drug_level", r"tacrolimus|cyclosporin|ciclosporin|sirolimus|everolimus|타크로리무스"),
     ("hcv_rna", r"(?:hcv|hepatitis c)\W+(?:\S+\W+){0,3}(?:rna|viral load|pcr|quant\w*)|11011-4|20416-4"),
 ]
 GENERIC_LAB = r"labs?\b|blood ?work|bloods\b|blood tests?|혈액\s*검사|피검사|검사실\s*검사|재검(?:사)?"

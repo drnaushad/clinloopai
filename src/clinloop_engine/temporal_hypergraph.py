@@ -271,7 +271,7 @@ class DynamicTemporalHypergraph:
         dx_tokens = set(re.split(r"[^a-z0-9]+", primary_dx))
         if dx_tokens & {"mi", "stemi", "nstemi", "ami"} or "myocardial_infarction" in primary_dx:
             return "post_mi_discharge"
-        if "heart_failure" in primary_dx or "hf_new" in dx_tokens:
+        if ("heart_failure" in primary_dx or "hf_new" in dx_tokens) and not details.get("known_heart_failure"):
             return "new_heart_failure"
 
         # 4. Culture results — bacteremia (R015)
@@ -375,7 +375,8 @@ class DynamicTemporalHypergraph:
 
             # Infer every trigger condition and collect their rules (once each)
             matching_rules: List[ObligationRule] = []
-            for condition in self._infer_conditions(node):
+            # An event with no particular condition still triggers the rules that take any event of its type (R008)
+            for condition in self._infer_conditions(node) or [""]:
                 for rule in get_rules_for_event(event_enum, condition):
                     if rule not in matching_rules:
                         matching_rules.append(rule)

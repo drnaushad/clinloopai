@@ -165,10 +165,26 @@ def pattern_creatinine(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: L
     labs = _labs(events, "creatinine")
     labs = [e for e in labs if not re.search(r"urine|소변|egfr|clearance|ratio", e["details"].get("test") or "", re.I)
             and creatinine_mg_dl(e) is not None]
+    # On dialysis creatinine rises between sessions by design: the AKI algorithm does not apply
+    # (NICE NG148; NHS England AKI algorithm excludes renal replacement therapy)
+    # (a dialysis session counts for 90 days, so a later kidney transplant is watched again)
+    rrt = [e for e in events if e["event_type"] == EventType.DIAGNOSIS.value and e["details"].get("renal_replacement")]
+
+    def on_rrt(when: datetime) -> bool:
+        return any(_t(r) <= when and (not r["details"].get("dialysis_session") or when - _t(r) <= timedelta(days=90))
+                   for r in rrt)
+
+    labs = [e for e in labs if not on_rrt(_t(e))]     # neither a warning nor a baseline while on dialysis
+
+    # Like with like: a result is compared with earlier results of the same test (LOINC code), so a
+    # point-of-care whole-blood creatinine never becomes the baseline for a laboratory serum one
+    def series(e: Dict[str, Any]) -> str:
+        return (sorted(e["details"].get("loinc") or []) or [str(e["details"].get("test") or "").lower()])[0]
+
     last: Optional[datetime] = None
     for i, e in enumerate(labs):
         when = _t(e)
-        prior = [p for p in labs[:i] if _t(p) < when]
+        prior = [p for p in labs[:i] if _t(p) < when and series(p) == series(e)]
         recent = [creatinine_mg_dl(p) for p in prior if when - _t(p) <= timedelta(days=7)]
         older = [creatinine_mg_dl(p) for p in prior if timedelta(days=7) < when - _t(p) <= timedelta(days=365)]
         if recent:
