@@ -23,7 +23,7 @@ Appointment, Communication, Encounter, MedicationRequest, Procedure, Condition.
 import os
 import re
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from .clinical_ontology import (
@@ -187,6 +187,28 @@ def _flag_from_interpretation(resource: Dict) -> Optional[str]:
     return None
 
 
+def _flag_from_reference_range(resource: Dict, value: Any) -> Optional[str]:
+    """
+    HIGH or LOW from the result's own reference range, when the laboratory sent a range but no
+    interpretation code (common in HL7 v2 feeds mapped to FHIR). Only the normal range is used
+    (a range typed as therapeutic or for another population is not), and only when it is unambiguous.
+    """
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return None
+    ranges = [rr for rr in resource.get("referenceRange", [])
+              if not rr.get("appliesTo") and not rr.get("age")
+              and (not rr.get("type") or _codes(rr.get("type")) & {"normal"})]
+    if len(ranges) != 1:
+        return None
+    low = (ranges[0].get("low") or {}).get("value")
+    high = (ranges[0].get("high") or {}).get("value")
+    if isinstance(high, (int, float)) and value > high:
+        return "HIGH"
+    if isinstance(low, (int, float)) and value < low:
+        return "LOW"
+    return None
+
+
 # ── Resource mappers ─────────────────────────────────────────────────────────
 
 def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
@@ -238,7 +260,7 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
     if value_text:
         details["result"] = value_text
 
-    flag = _flag_from_interpretation(r)
+    flag = _flag_from_interpretation(r) or _flag_from_reference_range(r, value)
     if flag:
         details["flag"] = flag
     mapping = ["Observation→lab_result"]
@@ -585,6 +607,9 @@ def _map_condition(r: Dict) -> List[Tuple[str, str, Dict]]:
     if malignant:
         details["malignancy"] = True
         mapping.append("Condition(malignancy)→diagnosis, context for radiology decisions")
+    if any(c.startswith(("N18.6", "N186", "Z99.2", "Z992", "Z49")) for c in codes) or _DIALYSIS.search(text):
+        details["renal_replacement"] = True
+        mapping.append("Condition(end-stage kidney disease / dialysis)→diagnosis, no AKI warnings")
     if any(c.startswith(_IMMUNO_ICD10) for c in codes) or _IMMUNO_TEXT.search(text):
         details["immunocompromised"] = True
         mapping.append("Condition(immunocompromise)→diagnosis, context for radiology decisions")
@@ -600,10 +625,25 @@ def _drug_name(r: Dict) -> str:
     return _concept_text(concept).lower()
 
 
+def _dose_text(r: Dict) -> str:
+    """The prescribed dose (instruction text and quantities), to tell a dose change from a renewal."""
+    parts = []
+    for di in r.get("dosageInstruction", []):
+        parts.append(str(di.get("text") or ""))
+        for dr in di.get("doseAndRate", []):
+            q = dr.get("doseQuantity") or {}
+            if q.get("value") is not None:
+                parts.append(f"{q.get('value')} {q.get('unit') or q.get('code') or ''}".strip())
+    return " ".join(p for p in parts if p).strip().lower()
+
+
 def _map_medication_request(r: Dict) -> List[Tuple[str, str, Dict]]:
     ts = r.get("authoredOn")
     name = _drug_name(r)
     details: Dict[str, Any] = {"medication": name or None}
+    dose = _dose_text(r)
+    if dose:
+        details["dose"] = dose
     if ANTICOAGULANT_NAMES.search(name or ""):
         details["anticoagulant"] = True       # closes R054 (AF anticoagulation decision)
     if any(a in name for a in ANTICOAGULANTS):
@@ -639,6 +679,10 @@ def biopsy_regions(text: str) -> List[str]:
     return expand_regions(found) if found else []
 
 
+_DIALYSIS = re.compile(r"dialysis|haemodialysis|hemodialysis|haemofiltration|hemofiltration|end[- ]stage (?:renal|kidney)|"
+                       r"\bESRD\b|\bESKD\b|투석|말기\s*신부전", re.I)
+
+
 def _map_procedure(r: Dict) -> List[Tuple[str, str, Dict]]:
     ts = _first(r.get("performedDateTime"), (r.get("performedPeriod") or {}).get("end"))
     text = _concept_text(r.get("code")).lower()
@@ -654,6 +698,22 @@ def _map_procedure(r: Dict) -> List[Tuple[str, str, Dict]]:
         etype = EventType.COLPOSCOPY_VISIT.value
     elif "biopsy" in text or "aspiration" in text or re.search(r"\bfna\b", text) or "조직검사" in text or "세침" in text:
         etype = EventType.BIOPSY_RESULT.value
+    elif re.search(r"\breferral (?:to|for)\b|\breferred to\b|의뢰", text):
+        # Some EHRs record a referral as a procedure ("Referral to cardiology service", SNOMED 3457005).
+        # Only a referral to a recognised medical specialty counts: a dental or home-care referral
+        # must not close a work-up (R004, R018 …).
+        spec = specialty_of(_concept_text(r.get("code")))
+        if not spec:
+            return []
+        when = _first(ts, r.get("performedDateTime"), (r.get("performedPeriod") or {}).get("start"))
+        return [(EventType.SPECIALIST_REFERRAL.value, when,
+                 {"order": _concept_text(r.get("code")), "specialty": spec,
+                  "mapping": [f"Procedure(referral to {spec})→specialist_referral"]})]
+    elif _DIALYSIS.search(text):
+        # Context, not an obligation: creatinine on dialysis is not an AKI warning (R053)
+        return [(EventType.DIAGNOSIS.value, ts, {"diagnosis": _concept_text(r.get("code")), "renal_replacement": True,
+                                                 "dialysis_session": True,
+                                                 "mapping": ["Procedure(dialysis)→diagnosis context: on renal replacement"]})]
     else:
         return []
     details = {"procedure": _concept_text(r.get("code")), "mapping": [f"Procedure→{etype}"]}
@@ -814,6 +874,17 @@ def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], L
                 "source": f"{rtype}/{rid}",
             })
 
+    # A feed whose numeric results carry neither an interpretation code nor a reference range
+    # cannot raise abnormal-result alerts at all: say so instead of looking reassuringly quiet
+    numeric = [e for evs in by_patient.values() for e in evs
+               if e["event_type"] == EventType.LAB_RESULT.value and isinstance(e["details"].get("value"), (int, float))]
+    if len(numeric) >= UNFLAGGED_LABS_WARN_AT and not any(e["details"].get("flag") for e in numeric) \
+            and not any(r.get("interpretation") or r.get("referenceRange") for r in _resources(bundle_or_resources)
+                        if r.get("resourceType") == "Observation"):
+        warnings.append(f"{len(numeric)} numeric lab results carry no interpretation flag and no reference range: "
+                        "abnormal-result rules (R001, R002, R021, R022) cannot fire for them; ask the laboratory "
+                        "interface to send OBX-8 / Observation.interpretation or reference ranges")
+
     for pid, events in by_patient.items():
         _derive_context(events)
         decide_obligations(events, patients.get(pid, {}))
@@ -859,6 +930,8 @@ def _derive_context(events: List[Dict]) -> None:
             if e["event_type"] == EventType.LIVER_IMAGING.value and ts(e) >= risk_since \
                     and is_fulfilling_status(e["status"]):
                 e["details"]["hcc_surveillance"] = True
+    _mark_renewals(events, ts)
+    _mark_known_heart_failure(events, ts)
     med_changes = [e for e in events if e["event_type"] == EventType.MEDICATION_CHANGE.value
                    and e["details"].get("condition") == "requires_monitoring"]
     derived: List[Dict] = []
@@ -886,6 +959,52 @@ def _derive_context(events: List[Dict]) -> None:
                 })
                 break
     events.extend(derived)
+
+
+# Numeric results without any flag or range, from which the feed is reported as unable to flag abnormal results
+UNFLAGGED_LABS_WARN_AT = 20
+
+# A prescription for the same drug and dose within this many days of the previous one is a renewal
+RENEWAL_DAYS = 400
+_HEART_FAILURE = re.compile(r"heart[ _]failure|\bchf\b|\bhfref\b|\bhfpef\b|심부전", re.I)
+
+
+def _mark_renewals(events: List[Dict], ts) -> None:
+    """
+    A renewal is not a medication change. EHRs write a new prescription for every refill or
+    annual renewal; only a new drug, a restart after a long gap, or a new dose makes monitoring
+    labs (R010) or an INR recheck due.
+    """
+    last: Dict[Tuple[str, str, str], datetime] = {}
+    meds = [e for e in events if e["event_type"] == EventType.MEDICATION_CHANGE.value and e["details"].get("drug")]
+    for e in sorted(meds, key=ts):
+        d = e["details"]
+        key = (d["drug"], d.get("medication") or "", d.get("dose") or "")
+        prev, last[key] = last.get(key), ts(e)
+        if prev is not None and (ts(e) - prev).days <= RENEWAL_DAYS and d.get("condition"):
+            d.pop("condition")
+            d["renewal"] = True
+            d["mapping"] = d.get("mapping", []) + [
+                f"same {d['drug']} and dose as {prev.date()}: renewal, no new monitoring due"]
+
+
+def _mark_known_heart_failure(events: List[Dict], ts) -> None:
+    """A heart-failure admission in a patient already known to have heart failure is not a new diagnosis (R016)."""
+    known = sorted([ts(e) for e in events if e["event_type"] == EventType.DIAGNOSIS.value
+                    and _HEART_FAILURE.search(str(e["details"].get("diagnosis", "")))]
+                   + [ts(e) for e in events if e["event_type"] == EventType.DISCHARGE.value
+                      and _HEART_FAILURE.search(str(e["details"].get("primary_diagnosis", "")))])
+    for e in events:
+        if e["event_type"] != EventType.DISCHARGE.value \
+                or not _HEART_FAILURE.search(str(e["details"].get("primary_diagnosis", ""))):
+            continue
+        # Known before this stay: an earlier HF discharge, or an HF diagnosis over 30 days before
+        t = ts(e)
+        if any(k < t - timedelta(days=30) for k in known) or \
+                any(x["event_type"] == EventType.DISCHARGE.value and ts(x) < t and x is not e
+                    and _HEART_FAILURE.search(str(x["details"].get("primary_diagnosis", ""))) for x in events):
+            e["details"]["known_heart_failure"] = True
+            e["details"].setdefault("mapping", []).append("heart failure known before this stay: not a new diagnosis")
 
 
 def patient_names(resources: List[Dict], patient_id: str) -> List[str]:

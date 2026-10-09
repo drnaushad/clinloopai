@@ -313,10 +313,10 @@ def evaluate(store: LoopStore, patient_id: str, fhir, pacs, now: datetime) -> Di
     """Re-check one patient with the new findings and record the loops."""
     from .fhir_ingest import bundle_to_events, patient_strata
     from .fhir_sync import patient_record
-    from .loop_detector import ClinLoopDetector
+    from .loop_detector import hospital_detector
     resources, _ = patient_record(patient_id, store, fhir, pacs)
     events_by_patient, _ = bundle_to_events(resources)
-    detector = ClinLoopDetector(evaluation_time=now)
+    detector = hospital_detector(now)
     counts = {"new": 0, "updated": 0, "resolved_by_engine": 0}
     for p, events in events_by_patient.items():
         for k, v in store.upsert_detections(detector.process_patient("image-scan", p, events),

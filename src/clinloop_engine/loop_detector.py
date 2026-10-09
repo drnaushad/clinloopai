@@ -7,7 +7,8 @@ and outputs prioritized open loops with full evidence chains.
 """
 
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from datetime import datetime, timedelta
+import os
 from typing import Dict, List, Optional
 import json
 
@@ -59,7 +60,13 @@ class ClinLoopDetector:
     6. Return prioritized list of detected loops
     """
 
-    def __init__(self, evaluation_time: Optional[datetime] = None):
+    def __init__(self, evaluation_time: Optional[datetime] = None, history_days: Optional[float] = None):
+        """
+        history_days: drop obligations whose deadline passed more than this many days before the
+        evaluation time. A hospital's full record reaches back decades; a PSA from 1977 that was never
+        followed up is history for a chart review, not today's worklist. None keeps everything.
+        """
+        self.history_days = history_days
         self.safety_clock = SafetyClock(steepness=8.0, threshold=1.0)
         self.risk_scorer = RiskScorer(
             abstention_threshold=0.7,
@@ -169,6 +176,11 @@ class ClinLoopDetector:
             detections.append(detection)
 
 
+        if self.history_days is not None:
+            cutoff = evaluation_time - timedelta(days=self.history_days)
+            detections = [d for d in detections
+                          if datetime.fromisoformat(d.deadline or d.trigger_time) >= cutoff]
+
         # Unresolved loops first, highest risk first. An overdue critical loop
         # must outrank a low-risk one that merely needs human review; ties go
         # to the human-review case so low-confidence items stay visible.
@@ -269,3 +281,12 @@ class ClinLoopDetector:
             })
 
         return predictions
+
+
+def hospital_detector(evaluation_time: Optional[datetime] = None) -> "ClinLoopDetector":
+    """
+    The detector for real hospital data: obligations whose deadline passed more than
+    CLINLOOP_HISTORY_DAYS (default 365; 0 = keep all) before the evaluation time are left out.
+    """
+    days = float(os.environ.get("CLINLOOP_HISTORY_DAYS", "365") or 0)
+    return ClinLoopDetector(evaluation_time=evaluation_time, history_days=days if days > 0 else None)
