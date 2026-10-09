@@ -247,6 +247,12 @@ class LoopStore:
             "VALUES (?,?,?,?,?,?,?,?)",
             (ts, actor, role, action, key, json.dumps(detail, ensure_ascii=False, default=str), prev, digest))
 
+    def record_audit(self, actor: str, role: str, action: str, key: Optional[str], detail: Dict) -> None:
+        """Add one entry to the hash-chained audit log (for events outside the loop workflow)."""
+        with self._lock:
+            self._audit(actor, role, action, key, detail)
+            self._db.commit()
+
     def audit_trail(self, key: Optional[str] = None, limit: int = 200) -> List[Dict]:
         with self._lock:
             if key:
@@ -444,14 +450,18 @@ class LoopStore:
         return self._row(r)
 
     def worklist(self, owner: Optional[str] = None, include_inactive: bool = False,
-                 now: Optional[datetime] = None) -> List[Dict]:
+                 now: Optional[datetime] = None, patient_id: Optional[str] = None) -> List[Dict]:
         """
         Active loops, most dangerous first: severity, then overdue, then risk.
         Deferred loops come back once their until-date passes.
         """
         now_iso = (now or utc_now()).isoformat()
         with self._lock:
-            rows = [self._row(r) for r in self._db.execute("SELECT * FROM loops")]
+            if patient_id is not None:
+                cursor = self._db.execute("SELECT * FROM loops WHERE patient_id=?", (patient_id,))
+            else:
+                cursor = self._db.execute("SELECT * FROM loops")
+            rows = [self._row(r) for r in cursor]
         out = []
         for r in rows:
             expired_deferral = (r["workflow_state"] == "deferred" and r["defer_until"]

@@ -462,6 +462,18 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       </div>`;
   }
 
+  // A link from the EHR (CDS Hooks card) or elsewhere: worklist.html#loop=<loop key>
+  function focusLinkedLoop() {
+    const m = location.hash.match(/^#loop=(.+)$/);
+    if (!m) return;
+    const key = decodeURIComponent(m[1]);
+    const card = [...document.querySelectorAll('article.loop')].find((a) => a.dataset.key === key);
+    if (!card) { setStatus(t().linkedMissing || 'The linked follow-up is not on the active worklist (it may be closed or deferred).'); return; }
+    card.scrollIntoView({ block: 'center' });
+    card.style.outline = '3px solid var(--accent, #0284c7)';
+    card.querySelectorAll('details').forEach((d) => { d.open = true; });
+  }
+
   async function renderMessages(card) {
     const box = card.querySelector('[data-messages]');
     try {
@@ -499,6 +511,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         ? wl.loops.map(loopCard).join('')
         : `<div class="card empty">${esc(t().noLoops)}${can('admin') ? esc(t().loadHint) : ''}</div>`;
       document.querySelectorAll('article.loop').forEach(renderMessages);
+      focusLinkedLoop();
       await renderRates();
     } catch (e) {
       setStatus(t().loadFailed(e.message), true);

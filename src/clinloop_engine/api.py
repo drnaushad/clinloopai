@@ -41,6 +41,7 @@ from src.clinloop_engine.pacs_mcp_server import handle_call_tool as handle_pacs
 from src.clinloop_engine.clinical_api import router as clinical_router, escalation_loop, get_store
 from src.clinloop_engine.imaging_api import router as imaging_router
 from src.clinloop_engine.patient_graph import router as graph_router
+from src.clinloop_engine.cds_hooks import router as cds_router
 from src.clinloop_engine.fhir_sync import sync_loop
 from src.clinloop_engine.imaging_scanner import scan_loop
 from src.clinloop_engine.loop_store import LoopStore
@@ -91,6 +92,7 @@ app.add_middleware(
 app.include_router(clinical_router)
 app.include_router(imaging_router)
 app.include_router(graph_router)
+app.include_router(cds_router)
 
 # Load Cases Data
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "cases.json")
