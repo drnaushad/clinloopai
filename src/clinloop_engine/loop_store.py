@@ -176,6 +176,18 @@ CREATE TABLE IF NOT EXISTS image_scan_studies (
     first_seen TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+-- Model-based second reader (second_reader.py): one row per report read. No report text is stored.
+CREATE TABLE IF NOT EXISTS second_reads (
+    report_key TEXT PRIMARY KEY,      -- patient id | DiagnosticReport id
+    patient_id TEXT NOT NULL,
+    text_hash TEXT NOT NULL,          -- re-read only if the report text changes
+    status TEXT NOT NULL,             -- read | failed
+    items INTEGER DEFAULT 0,          -- actionable items the model quoted
+    flags INTEGER DEFAULT 0,          -- of those, items no rule tracked (R058)
+    model TEXT,
+    detail TEXT,
+    updated_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS image_scan_runs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts TEXT NOT NULL,
@@ -637,6 +649,29 @@ class LoopStore:
             n = self._db.execute("SELECT attempts FROM image_scan_studies WHERE study_uid=?", (study_uid,)).fetchone()
             self._db.commit()
         return n["attempts"] if n else 0
+
+    def second_read(self, report_key: str) -> Optional[Dict]:
+        with self._lock:
+            r = self._db.execute("SELECT * FROM second_reads WHERE report_key=?", (report_key,)).fetchone()
+        return dict(r) if r else None
+
+    def set_second_read(self, report_key: str, patient_id: str, text_hash: str, status: str, items: int = 0,
+                        flags: int = 0, model: str = "", detail: str = "", now: Optional[datetime] = None) -> None:
+        with self._lock:
+            self._db.execute(
+                "INSERT INTO second_reads (report_key, patient_id, text_hash, status, items, flags, model, detail, updated_at) "
+                "VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(report_key) DO UPDATE SET text_hash=excluded.text_hash, "
+                "status=excluded.status, items=excluded.items, flags=excluded.flags, model=excluded.model, "
+                "detail=excluded.detail, updated_at=excluded.updated_at",
+                (report_key, patient_id, text_hash, status, items, flags, model, detail[:300], (now or utc_now()).isoformat()))
+            self._db.commit()
+
+    def second_read_counts(self) -> Dict[str, Any]:
+        with self._lock:
+            row = self._db.execute("SELECT COUNT(*) AS reports, COALESCE(SUM(items),0) AS items, COALESCE(SUM(flags),0) AS flags, "
+                                   "COALESCE(SUM(status='failed'),0) AS failed, MAX(updated_at) AS last FROM second_reads").fetchone()
+        return {"reports_read": row["reports"], "items_found": row["items"], "flags_raised": row["flags"],
+                "failed": row["failed"], "last_read": row["last"]}
 
     def acquire_lease(self, name: str, owner: str, ttl_minutes: float = 60.0, now: Optional[datetime] = None) -> bool:
         """A lease across processes (API workers, the CLI, cron): only one holder until it ends or expires."""

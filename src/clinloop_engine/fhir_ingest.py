@@ -195,6 +195,12 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
     code_text = _concept_text(r.get("code")).lower()
     codes = _codes(r.get("code"))
 
+    # A model-based second reader's flag on a report (second_reader.py): opens R058, a review for a person
+    tags = {t.get("code") for t in (r.get("meta") or {}).get("tag", []) if t.get("system") == CLINLOOP_TAG_SYSTEM}
+    if "second-reader" in tags:
+        from .second_reader import map_flag
+        return map_flag(r, ts)
+
     # Imaging-AI output (approved product or ClinLoop's model runner): a second reader, not a lab result
     if _is_ai_observation(r):
         return _map_ai_observation(r, ts)
@@ -880,6 +886,20 @@ def _derive_context(events: List[Dict]) -> None:
                 })
                 break
     events.extend(derived)
+
+
+def patient_names(resources: List[Dict], patient_id: str) -> List[str]:
+    """The patient's own name forms, to remove them from text sent to a model."""
+    names: List[str] = []
+    for r in resources:
+        if r.get("resourceType") != "Patient" or r.get("id") != patient_id:
+            continue
+        for n in r.get("name", []):
+            given = list(n.get("given") or [])
+            family = n.get("family") or ""
+            names += [n.get("text") or "", family, *given, " ".join(given + [family]).strip(),
+                      (family + "".join(given)).strip(), (family + " " + " ".join(given)).strip()]
+    return [x for x in dict.fromkeys(names) if x and len(x) >= 2]
 
 
 def patient_strata(bundle_or_resources: Any, as_of: Optional[datetime] = None) -> Dict[str, Dict[str, str]]:

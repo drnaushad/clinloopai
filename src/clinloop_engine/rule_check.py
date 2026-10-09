@@ -24,7 +24,7 @@ from .clinical_ontology import OBLIGATION_RULES, RULE_NAMES_KO
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Modules that turn real hospital data into events, and those that set trigger conditions
-EVENT_PRODUCERS = ["fhir_ingest.py", "radiology.py", "motifs.py", "ai_review.py"]
+EVENT_PRODUCERS = ["fhir_ingest.py", "radiology.py", "motifs.py", "ai_review.py", "second_reader.py"]
 CONDITION_PRODUCERS = EVENT_PRODUCERS + ["note_reader.py", "temporal_hypergraph.py"]
 SYNTHETIC = ["data_generator.py"]
 

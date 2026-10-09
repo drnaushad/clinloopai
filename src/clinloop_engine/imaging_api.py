@@ -402,6 +402,45 @@ def patient_documents(patient_id: str, user: User = Depends(require_role("viewer
     return {"patient_id": patient_id, "documents": get_store().external_resource_list(patient_id)}
 
 
+class SecondReadPreview(BaseModel):
+    text: str = Field(..., min_length=10, max_length=20000, description="Report text (identifiers are removed before the model sees it)")
+    category: str = Field("RAD", pattern="^(RAD|PAT)$")
+    title: str = Field("", max_length=200)
+
+
+@router.get("/reports/second-read/status", tags=["Imaging & Documents"])
+def second_read_status(user: User = Depends(require_role("viewer"))):
+    """The model-based second reader: on or off, on-premise model server, reports read and flags raised."""
+    from .second_reader import status
+    return status(get_store())
+
+
+@router.post("/reports/second-read/preview", tags=["Imaging & Documents"])
+def second_read_preview(req: SecondReadPreview, user: User = Depends(require_role("navigator"))):
+    """
+    What the rules and the second reader each find in one report, side by side. Nothing is filed: the
+    background sync does that for real reports (CLINLOOP_SECOND_READER=1).
+    """
+    from .loop_detector import ClinLoopDetector
+    from .second_reader import CATEGORIES, local_model, read_report, uncovered
+    model = local_model()
+    if model is None:
+        raise HTTPException(503, "No on-premise model server (CLINLOOP_OLLAMA_URL must be a private address)")
+    when = "2026-01-01T09:00:00Z"
+    res = [{"resourceType": "Patient", "id": "preview", "gender": "unknown"},
+           {"resourceType": "DiagnosticReport", "id": "preview-report", "status": "final",
+            "category": [{"coding": [{"code": req.category}]}], "code": {"text": req.title},
+            "subject": {"reference": "Patient/preview"}, "effectiveDateTime": when, "conclusion": req.text}]
+    events, _ = bundle_to_events(res)
+    from datetime import datetime as _dt
+    rules = sorted({d.rule_id for d in ClinLoopDetector(evaluation_time=_dt(2026, 1, 2)).process_patient(
+        "preview", "preview", events.get("preview", []))})
+    result = read_report(req.text, model)
+    new = uncovered(result["items"], set(rules)) if result["available"] else []
+    return {"rules_opened": rules, "second_reader": result,
+            "would_flag": [{**i, "label": CATEGORIES[i["category"]]["en"]} for i in new]}
+
+
 @router.get("/imaging/scan/status", tags=["Imaging & Documents"])
 def image_scan_status(user: User = Depends(require_role("viewer"))):
     """Automatic image scanning: on or off, which models may run, the last runs, and studies needing a person."""

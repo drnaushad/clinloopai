@@ -88,6 +88,7 @@ EVIDENCE_QUERIES: Dict[str, str] = {
     "R055": "microscopic hematuria evaluation urology referral delay bladder cancer",
     "R056": "pulmonary nodule growth volume doubling time missed interval change",
     "R057": "artificial intelligence worklist triage intracranial hemorrhage turnaround time",
+    "R058": "large language model radiology report follow-up recommendation extraction",
 }
 
 
