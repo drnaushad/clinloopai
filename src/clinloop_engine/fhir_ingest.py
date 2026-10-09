@@ -340,7 +340,10 @@ def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
 
     if "pat" in category or "pathology" in category or "sp" in category.split():
         mapping = ["DiagnosticReport(PAT)→pathology_result"]
-        m = _first_affirmed(_MALIGNANT, conclusion)
+        # Read the diagnosis, not the clinical history ("r/o melanoma vs SK" is the question, not the answer)
+        dx = re.search(r"(?:^|\n)\s*(?:final\s+)?(?:pathologic(?:al)?\s+)?diagnos[ie]s\s*[:：]|(?:^|\n)\s*(?:병리\s*)?진단\s*[:：]",
+                       conclusion, re.I)
+        m = _first_affirmed(_MALIGNANT, conclusion[dx.end():] if dx else conclusion)
         if m:
             details.update(condition="abnormal", evidence_span=_span(conclusion, m))
             mapping.append(f"'{m.group(1)}'→abnormal")

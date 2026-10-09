@@ -174,6 +174,66 @@ class TestPathology(unittest.TestCase):
                                sex="female"), set())
 
 
+class TestRealWorldReportWriting(unittest.TestCase):
+    """Defects found by blind full-length, real-style reports (structured sections, addenda, OCR, Korean shorthand)."""
+
+    def test_korean_recommendation_endings(self):
+        for text, rule in (("Imp) RLL 5 mm new nodule, indeterminate. 3개월 후 f/u CT 권함.", "R030"),
+                           ("Imp) Lt CPA 1.2 cm mass, likely meningioma. 6개월 후 f/u MRI 권함.", "R031"),
+                           ("Imp) Ascending aorta 4.5 cm. 1년 후 f/u CTA 권함.", "R030"),
+                           ("Imp) Liver S6 2.0 cm indeterminate lesion. liver MRI (dynamic) 권함.", "R031"),
+                           ("Imp) Rt hilar nodular opacity, indeterminate. Chest CT 권함.", "R030"),
+                           ("Imp) RLL focal pneumonia 가능성. 치료 후 4-6주 f/u CT 권함.", "R030")):
+            self.assertIn(rule, rules(text, title="CT"), text)
+
+    def test_scanned_report_noise(self):
+        text = ("IMPRESSION:\n1. 1O mm RUL s0lid nodule, indeterminate.\n   Rec: f/u CT in 3 months, per Fleisch-\n"
+                "   ner guideline.")
+        self.assertTrue(rules(text, title="CT chest", smoking="77176002") & {"R003", "R030"})
+
+    def test_abbreviated_subdural_and_korean_honorific_communication(self):
+        text = "Conclusion)\n1. Rt convexity acute SDH (7 mm).\n=> 신경외과 김OO 선생님께 02:10 구두 보고함."
+        self.assertEqual(rules(text, title="Brain CT"), {"R035"})
+
+    def test_exam_name_is_not_a_finding(self):
+        text = ("CTA CHEST - PULMONARY EMBOLISM PROTOCOL\nFindings: No filling defect.\nImpression: No pulmonary embolism.")
+        self.assertEqual(rules(text, title="CTA chest"), set())
+
+    def test_threshold_quoted_from_a_guideline_is_not_a_size(self):
+        self.assertEqual(rules("IMPRESSION: Several tiny (<6 mm) solid pulmonary nodules in a low-risk patient. "
+                               "No routine follow-up needed.", title="CT chest", smoking="266919005"), set())
+        got = rules("IMPRESSION: 1.1 cm left TR4 nodule, below the FNA threshold (1.5 cm). Recommend thyroid "
+                    "ultrasound in 1 year.", title="Thyroid US")
+        self.assertNotIn("R036", got)
+
+    def test_resolved_nodule_and_organ_before_the_word_nodule(self):
+        self.assertEqual(rules("IMPRESSION: The previously noted 7 mm LLL ground-glass nodule is no longer visible.",
+                               title="CT chest", smoking="8517006"), set())
+        got = rules("IMPRESSION: New 1.6 cm right adrenal nodule in a patient with lung cancer, suspicious for metastasis.",
+                    title="CT abdomen")
+        self.assertNotIn("R003", got)
+
+    def test_korean_persistent_part_solid_with_solid_portion(self):
+        text = ("Findings)\nLUL에 10 mm sized part-solid nodule, solid portion 7 mm. 이전과 비교하여 persistent.\n"
+                "Imp) LUL persistent part-solid nodule (solid portion 7 mm). 호흡기내과 협진 권함.")
+        self.assertIn("R046", rules(text, title="Chest CT", smoking="8517006"))
+
+    def test_addendum_that_withdraws_the_recommendation(self):
+        text = ("IMPRESSION: Indeterminate 1.9 cm right renal cystic lesion. Recommend renal mass protocol MRI.\n\n"
+                "ADDENDUM: Prior CT now available: unchanged for 4 years, Bosniak II, benign. The MRI recommendation is "
+                "withdrawn. No follow-up needed.")
+        self.assertEqual(rules(text), set())
+
+    def test_hedged_or_unneeded_biopsy(self):
+        self.assertEqual(rules("Imp) Rt 1.6 cm spongiform nodule, benign (TR1). FNA 및 추가 f/u 불필요.",
+                               title="Thyroid US"), set())
+
+    def test_pathology_reads_the_diagnosis_not_the_history(self):
+        for text in ("Clinical: r/o melanoma vs SK.\nDiagnosis:\n  Seborrheic keratosis. No evidence of malignancy.",
+                     "진단:\n  Chronic gastritis.\n  - Dysplasia / malignancy: not identified."):
+            self.assertEqual(rules(text, title="Pathology", category="PAT"), set(), text)
+
+
 class TestBlindCaseSets(unittest.TestCase):
     """The 270 blind-written cases (docs/ACCURACY_EVALUATION.md) stay above a floor: a change that loses
     findings or adds false alerts fails CI."""
