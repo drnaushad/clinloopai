@@ -165,5 +165,22 @@ class TestSecondReadPatient(unittest.TestCase):
             self.assertTrue(fhir_sync.sync_once(self.store, Client(), now=NOW)["ok"])
 
 
+class TestStoredEvaluation(unittest.TestCase):
+    """The stored stand-in model answers (docs/SECOND_READER.md) still reach the clinician through today's code."""
+
+    def test_rule_misses_still_reach_a_person(self):
+        import subprocess
+        base = os.path.join(ROOT, "tests", "report_eval")
+        caught = 0
+        for name in ("real", "confirm2"):
+            out = subprocess.run([sys.executable, os.path.join(base, "run_second_reader_eval.py"),
+                                  os.path.join(base, "second_reader", f"cases_{name}.json"),
+                                  os.path.join(base, "second_reader", f"rules_first_{name}.json")]
+                                 + [os.path.join(base, "second_reader", f"output_{i}.json") for i in range(3)],
+                                 capture_output=True, text=True, check=True).stdout
+            caught += int(out.split("second reader: ")[1].split("/")[0])
+        self.assertGreaterEqual(caught, 16)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -210,6 +210,15 @@ covid-chestxray-dataset: 60 pneumonia, 17 no finding) through the app's own DICO
   products, see [`VENDOR_IMAGING_AI.md`](VENDOR_IMAGING_AI.md).
 - CT organ measurement (aorta, spleen) is measurement, not diagnosis.
 
+## The second reader
+
+A model-based second reader (R058, [`SECOND_READER.md`](SECOND_READER.md)) was scored against the rules'
+**first-pass** output on both real-style sets:
+- 16 of the rules' 17 misses would have reached a clinician;
+- 8% of normal reports would have been flagged.
+
+The stand-in model was the smallest hosted model available, not a hospital's local model.
+
 ## Limits
 
 - **Synthetic data:** all reports are synthetic. The real-style sets imitate hospital reports, but a
