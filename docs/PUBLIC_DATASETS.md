@@ -90,5 +90,61 @@ only on real data:
 - cirrhosis;
 - hepatitis B.
 
-**Blind clinical review:** an independent reviewer judged 111 sampled obligations from the real records,
-without seeing the app's verdicts. The results are in the section below.
+## Blind clinical review on the real records
+
+**Method:**
+- 111 obligations were sampled across 11 rules from the first real-data run.
+- An independent reviewer judged each one from the patient's whole record, without seeing the app's
+  verdict. For each, they decided:
+  - whether the obligation was clinically warranted;
+  - if so, its status at the end of the record.
+
+**First pass, before any of the fixes below:**
+
+| Reviewer said | Count |
+|---|---|
+| Warranted | 33 (30%) |
+| Not warranted | 66 |
+| Unclear | 12 |
+
+- **Status:** where both the reviewer and the app could judge it, the app's status matched 14 of 17.
+- **Honest reading:** on real data, most of what the app raised at first would not survive a
+  clinician's review. That is the result that matters most from this test.
+
+**Why the "not warranted" ones were raised, and what changed:**
+
+| Reason (reviewer) | Fix |
+|---|---|
+| Labs drawn during a stay. In this data, many multi-day stays are labelled "outpatient", and ED labs are drawn just before admission | An encounter lasting more than a day counts as a stay, and so do the 12 hours before an admission. Drug starts and creatinine rises in hospital are not outpatient follow-ups |
+| Trivial values: blood-count indices, anion gap, urine microscopy, values just outside the range | Panel indices are shown with their panel, not reviewed on their own. A value within 10% of the reference limit is borderline |
+| Creatinine "rises" that stay within the normal range, or start from an impossible baseline of 0.1–0.3 | An AKI warning needs a value above the laboratory's upper limit, and a baseline of at least 0.3 mg/dL |
+| R021 (result after discharge) fired on new outpatient draws | Now follows Roy 2005: drawn by discharge and resulted after it. Without a result time, only within 7 days |
+| Chronic heart failure coded I50.22 read as new | Chronic and acute-on-chronic ICD codes mean known heart failure. An echo during the same stay answers R016 |
+
+**A false closure the reviewer's data exposed:** a thyroid follow-up (R012) could be closed by any
+monitoring lab, for example a potassium check after starting lisinopril. A drug's monitoring lab could
+also close another drug's obligation. Each follow-up must now be the right test (repeat TSH or free
+T4), or the lab that monitors that drug.
+
+**After the fixes, on the same 111 cases:**
+
+| | Still raised | No longer raised |
+|---|---|---|
+| Warranted | 27 | 6 |
+| Not warranted | 21 | 45 |
+| Unclear | 10 | 2 |
+
+- **Of what the app still raises:** 47% is warranted, or 56% leaving out the unclear cases.
+- **Status:** matches the reviewer's in 15 of 16 cases where both could judge it.
+- **Not an unbiased estimate:** the fixes were designed from this same sample. A fresh sample, ideally
+  judged by two clinicians, is the next measurement.
+- **What was lost:** of the 6 warranted cases no longer raised, 4 are new outpatient results after
+  discharge. These are now judged by the general abnormal-result rules (R001/R002) rather than R021.
+
+**What this data cannot test:**
+- **Patient notification and clinic visits** are not recorded here. So "done" can rarely be confirmed
+  for R001, R002, R021 and R023.
+- **Lab draws:** many lab-only draws are labelled as outpatient visits.
+- **Missing records:** there are no notes, and ICD-9-era procedures are missing.
+
+These are properties of this research copy. A hospital's own feed records them.

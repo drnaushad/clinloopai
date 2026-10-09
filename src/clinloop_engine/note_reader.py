@@ -55,7 +55,7 @@ ANALYTES: List[Tuple[str, str]] = [
     ("phosphate", r"phosphate|phosphorus|인산|2777-1"),
     ("creatinine", r"creatinine|renal function|kidney function|\begfr\b|\bbmp\b|\bcmp\b|신기능|크레아티닌|2160-0"),
     ("inr", r"\binr\b|prothrombin time|\bpt/inr\b|6301-6|34714-6"),
-    ("tsh", r"\btsh\b|thyroid function|\btfts?\b|갑상선\s*기능|3016-3"),
+    ("tsh", r"\btsh\b|thyrotropin|thyroid function|\btfts?\b|free t4|\bft4\b|thyroxine \(t4\)|갑상선\s*기능|3016-3|3024-7"),
     ("liver", r"\blfts?\b|liver function|liver enzymes|\balt\b|\bast\b|간기능|간\s*수치|1742-6|1920-8"),
     ("lipids", r"lipid panel|lipids|cholesterol|\bldl\b|지질|콜레스테롤|2093-3|13457-7"),
     ("psa", r"\bpsa\b|prostate[- ]specific antigen|2857-1"),

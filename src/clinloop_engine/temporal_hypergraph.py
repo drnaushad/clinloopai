@@ -479,8 +479,10 @@ class DynamicTemporalHypergraph:
         required_values = {ft.value for ft in required_types}
         required_regions = _required_regions(trigger, rule) if rule else []
 
+        since = (trigger.details.get("followup_since") or {}).get(rule.rule_id) if rule else None
+        start = normalize_timestamp(since) if since else trigger.timestamp
         for node in all_nodes:
-            if node.timestamp <= trigger.timestamp:
+            if node.timestamp <= start or node is trigger:
                 continue
             if node.timestamp > self.evaluation_time:
                 continue

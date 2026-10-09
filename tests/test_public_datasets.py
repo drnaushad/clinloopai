@@ -48,7 +48,7 @@ class TestOMOP(unittest.TestCase):
     def test_rules_run_on_omop_data(self):
         found, _ = loops(self.people["1"], "1", "2023-06-01T00:00:00")
         self.assertIn("R004", found)                 # PSA 7.2 (LOINC from the vocabulary)
-        self.assertIn("R010", found)                 # lisinopril start
+        self.assertIn("R010", found)                 # lisinopril started in clinic
         self.assertTrue({"R003", "R030"} & set(found))   # nodule in the radiology note (Fleischner for a smoker)
         self.assertIn("R023", found)                 # heart-failure discharge
         self.assertNotIn("R001", found)              # the high potassium was taken in hospital
@@ -82,10 +82,11 @@ class TestMIMIC(unittest.TestCase):
         found, _ = loops(self.people["19990001"], "19990001", "2150-06-01T00:00:00")
         expected = {"R030": "nodule on CT", "R051": "cardiology visit in the discharge summary",
                     "R048": "repeat potassium in the discharge summary", "R023": "heart-failure discharge",
-                    "R010": "lisinopril start", "R015": "Staph aureus bacteraemia", "R002": "outpatient high potassium"}
+                    "R015": "Staph aureus bacteraemia", "R002": "outpatient high potassium"}
         for rule, why in expected.items():
             self.assertIn(rule, found, why)
         self.assertNotIn("R016", found)              # "acute on chronic" heart failure is not a new diagnosis
+        self.assertNotIn("R010", found)              # lisinopril started in hospital: monitored there (MIMIC orders are inpatient)
 
     def test_sample_and_bulk_output(self):
         self.assertEqual(mimic_ingest.choose_subjects(os.path.join(FIX, "mimic"), 1),
@@ -145,7 +146,8 @@ class TestECG(unittest.TestCase):
 class TestCodedDiagnoses(unittest.TestCase):
 
     def test_icd_codes_without_names(self):
-        self.assertEqual(icd_label(["I50.23"]), "heart failure")
+        self.assertEqual(icd_label(["I50.23"]), "chronic heart failure")
+        self.assertEqual(icd_label(["I50.9"]), "heart failure")
         self.assertEqual(icd_label(["42731"]), "atrial fibrillation")
         self.assertEqual(icd_label(["Z99.2", "I10"]), "end-stage renal disease on dialysis")
         self.assertEqual(icd_label(["I10"]), "")

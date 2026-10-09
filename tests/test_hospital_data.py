@@ -206,6 +206,58 @@ class TestHospitalExport(unittest.TestCase):
         found = [d.trigger_event_id for d in rules([a, b])[0] if d.rule_id == "R023"]
         self.assertEqual(found, ["Encounter/b:discharge"])
 
+    def test_real_data_precision_rules(self):
+        rng = lambda lo, hi: {"referenceRange": [{"low": {"value": lo}, "high": {"value": hi}}]}  # noqa: E731
+        outpatient = lambda rid, test, v, lo, hi: lab(rid, "2023-03-01T09:00:00", "x", test, v, **rng(lo, hi))  # noqa: E731
+        abnormal = lambda res: {"R001", "R002"} & {d.rule_id for d in rules(res)[0]}  # noqa: E731
+        self.assertFalse(abnormal([outpatient("a", "MCHC", 37.5, 32, 36)]))          # a panel index
+        self.assertFalse(abnormal([outpatient("b", "TSH", 4.5, 0.4, 4.2)]))          # borderline (within 10%)
+        self.assertTrue(abnormal([outpatient("c", "TSH", 9.8, 0.4, 4.2)]))
+        long_amb = encounter("v", "AMB", "2023-02-27T08:00:00", "2023-03-03T10:00:00", "chest pain")
+        self.assertFalse(abnormal([long_amb, outpatient("d", "Potassium", 6.0, 3.5, 5.1)]))   # a 4-day "visit"
+
+    def test_pending_at_discharge_uses_collection_and_result_times(self):
+        stay = encounter("s", "IMP", "2023-02-01T08:00:00", "2023-02-05T10:00:00", "pneumonia")
+        pending = lab("p", "2023-02-04T06:00:00", "2823-3", "Potassium", 5.9, "mmol/L",
+                      referenceRange=[{"low": {"value": 3.5}, "high": {"value": 5.1}}], issued="2023-02-06T09:00:00")
+        self.assertIn("R021", {d.rule_id for d in rules([stay, pending])[0]})
+        fresh = lab("f", "2023-02-20T09:00:00", "2823-3", "Potassium", 5.9, "mmol/L",
+                    referenceRange=[{"low": {"value": 3.5}, "high": {"value": 5.1}}], issued="2023-02-20T11:00:00")
+        self.assertNotIn("R021", {d.rule_id for d in rules([stay, fresh])[0]})   # a new outpatient draw: R001/R002
+
+    def test_aki_warning_needs_an_outpatient_value_above_normal(self):
+        def crea(rid, when, v):
+            return lab(rid, when, "2160-0", "Creatinine", v, referenceRange=[{"low": {"value": 0.5}, "high": {"value": 1.2}}])
+        rising_normal = [crea("a", "2023-01-01T09:00:00", 0.5), crea("b", "2023-02-01T09:00:00", 0.6),
+                         crea("c", "2023-03-01T09:00:00", 1.0)]
+        self.assertNotIn("R053", {d.rule_id for d in rules(rising_normal)[0]})    # 2 × baseline but still normal
+        rising = rising_normal[:2] + [crea("c", "2023-03-01T09:00:00", 1.6)]
+        self.assertIn("R053", {d.rule_id for d in rules(rising)[0]})
+        stay = encounter("s", "IMP", "2023-02-28T08:00:00", "2023-03-04T10:00:00", "sepsis")
+        self.assertNotIn("R053", {d.rule_id for d in rules(rising + [stay])[0]})  # in hospital: repeated daily
+
+    def test_echo_during_the_admission_answers_new_heart_failure(self):
+        stay = encounter("s", "IMP", "2023-02-01T08:00:00", "2023-02-06T10:00:00", "Heart failure")
+        echo = {"resourceType": "Procedure", "id": "tte", "status": "completed", "subject": {"reference": "Patient/P"},
+                "code": {"text": "Transthoracic Echo"}, "performedDateTime": "2023-02-03T11:00:00"}
+        self.assertEqual({d.rule_id: d for d in rules([stay, echo])[0]}["R016"].loop_status, "closed")
+
+    def test_a_follow_up_lab_must_be_the_right_lab(self):
+        tsh = lambda rid, when, v: lab(rid, when, "3016-3", "Thyrotropin", v, "uIU/mL",  # noqa: E731
+                                       referenceRange=[{"low": {"value": 0.27}, "high": {"value": 4.2}}])
+        potassium = lab("k", "2023-01-10T09:00:00", "2823-3", "Potassium", 4.0, "mmol/L")
+        found = {d.rule_id: d.loop_status for d in rules([tsh("t1", "2023-01-05T09:00:00", 9.0),
+                                                          med("m", "2023-01-02T09:00:00"), potassium])[0]}
+        self.assertEqual(found, {"R012": "open", "R010": "closed"})   # potassium monitors lisinopril, not the thyroid
+        found = {d.rule_id: d.loop_status for d in rules([tsh("t1", "2023-01-05T09:00:00", 9.0),
+                                                          tsh("t2", "2023-02-10T09:00:00", 5.0)])[0]}
+        self.assertEqual(found, {"R012": "closed"})
+        two = rules([med("a", "2023-01-02T09:00:00", "Furosemide 40 MG Oral Tablet"),
+                     med("b", "2023-01-02T10:00:00", "Levothyroxine 50 MCG Oral Tablet"), potassium])[0]
+        self.assertEqual({d.trigger_event_id: d.loop_status for d in two if d.rule_id == "R010"},
+                         {"MedicationRequest/a:medication_change": "closed",
+                          "MedicationRequest/b:medication_change": "open"})        # TSH still due for levothyroxine
+
     def test_a_feed_without_flags_or_ranges_says_so(self):
         labs = [lab(f"l{i}", "2023-03-01T08:00:00", "2345-7", "Glucose", 90 + i) for i in range(25)]
         _, warnings = rules(labs)

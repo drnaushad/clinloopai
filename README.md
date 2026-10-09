@@ -30,7 +30,7 @@ with transparent, rule-grounded logic and an audit trail.
                                                                   Patient outreach: draft → clinician approval → send
 ```
 
-1. **Obligation rules** (`clinical_ontology.py`): 58 guideline-based rules, each with a trigger, its
+1. **Obligation rules** (`clinical_ontology.py`): 59 guideline-based rules, each with a trigger, its
    required follow-ups (all or any), a deadline, a severity, references and a Korean name. None is
    fit for patient care until a specialist signs it off (see **Governance** below). Example:
    `□(LAB_RESULT[abnormal_pap] → ◇≤30d COLPOSCOPY_REFERRAL)`.
@@ -47,6 +47,7 @@ with transparent, rule-grounded logic and an audit trail.
    | R056 | The same lung nodule, linked across reports by lobe and size, measured ≥ 2 mm larger than before when the report does not say so (with volume-doubling time) → radiologist confirmation and work-up |
    | R057 | Critical imaging-AI finding (intracranial haemorrhage, pneumothorax, free air) on a study with no report yet → read the study now (60 minutes by default); closed by the study's first report |
    | R058 | Report item no rule tracked, found by the hospital's own model as a second reader (exact quote required) → clinician review; never opens or closes a clinical obligation itself |
+   | R059 | ECG QTc ≥ 500 ms → review of QT-prolonging medicines and electrolytes, or a repeat ECG, within 24 h (AHA/ACCF 2010). AF found on an ECG also feeds the AF anticoagulation decision (R054) |
    | R052–R055 | Diagnostic patterns across events: iron-deficiency anaemia → GI investigation; creatinine rise (AKI warning) → repeat creatinine; atrial fibrillation with high CHA₂DS₂-VASc and no anticoagulant → anticoagulation decision; persistent microscopic haematuria → urology. See [`docs/DIAGNOSTIC_PATTERNS.md`](docs/DIAGNOSTIC_PATTERNS.md) |
    | R048–R051 | Plans written in clinicians' notes (English and Korean): repeat a lab test, imaging, a specialist referral, a follow-up visit. Each closes only on the matching event (same test, same modality and region, same specialty). Conditional, cancelled and already-done plans are not tracked |
 2. **Temporal hypergraph** (`temporal_hypergraph.py`): builds one hyperedge per triggered rule and
@@ -553,6 +554,13 @@ See [`docs/IMAGING.md`](docs/IMAGING.md). In short:
     is shown as done when it was not.
 
   Details and remaining disagreements are in [`docs/HOSPITAL_DATA_TEST.md`](docs/HOSPITAL_DATA_TEST.md).
+- **Real hospital records (MIMIC-IV demo, 100 patients, via OMOP)**:
+  - **The first run** raised 35,630 abnormal-lab obligations. A blind clinical review found only 30% of
+    sampled obligations warranted.
+  - **After the fixes:** about 500 obligations, 47–56% warranted on the same sample, and 15 of 16
+    statuses agreed with the reviewer.
+  - **Readers** for OMOP, MIMIC-IV, MIMIC-IV-Note, MIMIC-CXR and ECGs (PTB-XL), plus the data-use rules,
+    are in [`docs/PUBLIC_DATASETS.md`](docs/PUBLIC_DATASETS.md).
 - **Model-based second reader** (`CLINLOOP_SECOND_READER=1`, off by default): the hospital's own
   on-premise model reads each recent report. Any item it quotes word for word that no rule tracked
   goes to a clinician for review (R058).

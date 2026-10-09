@@ -294,6 +294,14 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
     flag = _flag_from_interpretation(r) or _flag_from_reference_range(r, value)
     if flag:
         details["flag"] = flag
+    rng = [rr for rr in r.get("referenceRange", []) if not rr.get("appliesTo")]
+    if len(rng) == 1:
+        for side in ("low", "high"):
+            if isinstance((rng[0].get(side) or {}).get("value"), (int, float)):
+                details[f"ref_{side}"] = rng[0][side]["value"]
+    if r.get("issued") and r.get("effectiveDateTime"):
+        details["collected"] = r["effectiveDateTime"]          # collection time; ts below is the result time
+        details["issued"] = r["issued"]
     mapping = ["Observation→lab_result"]
 
     is_culture = "culture" in code_text or "배양" in code_text or "microbiology" in _all_category_text(r)
@@ -333,6 +341,7 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
             mapping.append("HCV antibody reactive→hcv_antibody_positive")
     elif codes & LOINC_TSH and flag in ("HIGH", "LOW", "ABNORMAL", "CRITICAL"):
         details["condition"] = "abnormal_thyroid"
+        details["followup_match"] = {"R012": {"analyte": "tsh"}}      # a repeat thyroid test, not any lab
         mapping.append("TSH out of range→abnormal_thyroid")
     elif codes & LOINC_HBA1C and isinstance(value, (int, float)) and value >= HBA1C_UNCONTROLLED_PCT:
         details["condition"] = "uncontrolled_hba1c"
@@ -622,6 +631,9 @@ def _map_encounter(r: Dict) -> List[Tuple[str, str, Dict]]:
             details["psychiatric_admission"] = True
         if "severe" in primary_dx and re.search(r"preeclampsia|eclampsia|hypertens", primary_dx):
             details["severe_hypertension"] = True
+        if period.get("start"):
+            # An echocardiogram done during the stay answers a new heart-failure diagnosis (R016)
+            details["followup_since"] = {"R016": period["start"]}
         return [(EventType.DISCHARGE.value, period["end"], details)]
     if enc_class == "AMB" and str(r.get("status", "")).lower() == "finished" \
             and not re.search(r"death certific|사망\s*진단", service):      # paperwork after a death is not a visit
@@ -630,7 +642,8 @@ def _map_encounter(r: Dict) -> List[Tuple[str, str, Dict]]:
                                                       if isinstance(r.get("specialty"), list)))
         extra = {"specialty": spec} if spec else {}
         events = [(EventType.FOLLOWUP_APPOINTMENT.value, when,
-                   {**extra, "mapping": ["Encounter(AMB) finished→followup_appointment"]})]
+                   {**extra, "period_end": period.get("end"),
+                    "mapping": ["Encounter(AMB) finished→followup_appointment"]})]
         if spec or any(_ref_id(b, "ServiceRequest") for b in r.get("basedOn", [])):
             # A visit in a named specialty, or one booked against a referral, completes a referral (R008)
             events.append((EventType.REFERRAL_VISIT.value, when,
@@ -645,6 +658,8 @@ def _map_encounter(r: Dict) -> List[Tuple[str, str, Dict]]:
 # Diagnoses the rules depend on, recognised from ICD-10 / ICD-9 codes when a feed sends a code without
 # its name (common in claims-derived and OMOP data). Codes are compared without dots.
 _ICD_LABELS = [
+    (("I5022", "I5023", "I5032", "I5033", "I5042", "I5043", "42822", "42823", "42832", "42833", "42842", "42843"),
+     "chronic heart failure"),
     (("I50", "428"), "heart failure"),
     (("I48", "42731", "42732"), "atrial fibrillation"),
     (("I21", "I22", "410"), "myocardial infarction"),
@@ -659,7 +674,11 @@ _ICD_LABELS = [
 def icd_label(codes: Iterable[str]) -> str:
     """Plain names for the rule-relevant diagnoses among these ICD codes ('' if none)."""
     flat = [str(c).replace(".", "").upper() for c in codes]
-    return "; ".join(label for prefixes, label in _ICD_LABELS if any(c.startswith(prefixes) for c in flat))
+    labels: List[str] = []
+    for prefixes, label in _ICD_LABELS:
+        if any(c.startswith(prefixes) for c in flat) and not any(label in x for x in labels):
+            labels.append(label)          # "chronic heart failure" already says "heart failure"
+    return "; ".join(labels)
 
 
 def _map_condition(r: Dict) -> List[Tuple[str, str, Dict]]:
@@ -738,6 +757,7 @@ def _map_medication_request(r: Dict) -> List[Tuple[str, str, Dict]]:
         for drug, pattern, _, _ in DRUG_MONITORING:
             if re.search(pattern, name or "", re.I):
                 details.update(drug=drug, condition="requires_monitoring")
+                details["followup_match"] = {"R010": {"drug": drug}}   # the lab that monitors this drug
                 if drug in MONITORING_DAYS:
                     details["rule_deadline_days"] = {"R010": MONITORING_DAYS[drug]}
                 break
@@ -780,7 +800,7 @@ def _map_procedure(r: Dict) -> List[Tuple[str, str, Dict]]:
         etype = EventType.ENDOSCOPIC_ULTRASOUND.value
     elif "breast" in text and "biopsy" in text:
         etype = EventType.BREAST_BIOPSY.value
-    elif "echocardiogra" in text or "심초음파" in text:
+    elif "echocardiogra" in text or "심초음파" in text or re.search(r"\b(?:transthoracic|transesophageal) echo\b|\btte\b|\btee\b", text):
         etype = EventType.ECHOCARDIOGRAM.value
     elif "colposcopy" in text:
         etype = EventType.COLPOSCOPY_VISIT.value
@@ -1020,8 +1040,16 @@ def _derive_context(events: List[Dict]) -> None:
                     and is_fulfilling_status(e["status"]):
                 e["details"]["hcc_surveillance"] = True
     _merge_ed_into_admission(events, ts)
-    stays = [(normalize_timestamp(e["details"]["arrived_at"]), ts(e)) for e in events
+    stays = [(normalize_timestamp(e["details"]["arrived_at"]) - timedelta(hours=12), ts(e)) for e in events
              if e["event_type"] == EventType.DISCHARGE.value and e["details"].get("arrived_at")]
+    # An "outpatient" encounter lasting over a day is a stay in practice (mislabelled admissions are common)
+    stays += [(ts(e), normalize_timestamp(e["details"]["period_end"])) for e in events
+              if e["event_type"] == EventType.FOLLOWUP_APPOINTMENT.value and e["details"].get("period_end")
+              and normalize_timestamp(e["details"]["period_end"]) - ts(e) > timedelta(hours=24)]
+    _mark_inpatient_starts(events, ts, stays)
+    for e in events:          # results taken in hospital: the team at the bedside acts on them (motifs use this too)
+        if e["event_type"] == EventType.LAB_RESULT.value and any(start <= ts(e) <= end for start, end in stays):
+            e["details"]["in_stay"] = True
     _group_abnormal_results(events, ts, stays)
     _mark_renewals(events, ts)
     _mark_known_heart_failure(events, ts)
@@ -1034,9 +1062,17 @@ def _derive_context(events: List[Dict]) -> None:
         if e["event_type"] not in (EventType.LAB_RESULT.value, EventType.CULTURE_RESULT.value):
             continue
         t = ts(e)
-        # Discharged within the 30 days before this result, and not back in hospital when it was taken
-        prior = [d for d in discharges if d < t and (t - d).days <= 30]
-        if prior and not any(start <= t <= end for start, end in stays):
+        # A result pending at discharge (Roy 2005): drawn by the time of discharge, resulted after it. When the
+        # feed gives both times that is checked exactly; otherwise a result within 7 days of discharge is taken
+        # as pending, and later ones are ordinary outpatient results (R001/R002)
+        d_ = e["details"]
+        if d_.get("collected") and d_.get("issued"):
+            drawn, resulted = normalize_timestamp(d_["collected"]), normalize_timestamp(d_["issued"])
+            prior = [d for d in discharges if drawn <= d < resulted]
+        else:
+            resulted = t
+            prior = [d for d in discharges if d < t and (t - d).days <= 7]
+        if prior and not any(start <= resulted <= end for start, end in stays):   # not back in hospital by then
             e["details"]["resulted_after_discharge"] = True
             if e["event_type"] == EventType.CULTURE_RESULT.value and e["details"].get("result") == "positive":
                 e["details"].setdefault("condition", "positive_post_discharge")
@@ -1051,7 +1087,7 @@ def _derive_context(events: List[Dict]) -> None:
                     **{k: v for k, v in e.items() if k != "details"},
                     "event_id": f"{e['source']}:followup_lab",
                     "event_type": EventType.FOLLOWUP_LAB.value,
-                    "details": {"drug": drug, "mapping": [f"{drug} monitoring lab→followup_lab"]},
+                    "details": {"drug": drug, "analyte": analyte, "mapping": [f"{drug} monitoring lab→followup_lab"]},
                 })
                 break
     events.extend(derived)
@@ -1114,6 +1150,38 @@ def _mark_renewals(events: List[Dict], ts) -> None:
 KNOWN_ABNORMAL_DAYS = 90
 
 
+# Results that are indices or descriptive parts of a panel: shown with the panel, never a review of their own
+_PANEL_INDEX = re.compile(r"\bmchc?\b|\bmcv\b|\brdw\b|anion gap|eosinophil|basophil|monocyte|lymphocyte|"
+                          r"neutrophil|granulocyte|hyaline|\bcasts?\b|epithelial|bacteria\b|yeast|crystals|"
+                          r"\bmpv\b|nrbc|reticulocyte|specific gravity|urobilinogen|\bph\b", re.I)
+# A value this close to the reference limit (fraction of the limit) is borderline, not a new review
+BORDERLINE_FRACTION = 0.10
+
+
+def _minor_abnormality(d: Dict) -> Optional[str]:
+    """Why an out-of-range result is not worth a review of its own, or None."""
+    if _PANEL_INDEX.search(str(d.get("test") or "")):
+        return "a panel index, reviewed with its panel"
+    value, low, high = d.get("value"), d.get("ref_low"), d.get("ref_high")
+    if isinstance(value, (int, float)):
+        if isinstance(high, (int, float)) and high > 0 and high < value <= high * (1 + BORDERLINE_FRACTION):
+            return f"borderline ({value} vs upper limit {high})"
+        if isinstance(low, (int, float)) and low > 0 and low * (1 - BORDERLINE_FRACTION) <= value < low:
+            return f"borderline ({value} vs lower limit {low})"
+    return None
+
+
+def _mark_inpatient_starts(events: List[Dict], ts, stays) -> None:
+    """A drug started during a hospital stay is monitored there daily: R010 is for outpatient starts."""
+    for e in events:
+        d = e["details"]
+        if e["event_type"] == EventType.MEDICATION_CHANGE.value and d.get("condition") == "requires_monitoring" \
+                and any(start <= ts(e) <= end for start, end in stays):
+            d.pop("condition")
+            d["started_in_hospital"] = True
+            d.setdefault("mapping", []).append("started during a hospital stay: monitored there, no R010")
+
+
 def _group_abnormal_results(events: List[Dict], ts, stays) -> None:
     """
     Which abnormal (not critical) results open a "review and tell the patient" obligation (R001, R002, R021):
@@ -1129,10 +1197,17 @@ def _group_abnormal_results(events: List[Dict], ts, stays) -> None:
     for e in labs:
         d, t = e["details"], ts(e)
         key = (str(d.get("analyte") or d.get("test") or "").lower(), d["flag"])
-        if any(start <= t <= end for start, end in stays):
-            # Handled at the bedside; it does not make a later outpatient result "already known"
+        resulted = normalize_timestamp(d["issued"]) if d.get("issued") else t
+        if any(start <= t <= end and resulted <= end for start, end in stays):
+            # Handled at the bedside; it does not make a later outpatient result "already known".
+            # (Drawn in hospital but resulted after discharge is the pending-result case, R021: kept.)
             d["abnormal_handled"] = "taken during a hospital stay"
             d.setdefault("mapping", []).append(f"abnormal result not a new review: {d['abnormal_handled']}")
+            continue
+        minor = _minor_abnormality(d)
+        if minor:
+            d["abnormal_handled"] = minor
+            d.setdefault("mapping", []).append(f"abnormal result not a new review: {minor}")
             continue
         prev = last_abnormal.get(key)
         last_abnormal[key] = t
