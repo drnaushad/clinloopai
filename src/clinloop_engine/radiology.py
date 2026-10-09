@@ -175,9 +175,21 @@ def _next_sentence(text: str, end: int) -> str:
     return rest[:stop.start()] if stop else rest
 
 
-_LUNG_RADS = re.compile(r"lung-?rads\s*(?:category\s*)?:?\s*(\d[ABXS]?)", re.I)
-_BIRADS = re.compile(r"bi-?rads\s*(?:category\s*)?:?\s*(\d[ABC]?)", re.I)
-_TIRADS = re.compile(r"\bTR\s*([1-5])\b|(?<!K-)(?<!K)ti-?rads\s*(?:category\s*)?:?\s*([1-5])\b(?!\s*points?)", re.I)
+_CAT = r"(?:category|cat\.?|범주|카테고리)"
+_LUNG_RADS = re.compile(rf"lung-?rads\s*(?:{_CAT}\s*)?:?\s*(\d[ABXS]?)", re.I)
+_BIRADS = re.compile(rf"bi-?rads\s*(?:{_CAT}\s*)?:?\s*(\d[ABC]?)", re.I)
+_TIRADS = re.compile(rf"\bTR\s*([1-5])\b|(?<!K-)(?<!K)ti-?rads\s*(?:{_CAT}\s*)?:?\s*([1-5])\b(?!\s*points?)", re.I)
+
+# Services that can carry out each work-up (a referral naming none of them does not close it)
+WORKUP_SPECIALTIES: Dict[str, List[str]] = {
+    "R018": ["surgery", "oncology", "gynecology"],                         # breast surgery / breast clinic
+    "R020": ["pulmonology", "surgery", "oncology"],                        # thoracic surgery
+    "R046": ["pulmonology", "surgery", "oncology"],
+    "R038": ["endocrinology", "surgery", "oncology", "urology"],
+    "R039": ["urology", "oncology", "surgery"],
+    "R042": ["gastroenterology", "hepatology", "surgery", "oncology"],
+    "R045": ["surgery"],                                                    # vascular surgery
+}
 _KTIRADS = re.compile(r"K-?TI-?RADS\s*(?:category\s*)?:?\s*([2-5])\b", re.I)
 _CHEST_CT = re.compile(r"\b(ct|ldct|computed tomography)\b.*\b(chest|thorax|lung)\b|\b(chest|thorax|lung)\b.*\b(ct|ldct)\b"
                        r"|(?:흉부|폐)\s*(?:저선량\s*)?ct|\bpet[/-]?ct\b", re.I)
@@ -281,11 +293,17 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
                 continue
             if re.search(r"component", m.group(0), re.I) or re.match(r"\s*(?:solid\s+)?component", text[m.end():], re.I):
                 continue   # "nodule with a 7 mm solid component" is one nodule
+            size_override = None
             if re.search(r"(?:previously|was|were|from|prior(?:ly)?|이전)\s*(?:measur\w*\s*)?(?:about\s+)?$",
                          text[max(0, m.start(a) - 25):m.start(a)], re.I):
-                continue   # "now 9 mm, previously 6 mm": the earlier size, not a second nodule
+                # "grown from 6 mm to 10 mm": the new size follows; otherwise ("now 9 mm, previously 6 mm")
+                # this is the earlier size, not a second nodule
+                new = re.match(rf"\s*(?:to|→|->|에서)\s*{_SIZE}", text[m.end():])
+                if not new:
+                    continue
+                size_override = _size_mm(new.group(1), new.group(2), new.group(3))
             s = sentence(text, m.start(), m.end())
-            size = _size_mm(m.group(a), m.group(b), m.group(unit))
+            size = size_override or _size_mm(m.group(a), m.group(b), m.group(unit))
             comp = _SOLID_COMPONENT.search(s)
             comp_mm = None
             if comp:
@@ -621,7 +639,8 @@ _NOT_NEW_AFTER = re.compile(r"^[^.;]{0,40}?\b(resolved|resolving|decreas\w*|unch
                             r"|^[^.;,]{0,20}?(?:흡수|호전|감소|소실|변화\s*없|안정|만성)", re.I)
 _EXPLICITLY_NEW = re.compile(r"\b(new|acute|interval development of|newly)\b[^,;.]{0,25}$|(?:새로|새롭게|신규|급성)[^,;.]{0,15}$", re.I)
 _COMMUNICATED = re.compile(
-    r"(?<!will be )(?<!to be )(?<!should be )(?:discussed with|communicated (?:to|with)|called to|telephoned|"
+    r"(?<!will be )(?<!to be )(?<!should be )(?:discussed (?:(?:by|over the|via) (?:tele)?phone |in person |verbally )?with|"
+    r"communicated (?:(?:by|over the|via) (?:tele)?phone |verbally )?(?:to|with)|called to|telephoned|"
     r"notified|conveyed to|relayed to)\s+(?:the\s+)?(?:(?:referring|ordering|treating|on-?call|covering|responsible|"
     r"primary|ED|emergency|ICU)\s+)*(?:dr\.?\s|doctor|physician|clinician|provider|surgeon|team|ED\b|emergency|"
     r"nurse practitioner|NP\b|PA\b|attending|house officer|intensivist|consultant)"
@@ -1192,6 +1211,21 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
             d["extra_conditions"] = list(dict.fromkeys(conds))
         if deadlines:
             d["rule_deadline_days"] = deadlines
+        # Work-up is done by the right service and on the right organ: a cardiology referral or a liver
+        # biopsy does not close a lung-nodule or pancreatic work-up (a referral naming no specialty counts)
+        added = set(deadlines)
+        if d.get("lung_rads") in ("4B", "4X"):
+            added.add("R020")
+        if str(d.get("birads", ""))[:1] in ("4", "5"):
+            added.add("R018")
+        match = {r: {"specialty": WORKUP_SPECIALTIES[r], "_lenient": True,
+                     "_only_for": [EventType.SPECIALIST_REFERRAL.value, EventType.REFERRAL_VISIT.value]}
+                 for r in added if r in WORKUP_SPECIALTIES}
+        if match:
+            d["followup_match"] = {**(d.get("followup_match") or {}), **match}
+        for r in ("R020", "R046"):
+            if r in added:
+                regions.setdefault(r, ["lung"])
         if regions:
             d["followup_regions"] = regions
         if reviews:

@@ -26,6 +26,18 @@ REPORT_RULES = {"R003", "R009", "R018", "R019", "R020", "R030", "R031", "R032", 
 SMOKING = {"current": ("77176002", "Current smoker"), "former": ("8517006", "Former smoker"),
            "never": ("266919005", "Never smoked")}
 DONE = {"done", "done_late"}
+# One alert per finding (as in run_eval.py): the guideline rule and the radiologist's own recommendation for
+# the same study are one obligation. "Equivalent" compares each finding's status, whichever of the two is raised.
+GROUPS = [{"R003", "R019", "R034", "R030", "R031", "R032", "R033", "R037", "R040", "R041", "R043", "R044"},
+          {"R036", "R039", "R018", "R020", "R046", "R038", "R042", "R045"}, {"R009"}, {"R035"}]
+
+
+def by_group(statuses):
+    out = {}
+    for r, st in statuses.items():
+        g = next((i for i, grp in enumerate(GROUPS) if r in grp), r)
+        out.setdefault(g, set()).add(st)
+    return out
 
 
 def resources(case):
@@ -106,6 +118,7 @@ def main():
     pairs = Counter()
     agree = total = 0
     false_closure, false_alarm, wrong_rules, exact = [], [], [], 0
+    eq_agree = eq_total = 0
     for c in cases:
         exp = {k: v for k, v in (c.get("expected") or {}).items() if k in REPORT_RULES}
         try:
@@ -113,6 +126,10 @@ def main():
         except Exception as e:                       # a crash is a failure
             got = {"CRASH": type(e).__name__}
         exact += int(exp == got)
+        ge, gg = by_group(exp), by_group(got)
+        for g in set(ge) | set(gg):
+            eq_total += 1
+            eq_agree += int(ge.get(g) == gg.get(g))
         for r in set(exp) | set(got):
             e, g = exp.get(r, "absent"), got.get(r, "absent")
             pairs[(e, g)] += 1
@@ -127,7 +144,8 @@ def main():
         if show and exp != got:
             print(f"\n{c['id']} expected {exp} got {got}\n   {c.get('rationale', '')[:220]}")
     print(f"\ntimelines={len(cases)}  exact={exact}/{len(cases)} = {exact / max(1, len(cases)):.1%}")
-    print(f"obligation status agreement: {agree}/{total} = {agree / max(1, total):.1%}")
+    print(f"obligation status agreement (strict rule ids): {agree}/{total} = {agree / max(1, total):.1%}")
+    print(f"finding status agreement (one alert per finding): {eq_agree}/{eq_total} = {eq_agree / max(1, eq_total):.1%}")
     print(f"FALSE CLOSURES (not done, app says done): {len(false_closure)} {false_closure}")
     print(f"false alarms (done, app says not done): {len(false_alarm)} {false_alarm}")
     print(f"rule present/absent disagreements: {len(wrong_rules)}")

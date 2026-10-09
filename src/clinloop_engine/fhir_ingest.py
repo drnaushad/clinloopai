@@ -462,6 +462,10 @@ def _map_service_request(r: Dict) -> List[Tuple[str, str, Dict]]:
         etype = EventType.IMAGING_ORDER.value
     else:
         etype = EventType.LAB_ORDER.value
+    if etype == EventType.BIOPSY_ORDER.value:
+        sites = biopsy_regions(_concept_text(r.get("code")) + " " + " ".join(_concept_text(b) for b in r.get("bodySite", [])))
+        if sites:
+            details["body_regions"] = sites
     if etype == EventType.SPECIALIST_REFERRAL.value:
         spec = specialty_of(_concept_text(r.get("code")) + " " + " ".join(
             _concept_text(c) for c in r.get("performerType", []) if isinstance(r.get("performerType"), list))
@@ -602,6 +606,19 @@ def _map_medication_request(r: Dict) -> List[Tuple[str, str, Dict]]:
     return [(EventType.MEDICATION_CHANGE.value, ts, details)]
 
 
+_LUNG_SITE = re.compile(r"\blung|pulmonary|\blobe\b|\b(?:RUL|RML|RLL|LUL|LLL)\b|lingula|bronch\w*|transthoracic|"
+                        r"\bEBUS\b|폐|[우좌][상중하]엽|기관지", re.I)
+
+
+def biopsy_regions(text: str) -> List[str]:
+    """Where tissue was (or will be) sampled, from the procedure wording; [] when it does not say."""
+    from .radiology import expand_regions, regions_in
+    found = set(regions_in(text or ""))
+    if _LUNG_SITE.search(text or ""):
+        found |= {"lung", "chest"}
+    return expand_regions(found) if found else []
+
+
 def _map_procedure(r: Dict) -> List[Tuple[str, str, Dict]]:
     ts = _first(r.get("performedDateTime"), (r.get("performedPeriod") or {}).get("end"))
     text = _concept_text(r.get("code")).lower()
@@ -619,7 +636,12 @@ def _map_procedure(r: Dict) -> List[Tuple[str, str, Dict]]:
         etype = EventType.BIOPSY_RESULT.value
     else:
         return []
-    return [(etype, ts, {"procedure": _concept_text(r.get("code")), "mapping": [f"Procedure→{etype}"]})]
+    details = {"procedure": _concept_text(r.get("code")), "mapping": [f"Procedure→{etype}"]}
+    if etype in (EventType.BIOPSY_RESULT.value, EventType.BREAST_BIOPSY.value):
+        sites = biopsy_regions(_concept_text(r.get("code")) + " " + " ".join(_concept_text(b) for b in r.get("bodySite", [])))
+        if sites:
+            details["body_regions"] = sites
+    return [(etype, ts, details)]
 
 
 def note_text(r: Dict) -> str:

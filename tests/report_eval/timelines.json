@@ -1,0 +1,1577 @@
+[
+ {
+  "id": "T01",
+  "patient": {
+   "age": 62,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-01-15",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-01-15",
+    "category": "RAD",
+    "title": "CT Chest with contrast",
+    "text": "IMPRESSION: 1. 7 mm solid nodule in the right upper lobe (series 3, image 42), new compared with no prior. 2. No mediastinal lymphadenopathy. Patient is a former heavy smoker (high risk). Recommend follow-up non-contrast CT chest in 6-12 months per Fleischner 2017."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-06-14",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen and pelvis with contrast (RLQ pain)"
+   },
+   {
+    "type": "report",
+    "date": "2025-06-14",
+    "category": "RAD",
+    "title": "CT Abdomen/Pelvis",
+    "text": "IMPRESSION: Acute uncomplicated appendicitis. Lung bases clear."
+   }
+  ],
+  "evaluation_date": "2026-03-31",
+  "expected": {
+   "R003": "missed",
+   "R030": "missed"
+  },
+  "rationale": "Chest CT recommended within 12 months; only an abdominal CT (wrong region; lung bases only) was done. Day 440 is past 12 months plus grace."
+ },
+ {
+  "id": "T02",
+  "patient": {
+   "age": 58,
+   "sex": "female",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-03-03",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest without contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-03-03",
+    "category": "RAD",
+    "title": "CT Chest without contrast",
+    "text": "IMPRESSION: 11 mm solid, spiculated nodule in the left upper lobe. In a high-risk patient, recommend PET/CT or tissue sampling per Fleischner 2017."
+   },
+   {
+    "type": "referral",
+    "date": "2025-03-08",
+    "description": "Referral to pulmonology"
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2025-04-02",
+    "description": "CT-guided percutaneous biopsy, left upper lobe nodule"
+   }
+  ],
+  "evaluation_date": "2025-05-02",
+  "expected": {
+   "R003": "done"
+  },
+  "rationale": "Nodule >8 mm; tissue sampling at day 30 closes the Fleischner loop within 3 months. No specific CT/MR/US/XR recommendation, so no R030-R033."
+ },
+ {
+  "id": "T03",
+  "patient": {
+   "age": 70,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-02-10",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest with contrast (chronic cough)"
+   },
+   {
+    "type": "report",
+    "date": "2025-02-10",
+    "category": "RAD",
+    "title": "CT Chest with contrast",
+    "text": "IMPRESSION: 9 mm solid nodule in the right lower lobe, indeterminate. Recommend non-contrast chest CT in 3 months per Fleischner guidelines."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-05-05",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest without contrast, low dose"
+   },
+   {
+    "type": "report",
+    "date": "2025-05-05",
+    "category": "RAD",
+    "title": "CT Chest without contrast",
+    "text": "IMPRESSION: The 9 mm right lower lobe solid nodule is unchanged in size and morphology compared with prior CT of 3 months ago. Further follow-up CT at 9-12 months suggested."
+   }
+  ],
+  "evaluation_date": "2025-06-10",
+  "expected": {
+   "R003": "done",
+   "R030": "done"
+  },
+  "rationale": "3-month CT chest done at day 84; its report documents stability. Within 3 months (R003) and within 3 months plus grace (R030)."
+ },
+ {
+  "id": "T04",
+  "patient": {
+   "age": 64,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-04-01",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-04-01",
+    "category": "RAD",
+    "title": "CT Chest with contrast",
+    "text": "IMPRESSION: 14 mm part-solid nodule in the right upper lobe with a 4 mm solid component. Recommend follow-up CT chest in 3 months to assess persistence."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-06-20",
+    "modality": "DX",
+    "body_part": "CHEST",
+    "description": "Chest X-ray PA and lateral"
+   },
+   {
+    "type": "report",
+    "date": "2025-06-20",
+    "category": "RAD",
+    "title": "Chest radiograph PA/Lateral",
+    "text": "IMPRESSION: No acute cardiopulmonary process. The known right upper lobe subsolid nodule is not radiographically visible."
+   }
+  ],
+  "evaluation_date": "2025-10-18",
+  "expected": {
+   "R003": "missed",
+   "R030": "missed"
+  },
+  "rationale": "CT required; a chest radiograph cannot assess a part-solid nodule. Part-solid: 6-month upper bound passed; CT recommended at 3 months plus grace passed."
+ },
+ {
+  "id": "T05",
+  "patient": {
+   "age": 55,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-06-02",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "흉부 CT 조영증강"
+   },
+   {
+    "type": "report",
+    "date": "2025-06-02",
+    "category": "RAD",
+    "title": "흉부 CT",
+    "text": "결론: 우상엽에 8 mm 크기의 순수 간유리 결절이 있음. 6-12개월 후 흉부 CT 추적검사를 권고함. 종격동 림프절 비대 없음."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-09-10",
+    "modality": "US",
+    "body_part": "ABDOMEN",
+    "description": "복부 초음파 (건강검진)"
+   },
+   {
+    "type": "report",
+    "date": "2025-09-10",
+    "category": "RAD",
+    "title": "복부 초음파",
+    "text": "결론: 경도의 지방간. 그 외 특이 소견 없음."
+   }
+  ],
+  "evaluation_date": "2026-01-28",
+  "expected": {
+   "R003": "pending",
+   "R030": "pending"
+  },
+  "rationale": "Pure GGN >=6 mm: CT within 12 months. Abdominal ultrasound is irrelevant. Day 240 is before the 12-month deadline."
+ },
+ {
+  "id": "T06",
+  "patient": {
+   "age": 66,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-01-20",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "Low-dose CT chest lung cancer screening"
+   },
+   {
+    "type": "report",
+    "date": "2025-01-20",
+    "category": "RAD",
+    "title": "LDCT Lung Cancer Screening",
+    "text": "IMPRESSION: 9 mm solid nodule, right upper lobe, new since baseline screening. Lung-RADS 4A. Recommend 3-month LDCT; PET/CT may be considered."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-04-15",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "Low-dose CT chest"
+   },
+   {
+    "type": "report",
+    "date": "2025-04-15",
+    "category": "RAD",
+    "title": "LDCT Chest",
+    "text": "IMPRESSION: Right upper lobe nodule now 7 mm, decreased. Lung-RADS 3."
+   }
+  ],
+  "evaluation_date": "2025-04-30",
+  "expected": {
+   "R019": "done",
+   "R030": "done"
+  },
+  "rationale": "Recommended 3-month LDCT done at day 85."
+ },
+ {
+  "id": "T07",
+  "patient": {
+   "age": 71,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-05-12",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "Low-dose CT chest screening"
+   },
+   {
+    "type": "report",
+    "date": "2025-05-12",
+    "category": "RAD",
+    "title": "LDCT Lung Cancer Screening",
+    "text": "IMPRESSION: 12 mm part-solid nodule left lower lobe with 7 mm solid component. Lung-RADS 4A. Management per ACR Lung-RADS v2022."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-06-16",
+    "modality": "PT",
+    "body_part": "WHOLEBODY",
+    "description": "F-18 FDG PET/CT skull base to mid-thigh"
+   },
+   {
+    "type": "report",
+    "date": "2025-06-16",
+    "category": "RAD",
+    "title": "FDG PET/CT",
+    "text": "IMPRESSION: Left lower lobe nodule with low-grade FDG uptake (SUVmax 1.9). No FDG-avid nodal or distant disease."
+   }
+  ],
+  "evaluation_date": "2025-07-11",
+  "expected": {
+   "R019": "done"
+  },
+  "rationale": "Lung-RADS 4A allows 3-month LDCT or PET/CT; PET/CT done at day 35. No explicit specific-modality recommendation, so no R030."
+ },
+ {
+  "id": "T08",
+  "patient": {
+   "age": 69,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-07-07",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "Low-dose CT chest screening"
+   },
+   {
+    "type": "report",
+    "date": "2025-07-07",
+    "category": "RAD",
+    "title": "LDCT Lung Cancer Screening",
+    "text": "IMPRESSION: 18 mm spiculated solid nodule in the right upper lobe. Lung-RADS 4B. Further diagnostic work-up (PET/CT and/or tissue sampling) recommended."
+   },
+   {
+    "type": "referral",
+    "date": "2025-07-15",
+    "description": "Referral to pulmonology (lung nodule clinic)"
+   },
+   {
+    "type": "specialist_visit",
+    "date": "2025-07-28",
+    "description": "Pulmonology clinic visit"
+   }
+  ],
+  "evaluation_date": "2025-08-16",
+  "expected": {
+   "R020": "done"
+  },
+  "rationale": "Lung-RADS 4B work-up may be a specialist referral; referral at day 8 within 30 days."
+ },
+ {
+  "id": "T09",
+  "patient": {
+   "age": 61,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-08-04",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "Low-dose CT chest screening"
+   },
+   {
+    "type": "report",
+    "date": "2025-08-04",
+    "category": "RAD",
+    "title": "LDCT Lung Cancer Screening",
+    "text": "IMPRESSION: 1. 16 mm solid nodule in the left upper lobe, Lung-RADS 4B. Further work-up with PET/CT and/or tissue sampling recommended. 2. Moderate coronary artery calcification (S modifier)."
+   },
+   {
+    "type": "referral",
+    "date": "2025-08-10",
+    "description": "Referral to cardiology (coronary artery calcification)"
+   },
+   {
+    "type": "specialist_visit",
+    "date": "2025-08-22",
+    "description": "Cardiology clinic visit"
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-08-24",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen with contrast"
+   }
+  ],
+  "evaluation_date": "2025-09-23",
+  "expected": {
+   "R020": "missed"
+  },
+  "rationale": "Cardiology referral addresses the S-modifier, not the nodule; abdominal CT does not image the lung nodule. No valid work-up by day 30."
+ },
+ {
+  "id": "T10",
+  "patient": {
+   "age": 59,
+   "sex": "female",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2024-11-04",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "Low-dose CT chest screening"
+   },
+   {
+    "type": "report",
+    "date": "2024-11-04",
+    "category": "RAD",
+    "title": "LDCT Lung Cancer Screening",
+    "text": "IMPRESSION: 7 mm solid nodule in the right middle lobe, new. Lung-RADS 3. Recommend 6-month LDCT."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-07-07",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "Low-dose CT chest"
+   },
+   {
+    "type": "report",
+    "date": "2025-07-07",
+    "category": "RAD",
+    "title": "LDCT Chest",
+    "text": "IMPRESSION: Right middle lobe nodule stable at 7 mm. Lung-RADS 2."
+   }
+  ],
+  "evaluation_date": "2025-07-22",
+  "expected": {
+   "R034": "done_late",
+   "R030": "done_late"
+  },
+  "rationale": "6-month LDCT done at day 245, after 6 months plus 30-day grace."
+ },
+ {
+  "id": "T11",
+  "patient": {
+   "age": 63,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-06-16",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "Low-dose CT chest screening"
+   },
+   {
+    "type": "report",
+    "date": "2025-06-16",
+    "category": "RAD",
+    "title": "LDCT Lung Cancer Screening",
+    "text": "IMPRESSION: 7 mm solid nodule left lower lobe. Lung-RADS 3. Recommend 6-month LDCT."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-07-16",
+    "modality": "DX",
+    "body_part": "CHEST",
+    "description": "Chest X-ray PA"
+   },
+   {
+    "type": "report",
+    "date": "2025-07-16",
+    "category": "RAD",
+    "title": "Chest radiograph",
+    "text": "IMPRESSION: No acute cardiopulmonary abnormality."
+   }
+  ],
+  "evaluation_date": "2025-09-24",
+  "expected": {
+   "R034": "pending",
+   "R030": "pending"
+  },
+  "rationale": "A chest radiograph does not satisfy a 6-month LDCT; at day 100 the deadline has not passed."
+ },
+ {
+  "id": "T12",
+  "patient": {
+   "age": 45,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-03-24",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest with contrast (trauma)"
+   },
+   {
+    "type": "report",
+    "date": "2025-03-24",
+    "category": "RAD",
+    "title": "CT Chest with contrast",
+    "text": "IMPRESSION: 1. No acute traumatic injury. 2. 4 mm solid nodule in the left lower lobe; in a low-risk patient no routine follow-up is required per Fleischner 2017."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-10-10",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen with contrast"
+   },
+   {
+    "type": "referral",
+    "date": "2025-10-20",
+    "description": "Referral to gastroenterology"
+   }
+  ],
+  "evaluation_date": "2026-04-28",
+  "expected": {},
+  "rationale": "Solid nodule <6 mm in low-risk patient: no follow-up obligation. Later events irrelevant."
+ },
+ {
+  "id": "T13",
+  "patient": {
+   "age": 52,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-02-03",
+    "modality": "MG",
+    "body_part": "BREAST",
+    "description": "Diagnostic mammography, bilateral"
+   },
+   {
+    "type": "report",
+    "date": "2025-02-03",
+    "category": "RAD",
+    "title": "Diagnostic Mammogram",
+    "text": "IMPRESSION: 9 mm irregular mass with indistinct margins, left breast 2 o'clock. BI-RADS 4B: moderate suspicion for malignancy. Ultrasound-guided core needle biopsy recommended."
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2025-02-15",
+    "description": "Ultrasound-guided core needle biopsy, left breast 2 o'clock mass"
+   }
+  ],
+  "evaluation_date": "2025-03-05",
+  "expected": {
+   "R018": "done"
+  },
+  "rationale": "Tissue diagnosis at day 12, within 30 days."
+ },
+ {
+  "id": "T14",
+  "patient": {
+   "age": 47,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-03-10",
+    "modality": "MG",
+    "body_part": "BREAST",
+    "description": "Diagnostic mammography, right"
+   },
+   {
+    "type": "report",
+    "date": "2025-03-10",
+    "category": "RAD",
+    "title": "Diagnostic Mammogram",
+    "text": "IMPRESSION: New cluster of amorphous calcifications, right upper outer quadrant, 6 mm extent. BI-RADS 4A. Stereotactic biopsy recommended."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-03-20",
+    "modality": "US",
+    "body_part": "BREAST",
+    "description": "Breast ultrasound, right"
+   },
+   {
+    "type": "report",
+    "date": "2025-03-20",
+    "category": "RAD",
+    "title": "Breast Ultrasound",
+    "text": "IMPRESSION: No sonographic correlate for the calcifications."
+   }
+  ],
+  "evaluation_date": "2025-04-24",
+  "expected": {
+   "R018": "missed"
+  },
+  "rationale": "BI-RADS 4 requires tissue diagnosis; ultrasound alone does not close it. Past 30 days."
+ },
+ {
+  "id": "T15",
+  "patient": {
+   "age": 66,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-04-14",
+    "modality": "MG",
+    "body_part": "BREAST",
+    "description": "Screening mammography, bilateral"
+   },
+   {
+    "type": "report",
+    "date": "2025-04-14",
+    "category": "RAD",
+    "title": "Diagnostic Mammogram",
+    "text": "IMPRESSION: 2.1 cm spiculated mass with associated pleomorphic calcifications, right breast 10 o'clock. BI-RADS 5: highly suggestive of malignancy. Tissue sampling recommended."
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2025-05-29",
+    "description": "Ultrasound-guided core needle biopsy, right breast 10 o'clock"
+   }
+  ],
+  "evaluation_date": "2025-06-13",
+  "expected": {
+   "R018": "done_late"
+  },
+  "rationale": "Biopsy at day 45, after the 30-day target."
+ },
+ {
+  "id": "T16",
+  "patient": {
+   "age": 49,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-05-19",
+    "modality": "MG",
+    "body_part": "BREAST",
+    "description": "유방촬영술 양측"
+   },
+   {
+    "type": "report",
+    "date": "2025-05-19",
+    "category": "RAD",
+    "title": "유방촬영술",
+    "text": "결론: 좌측 유방 상외측에 1.2 cm 크기의 불규칙한 종괴. BI-RADS 범주 4. 조직검사가 필요함."
+   },
+   {
+    "type": "referral",
+    "date": "2025-05-26",
+    "description": "유방외과 의뢰"
+   },
+   {
+    "type": "specialist_visit",
+    "date": "2025-06-08",
+    "description": "유방외과 외래 진료"
+   }
+  ],
+  "evaluation_date": "2025-06-23",
+  "expected": {
+   "R018": "missed"
+  },
+  "rationale": "Referral and surgical visit do not provide tissue diagnosis; no biopsy by day 30."
+ },
+ {
+  "id": "T17",
+  "patient": {
+   "age": 58,
+   "sex": "female",
+   "smoking": "unknown",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-09-01",
+    "modality": "MG",
+    "body_part": "BREAST",
+    "description": "Diagnostic mammography, left"
+   },
+   {
+    "type": "report",
+    "date": "2025-09-01",
+    "category": "RAD",
+    "title": "Diagnostic Mammogram",
+    "text": "IMPRESSION: Irregular high-density mass 1.5 cm, left breast 6 o'clock. BI-RADS 4C. Biopsy recommended."
+   }
+  ],
+  "evaluation_date": "2025-09-21",
+  "expected": {
+   "R018": "pending"
+  },
+  "rationale": "No biopsy yet; day 20 is inside the 30-day window."
+ },
+ {
+  "id": "T18",
+  "patient": {
+   "age": 41,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2024-12-02",
+    "modality": "US",
+    "body_part": "BREAST",
+    "description": "Breast ultrasound, bilateral"
+   },
+   {
+    "type": "report",
+    "date": "2024-12-02",
+    "category": "RAD",
+    "title": "Breast Ultrasound",
+    "text": "IMPRESSION: 8 mm oval circumscribed hypoechoic mass, right breast 9 o'clock, likely fibroadenoma. BI-RADS 3: probably benign. Recommend short-interval follow-up breast ultrasound in 6 months."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-05-26",
+    "modality": "US",
+    "body_part": "BREAST",
+    "description": "Breast ultrasound, right"
+   },
+   {
+    "type": "report",
+    "date": "2025-05-26",
+    "category": "RAD",
+    "title": "Breast Ultrasound",
+    "text": "IMPRESSION: Right breast 9 o'clock mass stable. BI-RADS 3."
+   }
+  ],
+  "evaluation_date": "2025-06-20",
+  "expected": {
+   "R032": "done"
+  },
+  "rationale": "BI-RADS 3 does not open R018; radiologist-recommended 6-month ultrasound done at day 175."
+ },
+ {
+  "id": "T19",
+  "patient": {
+   "age": 57,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2024-08-05",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen and pelvis with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2024-08-05",
+    "category": "RAD",
+    "title": "CT Abdomen/Pelvis with contrast",
+    "text": "IMPRESSION: 1. 1.5 cm left adrenal nodule, 25 HU on unenhanced images, indeterminate. Recommend adrenal protocol CT in 12 months. 2. Colonic diverticulosis without diverticulitis."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-02-01",
+    "modality": "CT",
+    "body_part": "HEAD",
+    "description": "CT head without contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-02-01",
+    "category": "RAD",
+    "title": "CT Head",
+    "text": "IMPRESSION: No acute intracranial abnormality."
+   }
+  ],
+  "evaluation_date": "2025-10-09",
+  "expected": {
+   "R037": "missed",
+   "R030": "missed"
+  },
+  "rationale": "Head CT does not cover adrenals; 12 months plus grace passed with no adrenal imaging."
+ },
+ {
+  "id": "T20",
+  "patient": {
+   "age": 50,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-03-17",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-03-17",
+    "category": "RAD",
+    "title": "CT Abdomen with contrast",
+    "text": "IMPRESSION: 4.8 cm heterogeneous right adrenal mass. Malignancy cannot be excluded. Endocrine evaluation and specialist referral advised."
+   },
+   {
+    "type": "referral",
+    "date": "2025-03-27",
+    "description": "Referral to endocrinology (adrenal mass)"
+   }
+  ],
+  "evaluation_date": "2025-04-26",
+  "expected": {
+   "R038": "done"
+  },
+  "rationale": "Adrenal mass >=4 cm escalates to R038; referral at day 10 within 30 days."
+ },
+ {
+  "id": "T21",
+  "patient": {
+   "age": 63,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-02-24",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-02-24",
+    "category": "RAD",
+    "title": "CT Abdomen with contrast",
+    "text": "IMPRESSION: 3.2 cm solid enhancing mass in the lower pole of the left kidney (enhancement 45 HU), suspicious for renal cell carcinoma. Urology referral recommended."
+   },
+   {
+    "type": "referral",
+    "date": "2025-03-01",
+    "description": "Referral to nephrology (CKD stage 3)"
+   },
+   {
+    "type": "specialist_visit",
+    "date": "2025-03-15",
+    "description": "Nephrology clinic visit"
+   }
+  ],
+  "evaluation_date": "2025-04-05",
+  "expected": {
+   "R039": "missed"
+  },
+  "rationale": "Referral to nephrology for CKD is not a urology referral for the mass; no biopsy. Past 30 days."
+ },
+ {
+  "id": "T22",
+  "patient": {
+   "age": 72,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-04-07",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen and pelvis with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-04-07",
+    "category": "RAD",
+    "title": "CT Abdomen/Pelvis with contrast",
+    "text": "IMPRESSION: 2.4 cm enhancing solid right renal mass, suspicious for RCC. Recommend urology referral."
+   },
+   {
+    "type": "referral",
+    "date": "2025-05-02",
+    "description": "Referral to urology (renal mass)"
+   }
+  ],
+  "evaluation_date": "2025-06-06",
+  "expected": {
+   "R039": "done"
+  },
+  "rationale": "Rule is satisfied by a urology referral; referral placed at day 25 (patient never attended, but the rule tracks the referral)."
+ },
+ {
+  "id": "T23",
+  "patient": {
+   "age": 54,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2024-10-14",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen with and without contrast"
+   },
+   {
+    "type": "report",
+    "date": "2024-10-14",
+    "category": "RAD",
+    "title": "CT Abdomen with/without contrast",
+    "text": "IMPRESSION: 3.0 cm right renal cyst with multiple thin septa and minimally thickened smooth wall, Bosniak IIF (v2019). Recommend follow-up renal MRI in 6 months."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-03-13",
+    "modality": "US",
+    "body_part": "KIDNEY",
+    "description": "Renal ultrasound"
+   },
+   {
+    "type": "report",
+    "date": "2025-03-13",
+    "category": "RAD",
+    "title": "Renal Ultrasound",
+    "text": "IMPRESSION: Septated right renal cyst, unchanged in size."
+   }
+  ],
+  "evaluation_date": "2025-06-11",
+  "expected": {
+   "R040": "missed",
+   "R031": "missed"
+  },
+  "rationale": "Ultrasound is the wrong modality for Bosniak IIF surveillance and for an MRI recommendation; 6 months plus grace passed."
+ },
+ {
+  "id": "T24",
+  "patient": {
+   "age": 65,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2024-09-02",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "복부 CT 조영증강"
+   },
+   {
+    "type": "report",
+    "date": "2024-09-02",
+    "category": "RAD",
+    "title": "복부 CT",
+    "text": "결론: 췌장 체부에 1.8 cm 크기의 낭성 병변, 분지형 IPMN 가능성. 주췌관 확장이나 벽재결절 없음. 1년 후 MRI/MRCP 추적검사를 권고함."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-08-08",
+    "modality": "MR",
+    "body_part": "ABDOMEN",
+    "description": "췌장 MRI/MRCP"
+   },
+   {
+    "type": "report",
+    "date": "2025-08-08",
+    "category": "RAD",
+    "title": "MRCP",
+    "text": "결론: 췌장 체부 낭성 병변 1.8 cm으로 변화 없음."
+   }
+  ],
+  "evaluation_date": "2025-08-28",
+  "expected": {
+   "R041": "done",
+   "R031": "done"
+  },
+  "rationale": "1-year MRCP done at day 340."
+ },
+ {
+  "id": "T25",
+  "patient": {
+   "age": 68,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-06-09",
+    "modality": "MR",
+    "body_part": "ABDOMEN",
+    "description": "MRI abdomen with MRCP"
+   },
+   {
+    "type": "report",
+    "date": "2025-06-09",
+    "category": "RAD",
+    "title": "MRI/MRCP",
+    "text": "IMPRESSION: 2.8 cm cystic lesion in the pancreatic head with a 6 mm enhancing mural nodule; main pancreatic duct 8 mm. Worrisome features; EUS and pancreas specialist evaluation recommended."
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2025-06-29",
+    "description": "EUS-guided FNA, pancreatic head cyst"
+   }
+  ],
+  "evaluation_date": "2025-07-19",
+  "expected": {
+   "R042": "done"
+  },
+  "rationale": "EUS-FNA at day 20, within 30 days."
+ },
+ {
+  "id": "T26",
+  "patient": {
+   "age": 74,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-01-13",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT pancreas protocol"
+   },
+   {
+    "type": "report",
+    "date": "2025-01-13",
+    "category": "RAD",
+    "title": "CT Abdomen pancreas protocol",
+    "text": "IMPRESSION: 3.1 cm pancreatic tail cyst with an enhancing solid component. Recommend EUS / pancreatic surgery evaluation."
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2025-01-28",
+    "description": "Ultrasound-guided percutaneous liver biopsy (elevated transaminases, suspected autoimmune hepatitis)"
+   }
+  ],
+  "evaluation_date": "2025-02-27",
+  "expected": {
+   "R042": "missed"
+  },
+  "rationale": "Liver biopsy is a different organ; no EUS or pancreas specialist by day 30."
+ },
+ {
+  "id": "T27",
+  "patient": {
+   "age": 68,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-03-03",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-03-03",
+    "category": "RAD",
+    "title": "CT Chest with contrast",
+    "text": "IMPRESSION: 1. No pulmonary embolism. 2. 2.1 cm heterogeneous nodule in the right thyroid lobe. Recommend thyroid ultrasound."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-05-02",
+    "modality": "CT",
+    "body_part": "NECK",
+    "description": "CT neck soft tissue with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-05-02",
+    "category": "RAD",
+    "title": "CT Neck",
+    "text": "IMPRESSION: 2.1 cm right thyroid nodule as before. No cervical lymphadenopathy."
+   }
+  ],
+  "evaluation_date": "2025-07-11",
+  "expected": {
+   "R043": "missed",
+   "R032": "missed"
+  },
+  "rationale": "Thyroid ultrasound required; a neck CT is the wrong modality. Past 90 days (and any grace)."
+ },
+ {
+  "id": "T28",
+  "patient": {
+   "age": 60,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-05-05",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-05-05",
+    "category": "RAD",
+    "title": "CT Chest with contrast",
+    "text": "IMPRESSION: 1. No acute abnormality. 2. Incidental 8 mm hypodense left thyroid nodule without suspicious features; no further evaluation recommended per ACR."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-08-13",
+    "modality": "US",
+    "body_part": "ABDOMEN",
+    "description": "Abdominal ultrasound"
+   }
+  ],
+  "evaluation_date": "2025-11-21",
+  "expected": {},
+  "rationale": "Thyroid nodule <1.5 cm in a 60-year-old without suspicious features: no obligation."
+ },
+ {
+  "id": "T29",
+  "patient": {
+   "age": 44,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-07-14",
+    "modality": "US",
+    "body_part": "THYROID",
+    "description": "Thyroid ultrasound"
+   },
+   {
+    "type": "report",
+    "date": "2025-07-14",
+    "category": "RAD",
+    "title": "Thyroid Ultrasound",
+    "text": "IMPRESSION: 1.6 cm solid hypoechoic nodule in the left thyroid lobe with microcalcifications and irregular margins. ACR TI-RADS TR5. Recommend FNA."
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2025-08-04",
+    "description": "Ultrasound-guided FNA, left thyroid nodule"
+   }
+  ],
+  "evaluation_date": "2025-08-23",
+  "expected": {
+   "R036": "done"
+  },
+  "rationale": "FNA at day 21, within 30 days."
+ },
+ {
+  "id": "T30",
+  "patient": {
+   "age": 73,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2024-09-16",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2024-09-16",
+    "category": "RAD",
+    "title": "CT Abdomen with contrast",
+    "text": "IMPRESSION: Infrarenal abdominal aortic aneurysm measuring 4.2 cm in maximal diameter. Recommend surveillance ultrasound in 12 months."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-09-01",
+    "modality": "US",
+    "body_part": "ABDOMEN",
+    "description": "Abdominal aorta duplex ultrasound"
+   },
+   {
+    "type": "report",
+    "date": "2025-09-01",
+    "category": "RAD",
+    "title": "Aorta Ultrasound",
+    "text": "IMPRESSION: Infrarenal AAA 4.3 cm."
+   }
+  ],
+  "evaluation_date": "2025-09-21",
+  "expected": {
+   "R044": "done",
+   "R032": "done"
+  },
+  "rationale": "Annual surveillance ultrasound at day 350."
+ },
+ {
+  "id": "T31",
+  "patient": {
+   "age": 76,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-05-26",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen and pelvis with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-05-26",
+    "category": "RAD",
+    "title": "CT Abdomen/Pelvis",
+    "text": "IMPRESSION: 5.8 cm infrarenal abdominal aortic aneurysm without evidence of rupture or periaortic stranding. Vascular surgery referral recommended."
+   },
+   {
+    "type": "referral",
+    "date": "2025-06-15",
+    "description": "Referral to vascular surgery (AAA)"
+   }
+  ],
+  "evaluation_date": "2025-06-25",
+  "expected": {
+   "R045": "done_late"
+  },
+  "rationale": "AAA >=5.5 cm: vascular referral at day 20, after the 14-day target."
+ },
+ {
+  "id": "T32",
+  "patient": {
+   "age": 79,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-09-22",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen with contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-09-22",
+    "category": "RAD",
+    "title": "CT Abdomen with contrast",
+    "text": "IMPRESSION: Infrarenal abdominal aortic aneurysm measuring 5.2 cm, no rupture. Consider vascular surgery consultation."
+   }
+  ],
+  "evaluation_date": "2025-10-02",
+  "expected": {
+   "R045": "pending"
+  },
+  "rationale": "Female with AAA >=5.0 cm; no referral yet but day 10 is within 14 days."
+ },
+ {
+  "id": "T33",
+  "patient": {
+   "age": 48,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-08-11",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT pulmonary angiography"
+   },
+   {
+    "type": "report",
+    "date": "2025-08-11",
+    "category": "RAD",
+    "title": "CT Pulmonary Angiography",
+    "text": "IMPRESSION: Acute bilateral segmental and right lower lobe lobar pulmonary emboli. RV/LV ratio 1.1. Findings discussed by telephone with Dr. Kim (ED) at 14:20 on the date of the study."
+   }
+  ],
+  "evaluation_date": "2025-08-12",
+  "expected": {
+   "R035": "done"
+  },
+  "rationale": "Critical finding with documented clinician communication in the report."
+ },
+ {
+  "id": "T34",
+  "patient": {
+   "age": 29,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-08-25",
+    "modality": "DX",
+    "body_part": "CHEST",
+    "description": "Chest X-ray PA"
+   },
+   {
+    "type": "report",
+    "date": "2025-08-25",
+    "category": "RAD",
+    "title": "Chest radiograph",
+    "text": "IMPRESSION: Large right pneumothorax with leftward mediastinal shift."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-08-26",
+    "modality": "DX",
+    "body_part": "CHEST",
+    "description": "Chest X-ray portable after chest tube"
+   }
+  ],
+  "evaluation_date": "2025-08-26",
+  "expected": {
+   "R035": "missed"
+  },
+  "rationale": "Critical finding with no documented communication; the 1-hour window has passed. A later CXR is not communication."
+ },
+ {
+  "id": "T35",
+  "patient": {
+   "age": 61,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2025-04-21",
+    "category": "PAT",
+    "title": "Colon, sigmoid, colonoscopic biopsy",
+    "text": "DIAGNOSIS: Invasive adenocarcinoma, moderately differentiated."
+   },
+   {
+    "type": "referral",
+    "date": "2025-04-24",
+    "description": "Referral to colorectal surgery"
+   }
+  ],
+  "evaluation_date": "2025-05-01",
+  "expected": {
+   "R009": "done"
+  },
+  "rationale": "Abnormal pathology; specialist referral at day 3 within 5 days."
+ },
+ {
+  "id": "T36",
+  "patient": {
+   "age": 57,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2025-06-23",
+    "category": "PAT",
+    "title": "위, 내시경 생검",
+    "text": "진단: 선암, 중등도 분화 (위 체부 소만부)."
+   },
+   {
+    "type": "referral",
+    "date": "2025-07-05",
+    "description": "외과 의뢰 (위암)"
+   }
+  ],
+  "evaluation_date": "2025-07-13",
+  "expected": {
+   "R009": "done_late"
+  },
+  "rationale": "Specialist referral at day 12, after the 5-day target."
+ },
+ {
+  "id": "T37",
+  "patient": {
+   "age": 43,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2025-07-01",
+    "category": "PAT",
+    "title": "Stomach, antrum, endoscopic biopsy",
+    "text": "DIAGNOSIS: Mild chronic gastritis. Helicobacter pylori immunostain negative. No intestinal metaplasia or dysplasia."
+   },
+   {
+    "type": "referral",
+    "date": "2025-07-31",
+    "description": "Referral to dermatology"
+   }
+  ],
+  "evaluation_date": "2025-08-30",
+  "expected": {},
+  "rationale": "Benign pathology: no obligation."
+ },
+ {
+  "id": "T38",
+  "patient": {
+   "age": 68,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-02-17",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest without contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-02-17",
+    "category": "RAD",
+    "title": "CT Chest without contrast",
+    "text": "IMPRESSION: Left upper lobe solid nodule has grown from 6 mm to 10 mm since CT 6 months ago. Interval growth is concerning for malignancy; recommend PET/CT or tissue sampling."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-04-18",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest without contrast"
+   },
+   {
+    "type": "report",
+    "date": "2025-04-18",
+    "category": "RAD",
+    "title": "CT Chest without contrast",
+    "text": "IMPRESSION: Left upper lobe nodule 10 mm, unchanged from prior."
+   }
+  ],
+  "evaluation_date": "2025-04-28",
+  "expected": {
+   "R046": "missed"
+  },
+  "rationale": "Growing nodule escalates to R046 (PET/CT, sampling or referral); another plain CT is not work-up. Past 30 days."
+ },
+ {
+  "id": "T39",
+  "patient": {
+   "age": 67,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-01-06",
+    "modality": "DX",
+    "body_part": "CHEST",
+    "description": "Chest X-ray PA and lateral"
+   },
+   {
+    "type": "report",
+    "date": "2025-01-06",
+    "category": "RAD",
+    "title": "Chest radiograph PA/Lateral",
+    "text": "IMPRESSION: Right lower lobe consolidation consistent with pneumonia. Recommend follow-up chest radiograph in 6-8 weeks to document resolution."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-02-20",
+    "modality": "DX",
+    "body_part": "ABDOMEN",
+    "description": "Abdominal X-ray supine"
+   },
+   {
+    "type": "report",
+    "date": "2025-02-20",
+    "category": "RAD",
+    "title": "Abdominal radiograph",
+    "text": "IMPRESSION: Nonobstructive bowel gas pattern."
+   }
+  ],
+  "evaluation_date": "2025-04-16",
+  "expected": {
+   "R033": "missed"
+  },
+  "rationale": "Abdominal radiograph is the wrong region; 8 weeks plus grace passed."
+ },
+ {
+  "id": "T40",
+  "patient": {
+   "age": 55,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-02-03",
+    "modality": "DX",
+    "body_part": "CHEST",
+    "description": "Chest X-ray PA and lateral"
+   },
+   {
+    "type": "report",
+    "date": "2025-02-03",
+    "category": "RAD",
+    "title": "Chest radiograph PA/Lateral",
+    "text": "IMPRESSION: Left lower lobe pneumonia. Recommend follow-up chest radiograph in 6 weeks to document resolution."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2025-03-17",
+    "modality": "DX",
+    "body_part": "CHEST",
+    "description": "Chest X-ray PA and lateral"
+   },
+   {
+    "type": "report",
+    "date": "2025-03-17",
+    "category": "RAD",
+    "title": "Chest radiograph PA/Lateral",
+    "text": "IMPRESSION: Interval resolution of left lower lobe consolidation."
+   }
+  ],
+  "evaluation_date": "2025-04-04",
+  "expected": {
+   "R033": "done"
+  },
+  "rationale": "Follow-up chest radiograph at day 42."
+ }
+]
