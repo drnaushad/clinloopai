@@ -103,15 +103,8 @@ def _patient_resource(patient_id: str) -> Dict[str, Any]:
 
 
 def _patient_ids(patient: Dict[str, Any]) -> List[str]:
-    """What a DICOM PatientID may be: the FHIR id and the MRN (or the configured identifier system)."""
-    import os
-    system = os.environ.get("CLINLOOP_PACS_ID_SYSTEM")
-    ids = [patient["id"]]
-    for i in patient.get("identifier", []):
-        is_mrn = any(c.get("code") == "MR" for c in (i.get("type") or {}).get("coding", []))
-        if i.get("value") and (is_mrn or (system and i.get("system") == system)):
-            ids.append(i["value"])
-    return list(dict.fromkeys(ids))
+    from .pacs_client import dicom_patient_ids
+    return dicom_patient_ids(patient)
 
 
 def _patient_names(patient: Dict[str, Any]) -> List[str]:
@@ -407,6 +400,30 @@ def patient_documents(patient_id: str, user: User = Depends(require_role("viewer
     if not re.fullmatch(FHIR_ID, patient_id):
         raise HTTPException(422, "Invalid patient id")
     return {"patient_id": patient_id, "documents": get_store().external_resource_list(patient_id)}
+
+
+@router.get("/imaging/scan/status", tags=["Imaging & Documents"])
+def image_scan_status(user: User = Depends(require_role("viewer"))):
+    """Automatic image scanning: on or off, which models may run, the last runs, and studies needing a person."""
+    from .imaging_scanner import status
+    return status(get_store())
+
+
+@router.post("/imaging/scan/run", tags=["Imaging & Documents"])
+def image_scan_run(user: User = Depends(require_role("admin"))):
+    """Run one scan now (admin). Same safeguards as the background scan."""
+    from .fhir_sync import client_from_env as fhir_from_env
+    from .imaging_scanner import enabled, scan_once
+    from .pacs_client import client_from_env as pacs_from_env
+    if not enabled():
+        raise HTTPException(409, "Image scanning is off (set CLINLOOP_IMAGE_SCAN=1)")
+    pacs = pacs_from_env()
+    if pacs is None:
+        raise HTTPException(409, "No PACS configured (set CLINLOOP_PACS_DICOMWEB)")
+    store = get_store()
+    store._audit(user.name, user.role, "image_scan_run", None, {})
+    store._db.commit()
+    return scan_once(store, pacs, fhir_from_env())
 
 
 @router.post("/pacs/check", tags=["Imaging & Documents"])

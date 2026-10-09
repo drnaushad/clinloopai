@@ -14,7 +14,7 @@ regulatory certificate, and the hospital's integration team.
 
 | | ClinLoop calls the product (pull) | The product sends results (push) |
 |---|---|---|
-| **When** | A person analyses an image on `imaging.html` | The hospital's integration engine forwards every result |
+| **When** | A person analyses an image on `imaging.html`, or automatic scanning sends every new PACS study ([`IMAGING.md`](IMAGING.md) §4a) | The hospital's integration engine forwards every result |
 | **How** | ClinLoop POSTs the DICOM file to the product's on-premise endpoint | `POST /api/v1/imaging/ai-results` with a FHIR Bundle of `Observation`s or the product's DICOM SR |
 | **Set up** | `CLINLOOP_IMAGING_MODELS_CONFIG=/config/imaging_models.json` | An admin API token for the integration engine |
 | **Best for** | A pilot, or products with a synchronous API | Production: every study, no manual step |
@@ -29,6 +29,7 @@ One entry per product (see the template):
 | `url` | The product's on-premise inference endpoint. ClinLoop POSTs `application/dicom` and expects `{"findings": [{"label", "score", "positive"?}]}`. If the product's API differs, put a small adapter in the integration engine. |
 | `token_env` | Name of the environment variable that holds the bearer token. Never the token itself. |
 | `modalities`, `body_regions` | The product runs only on matching images (intended use). |
+| `input` | `"instance"` (default): one DICOM file per request. `"series"`: the whole series in one `multipart/related` request, for CT and MRI products. |
 | `regulatory` | For example `MFDS approved (Class II), certificate no. …`. If empty, or if it says research use, the product's findings open no loops unless research AI is allowed. |
 | `threshold` | The vendor's operating point, used when the product sends a score without a positive/negative flag. Use the value from the product's validation, not 0.5. |
 | `label_map` | Vendor label → ClinLoop wording ("Nodule", "Pneumothorax", "Intracranial haemorrhage", …). The finding types ClinLoop compares with reports are listed in `imaging_fhir.AI_FINDINGS`. |

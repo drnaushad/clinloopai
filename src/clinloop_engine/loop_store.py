@@ -163,6 +163,27 @@ CREATE TABLE IF NOT EXISTS external_resources (
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_external_patient ON external_resources(patient_id);
+-- Automatic image scanning (imaging_scanner.py): one row per PACS study. No pixel data, no PACS PatientID.
+CREATE TABLE IF NOT EXISTS image_scan_studies (
+    study_uid TEXT PRIMARY KEY,
+    patient_id TEXT,                  -- FHIR patient id once matched
+    status TEXT NOT NULL,             -- scanned | no_model | unmatched | refused | failed
+    models TEXT,                      -- JSON: model names that ran
+    findings INTEGER DEFAULT 0,
+    detail TEXT,
+    attempts INTEGER DEFAULT 0,
+    first_seen TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS image_scan_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT NOT NULL,
+    ok INTEGER NOT NULL,
+    found INTEGER DEFAULT 0,
+    scanned INTEGER DEFAULT 0,
+    findings INTEGER DEFAULT 0,
+    error TEXT
+);
 CREATE TABLE IF NOT EXISTS audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts TEXT NOT NULL,
@@ -585,6 +606,58 @@ class LoopStore:
             if not ok:
                 self._audit(actor, "system", "ingest_failed", None, {"source": source, "error": error})
             self._db.commit()
+
+    # ── automatic image scanning ─────────────────────────────────────────────
+    def scan_study(self, study_uid: str) -> Optional[Dict]:
+        with self._lock:
+            r = self._db.execute("SELECT * FROM image_scan_studies WHERE study_uid=?", (study_uid,)).fetchone()
+        return dict(r) if r else None
+
+    def set_scan_study(self, study_uid: str, status: str, patient_id: Optional[str] = None,
+                       models: Optional[List[str]] = None, findings: int = 0, detail: str = "",
+                       now: Optional[datetime] = None) -> None:
+        ts = (now or utc_now()).isoformat()
+        with self._lock:
+            self._db.execute(
+                "INSERT INTO image_scan_studies (study_uid, patient_id, status, models, findings, detail, attempts, "
+                "first_seen, updated_at) VALUES (?,?,?,?,?,?,1,?,?) ON CONFLICT(study_uid) DO UPDATE SET "
+                "patient_id=COALESCE(excluded.patient_id, patient_id), status=excluded.status, models=excluded.models, "
+                "findings=excluded.findings, detail=excluded.detail, attempts=attempts+1, updated_at=excluded.updated_at",
+                (study_uid, patient_id, status, json.dumps(models or []), findings, detail[:500], ts, ts))
+            self._db.commit()
+
+    def record_scan_run(self, ok: bool, found: int = 0, scanned: int = 0, findings: int = 0,
+                        error: Optional[str] = None, now: Optional[datetime] = None) -> None:
+        with self._lock:
+            self._db.execute("INSERT INTO image_scan_runs (ts, ok, found, scanned, findings, error) VALUES (?,?,?,?,?,?)",
+                             ((now or utc_now()).isoformat(), int(ok), found, scanned, findings, error))
+            if not ok:
+                self._audit("image-scan", "system", "image_scan_failed", None, {"error": error})
+            self._db.commit()
+
+    def scan_status(self, max_silence_hours: float = 2.0, now: Optional[datetime] = None) -> Dict:
+        """Is the image scanner running? Kept apart from feed_status: a working scanner must never
+        make a dead FHIR feed look healthy."""
+        now = now or utc_now()
+        with self._lock:
+            last_ok = self._db.execute("SELECT ts FROM image_scan_runs WHERE ok=1 ORDER BY id DESC LIMIT 1").fetchone()
+            recent = [dict(r) for r in self._db.execute("SELECT * FROM image_scan_runs ORDER BY id DESC LIMIT 5")]
+            counts = {r["status"]: r["n"] for r in self._db.execute(
+                "SELECT status, COUNT(*) AS n FROM image_scan_studies GROUP BY status")}
+            problems = [dict(r) for r in self._db.execute(
+                "SELECT study_uid, status, detail, attempts, updated_at FROM image_scan_studies "
+                "WHERE status IN ('failed','refused','unmatched') ORDER BY updated_at DESC LIMIT 20")]
+        hours = round((now - datetime.fromisoformat(last_ok["ts"])).total_seconds() / 3600, 2) if last_ok else None
+        if not recent:
+            status = "NEVER"
+        elif len(recent) >= 3 and not any(r["ok"] for r in recent[:3]):
+            status = "FAILING"
+        elif hours is None or hours > max_silence_hours:
+            status = "STALE"
+        else:
+            status = "OK"
+        return {"status": status, "last_success": last_ok["ts"] if last_ok else None, "hours_since_success": hours,
+                "studies": counts, "recent_runs": recent, "problems": problems}
 
     def get_cursor(self, source: str) -> Optional[str]:
         with self._lock:

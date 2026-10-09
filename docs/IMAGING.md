@@ -6,6 +6,7 @@ ClinLoop covers each of them.
 | Capability | What it answers | How |
 |---|---|---|
 | **PACS study labels** | "Was the follow-up adrenal CT actually done?" | Reads study labels (modality, body part, description, date, status) from the PACS over DICOMweb QIDO-RS. Never reads pixels. |
+| **Automatic scanning** | "Every new chest X-ray and head CT is read by our approved AI, without anyone uploading it." | Off by default. Finds new PACS studies, sends those an approved product applies to, and files the findings (section 4a). |
 | **Imaging AI as second reader** | "The AI saw a nodule. Did the radiologist address it?" | Compares each positive AI finding with the report for the same study. If the report never mentions it, a radiologist-review loop opens (R047). |
 | **Outside reports** | "The patient brought a CT report from another hospital." | Reads PDF text, or runs OCR (Tesseract, Korean and English) on scans and photos. A person checks and corrects the text. The report then goes through the same report-reading logic. |
 | **DICOM analysis** | "Is this image safe to file, and does an imaging model flag anything?" | Header safety checks, a study record, and the hospital's imaging models. Any finding is only a request for a second look. |
@@ -163,6 +164,85 @@ for sites without DICOMweb.
 
 Approved vendor products: see [`VENDOR_IMAGING_AI.md`](VENDOR_IMAGING_AI.md) and the placeholder
 template [`imaging_models.example.json`](imaging_models.example.json).
+
+## 4a. Automatic scanning of new PACS studies (off by default)
+
+When the hospital turns it on, ClinLoop finds new studies in the PACS and sends each one to the
+approved imaging-AI products that apply to it. Nobody uploads anything. Findings go through the same
+second-reader comparison as before: when the radiologist's report arrives and does not address a
+finding, a radiologist-review loop opens (R047, 1 day for critical findings, 7 days otherwise).
+
+```
+CLINLOOP_IMAGE_SCAN=1                       # turn it on (needs CLINLOOP_PACS_DICOMWEB)
+CLINLOOP_IMAGING_MODELS_CONFIG=/config/imaging_models.json   # the approved products
+CLINLOOP_FHIR_BASE=…                        # to match each study's PatientID to one patient
+CLINLOOP_IMAGE_SCAN_MINUTES=10              # interval
+CLINLOOP_IMAGE_SCAN_LOOKBACK_DAYS=2         # how far back to look for new studies
+CLINLOOP_IMAGE_SCAN_MODALITIES=CR,DX,MG,CT,MR,US
+CLINLOOP_IMAGE_SCAN_MAX_STUDIES=50          # studies analysed per run; the rest wait for the next run
+CLINLOOP_IMAGE_SCAN_SETTLE_MINUTES=20       # leave a study this long after acquisition (images still arriving)
+CLINLOOP_IMAGE_SCAN_MAX_IMAGES=4            # images per series sent to a single-image product
+CLINLOOP_IMAGE_SCAN_MAX_SERIES_MB=600       # largest series sent to a whole-series product
+CLINLOOP_IMAGE_SCAN_RESEARCH=1              # also run research models, in shadow mode (default off)
+```
+
+**What happens to each study**
+
+1. **Found.** The PACS is asked (QIDO-RS) for studies acquired in the look-back window, by modality.
+2. **Matched to one patient.** The study's PatientID must match the MRN (or the identifier system in
+   `CLINLOOP_PACS_ID_SYSTEM`) of exactly one patient on the FHIR server. No match, or two patients:
+   the study is not analysed and is listed for a person to check. A patient is never guessed.
+3. **Checked against the products.** Only series that an enabled product applies to (modality and
+   body part) are considered. When the PACS does not return the body part in its series list, one
+   image header is read (metadata, no pixels). Localizers, dose reports, structured reports and
+   screenshots are skipped. If no product applies, no image is retrieved.
+4. **Retrieved and checked.** Images are retrieved over WADO-RS, held in memory and never stored.
+   Every image's PatientID is checked. One image of another patient stops the whole study:
+   nothing is sent and nothing is filed.
+5. **Analysed.**
+   - **Single-image products** (chest X-ray, mammography) get each view, up to the image limit.
+   - **Whole-series products** (CT, MRI; `"input": "series"` in the configuration) get every image
+     of the series in one `multipart/related` request.
+6. **Filed.** The study (`ImagingStudy`) and each positive finding (`Observation`) are filed, and
+   the patient is re-checked.
+
+**Only approved products run automatically.** A product whose regulatory field is empty or says
+research use is not run, unless `CLINLOOP_IMAGE_SCAN_RESEARCH=1` is set for shadow-mode evaluation.
+Even then its findings open no loops unless `CLINLOOP_IMAGING_RESEARCH_AI=1`.
+
+**The ledger.** Every study is recorded once, without pixels and without the PACS PatientID:
+
+| Status | Meaning | Retried? |
+|---|---|---|
+| `scanned` | Analysed; findings filed | No |
+| `no_model` | No enabled product applies | No |
+| `unmatched` | PatientID matched no patient, or more than one | Yes, up to 5 times |
+| `refused` | A safety check failed (wrong patient, mixed series) | No: a person checks it |
+| `failed` | The PACS or the product failed, or no product produced a result | Yes, up to 5 times |
+
+A study no product could read is recorded as `failed`, never as "scanned, nothing found".
+
+**Monitoring.** `GET /api/v1/imaging/scan/status` and the panel on `imaging.html` show whether
+scanning is on, the products that may run, the last runs, the counts by status and the studies that
+need a person. Admins can run a scan now (`POST /api/v1/imaging/scan/run`). Scan runs are monitored
+apart from the FHIR data feed, so a working image scanner can never make a dead record feed look
+healthy. From the command line: `python -m src.clinloop_engine.imaging_scanner --once`.
+
+**Tested against a real DICOMweb server.** Orthanc 1.12 with its DICOMweb plugin, synthetic
+studies and a stand-in vendor endpoint were used.
+- **Chest X-ray:** one image was sent to the X-ray product with its token.
+- **Head CT:** all 6 slices went to the CT product in one request.
+- **Other studies:**
+  - the unknown patient was held back;
+  - the knee MRI was skipped without retrieving images;
+  - a study acquired minutes earlier waited for the next run.
+- **Result:** both findings were absent from the stand-in reports, so two radiologist-review
+  loops opened. A second run re-sent nothing.
+
+This run found two defects that the unit tests had missed; both are fixed and tested:
+- Orthanc ignored the comma-separated field list, so no study description came back.
+- Orthanc does not return the body part in series queries, so studies would have been skipped as
+  "no model applies".
 
 ## 5. CT organ measurement (3-D, research use)
 

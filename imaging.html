@@ -182,6 +182,13 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       </div>
     </section>
 
+    <section class="card pane" aria-labelledby="h-scan" style="margin-top:16px;">
+      <div class="loop-head"><h2 id="h-scan" data-i18n="scanTitle"></h2>
+        <button type="button" id="scan-run" hidden data-i18n="scanRun"></button></div>
+      <p class="sub" data-i18n="scanHelp"></p>
+      <div id="scan-status" class="result" aria-live="polite"></div>
+    </section>
+
     <div class="grid2">
       <section class="card pane" aria-labelledby="h-report">
         <h2 id="h-report" data-i18n="reportTitle"></h2>
@@ -263,6 +270,17 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       ctFindings: '측정 소견 (재검토 요청)', noCtFindings: '기준을 넘는 측정값 없음', borderline: '경계값', covered: (r) => `스캔에 포함된 부위: ${r.join(', ')} (정보 제공용, 루프를 닫지 않음)`,
       vlmText: 'AI 생성 설명 (검증되지 않음, 저장되지 않음)', dropped: (n) => `어휘 밖이거나 부위가 맞지 않아 제외한 응답 ${n}개`, unparsed: '모델 응답을 해석할 수 없어 소견을 등록하지 않았습니다.',
       graphLink: '환자 지식 그래프 보기 →',
+      scanTitle: 'PACS 자동 영상 분석', scanRun: '지금 실행',
+      scanHelp: '새 검사를 PACS에서 찾아, 승인된 영상 AI 제품이 적용되는 검사만 자동으로 분석합니다. 환자는 MRN이 정확히 한 명과 일치할 때만 연결하며, 영상마다 환자 ID를 확인합니다. 화소 데이터는 저장되지 않습니다. 판독문이 AI 소견을 다루지 않으면 영상의학과 재검토 요청(R047)이 생깁니다.',
+      scanOff: '꺼짐: 병원이 CLINLOOP_IMAGE_SCAN=1과 PACS(CLINLOOP_PACS_DICOMWEB)를 설정해야 켜집니다.',
+      scanNoPacs: 'PACS가 설정되지 않았습니다 (CLINLOOP_PACS_DICOMWEB).',
+      scanState: { OK: '정상 실행 중', STALE: '최근 실행 없음', FAILING: '연속 실패', NEVER: '아직 실행 안 됨' },
+      scanEvery: (m, mods, d) => `${m}분마다 · ${mods.join(', ')} · 최근 ${d}일 검사`,
+      scanLast: (ts, h) => `마지막 성공 ${ts} (${h}시간 전)`,
+      scanModels: '자동 실행 모델', scanNoModels: '자동으로 실행할 수 있는 승인 모델이 없습니다.', scanSeries: '시리즈 전체', scanImage: '영상별',
+      scanNotRun: '자동 실행 제외', scanCounts: '검사 처리 현황',
+      scanStatusName: { scanned: '분석함', no_model: '적용 모델 없음', unmatched: '환자 불일치', refused: '안전 점검 거부', failed: '실패(재시도)' },
+      scanProblems: '확인이 필요한 검사', scanResult: (r) => r.ok ? `발견 ${r.found} · 분석 ${r.scanned} · 소견 ${r.findings} · 대기 ${r.waiting}` : `실패: ${r.error}`,
       needPatient: '환자 ID를 입력하세요.', working: '처리 중…', footer: 'ClinLoop AI · AI는 다시 보도록 요청할 뿐, 판단은 영상의학과 전문의가 합니다.',
     },
     en: {
@@ -288,6 +306,17 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       ctFindings: 'Measurement findings (review requests)', noCtFindings: 'No measurement above its limit', borderline: 'borderline', covered: (r) => `Regions in the scan: ${r.join(', ')} (information only: closes no loop)`,
       vlmText: 'AI-generated description (unverified, not stored)', dropped: (n) => `${n} answer(s) dropped: outside the vocabulary or the wrong body region`, unparsed: 'The model\'s answer could not be read: no findings were filed.',
       graphLink: 'Open the patient knowledge graph →',
+      scanTitle: 'Automatic scanning from the PACS', scanRun: 'Run now',
+      scanHelp: 'Finds new studies in the PACS and analyses only those an approved imaging-AI product applies to. A study is linked to a patient only when its MRN matches exactly one patient, and every image\'s patient ID is checked. Pixel data is never stored. A finding the report does not address asks a radiologist to look again (R047).',
+      scanOff: 'Off: the hospital turns it on with CLINLOOP_IMAGE_SCAN=1 and a PACS (CLINLOOP_PACS_DICOMWEB).',
+      scanNoPacs: 'No PACS configured (CLINLOOP_PACS_DICOMWEB).',
+      scanState: { OK: 'Running', STALE: 'No recent run', FAILING: 'Failing', NEVER: 'Not run yet' },
+      scanEvery: (m, mods, d) => `Every ${m} min · ${mods.join(', ')} · studies from the last ${d} day(s)`,
+      scanLast: (ts, h) => `Last success ${ts} (${h} h ago)`,
+      scanModels: 'Models that run automatically', scanNoModels: 'No approved model can run automatically.', scanSeries: 'whole series', scanImage: 'per image',
+      scanNotRun: 'Not run automatically', scanCounts: 'Studies so far',
+      scanStatusName: { scanned: 'analysed', no_model: 'no model applies', unmatched: 'patient not matched', refused: 'refused by safety check', failed: 'failed (will retry)' },
+      scanProblems: 'Studies that need a person', scanResult: (r) => r.ok ? `found ${r.found} · analysed ${r.scanned} · findings ${r.findings} · waiting ${r.waiting}` : `Failed: ${r.error}`,
       needPatient: 'Enter a patient ID.', working: 'Working…', footer: 'ClinLoop AI · The AI asks for a second look; the radiologist decides.',
     },
   };
@@ -305,6 +334,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     $('btn-lang').textContent = lang === 'ko' ? 'English' : '한국어';
     document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t()[el.dataset.i18n]; });
     if (state.models) $('services').textContent = t().services(state.models);
+    if (state.scan) $('scan-status').innerHTML = scanHtml(state.scan);
   }
   function setStatus(msg, isError = false) { $('status').textContent = msg; $('status').classList.toggle('error', isError); }
   async function api(path, opts = {}) {
@@ -402,6 +432,38 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     } catch (err) { setStatus(err.message, true); }
   });
 
+  // ── Automatic scanning ──
+  function scanHtml(s) {
+    if (!s) return '';
+    if (!s.enabled) return `<div class="qa">${esc(t().scanOff)}</div>`;
+    if (!s.pacs_configured) return `<div class="qa warning">${esc(t().scanNoPacs)}</div>`;
+    const level = { OK: 'ok', STALE: 'moderate', FAILING: 'critical', NEVER: 'moderate' }[s.status] || 'moderate';
+    const models = s.models.length ? `<ul class="sub">${s.models.map((m) => `<li>${esc(m.name)} · ${esc(m.regulatory)} · ${esc(m.input === 'series' ? t().scanSeries : t().scanImage)} · ${esc((m.modalities || []).join('/'))}</li>`).join('')}</ul>`
+      : `<div class="qa warning">${esc(t().scanNoModels)}</div>`;
+    const notRun = (s.models_not_run || []).length ? `<p class="sub"><b>${esc(t().scanNotRun)}</b></p><ul class="sub">${s.models_not_run.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '';
+    const counts = Object.entries(s.studies || {}).map(([k, n]) => `${esc(t().scanStatusName[k] || k)} ${n}`).join(' · ');
+    const problems = (s.problems || []).length ? `<p class="sub"><b>${esc(t().scanProblems)}</b></p>` +
+      s.problems.map((p) => `<div class="qa ${p.status === 'failed' ? 'warning' : ''}"><b>${esc(t().scanStatusName[p.status] || p.status)}</b> · ${esc(p.detail)} <span class="sub">(${esc(p.study_uid)})</span></div>`).join('') : '';
+    return `<div class="loop-head"><span class="chip ${level}">${esc(t().scanState[s.status] || s.status)}</span>
+        <span class="sub">${esc(t().scanEvery(s.interval_minutes, s.modalities, s.lookback_days))}</span></div>
+      ${s.last_success ? `<p class="sub">${esc(t().scanLast(s.last_success.slice(0, 16).replace('T', ' '), s.hours_since_success))}</p>` : ''}
+      <p class="sub" style="margin-top:8px;"><b>${esc(t().scanModels)}</b></p>${models}${notRun}
+      ${counts ? `<p class="sub"><b>${esc(t().scanCounts)}</b>: ${counts}</p>` : ''}${problems}`;
+  }
+  async function loadScan() {
+    try { state.scan = await api('/api/v1/imaging/scan/status'); } catch (err) { state.scan = null; $('scan-status').textContent = err.message; return; }
+    $('scan-status').innerHTML = scanHtml(state.scan);
+    $('scan-run').hidden = !(state.user && state.user.role === 'admin' && state.scan.enabled && state.scan.pacs_configured);
+  }
+  $('scan-run').addEventListener('click', async () => {
+    try {
+      setStatus(t().working);
+      const r = await api('/api/v1/imaging/scan/run', { method: 'POST' });
+      setStatus(t().scanResult(r), !r.ok);
+      await loadScan();
+    } catch (err) { setStatus(err.message, true); }
+  });
+
   // ── CT series ──
   $('ct-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -438,6 +500,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       store.set('clinloop_api', state.base); store.set('clinloop_token', state.token);
       $('services').textContent = t().services(state.models);
       $('app').hidden = false;
+      await loadScan();
       setStatus(`${state.user.user} (${state.user.role})`);
     } catch (err) { $('app').hidden = true; setStatus(err.message, true); }
   });

@@ -441,6 +441,10 @@ See [`docs/IMAGING.md`](docs/IMAGING.md). In short:
 
 - **PACS** (`CLINLOOP_PACS_DICOMWEB`): reads study labels only (modality, body part, date) over
   DICOMweb. "Was the follow-up adrenal CT done?" is then answered from the PACS itself.
+- **Automatic image scanning** (`CLINLOOP_IMAGE_SCAN=1`, off by default): new PACS studies are sent
+  to the approved imaging-AI products that apply to them. Each study is matched to exactly one
+  patient, every image's patient ID is checked, and pixels are never stored. See
+  [`docs/IMAGING.md`](docs/IMAGING.md) §4a.
 - **Imaging AI as second reader** (`/api/v1/imaging/ai-results`, R047): a finding from an approved
   product that the report does not address asks a radiologist to look again. ClinLoop never
   diagnoses.
