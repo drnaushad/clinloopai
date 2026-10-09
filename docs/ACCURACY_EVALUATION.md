@@ -1,21 +1,33 @@
 # How accurately does ClinLoop read reports? A blind evaluation
 
 **Question:** given a radiology or pathology report, does ClinLoop open the follow-up obligations a careful
-specialist would, with the right deadline, and stay quiet when nothing is needed?
+specialist would, with the right deadline, and stay quiet when nothing is needed? When follow-up
+happens, does it close the right obligation, and only that one?
 
-**Short answer, on synthetic reports:**
-- On a final set of 100 cases written blind and scored once before any fix, every report that needed
-  follow-up raised at least one correct obligation in 97% of cases.
-- No normal or benign report raised an alert.
-- Deadlines were inside the specialist's window in 97% of cases.
+**Short answer.** The best guides are the first-pass scores on sets nobody had looked at.
 
-These are synthetic reports from one writer. This is software verification, not clinical validation (see
-"Limits" below).
+- **Short impressions** (clean, one-paragraph): **97%** of reports handled correctly.
+- **Full, real-style reports** (sections, addenda, Korean-English shorthand, scanned-text noise):
+  - **80%** on the first such set;
+  - **87.5%** on a second, untouched set after a round of fixes;
+  - no false alarms on 96% of normal reports.
+- **Follow-up tracking** over patient timelines:
+  - about **85%** of findings got the correct status (done, done late, pending, missed);
+  - after the fixes, **0 false closures**. A follow-up is never shown as done when it was not.
+
+Every defect found was fixed and is covered by a test. All 450 cases and 60 timelines now pass, but
+those are no longer unbiased numbers. The steady gap between first-pass scores and after-fix scores
+is the honest message: real report wording has a long tail. These are synthetic reports, so this is
+software verification, not clinical validation (see "Limits" below).
 
 ## Method
 
-1. **Blind cases.** A case writer, acting as radiologist and pathologist, wrote 270 report impressions with
-   expected rules and deadline windows. The writer saw only the rule catalogue
+1. **Blind cases.** Three independent case writers, acting as radiologists and pathologists, wrote:
+   - 270 short report impressions;
+   - 180 full real-style reports;
+   - 60 patient timelines.
+
+   Each case has its expected rules and deadline windows. The writers saw only the rule catalogue
    ([`tests/report_eval/rule_catalog.json`](../tests/report_eval/rule_catalog.json)), never the code.
    - **Coverage:** CT, CTA, MRI, X-ray, ultrasound, mammography, LDCT screening, PET/CT and pathology.
    - **Mix:** 30% Korean; 37% need no follow-up.
@@ -40,18 +52,94 @@ python tests/report_eval/run_eval.py tests/report_eval/cases.json confirm --show
 
 ## Results
 
-| Set (scored before fixing it) | Equivalent | ≥1 correct obligation | No alert when none needed | Deadline in window |
-|---|---|---|---|---|
-| Development, baseline | n/a | 81.1% | 96.9% | 97.7% |
-| Held-out, after development fixes | 82.4% | 81.5% | 80.6% | 97.7% |
-| **Confirmation, after held-out fixes** | **97.0%** | **96.8%** | **100%** | **96.7%** |
-| All 270, after every fix (not an unbiased number) | 100% | 98.8% | 100% | 98.2% |
+### Reports: does the right obligation open?
 
-**The gap between development and held-out matters.** The development fixes overfitted at first: they
-reached 100% on development, but only 82% on new cases. The confirmation set exists to measure honestly
-after the second round of fixes.
+| Set (each scored once, before it was used for fixing) | Cases | Equivalent | ≥1 correct obligation | No alert when none needed | Deadline in window |
+|---|---|---|---|---|---|
+| Development, baseline | 85 | n/a | 81.1% | 96.9% | 97.7% |
+| Held-out (clean impressions) | 85 | 82.4% | 81.5% | 80.6% | 97.7% |
+| Confirmation (clean impressions) | 100 | **97.0%** | **96.8%** | **100%** | **96.7%** |
+| Real-style full reports (new writer) | 100 | **80.0%** | 81.0% | 81.1% | 98.0% |
+| Real-style confirmation (third writer) | 80 | **87.5%** | 83.0% | 96.3% | 86.4% |
+| All 450 after every fix (not unbiased) | 450 | 99.8% | 97.5% | 100% | 98.6% |
+
+**Why the real-style sets matter.** Every rise in score came from fixing what one set revealed, and the
+next untouched set always found new wording. Clean impressions are not what hospitals send. Full
+reports carry:
+- findings in the FINDINGS section only;
+- addenda that change or withdraw advice;
+- Korean endings (권함, 요망) and Korean-English shorthand;
+- quoted guideline thresholds and prior sizes;
+- scanning errors ("1O rnm s0lid").
+
+### Follow-up: does the right event close the right obligation?
+
+Patient timelines: a first report, then later events (imaging of some modality and body part,
+referrals, specialist visits, biopsies, later reports), and the expected status at an evaluation date.
+Score them with:
+```
+python tests/report_eval/run_timelines.py tests/report_eval/timelines.json --show
+```
+
+| Set (first pass) | Timelines | Findings with the right status | False closures (not done, shown done) |
+|---|---|---|---|
+| Timelines, first set | 40 | 83.8% | **3** |
+| Timelines, confirmation set | 20 | 85.0% | **0** |
+| All 60 after fixes | 60 | 93.0% | **0** (enforced in CI) |
+
+**The 3 false closures**, now fixed:
+- a cardiology referral closed a Lung-RADS 4B work-up;
+- a nephrology referral closed a suspicious-kidney-mass referral;
+- a liver biopsy closed a pancreatic-cyst work-up.
+
+**The fix.** Work-up rules now need a referral to a service that can carry out the work-up, and a
+biopsy that names its site must be of the right organ.
+
+**A design question, not a defect.** R009 (abnormal pathology) needs both a patient notification and
+a specialist referral. Both blind writers counted a referral alone as done, so these 4 obligations
+stay "missed" until a notification is recorded. Whether a referral should be enough is the hospital's
+decision.
+
+**One configuration difference.** The example critical-findings list includes acute appendicitis (ACR
+category 2, report within 6 hours). One writer did not consider it critical. Each hospital edits that
+list.
 
 ## Defects found and fixed (each now has a test in `tests/test_report_accuracy.py`)
+
+### Found by the real-style and timeline sets
+- **Follow-up matching:**
+  - wrong-specialty referrals and wrong-organ biopsies no longer close work-ups;
+  - an imaging recommendation no longer replaces a work-up rule;
+  - a recommendation with no interval takes the guideline's interval instead of 30 days.
+- **Korean wording:**
+  - recommendation endings 권함, 권합니다, 추천, 요망, 시행 권함;
+  - "f/u CXR", "f/u CTA", "MRI (dynamic)";
+  - "BI-RADS 범주 4";
+  - "선생님께 … 구두 보고함" as communication;
+  - "변화 없음" (no change) is not absence;
+  - "암 병력 없음" (no cancer history) is a negation;
+  - bracketed addenda "[추가판독 …]".
+- **Addenda:** revised findings replace the report's own; a withdrawn recommendation is no longer
+  tracked; a Bosniak class in the addendum re-classifies the kidney lesion.
+- **Scanned text:** "1O rnm s0lid", "Fle1schner", and words broken across lines.
+- **Numbers that are not measurements:** "(<6 mm)", "below the FNA threshold (1.5 cm)"; exam names
+  ("PULMONARY EMBOLISM PROTOCOL") are not findings.
+- **Negation:** the middle item of a list ("without septation, mural nodule, calcification or enhancing
+  component") is negated, but a measured item in a list ("9 mm nodule") is still taken as present.
+- **Findings:**
+  - resolved nodules;
+  - the organ right before "nodule" wins ("adrenal nodule in a patient with lung cancer");
+  - "solid portion", including a comparison in the next sentence;
+  - "grown from 6 mm to 10 mm";
+  - "MPD 8 mm", and an IPMN with no organ word;
+  - thin smooth septa are not suspicious;
+  - "annual CT angiography";
+  - "acute SDH".
+- **Patient context:** a radiologist's "known malignancy" counts.
+- **Pathology:**
+  - the diagnosis section is read, not the clinical history;
+  - "X: not identified" is a negation;
+  - EIN (endometrial precancer) is abnormal.
 
 ### Missed critical findings
 - "Ruptured 7.5 cm infrarenal **AAA**" did not match.
@@ -104,7 +192,8 @@ after the second round of fixes.
 - High-grade cervical cytology (HSIL, ASC-H, AGC, CIN 2–3) and high-risk breast lesions (ADH, ALH, LCIS) now
   open R009.
 
-A CI test (`TestBlindCaseSets`) keeps the 270 cases at or above 97% equivalent and 97% specificity.
+CI keeps all 450 cases at or above 97% equivalent and 97% specificity (`TestBlindCaseSets`), and fails on
+any false closure among the 60 timelines (`tests/test_followup_matching.py`).
 
 ## Images (separate question)
 
@@ -123,12 +212,13 @@ covid-chestxray-dataset: 60 pneumonia, 17 no finding) through the app's own DICO
 
 ## Limits
 
-- **Synthetic data:** all reports are synthetic, from one writer. Real reports are longer, messier and
-  more varied, and include addenda, templates, OCR noise and dictation errors.
-- **What is scored:** obligation opening only. Loop closure and the timing of real follow-ups are tested
-  elsewhere (`tests/`), not here.
-- **Same writer for every set:** the confirmation set is independent of the code, but not of the writer's
-  style.
+- **Synthetic data:** all reports are synthetic. The real-style sets imitate hospital reports, but a
+  hospital's own reports are the real test.
+- **Each writer has their own habits:** three independent case writers were used. Every new writer
+  still found new wording, so a hospital's own reports will too.
+- **A rule-based reader has a long tail:** it reads what it has been taught. A practical safety net is
+  a second, model-based reader on the hospital's own server that flags reports the rules opened nothing
+  for. A person would review each flag; it would never close or open a loop by itself.
 - **Before clinical use:**
   - a retrospective chart review on the hospital's own reports, against two specialists, with κ;
   - shadow-mode operation;

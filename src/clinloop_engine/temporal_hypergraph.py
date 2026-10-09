@@ -35,6 +35,14 @@ REGION_CHECKED_TYPES = {
     EventType.IMAGING_CT.value, EventType.IMAGING_MRI.value, EventType.IMAGING_ULTRASOUND.value,
     EventType.IMAGING_XRAY.value, EventType.IMAGING_PET.value, EventType.FOLLOWUP_CT.value,
 }
+# Tissue sampling is checked only when it names its site: a liver biopsy never closes a pancreatic work-up,
+# while "biopsy" with no site still counts (a person sees the evidence chain)
+SITE_CHECKED_TYPES = {EventType.BIOPSY_ORDER.value, EventType.BIOPSY_RESULT.value, EventType.BREAST_BIOPSY.value}
+
+
+def _region_checked(node: "ClinicalNode") -> bool:
+    return node.event_type in REGION_CHECKED_TYPES or (
+        node.event_type in SITE_CHECKED_TYPES and bool(node.details.get("body_regions")))
 
 
 def _required_regions(trigger: "ClinicalNode", rule: ObligationRule) -> List[str]:
@@ -54,8 +62,13 @@ def _details_match(trigger: "ClinicalNode", rule: ObligationRule, node: "Clinica
     if only_for and node.event_type not in only_for:
         return True
     lenient = want.get("_lenient")            # a follow-up that does not say (e.g. no specialty) still counts
-    return all(node.details.get(k) == v or (lenient and node.details.get(k) is None)
-               for k, v in want.items() if k not in ("_only_for", "_lenient"))
+
+    def ok(k, v):
+        got = node.details.get(k)
+        if lenient and got is None:
+            return True
+        return got in v if isinstance(v, list) else got == v      # a list: any of these (e.g. specialties)
+    return all(ok(k, v) for k, v in want.items() if k not in ("_only_for", "_lenient"))
 
 
 def _type_ok(trigger: "ClinicalNode", rule: ObligationRule, node: "ClinicalNode") -> bool:
@@ -427,7 +440,7 @@ class DynamicTemporalHypergraph:
                         f"{n.event_type} [{', '.join(n.details.get('body_regions') or []) or 'region unknown'}] "
                         f"on {n.timestamp.date().isoformat()}"
                         for n in nodes_list
-                        if n.event_type in required_values and n.event_type in REGION_CHECKED_TYPES
+                        if n.event_type in required_values and _region_checked(n)
                         and node.timestamp < n.timestamp <= self.evaluation_time
                         and is_fulfilling_status(n.status) and not _region_ok(required_regions, n)
                     ]
@@ -471,8 +484,7 @@ class DynamicTemporalHypergraph:
             if node.patient_id != trigger.patient_id:
                 continue
             if node.event_type in required_values:
-                if (required_regions and node.event_type in REGION_CHECKED_TYPES
-                        and not _region_ok(required_regions, node)):
+                if required_regions and _region_checked(node) and not _region_ok(required_regions, node):
                     continue
                 if rule is not None and not (_details_match(trigger, rule, node) and _type_ok(trigger, rule, node)):
                     continue
