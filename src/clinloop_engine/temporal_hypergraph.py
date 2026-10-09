@@ -307,6 +307,10 @@ class DynamicTemporalHypergraph:
         is_abnormal = conditions[0] not in ("", "normal") or flag in (
             "ABNORMAL", "HIGH", "LOW", "CRITICAL", "PANIC")
 
+        if details.get("abnormal_handled"):
+            # Taken in hospital, part of a sample already under review, or a known abnormality (fhir_ingest)
+            conditions = [c for c in conditions if c != "abnormal"]
+            is_abnormal = False
         if flag in ("CRITICAL", "PANIC") or details.get("critical") is True:
             conditions.append("critical_value")
         if details.get("resulted_after_discharge") is True and is_abnormal:

@@ -1,0 +1,6 @@
+note_id,subject_id,hadm_id,note_type,note_seq,charttime,storetime,text
+19990001-RR-1,19990001,29990001,RR,1,2150-03-02 14:00:00,2150-03-02 15:00:00,"EXAMINATION: CT CHEST W/O CONTRAST
+
+FINDINGS: Cardiomegaly with small bilateral pleural effusions. There is a 9 mm solid nodule in the right upper lobe.
+
+IMPRESSION: 9 mm solid right upper lobe nodule. Recommend follow-up chest CT in 3 months."

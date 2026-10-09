@@ -1,0 +1,3 @@
+microevent_id,subject_id,hadm_id,micro_specimen_id,order_provider_id,chartdate,charttime,spec_itemid,spec_type_desc,test_seq,storedate,storetime,test_itemid,test_name,org_itemid,org_name,isolate_num,quantity,ab_itemid,ab_name,dilution_text,dilution_comparison,dilution_value,interpretation,comments
+1,19990001,29990001,71,P1,2150-03-01,2150-03-01 11:00:00,70012,BLOOD CULTURE,1,2150-03-03,2150-03-03 09:00:00,90201,Blood Culture,80023,STAPH AUREUS COAG +,1,,,,,,,,
+2,19990001,29990001,71,P1,2150-03-01,2150-03-01 11:00:00,70012,BLOOD CULTURE,1,2150-03-03,2150-03-03 09:00:00,90201,Blood Culture,80023,STAPH AUREUS COAG +,1,,90,OXACILLIN,<=0.25,<=,0.25,S,

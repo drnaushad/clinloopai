@@ -1,0 +1,2 @@
+subject_id,hadm_id,admittime,dischtime,deathtime,admission_type,admit_provider_id,admission_location,discharge_location,insurance,language,marital_status,race,edregtime,edouttime,hospital_expire_flag
+19990001,29990001,2150-03-01 10:00:00,2150-03-05 12:00:00,,URGENT,P1,EMERGENCY ROOM,HOME,Other,ENGLISH,MARRIED,WHITE,2150-03-01 06:00:00,2150-03-01 10:00:00,0

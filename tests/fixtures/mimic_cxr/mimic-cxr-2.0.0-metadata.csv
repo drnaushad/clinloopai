@@ -1,0 +1,3 @@
+dicom_id,subject_id,study_id,PerformedProcedureStepDescription,ViewPosition,Rows,Columns,StudyDate,StudyTime,ProcedureCodeSequence_CodeMeaning,ViewCodeSequence_CodeMeaning,PatientOrientationCodeSequence_CodeMeaning
+d1,19990001,59990001,CHEST (PA AND LAT),PA,3056,2544,21500301,083000.000,CHEST (PA AND LAT),postero-anterior,Erect
+d2,19990001,59990001,CHEST (PA AND LAT),LATERAL,3056,2544,21500301,083000.000,CHEST (PA AND LAT),lateral,Erect
