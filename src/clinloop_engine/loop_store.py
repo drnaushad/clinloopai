@@ -167,11 +167,12 @@ CREATE INDEX IF NOT EXISTS idx_external_patient ON external_resources(patient_id
 CREATE TABLE IF NOT EXISTS image_scan_studies (
     study_uid TEXT PRIMARY KEY,
     patient_id TEXT,                  -- FHIR patient id once matched
-    status TEXT NOT NULL,             -- scanned | no_model | unmatched | refused | failed
+    status TEXT NOT NULL,             -- pending | scanned | no_model | unmatched | refused | failed | abandoned
     models TEXT,                      -- JSON: model names that ran
     findings INTEGER DEFAULT 0,
     detail TEXT,
-    attempts INTEGER DEFAULT 0,
+    attempts INTEGER DEFAULT 0,       -- failures of THIS study (outages of the PACS/FHIR/vendor are not counted)
+    instances INTEGER,                -- images in the study when last seen: more images later re-opens it
     first_seen TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -213,6 +214,10 @@ class LoopStore:
         self._db.row_factory = sqlite3.Row
         with self._lock:
             self._db.executescript(SCHEMA)
+            # Databases created before a column existed
+            cols = {r["name"] for r in self._db.execute("PRAGMA table_info(image_scan_studies)")}
+            if "instances" not in cols:
+                self._db.execute("ALTER TABLE image_scan_studies ADD COLUMN instances INTEGER")
             self._db.commit()
 
     # ── audit ────────────────────────────────────────────────────────────────
@@ -615,15 +620,41 @@ class LoopStore:
 
     def set_scan_study(self, study_uid: str, status: str, patient_id: Optional[str] = None,
                        models: Optional[List[str]] = None, findings: int = 0, detail: str = "",
-                       now: Optional[datetime] = None) -> None:
+                       now: Optional[datetime] = None, count_attempt: bool = False,
+                       instances: Optional[int] = None, reset_attempts: bool = False) -> int:
+        """Record a study's state; returns its attempt count (failures of this study, not outages)."""
         ts = (now or utc_now()).isoformat()
+        inc = 1 if count_attempt else 0
         with self._lock:
             self._db.execute(
                 "INSERT INTO image_scan_studies (study_uid, patient_id, status, models, findings, detail, attempts, "
-                "first_seen, updated_at) VALUES (?,?,?,?,?,?,1,?,?) ON CONFLICT(study_uid) DO UPDATE SET "
+                "instances, first_seen, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(study_uid) DO UPDATE SET "
                 "patient_id=COALESCE(excluded.patient_id, patient_id), status=excluded.status, models=excluded.models, "
-                "findings=excluded.findings, detail=excluded.detail, attempts=attempts+1, updated_at=excluded.updated_at",
-                (study_uid, patient_id, status, json.dumps(models or []), findings, detail[:500], ts, ts))
+                "findings=excluded.findings, detail=excluded.detail, "
+                f"attempts={'0' if reset_attempts else 'attempts'}+{inc}, "
+                "instances=COALESCE(excluded.instances, instances), updated_at=excluded.updated_at",
+                (study_uid, patient_id, status, json.dumps(models or []), findings, detail[:500], inc, instances, ts, ts))
+            n = self._db.execute("SELECT attempts FROM image_scan_studies WHERE study_uid=?", (study_uid,)).fetchone()
+            self._db.commit()
+        return n["attempts"] if n else 0
+
+    def acquire_lease(self, name: str, owner: str, ttl_minutes: float = 60.0, now: Optional[datetime] = None) -> bool:
+        """A lease across processes (API workers, the CLI, cron): only one holder until it ends or expires."""
+        now = now or utc_now()
+        key = f"lease:{name}"
+        with self._lock:
+            self._db.execute("INSERT OR IGNORE INTO sync_state (source, cursor, updated_at) VALUES (?,?,?)",
+                             (key, owner, now.isoformat()))
+            cur = self._db.execute(
+                "UPDATE sync_state SET cursor=?, updated_at=? WHERE source=? AND (cursor=? OR cursor='' OR updated_at < ?)",
+                (owner, now.isoformat(), key, owner, (now - timedelta(minutes=ttl_minutes)).isoformat()))
+            got = cur.rowcount == 1
+            self._db.commit()
+        return got
+
+    def release_lease(self, name: str, owner: str) -> None:
+        with self._lock:
+            self._db.execute("UPDATE sync_state SET cursor='' WHERE source=? AND cursor=?", (f"lease:{name}", owner))
             self._db.commit()
 
     def record_scan_run(self, ok: bool, found: int = 0, scanned: int = 0, findings: int = 0,
@@ -646,7 +677,8 @@ class LoopStore:
                 "SELECT status, COUNT(*) AS n FROM image_scan_studies GROUP BY status")}
             problems = [dict(r) for r in self._db.execute(
                 "SELECT study_uid, status, detail, attempts, updated_at FROM image_scan_studies "
-                "WHERE status IN ('failed','refused','unmatched') ORDER BY updated_at DESC LIMIT 20")]
+                "WHERE status IN ('abandoned','failed','refused','unmatched') "
+                "ORDER BY status='abandoned' DESC, updated_at DESC LIMIT 20")]
         hours = round((now - datetime.fromisoformat(last_ok["ts"])).total_seconds() / 3600, 2) if last_ok else None
         if not recent:
             status = "NEVER"
@@ -654,6 +686,8 @@ class LoopStore:
             status = "FAILING"
         elif hours is None or hours > max_silence_hours:
             status = "STALE"
+        elif counts.get("abandoned") or (recent and recent[0]["ok"] and recent[0]["error"]):
+            status = "ATTENTION"     # studies given up on, or the last run's study list was cut short
         else:
             status = "OK"
         return {"status": status, "last_success": last_ok["ts"] if last_ok else None, "hours_since_success": hours,

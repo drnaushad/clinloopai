@@ -12,7 +12,12 @@ study:
         (1 day for critical findings, 7 days otherwise);
   * a later report or addendum of the same study that addresses it closes the
     loop (AI_FINDING_REVIEWED), as does a clinician closing it with evidence;
-  * no report yet → no loop (the comparison waits for the report).
+  * no report yet → no loop (the comparison waits for the report), EXCEPT for a
+    critical finding (intracranial haemorrhage, pneumothorax, free air): the
+    unreported study must be read now (R057, 60 minutes by default,
+    CLINLOOP_AI_CRITICAL_READ_MINUTES). The first report of the study closes
+    it; R047 then checks that the report addressed the finding. A study that
+    was already reported when the AI result arrived raises no R057.
 
 Which report belongs to the study: first by DICOM StudyInstanceUID (or the same
 ImagingStudy reference); only when neither side names its study, the first
@@ -44,8 +49,51 @@ IMAGING_EVENT_TYPES = {EventType.IMAGING_CT.value, EventType.IMAGING_MRI.value, 
                        EventType.IMAGING_XRAY.value, EventType.IMAGING_PET.value}
 
 
+def critical_read_minutes() -> float:
+    try:
+        minutes = float(os.environ.get("CLINLOOP_AI_CRITICAL_READ_MINUTES", "60"))
+    except ValueError:
+        minutes = 60.0
+    return minutes if minutes > 0 else 60.0
+
+
 def research_ai_enabled() -> bool:
     return os.environ.get("CLINLOOP_IMAGING_RESEARCH_AI", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _unread_critical(ai: Dict[str, Any], spec: Dict[str, Any], reports: List[Dict[str, Any]], ts) -> List[Dict[str, Any]]:
+    """R057: a critical AI finding on a study not yet reported → the study is read now; its first report closes it."""
+    d = ai["details"]
+    if any(ts(r) <= ts(ai) for r in reports):
+        d["mapping"].append("study already reported when the AI result arrived: no urgent read needed")
+        return []
+    minutes = critical_read_minutes()
+    label = f"{spec['en']} ({d.get('product') or 'imaging AI'}, score {d.get('score', '–')})"
+    out = [{
+        **{k: v for k, v in ai.items() if k not in ("details", "event_id", "timestamp")},
+        "event_id": f"{ai['event_id']}:unread",
+        "timestamp": ts(ai).isoformat(),
+        "details": {**{k: v for k, v in d.items() if k != "mapping"},
+                    "extra_conditions": ["ai_critical_unread"],
+                    "rule_deadline_days": {"R057": minutes / 1440.0},
+                    "followup_match": {"R057": {"read_of_ai_event": ai["event_id"]}},
+                    "evidence_span": f"AI: {label} on a study with no radiology report yet.",
+                    "mapping": [f"critical AI finding, study not yet reported → read within {minutes:g} min (R057)"]},
+    }]
+    if reports:
+        first = reports[0]
+        out.append({
+            **{k: v for k, v in first.items() if k not in ("details", "event_id", "event_type")},
+            "event_id": f"{first['event_id']}:read:{ai['event_id']}",
+            "event_type": EventType.AI_FINDING_REVIEWED.value,
+            "details": {"read_of_ai_event": ai["event_id"],
+                        "evidence_span": f"report of {ts(first).strftime('%Y-%m-%d %H:%M')}",
+                        "mapping": ["first report of the study→study read (R057)"]},
+        })
+        d["mapping"].append(f"critical AI finding; the study was reported at {ts(first).strftime('%Y-%m-%d %H:%M')}")
+    else:
+        d["mapping"].append(f"critical AI finding on an unreported study → R057: read within {minutes:g} min")
+    return out
 
 
 def _mentions(report: Dict[str, Any], key: str) -> Optional[re.Match]:
@@ -98,7 +146,8 @@ def apply_ai_review(events: List[Dict[str, Any]]) -> None:
             notes.append("same finding reported again for this study: reviewed once")
 
     derived: List[Dict[str, Any]] = []
-    for ai in best.values():
+    unread_checked: Set[str] = set()       # one "read this study now" per study, however many critical findings
+    for (study_key, _), ai in best.items():
         d = ai["details"]
         key = d["finding_key"]
         spec = AI_FINDINGS[key]
@@ -124,6 +173,9 @@ def apply_ai_review(events: List[Dict[str, Any]]) -> None:
                 covered = (r["details"].get("radiology") or {}).get("study_regions") or []
                 if covered and regions_compatible(expand_regions(regions), covered):
                     candidates.append(r)
+        if spec.get("critical") and study_key not in unread_checked:
+            unread_checked.add(study_key)
+            derived.extend(_unread_critical(ai, spec, candidates, ts))
         if not candidates:
             notes.append("no radiology report for this study yet: compared once the report arrives")
             continue

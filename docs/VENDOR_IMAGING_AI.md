@@ -30,6 +30,11 @@ One entry per product (see the template):
 | `token_env` | Name of the environment variable that holds the bearer token. Never the token itself. |
 | `modalities`, `body_regions` | The product runs only on matching images (intended use). |
 | `input` | `"instance"` (default): one DICOM file per request. `"series"`: the whole series in one `multipart/related` request, for CT and MRI products. |
+
+The product receives the DICOM file as stored (any transfer syntax). It must answer with
+`{"findings": [...]}`, where every finding has a `label` and a numeric `score` or a `positive` flag.
+Anything else (an asynchronous job id, `probability` in place of `score`, an error body) is a
+failure that is retried, never a clean read.
 | `regulatory` | For example `MFDS approved (Class II), certificate no. …`. If empty, or if it says research use, the product's findings open no loops unless research AI is allowed. |
 | `threshold` | The vendor's operating point, used when the product sends a score without a positive/negative flag. Use the value from the product's validation, not 0.5. |
 | `label_map` | Vendor label → ClinLoop wording ("Nodule", "Pneumothorax", "Intracranial haemorrhage", …). The finding types ClinLoop compares with reports are listed in `imaging_fhir.AI_FINDINGS`. |

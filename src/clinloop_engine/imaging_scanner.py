@@ -6,12 +6,14 @@ configured (CLINLOOP_PACS_DICOMWEB). Each run:
 
   1. Asks the PACS (QIDO-RS) for studies acquired in the last
      CLINLOOP_IMAGE_SCAN_LOOKBACK_DAYS days, for the configured modalities.
-     A study acquired less than CLINLOOP_IMAGE_SCAN_SETTLE_MINUTES ago is left
-     for the next run (its images may still be arriving).
-  2. Matches the study's PatientID to exactly ONE patient on the FHIR server
-     (MRN, or the identifier system in CLINLOOP_PACS_ID_SYSTEM). No match, or
-     more than one: the study is not analysed and is listed for a person to
-     check. A patient is never guessed.
+     A study is read only once its image count is the same on two runs (and
+     it is at least CLINLOOP_IMAGE_SCAN_SETTLE_MINUTES old): a half-arrived
+     study is never read. Images arriving after a study was read re-open it.
+  2. Matches the study's PatientID to exactly ONE patient on the FHIR server,
+     by the identifier system in CLINLOOP_PACS_ID_SYSTEM (required: another
+     site's MRN with the same digits must never match). No match, or more than
+     one: the study is not analysed and is listed for a person to check. A
+     patient is never guessed.
   3. Chooses the series an enabled model applies to (modality, body part).
      No applicable model: no image is retrieved at all.
   4. Retrieves those images (WADO-RS), in memory only, and checks every image's
@@ -29,10 +31,15 @@ model (or one with no stated approval) runs automatically only with
 CLINLOOP_IMAGE_SCAN_RESEARCH=1, for shadow-mode evaluation; its findings still
 open no loops unless CLINLOOP_IMAGING_RESEARCH_AI=1.
 
-Every study is recorded once in a ledger (image_scan_studies): scanned,
-no_model, unmatched, refused or failed. Failed and unmatched studies are
-retried on later runs, up to MAX_ATTEMPTS. Runs are recorded apart from the
-FHIR feed monitor, so a working scanner can never hide a dead record feed.
+Every study is recorded in a ledger (image_scan_studies): pending, scanned,
+no_model, unmatched, refused, failed or abandoned. An outage (FHIR, PACS or a
+product failing study after study) stops the run and costs no study a retry;
+a study that itself keeps failing is abandoned after MAX_ATTEMPTS and raises
+an alarm (status ATTENTION). If one product reads a study and another fails,
+the findings are filed and the study is retried. Runs are recorded apart from
+the FHIR feed monitor, so a working scanner can never hide a dead record feed,
+and a database lease keeps two processes (API workers, the CLI) from scanning
+at once. Dates and times are the hospital's (CLINLOOP_LOCAL_TZ).
 
 Configuration (environment):
   CLINLOOP_IMAGE_SCAN=1                   turn scanning on
@@ -40,7 +47,8 @@ Configuration (environment):
   CLINLOOP_IMAGE_SCAN_LOOKBACK_DAYS       how far back to look for new studies (default 2)
   CLINLOOP_IMAGE_SCAN_MODALITIES          default CR,DX,MG,CT,MR,US
   CLINLOOP_IMAGE_SCAN_MAX_STUDIES         studies analysed per run (default 50; the rest wait)
-  CLINLOOP_IMAGE_SCAN_SETTLE_MINUTES      default 20
+  CLINLOOP_IMAGE_SCAN_SETTLE_MINUTES      minimum age of a study before it is read (default 5)
+  CLINLOOP_PACS_ID_SYSTEM                 FHIR identifier system of the PACS PatientID (required)
   CLINLOOP_IMAGE_SCAN_MAX_IMAGES          images per series for single-image models (default 4)
   CLINLOOP_IMAGE_SCAN_MAX_SERIES_MB       largest series sent to a series model (default 600)
   CLINLOOP_IMAGE_SCAN_RESEARCH=1          also run research-use models (shadow mode)
@@ -55,23 +63,27 @@ import hashlib
 import logging
 import os
 import re
+import socket
 import sys
 import threading
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 
-from .imaging_fhir import DICOM_MODALITY, dicom_regions, regulatory_unverified
+from .imaging_fhir import DICOM_MODALITY, _local_tz, dicom_regions, regulatory_unverified
 from .loop_store import LoopStore
 from .safety_clock import utc_now
 
 logger = logging.getLogger("clinloop.image_scan")
 
-MAX_ATTEMPTS = 5
-_RUNNING = threading.Lock()      # one scan at a time: "Run now" during a background run never double-sends
-TERMINAL = {"scanned", "no_model", "refused"}
+MAX_ATTEMPTS = 5                 # failures of one study before it is abandoned (outages are not counted)
+MAX_CONSECUTIVE_OUTAGES = 3      # PACS or product failing study after study: stop the run, try again next run
+LEASE_MINUTES = 60.0
+_RUNNING = threading.Lock()      # one scan at a time in this process; a database lease covers other processes
+TERMINAL = {"scanned", "no_model", "refused", "abandoned"}
 # Series that are not images to analyse: reports, presentation states, key objects, segmentations …
 SKIP_MODALITIES = {"SR", "PR", "KO", "SEG", "REG", "RTSTRUCT", "RTPLAN", "RTDOSE", "DOC", "OT", "SC"}
 SKIP_SERIES = re.compile(r"localizer|scout|topogram|surview|dose (?:report|info)|screen ?save|report|summary", re.I)
@@ -92,7 +104,7 @@ class ScanConfig:
     lookback_days: int = 2
     modalities: List[str] = field(default_factory=lambda: ["CR", "DX", "MG", "CT", "MR", "US"])
     max_studies: int = 50
-    settle_minutes: float = 20.0
+    settle_minutes: float = 5.0           # minimum wait; the image count must also be unchanged between two runs
     max_images: int = 4
     max_series_mb: float = 600.0
     allow_research: bool = False
@@ -108,7 +120,7 @@ class ScanConfig:
         return cls(lookback_days=num("CLINLOOP_IMAGE_SCAN_LOOKBACK_DAYS", 2),
                    modalities=mods or cls().modalities,
                    max_studies=num("CLINLOOP_IMAGE_SCAN_MAX_STUDIES", 50),
-                   settle_minutes=num("CLINLOOP_IMAGE_SCAN_SETTLE_MINUTES", 20, float),
+                   settle_minutes=num("CLINLOOP_IMAGE_SCAN_SETTLE_MINUTES", 5, float),
                    max_images=num("CLINLOOP_IMAGE_SCAN_MAX_IMAGES", 4),
                    max_series_mb=num("CLINLOOP_IMAGE_SCAN_MAX_SERIES_MB", 600, float),
                    allow_research=_flag("CLINLOOP_IMAGE_SCAN_RESEARCH"))
@@ -211,7 +223,7 @@ def scan_study(study: Dict[str, Any], patient: Dict[str, Any], pacs, models: Lis
     from .imaging_ai import ImagingError, analyze_dicom, analyze_series
     from .pacs_client import dicom_patient_ids
     pid = patient["id"]
-    expected = dicom_patient_ids(patient)
+    expected = dicom_patient_ids(patient, strict=True)
     series_list = study.get("series") or pacs.series(study["study_uid"])
     plan = _plan(study, series_list, models, pacs)
     if not plan:
@@ -262,11 +274,17 @@ def scan_study(study: Dict[str, Any], patient: Dict[str, Any], pacs, models: Lis
             ran += [m["name"] for m in result["models"] if m.get("ran")]
             errors += [f"{m['name']} {m['reason']}" for m in result["models"]
                        if not m.get("ran") and str(m.get("reason", "")).startswith("failed")]
+    n_findings = sum(1 for r in resources.values() if r["resourceType"] == "Observation")
+    errors = list(dict.fromkeys(errors))
     if not ran:
         # "Scanned, nothing found" would be false reassurance: a study no model read is a failure, retried
-        return {"status": "failed", "resources": [], "models": [],
-                "detail": "; ".join(dict.fromkeys(errors)) or "no model produced a result"}
-    n_findings = sum(1 for r in resources.values() if r["resourceType"] == "Observation")
+        return {"status": "failed", "resources": [], "models": [], "infra": bool(errors),
+                "detail": "; ".join(errors) or "no model produced a result"}
+    if errors:
+        # One product read it, another failed: file what was found, and retry so every product reads it
+        return {"status": "failed", "resources": list(resources.values()), "models": sorted(set(ran)), "infra": True,
+                "findings": n_findings,
+                "detail": f"{'; '.join(errors)}. {n_findings} finding(s) from {', '.join(sorted(set(ran)))} filed; retried"}
     return {"status": "scanned", "resources": list(resources.values()), "models": sorted(set(ran)),
             "findings": n_findings,
             "detail": f"{n_findings} positive finding(s) from {', '.join(sorted(set(ran))) or 'no model'}"}
@@ -313,10 +331,29 @@ def scan_once(store: LoopStore, pacs, fhir=None, models: Optional[List[Any]] = N
     """One scan run. Never raises: failures are recorded for the scan monitor."""
     if not _RUNNING.acquire(blocking=False):
         return {"ok": False, "error": "a scan is already running", "busy": True}
+    owner = f"{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex[:8]}"
     try:
-        return _scan_once(store, pacs, fhir, models, cfg, now, local_now)
+        if not store.acquire_lease("image-scan", owner, LEASE_MINUTES, now):
+            return {"ok": False, "error": "a scan is already running in another process", "busy": True}
+        try:
+            return _scan_once(store, pacs, fhir, models, cfg, now, local_now)
+        finally:
+            store.release_lease("image-scan", owner)
     finally:
         _RUNNING.release()
+
+
+def _hospital_now() -> datetime:
+    """Now in the hospital's time zone (CLINLOOP_LOCAL_TZ), naive like DICOM dates and times; never the container's."""
+    tz = _local_tz()
+    return datetime.now(tz).replace(tzinfo=None) if tz else datetime.now()
+
+
+def _count(value) -> Optional[int]:
+    try:
+        return int(value) if value not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
 
 
 def _scan_once(store, pacs, fhir, models, cfg, now, local_now) -> Dict[str, Any]:
@@ -324,57 +361,87 @@ def _scan_once(store, pacs, fhir, models, cfg, now, local_now) -> Dict[str, Any]
     from .pacs_client import PACSError
     cfg = cfg or ScanConfig.from_env()
     now = now or utc_now()
-    local_now = local_now or datetime.now()          # DICOM dates and times are the scanner's local time
-    usable, skipped = eligible_models(models if models is not None else registered_models(), cfg)
-    if not usable:
-        msg = "no imaging model may run automatically" + (f" ({'; '.join(skipped)})" if skipped else
-                                                          ": configure an approved product (CLINLOOP_IMAGING_MODELS_CONFIG)")
+    local_now = local_now or _hospital_now()        # DICOM dates and times are the hospital's local time
+
+    def fail_run(msg: str) -> Dict[str, Any]:
         store.record_scan_run(ok=False, error=msg, now=now)
         return {"ok": False, "error": msg}
+
+    usable, skipped = eligible_models(models if models is not None else registered_models(), cfg)
+    if not usable:
+        return fail_run("no imaging model may run automatically" + (f" ({'; '.join(skipped)})" if skipped else
+                        ": configure an approved product (CLINLOOP_IMAGING_MODELS_CONFIG)"))
+    match_fhir_id = _flag("CLINLOOP_PACS_MATCH_FHIR_ID")
+    if fhir is None and not match_fhir_id:
+        return fail_run("no FHIR server to match PatientIDs to patients (set CLINLOOP_FHIR_BASE)")
+    if fhir is not None and not os.environ.get("CLINLOOP_PACS_ID_SYSTEM") and not match_fhir_id:
+        # Without it, another site's MRN with the same digits could match: images filed to the wrong patient
+        return fail_run("set CLINLOOP_PACS_ID_SYSTEM to the FHIR identifier system of the PACS PatientID "
+                        "(required for automatic scanning)")
     date_to = local_now.strftime("%Y%m%d")
     date_from = (local_now - timedelta(days=cfg.lookback_days)).strftime("%Y%m%d")
-    tally = {"found": 0, "scanned": 0, "findings": 0, "waiting": 0, "skipped_done": 0, "deferred": 0}
+    tally = {"found": 0, "scanned": 0, "findings": 0, "waiting": 0, "skipped_done": 0, "deferred": 0, "reopened": 0}
     by_status: Dict[str, int] = {}
     patients: Dict[str, None] = {}
     try:
         studies = pacs.new_studies(date_from, date_to, cfg.modalities)
     except (PACSError, requests.RequestException, ValueError) as e:
-        store.record_scan_run(ok=False, error=f"PACS query failed: {e}", now=now)
-        return {"ok": False, "error": f"PACS query failed: {e}"}
+        return fail_run(f"PACS query failed: {e}")
+    truncated = list(getattr(pacs, "truncated", []) or [])
     tally["found"] = len(studies)
-    retrieved = 0
+
+    def record(uid, status, **kw) -> int:
+        by_status[status] = by_status.get(status, 0) + 1
+        return store.set_scan_study(uid, status, now=now, **kw)
+
+    retrieved, outages, aborted = 0, 0, None
     for study in sorted(studies, key=lambda s: (s.get("study_date") or "", s.get("study_time") or "")):
         uid = study["study_uid"]
         done = store.scan_study(uid)
-        if done and (done["status"] in TERMINAL or done["attempts"] >= MAX_ATTEMPTS):
-            tally["skipped_done"] += 1
+        n = _count(study.get("n_instances"))
+        if done and (done["status"] in TERMINAL or (done["status"] == "unmatched" and done["attempts"] >= MAX_ATTEMPTS)):
+            grew = n is not None and done["instances"] is not None and n > done["instances"]
+            if grew and done["status"] in ("scanned", "no_model"):
+                # Images arrived after it was read: read it again, once the count settles
+                store.set_scan_study(uid, "pending", patient_id=done["patient_id"], instances=n, reset_attempts=True,
+                                     detail=f"{n - done['instances']} more image(s) arrived after it was "
+                                            f"{done['status'].replace('_', ' ')}: read again", now=now)
+                tally["reopened"] += 1
+                tally["waiting"] += 1
+            else:
+                tally["skipped_done"] += 1
             continue
         acquired = _acquired(study)
         if acquired and local_now - acquired < timedelta(minutes=cfg.settle_minutes):
             tally["waiting"] += 1                   # images may still be arriving
+            continue
+        if n is not None and (done is None or done["instances"] != n):
+            # Read only once the image count is the same on two runs: a half-arrived study is not read
+            store.set_scan_study(uid, done["status"] if done else "pending", instances=n, now=now,
+                                 detail=done["detail"] if done else "waiting for all images to arrive")
+            tally["waiting"] += 1
             continue
         if retrieved >= cfg.max_studies:
             tally["deferred"] += 1                  # next run
             continue
         try:
             patient, why = resolve_patient(study.get("pacs_patient_id") or "", fhir, store)
-        except Exception as e:                       # FHIR down: try again next run
-            store.set_scan_study(uid, "failed", detail=f"patient lookup failed ({type(e).__name__})", now=now)
-            by_status["failed"] = by_status.get("failed", 0) + 1
-            continue
+        except Exception as e:                       # FHIR down: stop; no study loses a retry to an outage
+            aborted = f"FHIR server unreachable ({type(e).__name__}): run stopped, studies wait for the next run"
+            break
         if patient is None:
-            store.set_scan_study(uid, "unmatched", detail=why, now=now)
-            by_status["unmatched"] = by_status.get("unmatched", 0) + 1
+            record(uid, "unmatched", detail=why, count_attempt=True, instances=n)
             continue
         retrieved += 1
         try:
             result = scan_study(study, patient, pacs, usable, cfg)
         except (PACSError, requests.RequestException) as e:
-            result = {"status": "failed", "resources": [], "models": [], "detail": f"PACS retrieval failed: {e}"}
+            result = {"status": "failed", "resources": [], "models": [], "infra": True,
+                      "detail": f"PACS retrieval failed: {e}"}
         except Exception as e:                      # one bad study never stops the run
             logger.exception("Image scan of one study failed")
             result = {"status": "failed", "resources": [], "models": [], "detail": f"error: {type(e).__name__}"}
-        if result["status"] == "scanned":
+        if result["resources"]:
             sha = hashlib.sha256(uid.encode()).hexdigest()
             for r in result["resources"]:
                 kind = "dicom-study" if r["resourceType"] == "ImagingStudy" else "imaging-ai"
@@ -382,11 +449,21 @@ def _scan_once(store, pacs, fhir, models, cfg, now, local_now) -> Dict[str, Any]
                                             summary=(r.get("description") if kind == "dicom-study"
                                                      else f"{r['device']['display']}: {r['code']['text']}"))
             patients[patient["id"]] = None
+        if result["status"] == "scanned":
             tally["scanned"] += 1
-            tally["findings"] += result.get("findings", 0)
-        store.set_scan_study(uid, result["status"], patient_id=patient["id"], models=result.get("models"),
-                             findings=result.get("findings", 0), detail=result.get("detail", ""), now=now)
-        by_status[result["status"]] = by_status.get(result["status"], 0) + 1
+        tally["findings"] += result.get("findings", 0)
+        infra = bool(result.get("infra"))
+        attempts = record(uid, result["status"], patient_id=patient["id"], models=result.get("models"),
+                          findings=result.get("findings", 0), detail=result.get("detail", ""), instances=n,
+                          count_attempt=result["status"] == "failed" and not infra)
+        if result["status"] == "failed" and attempts >= MAX_ATTEMPTS:
+            store.set_scan_study(uid, "abandoned", patient_id=patient["id"], now=now,
+                                 detail=f"gave up after {attempts} failures: {result.get('detail', '')}")
+            by_status["abandoned"] = by_status.get("abandoned", 0) + 1
+        outages = outages + 1 if infra else 0
+        if outages >= MAX_CONSECUTIVE_OUTAGES:
+            aborted = f"{outages} studies in a row failed on the PACS or a product ({result.get('detail', '')[:120]}): run stopped"
+            break
     loops = {"new": 0, "updated": 0, "resolved_by_engine": 0}
     for pid in patients:
         try:
@@ -394,9 +471,17 @@ def _scan_once(store, pacs, fhir, models, cfg, now, local_now) -> Dict[str, Any]
                 loops[k] = loops.get(k, 0) + v
         except Exception as e:                      # findings are filed; the next FHIR sync re-checks the patient
             logger.warning("Re-check after image scan failed: %s", type(e).__name__)
-    store.record_scan_run(ok=True, found=tally["found"], scanned=tally["scanned"], findings=tally["findings"], now=now)
-    return {"ok": True, **tally, "by_status": by_status, "loops": loops, "models": [m.name for m in usable],
-            "models_not_run": skipped, "window": f"{date_from}-{date_to}"}
+    summary = {**tally, "by_status": by_status, "loops": loops, "models": [m.name for m in usable],
+               "models_not_run": skipped, "window": f"{date_from}-{date_to}", "truncated": truncated}
+    if aborted:
+        store.record_scan_run(ok=False, found=tally["found"], scanned=tally["scanned"], findings=tally["findings"],
+                              error=aborted, now=now)
+        return {"ok": False, "error": aborted, **summary}
+    note = (f"study list cut short for {', '.join(truncated)}: shorten CLINLOOP_IMAGE_SCAN_LOOKBACK_DAYS"
+            if truncated else None)
+    store.record_scan_run(ok=True, found=tally["found"], scanned=tally["scanned"], findings=tally["findings"],
+                          error=note, now=now)
+    return {"ok": True, **summary}
 
 
 def status(store: LoopStore) -> Dict[str, Any]:
@@ -406,7 +491,10 @@ def status(store: LoopStore) -> Dict[str, Any]:
     usable, skipped = eligible_models(registered_models(), cfg)
     minutes = float(os.environ.get("CLINLOOP_IMAGE_SCAN_MINUTES", "10") or 10)
     s = store.scan_status(max_silence_hours=max(2.0, 3 * minutes / 60))
+    from .fhir_sync import client_from_env as fhir_from_env
+    id_ok = bool(os.environ.get("CLINLOOP_PACS_ID_SYSTEM")) or _flag("CLINLOOP_PACS_MATCH_FHIR_ID")
     return {"enabled": enabled(), "pacs_configured": client_from_env() is not None,
+            "fhir_configured": fhir_from_env() is not None, "patient_id_system_configured": id_ok,
             "interval_minutes": minutes, "modalities": cfg.modalities, "lookback_days": cfg.lookback_days,
             "research_models_allowed": cfg.allow_research,
             "models": [{"name": m.name, "regulatory": m.regulatory, "input": getattr(m, "input", "instance"),

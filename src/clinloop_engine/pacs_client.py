@@ -119,28 +119,42 @@ class DICOMwebClient:
         return out
 
     def new_studies(self, date_from: str, date_to: str, modalities: List[str],
-                    page: int = 100, max_studies: int = 2000) -> List[Dict[str, Any]]:
-        """Studies acquired between two dates (YYYYMMDD), any patient, with their PatientID (for the scanner)."""
+                    page: int = 100, max_per_modality: int = 5000, max_pages: int = 200) -> List[Dict[str, Any]]:
+        """
+        Studies acquired between two dates (YYYYMMDD), any patient, with their PatientID (for the scanner).
+        Paging continues until an empty page (a PACS may cap pages below `page`), stops when a page adds
+        nothing new (a PACS that ignores `offset`), and each modality has its own cap, so a busy CR list
+        can never crowd out CT or MR. Modalities whose list was cut short are left in self.truncated.
+        """
         fields = STUDY_FIELDS + [TAG["patient_id"], TAG["study_date"]]   # repeated includefield: widest support
         found: Dict[str, Dict[str, Any]] = {}
+        self.truncated: List[str] = []
         for modality in modalities or [""]:
-            offset = 0
-            while len(found) < max_studies:
+            offset, mine = 0, set()
+            for _ in range(max_pages):
                 params = {"StudyDate": f"{date_from}-{date_to}", "includefield": fields,
                           "limit": page, "offset": offset}
                 if modality:
                     params["ModalitiesInStudy"] = modality
                 items = self._get("/studies", params)
+                new = 0
                 for item in items:
                     study = self._study(item)
                     pid = _value(item, TAG["patient_id"])
-                    if study and pid is not None:
+                    if study and pid is not None and study["study_uid"] not in mine:
                         study["pacs_patient_id"] = str(pid)
                         found.setdefault(study["study_uid"], study)
-                if len(items) < page:
+                        mine.add(study["study_uid"])
+                        new += 1
+                if not items or not new:
                     break
-                offset += page
-        return list(found.values())[:max_studies]
+                if len(mine) >= max_per_modality:
+                    self.truncated.append(modality or "all")
+                    break
+                offset += len(items)
+            else:
+                self.truncated.append(modality or "all")
+        return list(found.values())
 
     def instances(self, study_uid: str, series_uid: str) -> List[Dict[str, Any]]:
         """Instance UIDs of one series, in instance-number order."""
@@ -217,24 +231,41 @@ def _first_dicom_part(body: bytes, content_type: str) -> bytes:
     """The DICOM file in a WADO-RS response (multipart/related, or a bare application/dicom body)."""
     if "multipart" not in content_type.lower():
         return body
-    import email
-    msg = email.message_from_bytes(b"Content-Type: " + content_type.encode("latin-1") + b"\r\n\r\n" + body)
-    for part in msg.walk():
-        if part.is_multipart():
-            continue
-        payload = part.get_payload(decode=True)
-        if payload:
-            return payload
+    m = re.search(r'boundary="?([^";]+)"?', content_type, re.I)
+    if not m:
+        raise PACSError("WADO-RS multipart response without a boundary")
+    delimiter = b"--" + m.group(1).strip().encode("latin-1")
+    # Slice the bytes directly: a generic MIME parser copies a 200 MB part many times over
+    start = body.find(delimiter)
+    while start != -1:
+        head_end = body.find(b"\r\n\r\n", start)
+        if head_end == -1:
+            break
+        nxt = body.find(b"\r\n" + delimiter, head_end + 4)
+        part = body[head_end + 4: nxt if nxt != -1 else len(body)]
+        if part:
+            return part
+        start = nxt + 2 if nxt != -1 else -1
     raise PACSError("WADO-RS response had no DICOM part")
 
 
-def dicom_patient_ids(patient: Dict[str, Any]) -> List[str]:
-    """What an image's DICOM PatientID may be: the FHIR id and the MRN (or the configured identifier system)."""
+def dicom_patient_ids(patient: Dict[str, Any], strict: bool = False) -> List[str]:
+    """
+    What an image's DICOM PatientID may be: the FHIR id and the MRN (or the configured identifier system).
+    strict (automatic scanning, no person looking): only the configured system's value, and the FHIR id
+    only with CLINLOOP_PACS_MATCH_FHIR_ID=1. Another site's MRN with the same digits never matches.
+    """
     system = os.environ.get("CLINLOOP_PACS_ID_SYSTEM")
-    ids = [patient["id"]]
+    match_fhir = os.environ.get("CLINLOOP_PACS_MATCH_FHIR_ID", "").strip().lower() in ("1", "true", "yes", "on")
+    ids = [patient["id"]] if (not strict or match_fhir) else []
     for i in patient.get("identifier", []):
         is_mrn = any(c.get("code") == "MR" for c in (i.get("type") or {}).get("coding", []))
-        if i.get("value") and (is_mrn or (system and i.get("system") == system)):
+        if not i.get("value"):
+            continue
+        if strict:
+            if system and i.get("system") == system:
+                ids.append(i["value"])
+        elif is_mrn or (system and i.get("system") == system):
             ids.append(i["value"])
     return list(dict.fromkeys(ids))
 

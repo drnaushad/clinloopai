@@ -202,6 +202,7 @@ def preview_png(img: np.ndarray, size: int = 512) -> str:
 class ImagingModel:
     name = "model"
     input = "instance"          # "series": the model reads a whole series (CT, MRI) in one request
+    needs_pixels = True         # False: the product decodes the DICOM file itself (any compression)
     version = ""
     regulatory = "not stated"
     intended_use = ""
@@ -304,6 +305,7 @@ class HTTPImagingModel(ImagingModel):
         self.label_map = cfg.get("label_map", {})
         self.timeout = float(cfg.get("timeout", 60))
         self.input = "series" if str(cfg.get("input", "instance")).lower() == "series" else "instance"
+        self.needs_pixels = False   # the product reads the DICOM bytes: ClinLoop need not decode them
 
     def predict(self, ds, img, content):
         return self._post(content, "application/dicom")
@@ -323,11 +325,22 @@ class HTTPImagingModel(ImagingModel):
         r = requests.post(self.url, data=data, headers=headers, timeout=self.timeout)
         if r.status_code != 200:
             raise ImagingError(f"{self.name}: HTTP {r.status_code}")
+        try:
+            data = r.json()
+        except ValueError:
+            raise ImagingError(f"{self.name}: response is not JSON")
+        # A 200 without a findings list (an async job id, an error body) is not "read, nothing found"
+        if not isinstance(data, dict) or not isinstance(data.get("findings"), list):
+            raise ImagingError(f"{self.name}: response has no 'findings' list")
         out = []
-        for f in (r.json() or {}).get("findings", []):
-            label = self.label_map.get(f.get("label"), f.get("label"))
-            if label:
-                out.append({"label": label, "score": f.get("score"), "positive": f.get("positive")})
+        for f in data["findings"]:
+            if not isinstance(f, dict) or not f.get("label"):
+                raise ImagingError(f"{self.name}: a finding without a label")
+            score, positive = f.get("score"), f.get("positive")
+            if not isinstance(score, (int, float)) and not isinstance(positive, (bool, str)):
+                raise ImagingError(f"{self.name}: finding '{f.get('label')}' has neither a numeric score nor a positive flag")
+            label = self.label_map.get(f["label"], f["label"])
+            out.append({"label": label, "score": score, "positive": positive})
         return out
 
 
@@ -566,7 +579,8 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
     model_results, observations = [], []
     for model in (models if models is not None else registered_models()):
         info = model.describe()
-        reason = model.available() or model.applies(summary) or (None if img is not None else "no image") \
+        reason = model.available() or model.applies(summary) \
+            or (None if img is not None or not getattr(model, "needs_pixels", True) else "no image") \
             or ("reads a whole series: run by the PACS scanner" if getattr(model, "input", "instance") == "series" else None)
         if reason:
             model_results.append({**info, "ran": False, "reason": reason, "findings": []})

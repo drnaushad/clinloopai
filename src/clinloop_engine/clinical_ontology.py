@@ -960,7 +960,8 @@ OBLIGATION_RULES: List[ObligationRule] = [
         ltl_formula="□(RBC ≥ 3/hpf twice in 12mo ∧ age ≥ 35 → ◇_{≤90d} (UROLOGY ∨ CT[kidney ∨ bladder]))",
         references=["Barocas DA et al. Microhematuria: AUA/SUFU Guideline. J Urol 2020;204:778-86"],
         evidence_note="Two positive tests reduce false alarms (menstruation, exercise). Closed by a urology referral or visit, or a CT covering the urinary tract.",
-    ),    ObligationRule(
+    ),
+    ObligationRule(
         rule_id="R056",
         name="Lung Nodule Measured Larger Across Reports → Review and Work-up",
         description=("The same lung nodule (linked across reports by lobe and size) is ≥ 2 mm larger than its smallest "
@@ -979,6 +980,28 @@ OBLIGATION_RULES: List[ObligationRule] = [
         evidence_note=("Catches growth that is never written down: 'stable 8 mm' after 6 mm, or 6 → 7 → 8 mm over three "
                        "scans. The lesion match is probable, so the loop asks a radiologist to confirm it; a re-measurement "
                        "showing no growth closes it with evidence. Volume-doubling time < 400 days is flagged as suspicious."),
+    ),
+    ObligationRule(
+        rule_id="R057",
+        name="Critical Imaging-AI Finding on an Unreported Study → Read the Study Now",
+        description=("An approved imaging-AI product flagged a critical finding (intracranial haemorrhage, pneumothorax, "
+                     "free intraperitoneal air) on a study that has no radiology report yet; a radiologist must read it"),
+        trigger_event=EventType.AI_FINDING,
+        trigger_condition="ai_critical_unread",
+        required_followups=[EventType.AI_FINDING_REVIEWED],
+        deadline_days=1.0 / 24,
+        severity=Severity.CRITICAL,
+        clinical_domain="radiology",
+        ltl_formula="□(AI_FINDING[critical ∧ study unreported] → ◇_{≤60min} RADIOLOGY_REPORT[same study])",
+        references=["ACR Practice Parameter for Communication of Diagnostic Imaging Findings (2020)",
+                    "FDA: Computer-assisted triage and notification software (CADt), 21 CFR 892.2080",
+                    "MFDS 인공지능 의료기기 허가·심사 가이드라인"],
+        evidence_note=("Worklist triage, the purpose of approved triage products: the AI result moves the study up, it never "
+                       "diagnoses or reaches the patient. Closed by the first report of the same study (StudyInstanceUID, or "
+                       "the first report after the study covering its body region); R047 then checks that the report "
+                       "addressed the finding. Not raised when the study was already reported. 60 minutes is the default "
+                       "(CLINLOOP_AI_CRITICAL_READ_MINUTES); research-use products count only when the hospital enables them."),
+        patient_outreach=False,
     ),
 ]
 
@@ -1042,6 +1065,7 @@ RULE_NAMES_KO: Dict[str, str] = {
     "R054": "심방세동 고위험 → 항응고 치료 결정",
     "R055": "지속 현미경적 혈뇨 → 비뇨의학과 평가",
     "R056": "보고서 간 폐결절 크기 증가 → 재검토 및 정밀검사",
+    "R057": "판독 전 검사의 영상 AI 위급 소견 → 즉시 판독",
 }
 assert set(RULE_NAMES_KO) == {r.rule_id for r in OBLIGATION_RULES}, "every rule needs a Korean name"
 
