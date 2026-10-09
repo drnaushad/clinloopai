@@ -290,3 +290,20 @@ def hospital_detector(evaluation_time: Optional[datetime] = None) -> "ClinLoopDe
     """
     days = float(os.environ.get("CLINLOOP_HISTORY_DAYS", "365") or 0)
     return ClinLoopDetector(evaluation_time=evaluation_time, history_days=days if days > 0 else None)
+
+
+def lapse_after_death(detections: List["LoopDetection"], resources) -> List["LoopDetection"]:
+    """
+    Leave out obligations that were not yet done or due when the patient died (Patient.deceasedDateTime):
+    they lapsed, they were not missed (anything recorded after the death cannot have fulfilled them). Obligations already overdue before the death are kept, since
+    they were missed while the patient was alive.
+    """
+    from .fhir_ingest import _resources
+    from .safety_clock import normalize_timestamp
+    died = {r.get("id"): normalize_timestamp(r["deceasedDateTime"]) for r in _resources(resources)
+            if r.get("resourceType") == "Patient" and r.get("deceasedDateTime")}
+    if not died:
+        return detections
+    return [d for d in detections
+            if not (d.patient_id in died and d.loop_status in ("open", "needs_human_review", "delayed")
+                    and d.deadline and datetime.fromisoformat(d.deadline) > died[d.patient_id])]

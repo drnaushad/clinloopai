@@ -37,7 +37,7 @@ from urllib.parse import urlencode
 import requests
 
 from .fhir_ingest import _patient_id, bundle_to_events, patient_strata
-from .loop_detector import ClinLoopDetector, hospital_detector
+from .loop_detector import ClinLoopDetector, hospital_detector, lapse_after_death
 from .loop_store import LoopStore
 from .safety_clock import utc_now
 
@@ -164,7 +164,7 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
             strata = patient_strata(history)
             for p, events in events_by_patient.items():
                 n_events += len(events)
-                result = store.upsert_detections(detector.process_patient(source, p, events),
+                result = store.upsert_detections(lapse_after_death(detector.process_patient(source, p, events), history),
                                                  strata=strata, actor=source)
                 for k, v in result.items():
                     counts[k] += v

@@ -186,11 +186,11 @@ OBLIGATION_RULES: List[ObligationRule] = [
         description="Significantly elevated PSA requires urological evaluation",
         trigger_event=EventType.LAB_RESULT,
         trigger_condition="elevated_psa",
-        required_followups=[EventType.SPECIALIST_REFERRAL, EventType.BIOPSY_ORDER],
+        required_followups=[EventType.SPECIALIST_REFERRAL, EventType.BIOPSY_ORDER, EventType.BIOPSY_RESULT],
         deadline_days=30.0,
         severity=Severity.HIGH,
         clinical_domain="laboratory",
-        ltl_formula="□(LAB_RESULT[PSA>threshold] → ◇_{≤30d} (SPECIALIST_REFERRAL ∨ BIOPSY_ORDER))",
+        ltl_formula="□(LAB_RESULT[PSA>threshold] → ◇_{≤30d} (SPECIALIST_REFERRAL ∨ BIOPSY_ORDER ∨ BIOPSY_RESULT))",
         references=["AUA/SUO Early Detection of Prostate Cancer 2023"],
         followup_logic="any",  # Referral OR Biopsy — disjunctive
     ),

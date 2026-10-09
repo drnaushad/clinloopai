@@ -375,7 +375,8 @@ class DynamicTemporalHypergraph:
 
             # Infer every trigger condition and collect their rules (once each)
             matching_rules: List[ObligationRule] = []
-            for condition in self._infer_conditions(node):
+            # An event with no particular condition still triggers the rules that take any event of its type (R008)
+            for condition in self._infer_conditions(node) or [""]:
                 for rule in get_rules_for_event(event_enum, condition):
                     if rule not in matching_rules:
                         matching_rules.append(rule)

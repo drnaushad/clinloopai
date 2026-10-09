@@ -217,7 +217,7 @@ class TestACRIncidentalFindings(unittest.TestCase):
     def test_renal_mass_referral_closes(self):
         statuses, _, _ = run([patient(), rad("a", T0, "CT abdomen", "2.1 cm enhancing solid renal mass."),
                               referral("2026-01-20T09:00:00Z")])
-        self.assertEqual(statuses, {"R039": "closed"})
+        self.assertEqual(statuses, {"R039": "closed", "R008": "open"})    # the referral itself awaits its visit
 
     def test_renal_biopsy_advice_is_one_loop(self):
         statuses, _, _ = run([patient(), rad("a", T0, "CT abdomen",

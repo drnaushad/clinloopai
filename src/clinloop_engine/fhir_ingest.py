@@ -84,14 +84,33 @@ SMOKING_SNOMED = {
     "8517006": "former", "266919005": "never",
 }
 
-# Monitoring labs that satisfy R010 for a given drug (by LOINC code)
-DRUG_MONITORING_LOINC = {
-    "levothyroxine": {"3016-3"},                       # TSH
-    "lithium": {"14334-7"},                            # serum lithium
-    "metformin": {"2160-0", "33914-3", "62238-1"},     # creatinine / eGFR
-    "lisinopril": {"2823-3", "2160-0"},                # potassium, creatinine
-    "methotrexate": {"6690-2", "1742-6", "718-7"},     # WBC, ALT, haemoglobin
-}
+# Drugs whose start (or dose increase) makes monitoring labs due within 14 days (R010), and the labs
+# that satisfy it: by normalised analyte (any specimen code a laboratory uses) or by LOINC code.
+# (label, drug-name pattern, analytes, LOINC codes)
+# Metformin is not here: renal function is checked before starting and then yearly, not after a start.
+DRUG_MONITORING = [
+    ("levothyroxine", r"levothyrox", {"tsh"}, {"3016-3"}),
+    ("lithium", r"\blithium", set(), {"14334-7"}),
+    # Renin-angiotensin blockers, MRAs and diuretics: potassium and creatinine (KDIGO 2012; NICE NG136)
+    ("ace inhibitor", r"\b\w+pril\b", {"potassium", "creatinine"}, {"2823-3", "6298-4", "2160-0", "38483-4"}),
+    ("angiotensin receptor blocker", r"\b\w+sartan\b|sacubitril", {"potassium", "creatinine"},
+     {"2823-3", "6298-4", "2160-0", "38483-4"}),
+    ("mineralocorticoid antagonist", r"spironolactone|eplerenone|finerenone", {"potassium", "creatinine"},
+     {"2823-3", "6298-4", "2160-0", "38483-4"}),
+    ("diuretic", r"furosemide|bumetanide|torsemide|hydrochlorothiazide|chlorthalidone|indapamide|metolazone",
+     {"potassium", "sodium", "creatinine"}, {"2823-3", "6298-4", "2951-2", "2947-0", "2160-0", "38483-4"}),
+    # Calcineurin inhibitors: drug level or renal function
+    ("calcineurin inhibitor", r"tacrolimus|cyclosporin|ciclosporin", {"creatinine", "drug_level"}, {"2160-0", "38483-4"}),
+    ("methotrexate", r"methotrexate", {"cbc", "liver", "creatinine"}, {"6690-2", "1742-6", "718-7"}),
+    # Cytotoxic chemotherapy: blood count (and renal function) around the first cycle
+    ("chemotherapy", r"paclitaxel|docetaxel|cisplatin|carboplatin|oxaliplatin|cyclophosphamide|doxorubicin|"
+                     r"fluorouracil|capecitabine|gemcitabine|etoposide|irinotecan|vincristine",
+     {"cbc", "creatinine"}, {"6690-2", "718-7", "26515-7", "2160-0", "38483-4"}),
+]
+DRUG_MONITORING_LOINC = {label: loincs for label, _, _, loincs in DRUG_MONITORING}
+# When the monitoring lab is due, if not the rule's 14 days: TSH 6–8 weeks after a levothyroxine start
+# (ATA 2014), a lithium level about a week after a start (NICE CG185)
+MONITORING_DAYS = {"levothyroxine": 56.0, "lithium": 7.0}
 ANTICOAGULANTS = {"warfarin", "coumadin", "와파린"}
 
 # Thresholds (document local overrides with the lab director)
@@ -308,6 +327,10 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
         mapping.append(f"HbA1c ≥{HBA1C_UNCONTROLLED_PCT}%→uncontrolled_hba1c")
     elif codes & LOINC_PSA and isinstance(value, (int, float)) and value > PSA_THRESHOLD_NG_ML:
         details["condition"] = "elevated_psa"
+        # Closed by a urology (or oncology) referral or a prostate biopsy, not by any referral or biopsy
+        details["followup_match"] = {"R004": {"specialty": ["urology", "oncology"], "_lenient": True,
+                                              "_only_for": [EventType.SPECIALIST_REFERRAL.value]}}
+        details["followup_regions"] = {"R004": ["prostate"]}
         mapping.append(f"PSA >{PSA_THRESHOLD_NG_ML}→elevated_psa")
     elif re.search(r"cervical|pap\b|자궁경부", code_text):
         m = re.search(r"\b(HSIL|LSIL|ASC-H|ASC-US|AGC|AIS|squamous cell carcinoma)\b", value_text, re.I)
@@ -505,6 +528,7 @@ def _map_service_request(r: Dict) -> List[Tuple[str, str, Dict]]:
             + " " + _concept_text(r.get("performerType") if isinstance(r.get("performerType"), dict) else None))
         if spec:
             details["specialty"] = spec
+            details["followup_match"] = {"R008": {"specialty": spec, "_lenient": True}}
     details["mapping"] = [f"ServiceRequest→{etype}"]
     return [(etype, ts, details)]
 
@@ -556,6 +580,12 @@ _EUS = re.compile(r"endoscopic ultrasound|\beus\b|내시경\s*초음파", re.I)
 _PSYCH = re.compile(r"psychiatr|mental health|behavioral health|정신", re.I)
 
 
+_OBSTETRIC = re.compile(r"obstetric|deliver|labou?r and|childbirth|caesarean|cesarean|분만|출산", re.I)
+_HDP = re.compile(r"pre-?eclampsia|eclampsia|hellp|gestational hypertension|pregnancy[- ]induced hypertension|"
+                  r"hypertensive disorder of pregnancy|임신\s*중독|자간전증|자간증|임신성\s*고혈압", re.I)
+_HDP_SEVERE = re.compile(r"(?<![-\w])eclampsia|hellp|severe pre-?eclampsia|(?<!전)자간증", re.I)
+
+
 def _map_encounter(r: Dict) -> List[Tuple[str, str, Dict]]:
     period = r.get("period") or {}
     enc_class = str((r.get("class") or {}).get("code", "")).upper()
@@ -568,16 +598,27 @@ def _map_encounter(r: Dict) -> List[Tuple[str, str, Dict]]:
                        + [_concept_text(t) for t in r.get("type", [])]).lower()
     if enc_class in ("IMP", "ACUTE", "NONAC", "EMER", "OBSENC") and period.get("end"):
         details = {"primary_diagnosis": primary_dx, "encounter_class": enc_class,
+                   "arrived_at": period.get("start"),
                    "mapping": [f"Encounter({enc_class}) end→discharge"]}
+        if _OBSTETRIC.search(service + " " + dx_text):
+            details["obstetric"] = True
         if enc_class in ("IMP", "ACUTE") and _PSYCH.search(service):
             details["psychiatric_admission"] = True
         if "severe" in primary_dx and re.search(r"preeclampsia|eclampsia|hypertens", primary_dx):
             details["severe_hypertension"] = True
         return [(EventType.DISCHARGE.value, period["end"], details)]
-    if enc_class == "AMB" and str(r.get("status", "")).lower() == "finished":
+    if enc_class == "AMB" and str(r.get("status", "")).lower() == "finished" \
+            and not re.search(r"death certific|사망\s*진단", service):      # paperwork after a death is not a visit
         when = _first(period.get("start"), period.get("end"))
+        spec = specialty_of(service + " " + " ".join(_concept_text(s) for s in r.get("specialty", [])
+                                                      if isinstance(r.get("specialty"), list)))
+        extra = {"specialty": spec} if spec else {}
         events = [(EventType.FOLLOWUP_APPOINTMENT.value, when,
-                   {"mapping": ["Encounter(AMB) finished→followup_appointment"]})]
+                   {**extra, "mapping": ["Encounter(AMB) finished→followup_appointment"]})]
+        if spec or any(_ref_id(b, "ServiceRequest") for b in r.get("basedOn", [])):
+            # A visit in a named specialty, or one booked against a referral, completes a referral (R008)
+            events.append((EventType.REFERRAL_VISIT.value, when,
+                           {**extra, "mapping": ["Encounter(AMB, specialty or referral)→referral_visit"]}))
         if _PSYCH.search(service):
             events.append((EventType.MENTAL_HEALTH_FOLLOWUP.value, when,
                            {"mapping": ["Encounter(AMB, mental health)→mental_health_followup"]}))
@@ -589,6 +630,12 @@ def _map_condition(r: Dict) -> List[Tuple[str, str, Dict]]:
     """Active problem-list entries: all as context; HCC risk carries an obligation, cancer and immunocompromise inform radiology."""
     clinical = _codes(r.get("clinicalStatus")) or {"active"}
     if not clinical & {"active", "recurrence", "relapse"}:
+        # A resolved hypertensive disorder of pregnancy is still the history the postpartum check needs (R024)
+        text = _concept_text(r.get("code"))
+        if _HDP.search(text) and _codes(r.get("verificationStatus")) & {"refuted", "entered-in-error"} == set():
+            ts = _first(r.get("onsetDateTime"), r.get("recordedDate"))
+            return [(EventType.DIAGNOSIS.value, ts, {"diagnosis": text, "resolved": True,
+                                                     "mapping": ["Condition(resolved HDP)→diagnosis, pregnancy history"]})]
         return []
     verification = next(iter(_codes(r.get("verificationStatus"))), None)
     if verification in ("refuted", "entered-in-error"):
@@ -649,9 +696,11 @@ def _map_medication_request(r: Dict) -> List[Tuple[str, str, Dict]]:
     if any(a in name for a in ANTICOAGULANTS):
         details.update(drug="warfarin", condition="anticoagulant_dose_change")
     else:
-        for drug in DRUG_MONITORING_LOINC:
-            if drug in name:
+        for drug, pattern, _, _ in DRUG_MONITORING:
+            if re.search(pattern, name or "", re.I):
                 details.update(drug=drug, condition="requires_monitoring")
+                if drug in MONITORING_DAYS:
+                    details["rule_deadline_days"] = {"R010": MONITORING_DAYS[drug]}
                 break
     details["mapping"] = [f"MedicationRequest→medication_change ({details.get('condition', 'no rule')})"]
     return [(EventType.MEDICATION_CHANGE.value, ts, details)]
@@ -708,6 +757,7 @@ def _map_procedure(r: Dict) -> List[Tuple[str, str, Dict]]:
         when = _first(ts, r.get("performedDateTime"), (r.get("performedPeriod") or {}).get("start"))
         return [(EventType.SPECIALIST_REFERRAL.value, when,
                  {"order": _concept_text(r.get("code")), "specialty": spec,
+                  "followup_match": {"R008": {"specialty": spec, "_lenient": True}},
                   "mapping": [f"Procedure(referral to {spec})→specialist_referral"]})]
     elif _DIALYSIS.search(text):
         # Context, not an obligation: creatinine on dialysis is not an AKI warning (R053)
@@ -930,8 +980,10 @@ def _derive_context(events: List[Dict]) -> None:
             if e["event_type"] == EventType.LIVER_IMAGING.value and ts(e) >= risk_since \
                     and is_fulfilling_status(e["status"]):
                 e["details"]["hcc_surveillance"] = True
+    _merge_ed_into_admission(events, ts)
     _mark_renewals(events, ts)
     _mark_known_heart_failure(events, ts)
+    _mark_hdp_deliveries(events, ts)
     med_changes = [e for e in events if e["event_type"] == EventType.MEDICATION_CHANGE.value
                    and e["details"].get("condition") == "requires_monitoring"]
     derived: List[Dict] = []
@@ -948,9 +1000,11 @@ def _derive_context(events: List[Dict]) -> None:
                 e["details"].setdefault("condition", "positive_post_discharge")
 
         loinc = set(e["details"].get("loinc", []))
+        analyte = e["details"].get("analyte")
         for med in med_changes:
             drug = med["details"].get("drug")
-            if loinc & DRUG_MONITORING_LOINC.get(drug, set()) and ts(med) < t:
+            if (loinc & DRUG_MONITORING_LOINC.get(drug, set()) or analyte in _MONITORING_ANALYTES.get(drug, set())) \
+                    and ts(med) < t:
                 derived.append({
                     **{k: v for k, v in e.items() if k != "details"},
                     "event_id": f"{e['source']}:followup_lab",
@@ -961,12 +1015,25 @@ def _derive_context(events: List[Dict]) -> None:
     events.extend(derived)
 
 
+_MONITORING_ANALYTES = {label: analytes for label, _, analytes, _ in DRUG_MONITORING}
+
 # Numeric results without any flag or range, from which the feed is reported as unable to flag abnormal results
 UNFLAGGED_LABS_WARN_AT = 20
 
 # A prescription for the same drug and dose within this many days of the previous one is a renewal
 RENEWAL_DAYS = 400
 _HEART_FAILURE = re.compile(r"heart[ _]failure|\bchf\b|\bhfref\b|\bhfpef\b|심부전", re.I)
+
+
+def _product(text: str) -> str:
+    """The drug and form without its strength ('lisinopril oral tablet'), to compare doses of one product."""
+    t = re.sub(r"\d+(?:\.\d+)?\s*(?:mg|mcg|µg|ug|g|ml|unt|units?|meq|%)?(?:/\s*(?:ml|mg|actuat|hr))?\b", " ", text.lower())
+    return " ".join(t.split())
+
+
+def _strength_mg(text: str) -> Optional[float]:
+    m = re.search(r"(\d+(?:\.\d+)?)\s*mg\b", text or "", re.I)
+    return float(m.group(1)) if m else None
 
 
 def _mark_renewals(events: List[Dict], ts) -> None:
@@ -986,6 +1053,54 @@ def _mark_renewals(events: List[Dict], ts) -> None:
             d["renewal"] = True
             d["mapping"] = d.get("mapping", []) + [
                 f"same {d['drug']} and dose as {prev.date()}: renewal, no new monitoring due"]
+            continue
+        # A lower strength of a drug already taken is a dose reduction: monitoring labs are for starts and
+        # increases (an anticoagulant's INR is due after any change, so it is not exempt)
+        if d.get("condition") == "requires_monitoring":
+            strength = _strength_mg(d.get("medication") or "")
+            product = _product(d.get("medication") or "")
+            earlier = [_strength_mg(k[1]) for k, t in last.items()        # the same product and form only
+                       if k[0] == d["drug"] and k != key and _product(k[1]) == product
+                       and (ts(e) - t).days <= RENEWAL_DAYS]
+            if strength is not None and earlier and all(x is not None and x > strength for x in earlier):
+                d.pop("condition")
+                d["dose_reduction"] = True
+                d["mapping"] = d.get("mapping", []) + [f"{d['drug']} dose reduced: no new monitoring due"]
+
+
+def _merge_ed_into_admission(events: List[Dict], ts) -> None:
+    """
+    An emergency visit that ends in admission is one stay, not two discharges: the patient leaves the ED
+    for a ward, not for home. Its discharge is dropped when an inpatient stay began during the ED visit
+    or within 12 hours of it (otherwise post-discharge rules such as R014 and R023 would fire twice).
+    """
+    stays = [e for e in events if e["event_type"] == EventType.DISCHARGE.value and e["details"].get("arrived_at")]
+    drop = []
+    for e in stays:
+        start, end = normalize_timestamp(e["details"]["arrived_at"]), ts(e)
+        # Another stay began during this one (or within 12 hours of its end) and lasted longer: the patient
+        # moved on (ED → ward, or two overlapping encounters for one admission); only the last end is a discharge
+        if any(x is not e and start <= normalize_timestamp(x["details"]["arrived_at"]) <= end + timedelta(hours=12)
+               and ts(x) > end for x in stays):
+            drop.append(e)
+    for e in drop:
+        events.remove(e)
+
+
+def _mark_hdp_deliveries(events: List[Dict], ts) -> None:
+    """A delivery stay in a woman diagnosed with a hypertensive disorder of this pregnancy: postpartum BP check (R024)."""
+    hdp = [(ts(e), str(e["details"].get("diagnosis", ""))) for e in events
+           if e["event_type"] == EventType.DIAGNOSIS.value and _HDP.search(str(e["details"].get("diagnosis", "")))]
+    for e in events:
+        d = e["details"]
+        if e["event_type"] != EventType.DISCHARGE.value or not d.get("obstetric"):
+            continue
+        found = [txt for t, txt in hdp if timedelta(0) <= ts(e) - t <= timedelta(days=300)]
+        if found:
+            d["extra_conditions"] = list(d.get("extra_conditions") or []) + ["hypertensive_disorder_pregnancy"]
+            if any(_HDP_SEVERE.search(x) for x in found):
+                d["severe_hypertension"] = True
+            d.setdefault("mapping", []).append(f"delivery after '{found[-1]}' → postpartum BP check")
 
 
 def _mark_known_heart_failure(events: List[Dict], ts) -> None:

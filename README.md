@@ -375,6 +375,7 @@ Configuration:
 | `CLINLOOP_DB` | Loop registry (SQLite) | `data/clinloop.db` |
 | `CLINLOOP_FHIR_BASE` / `CLINLOOP_FHIR_TOKEN` | Hospital FHIR server and read-only token; enables background sync | sync off |
 | `CLINLOOP_FHIR_SYNC_MINUTES` / `CLINLOOP_FHIR_INITIAL_DAYS` | Sync interval / first-sync look-back | 15 / 365 |
+| `CLINLOOP_HISTORY_DAYS` | Obligations whose deadline passed more than this many days ago stay off the worklist (0 = keep all) | 365 |
 | `CLINLOOP_FEED_MAX_SILENCE_HOURS` | Feed alarm threshold | 24 |
 | `CLINLOOP_OUTREACH_PROVIDER` | `outbox` (local JSONL, nothing leaves the server) or `webhook` | `outbox` |
 | `CLINLOOP_OUTREACH_WEBHOOK_URL` | Hospital integration endpoint for KakaoTalk/SMS delivery | — |
@@ -509,6 +510,15 @@ See [`docs/IMAGING.md`](docs/IMAGING.md). In short:
 
   Method, every defect found and the limits are in
   [`docs/ACCURACY_EVALUATION.md`](docs/ACCURACY_EVALUATION.md).
+- **Whole-record test on EHR-style data**: a complete Synthea FHIR bulk export (120 patients, 144,758
+  records) and the HL7 FHIR R4 examples ran without errors. An independent blind reviewer listed 210
+  obligations:
+  - **First pass:** the app found 87 and raised 1,048 loops, mostly noise from prescription renewals,
+    known heart failure and dialysis creatinine.
+  - **After the fixes:** it finds 149 (71%), 123 with the same status, and raises 194 loops; no follow-up
+    is shown as done when it was not.
+
+  Details and remaining disagreements are in [`docs/HOSPITAL_DATA_TEST.md`](docs/HOSPITAL_DATA_TEST.md).
 - **Model-based second reader** (`CLINLOOP_SECOND_READER=1`, off by default): the hospital's own
   on-premise model reads each recent report. Any item it quotes word for word that no rule tracked
   goes to a clinician for review (R058).
