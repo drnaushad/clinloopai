@@ -1,0 +1,18 @@
+# One-click public demo on Render (https://render.com/deploy?repo=https://github.com/drnaushad/clinloopai)
+#
+# Runs the published image in demo mode: synthetic patients only, a published
+# view-only token, an in-memory database that resets on every restart, and no
+# hospital connections. Never point this service at real patient data.
+services:
+  - type: web
+    name: clinloopai-demo
+    runtime: image
+    image:
+      url: ghcr.io/drnaushad/clinloopai:latest
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: CLINLOOP_DEMO
+        value: "1"
+      - key: PORT
+        value: "8124"

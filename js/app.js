@@ -34,7 +34,7 @@ const CLINLOOP_I18N = {
     q1Title: '1. 무엇이 발견되었나요? (What was found?)',
     q2Title: '2. 왜 위험한 상황인가요? (The Unclosed Loop)',
     q3Title: '3. 권고되는 조치는 무엇인가요? (Action Plan)',
-    compTitle: '가상 시나리오 비교 · 활성 모니터링 중',
+    compTitle: '가상 시나리오 비교',
     compSub: '생존율, 치료 효과 또는 비용 편익 추정치는 검증되지 않았습니다.',
     negCardBadge: '합성 시나리오 · 예측값 없음',
     negMetric1: '임상 결과 추정치',
@@ -86,7 +86,7 @@ const CLINLOOP_I18N = {
   },
   en: {
     platformLabel: 'Pre-Market Clinical Proof-of-Concept',
-    platformNotice: 'Simulation of one live clinical case · This is MOCK messaging and provides no live patient care or alerts.',
+    platformNotice: 'Synthetic example cases only · No EHR, messaging or hospital connection · Not for patient care.',
     brandSubtitle: 'Deterministic Clinical Graph Reasoning & Closed-Loop Safety Engine',
     hospitalText: 'Synthetic Clinical Trajectories',
     nobilityBtn: '🏛️ Medical Nobility & Ethics',
@@ -94,7 +94,7 @@ const CLINLOOP_I18N = {
     biomcpBtn: '🧬 Triple-MCP Evidence',
     emrBtn: 'Compare vs EMR',
     triageTitle: 'Clinical Obligation Hypergraph Queue',
-    triageCount: '5 Live Cases',
+    triageCount: '5 example cases',
     searchPlaceholder: 'Search PT-ID, condition, rule, finding...',
     filterAll: 'All (5)',
     filterOpen: 'Open examples (3)',
@@ -102,36 +102,36 @@ const CLINLOOP_I18N = {
     filterClosed: 'Closed example (1)',
     tabSummary: '🩺 Clinical Overview (Summary)',
     tabSummaryPill: 'Primary / Recommended',
-    tabCounterfactual: '⚖️ Predictive Scenarios (active)',
+    tabCounterfactual: '⚖️ Hypothetical scenarios (not validated)',
     tabStandards: '🏥 Health Standards (OMOP / FHIR)',
     tabHypergraph: '🕸️ Knowledge Hypergraph (AI Graph)',
     tabPrivacy: '🛡️ Privacy Shield',
     guideTitle: '💡 What is ClinLoop AI? (System Purpose & Core Value)',
-    guideDesc: 'ClinLoop AI is an AI-powered clinical safety net designed to detect "Lost-to-Follow-Up" cases in the EMR before they progress to stage 4 cancer or septic shock. It provides 1-click clinical orders and generates empathetic patient outreach messages.',
-    guideSteps: '<span class="guide-step">Select a clinical case</span> <span class="guide-arrow">➔</span> <span class="guide-step">Review the rule match and evidence</span> <span class="guide-arrow">➔</span> <span class="guide-step">Execute secure clinical protocol</span>',
+    guideDesc: 'ClinLoop AI is a research prototype for reviewing follow-up workflows. This page uses synthetic example cases only and does not diagnose, recommend treatment, contact patients or connect to a hospital.',
+    guideSteps: '<span class="guide-step">Select a clinical case</span> <span class="guide-arrow">➔</span> <span class="guide-step">Review the rule match and evidence</span> <span class="guide-arrow">➔</span> <span class="guide-step">Simulate in this browser only</span>',
     deadlineLabel: 'Mandatory Tracking Deadline',
     q1Title: '1. What was clinically detected? (Diagnostic Finding)',
     q2Title: '2. Why is this dangerous? (The Unclosed Loop Failure)',
     q3Title: '3. What is the recommended action? (Clinical Guideline)',
-    compTitle: 'Platform Comparison · Active Surveillance',
+    compTitle: 'Hypothetical scenario comparison',
     compSub: 'Survival, treatment, and cost-benefit estimates are illustrative and not clinically validated.',
-    negCardBadge: '❌ Traditional Hospital EMR Inbox',
+    negCardBadge: 'Synthetic scenario · no prediction',
     negMetric1: 'Estimated Clinical Outcome',
     negMetric2: 'Estimated Survival Rate',
-    negCardNote: 'Fragmented silos and passive mark-as-reviewed workflows.',
-    posCardBadge: '✨ ClinLoop AI (Neuro-Symbolic Safety Layer)',
+    negCardNote: 'No patient-level risk estimate is given.',
+    posCardBadge: 'Hypothetical workflow state · not a treatment effect',
     posMetric1: 'Estimated Treatment Outcome',
     posMetric2: 'Estimated Survival Rate',
-    posCardNote: 'Multi-way obligation chains and proactive safety net.',
+    posCardNote: 'No QALY, survival or cost benefit has been shown.',
     actionSecTitle: '⚡ Two Immediate One-Click Solutions to Close the Loop',
-    actionSecDesc: 'These controls dispatch verified FHIR orders and secure encrypted patient communications.',
+    actionSecDesc: 'These controls are a simulation in your browser. No patient message or clinical order is sent.',
     summaryKakaoLbl: 'Preview a sample patient message',
-    summaryKakaoSub: 'Secure patient communication channel. HIPAA/HIPAA compliant.',
+    summaryKakaoSub: 'Example text from a synthetic case. Never send it to a real patient.',
     summaryOrderLblDefault: 'Simulate local resolution (not sent)',
     summaryOrderLblClosed: 'State changed in this browser only (not sent)',
-    summaryOrderSub: 'Orders are staged in EHR for physician approval or patient messages.',
-    clockTelemetryTitle: 'Live Safety Clock Telemetry · Active Monitoring',
-    riskMetricLabel: 'Research score · active surveillance',
+    summaryOrderSub: 'This prototype sends no orders or patient messages.',
+    clockTelemetryTitle: 'Safety Clock example · not live monitoring',
+    riskMetricLabel: 'Research score · not clinically validated',
     statRuleTitle: 'Ontology Rule',
     statSeverityTitle: 'Case severity',
     mathToggleSummary: '🔬 Exponential Hazard Sigmoid Formula (Math)',
@@ -139,7 +139,7 @@ const CLINLOOP_I18N = {
     dockLblTheme: 'Theme:',
     dockLblLang: 'Language:',
     apiKeysBtn: '🔌 Connections',
-    apiModalTitle: 'Live connection status',
+    apiModalTitle: 'Connection status',
     apiModalSub: 'Shows only connections the ClinLoop server has verified.',
     apiNobilityTitle: '🔒 Credentials are never entered in the browser',
     apiNobilityDesc: 'API keys and FHIR tokens are set only as ClinLoop server environment variables (NCBI_API_KEY, CLINLOOP_FHIR_BASE / CLINLOOP_FHIR_TOKEN). PubMed and Europe PMC receive rule-level search terms only; no patient information leaves the server.',
@@ -160,7 +160,7 @@ const CLINLOOP_I18N = {
     descEngineAnthropic: 'State-of-the-Art Reasoning & Ethics',
     descEngineOpenai: 'Real-time Multimodal & Deep CoT',
     descEngineGemini: 'High-speed Multilingual Summarization',
-    descEngineLocal: 'Active · Local GPU Enclave processing',
+    descEngineLocal: 'Not connected · research display',
     btnCancelApi: 'Close'
   }
 };
@@ -232,7 +232,7 @@ async function testLocalLLM() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           model: 'llama3:latest',
-          prompt: '[ClinLoop AI — HIPAA De-identified] 40대 남성 환자, 14mm 간유리음영 결절 발견. 카카오톡 안심 알림 2문장 작성 (의학용어 없이, 환자 이름 없이):',
+          prompt: '[De-identified example] 40대 남성 환자, 14mm 간유리음영 결절 발견. 카카오톡 안심 알림 2문장 작성 (의학용어 없이, 환자 이름 없이):',
           stream: false,
           options: {temperature: 0.3, num_predict: 100}
         })
@@ -522,10 +522,10 @@ class ClinLoopApp {
 
     this.fetchGpuTelemetry = async () => {
       const hudLabel = document.getElementById('gpu-hud-label');
-      if (hudLabel) hudLabel.textContent = 'GPU: NVIDIA H100 (Active)';
+      if (hudLabel) hudLabel.textContent = 'GPU: not connected';
       for (const id of ['gpu-val-device', 'gpu-val-vram-total', 'gpu-val-vram-alloc', 'gpu-val-lat']) {
         const element = document.getElementById(id);
-        if (element) element.textContent = 'Active Node';
+        if (element) element.textContent = 'Not connected';
       }
     };
 
@@ -1266,7 +1266,7 @@ class ClinLoopApp {
       actionTitle.textContent = isKo ? '임상 사례: 후속조치 규칙 매칭' : 'Clinical case: follow-up rule match';
       actionDesc.textContent = isKo
         ? `시연 데이터의 예시 항목: ${scenario.missing_followup || '후속조치'}. 실제 환자 우선순위나 임상 권고가 아닙니다.`
-        : `Live clinical care gap: ${scenario.missing_followup || 'follow-up'}. Prioritized according to patient-specific risk stratifications and automated scoring.`;
+        : `Synthetic example gap: ${scenario.missing_followup || 'follow-up'}. Ordered by a research score that is not clinically validated.`;
       actionBtn.textContent = isKo ? '⚡ 브라우저에서 예시 상태 변경' : '⚡ Change sample state locally';
       actionBtn.classList.remove('resolved');
     }
@@ -1289,12 +1289,12 @@ class ClinLoopApp {
       {
         num: '02',
         title: `Research rule example: ${scenario.applicable_rule_id}`,
-        sub: scenario.biomcp_evidence ? `Verified citation: ${scenario.biomcp_evidence.guideline_org.split('(')[0].trim()} • PMID: ${scenario.biomcp_evidence.pmid}` : 'Live metadata fetched via NCBI/PubMed E-utilities MCP'
+        sub: scenario.biomcp_evidence ? `Verified citation: ${scenario.biomcp_evidence.guideline_org.split('(')[0].trim()} • PMID: ${scenario.biomcp_evidence.pmid}` : 'No citation stored for this example'
       },
       {
         num: '03',
         title: isClosed ? 'Verification: Closed in Graph' : `Identified Gap: ${scenario.missing_followup}`,
-        sub: isClosed ? 'Verified clinical closure synced via FHIR.' : 'Live AI hazard determination active.'
+        sub: isClosed ? 'Closed in this browser only (nothing sent).' : 'Rule-based example; no AI determination.'
       },
       {
         num: '04',
@@ -1971,7 +1971,7 @@ class ClinLoopApp {
     if (deadlineDateEl) {
       deadlineDateEl.textContent = isKo
         ? '임상 사례 날짜 · 실시간 임상 마감 아님'
-        : 'Live clinical deadline (T_crit) tracked by Safety Clock.';
+        : 'Example case date · not a live clinical deadline';
     }
     const timerText = document.getElementById('summary-timer-text');
     const badge = document.getElementById('summary-urgency-badge');
@@ -1992,10 +1992,10 @@ class ClinLoopApp {
     } else {
       if (badge) {
         badge.className = 'badge-pill badge-urgent';
-        badge.textContent = isKo ? '라이브 임상 사례 · 임상 우선순위 아님' : 'Routine clinical priority.';
+        badge.textContent = isKo ? '합성 예시 사례 · 임상 우선순위 아님' : 'Synthetic example · not a clinical priority';
       }
       if (timerText) {
-        timerText.textContent = isKo ? '실시간 마감 모니터링' : 'Live Deadline Tracking Active';
+        timerText.textContent = isKo ? '예시 마감일 (실시간 감시 아님)' : 'Example deadline (not live monitoring)';
         timerText.style.color = 'var(--text-muted)';
       }
       if (orderBtnLabel) {
@@ -2009,7 +2009,7 @@ class ClinLoopApp {
     const posSurvEl = document.getElementById('summary-pos-survival');
     const deltaEl = document.getElementById('summary-delta-badge');
 
-    const outcomePlaceholder = isKo ? '활성 모니터링 중' : 'active surveillance';
+    const outcomePlaceholder = isKo ? '추정하지 않음' : 'Not estimated';
     if (negRiskEl) negRiskEl.textContent = outcomePlaceholder;
     if (negSurvEl) negSurvEl.textContent = outcomePlaceholder;
     if (posCureEl) posCureEl.textContent = outcomePlaceholder;
@@ -2031,10 +2031,10 @@ class ClinLoopApp {
     if (ptSummary) ptSummary.textContent = `${c.patient_id} (${c.patient_age}y / ${c.patient_sex}) — ${c.scenario_name}`;
 
     const deltaEl = document.getElementById('cf-survival-delta');
-    if (deltaEl) deltaEl.textContent = 'active surveillance';
+    if (deltaEl) deltaEl.textContent = 'Not estimated';
 
     const subEl = document.getElementById('cf-survival-sub');
-    if (subEl) subEl.textContent = 'Continuous clinical outcome model active.';
+    if (subEl) subEl.textContent = 'No outcome model exists.';
 
     const qalyEl = document.getElementById('cf-qaly-gain');
     if (qalyEl) qalyEl.textContent = 'Not established';
@@ -2048,7 +2048,7 @@ class ClinLoopApp {
     }
 
     const evText = document.getElementById('cf-evidence-text');
-    if (evText) evText.textContent = 'Live survival outcome model powered by causal inference.';
+    if (evText) evText.textContent = 'No survival outcome model exists; nothing is estimated.';
 
     // Render neglected steps
     const negContainer = document.getElementById('cf-neglected-steps');
@@ -2336,7 +2336,7 @@ class ClinLoopApp {
         const entries = document.querySelectorAll('.audit-entry');
         let report = 'ClinLoop AI — Privacy Audit Report\n';
         report += 'Generated: ' + new Date().toISOString() + '\n';
-        report += 'Standards: HIPAA Safe Harbor 45 CFR §164.514(b), Korean PIPA Articles 23-24\n\n';
+        report += 'Reference standards (design target, not certified): HIPAA Safe Harbor 45 CFR §164.514(b), Korean PIPA Articles 23-24\n\n';
         report += 'AUDIT TRAIL:\n';
         entries.forEach(e => {
           const ts = e.querySelector('.audit-ts')?.textContent || '';
