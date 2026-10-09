@@ -1,0 +1,1 @@
+{"enabled":false,"pacs_configured":false,"fhir_configured":false,"patient_id_system_configured":false,"interval_minutes":10.0,"modalities":["CR","DX","MG","CT","MR","US"],"lookback_days":2,"research_models_allowed":false,"models":[],"models_not_run":[],"status":"NEVER","last_success":null,"hours_since_success":null,"studies":{},"recent_runs":[],"problems":[]}

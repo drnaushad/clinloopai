@@ -1,0 +1,37 @@
+/* responsive.css: shared phone and tablet fixes for every page (loaded last, after each page's own styles) */
+
+/* Navigation wraps whole links, never single letters */
+header nav { flex-wrap: wrap; row-gap: 8px; justify-content: flex-end; }
+header nav a, header nav button { white-space: nowrap; }
+
+img, svg, video, canvas { max-width: 100%; }
+pre, code { overflow-wrap: anywhere; }
+table { display: block; max-width: 100%; overflow-x: auto; }
+
+/* Comfortable touch targets */
+@media (pointer: coarse) {
+  button, select, .btn, header nav a { min-height: 40px; }
+  header nav a { display: inline-flex; align-items: center; }
+}
+
+@media (max-width: 640px) {
+  /* Inputs at 16px stop phones from zooming in on focus */
+  input, select, textarea { font-size: 16px !important; }
+  header nav { justify-content: flex-start; gap: 6px 14px; }
+  .wrap { padding-left: 14px !important; padding-right: 14px !important; }
+  /* Cockpit: the floating theme/language bar sits in the page instead of covering it */
+  .floating-theme-switch-dock { position: static !important; margin: 16px auto !important; width: max-content;
+                                max-width: calc(100% - 24px); flex-wrap: wrap; justify-content: center;
+                                border-radius: 16px !important; }
+  .header-badges .badge, #badge-hospital { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  /* Cockpit on a phone: the essentials first; secondary controls stay on larger screens */
+  #btn-gpu-hud, #btn-try-voice-agent, #lives-counter-pill, #live-cockpit-clock, #btn-nobility-charter,
+  #sound-toggle, #btn-emr-comparison { display: none !important; }
+}
+
+/* Public static demo: no server to connect to, so the connection form is not shown */
+.static-demo #connect-form { display: none; }
+
+@media print {
+  #clinloop-demo-banner, header nav, .floating-theme-switch-dock { display: none !important; }
+}

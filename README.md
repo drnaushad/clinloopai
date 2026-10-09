@@ -1,9 +1,15 @@
 # ClinLoop AI — Closed-Loop Clinical Safety Monitoring
 
 > 설명가능 AI 기반 미완결 진료루프 탐지·종결 지원 플랫폼
-> **Website:** [https://clinloopai.app](https://clinloopai.app) shows the cockpit on five synthetic
-> cases. The clinical pages (worklist, patient graph, imaging, quality, rule sign-off) need a ClinLoop
-> server; to try them, run the [public demo](#try-the-full-app-public-demo) (one click or one command).
+> **Try it:** [https://clinloopai.app](https://clinloopai.app) works on any phone, tablet or computer, with
+> no sign-up and no install.
+> - **The whole app:** [worklist](https://clinloopai.app/worklist.html), [patient graph](https://clinloopai.app/patient.html),
+>   [quality](https://clinloopai.app/quality.html), [rule sign-off](https://clinloopai.app/governance.html) and
+>   [imaging](https://clinloopai.app/imaging.html).
+> - **The data:** synthetic patients only, read-only.
+> - **No server:** the website serves a pre-computed snapshot from a global CDN, so any number of people can
+>   use it at once. To act on loops (acknowledge, close, upload), run your own server
+>   ([public demo](#try-the-full-app-public-demo) or a hospital install).
 
 ClinLoop AI tracks **clinical obligations**, not diagnoses. Examples: an abnormal lab that must be
 communicated, an incidental lung nodule that needs a follow-up CT, a warfarin dose change that needs
@@ -467,6 +473,18 @@ Build locally instead of pulling: `docker build -t ghcr.io/drnaushad/clinloopai:
 `/api/v1/agent/safety-clock/status` reports the background watchdog over the cockpit demo cases.
 
 #### Try the full app (public demo)
+
+**On the website (read-only):** https://clinloopai.app. The clinical pages read `demo/api/`, a snapshot of
+the demo server's answers that `scripts/build_static_demo.py` builds from the synthetic patients:
+
+```bash
+python scripts/build_static_demo.py
+```
+
+`js/demo.js` answers the pages' requests from those files when no server is present. Requests that
+would change something get a clear "read-only demo" answer.
+
+**With your own server (read-only, live engine):**
 
 Demo mode lets anyone use every page through a link, with no risk to real patients:
 
