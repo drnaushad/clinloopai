@@ -42,6 +42,7 @@ from src.clinloop_engine.clinical_api import router as clinical_router, escalati
 from src.clinloop_engine.imaging_api import router as imaging_router
 from src.clinloop_engine.patient_graph import router as graph_router
 from src.clinloop_engine.fhir_sync import sync_loop
+from src.clinloop_engine.imaging_scanner import scan_loop
 
 # Initialize FastAPI App
 @asynccontextmanager
@@ -49,7 +50,8 @@ async def lifespan(_app: FastAPI):
     # Background safety tasks: the Safety Clock watchdog over the demo cases,
     # and escalation of unacknowledged overdue loops in the pilot registry
     tasks = [asyncio.create_task(safety_clock_loop()), asyncio.create_task(escalation_loop()),
-             asyncio.create_task(sync_loop(get_store))]   # no-op unless CLINLOOP_FHIR_BASE is set
+             asyncio.create_task(sync_loop(get_store)),    # no-op unless CLINLOOP_FHIR_BASE is set
+             asyncio.create_task(scan_loop(get_store))]    # no-op unless CLINLOOP_IMAGE_SCAN=1 and a PACS
     yield
     for t in tasks:
         t.cancel()

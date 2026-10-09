@@ -10,6 +10,11 @@ report titles.
 Works with any DICOMweb server (Orthanc, dcm4chee, Sectra, Infinitt, Google
 Cloud Healthcare, …). Read-only.
 
+Pixel data is retrieved (WADO-RS) only by the automatic image scanner
+(imaging_scanner.py), which is off unless the hospital turns it on, and only
+for studies an enabled imaging model applies to. Images are analysed in memory
+and never stored.
+
 Configuration (environment):
   CLINLOOP_PACS_DICOMWEB     QIDO-RS base URL, e.g. https://pacs.hospital.local/dicom-web
   CLINLOOP_PACS_TOKEN        bearer token (optional)
@@ -24,6 +29,7 @@ Every study returned is checked: its PatientID must equal the one queried.
 
 import logging
 import os
+import re
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -38,6 +44,7 @@ TAG = {
     "description": "00081030", "modalities": "00080061", "patient_id": "00100020",
     "n_series": "00201206", "n_instances": "00201208",
     "series_uid": "0020000E", "modality": "00080060", "series_description": "0008103E", "body_part": "00180015",
+    "sop_uid": "00080018", "instance_number": "00200013",
 }
 STUDY_FIELDS = ["00081030", "00080061", "00201206", "00201208", "00080050", "00080030"]
 SERIES_FIELDS = ["0008103E", "00180015", "00080060"]
@@ -45,6 +52,16 @@ SERIES_FIELDS = ["0008103E", "00180015", "00080060"]
 
 class PACSError(RuntimeError):
     pass
+
+
+_UID = re.compile(r"^[0-9]+(?:\.[0-9]+)*$")
+
+
+def _uid(value: str) -> str:
+    """A DICOM UID (digits and dots, ≤64 characters) before it goes into a URL path."""
+    if not isinstance(value, str) or len(value) > 64 or not _UID.match(value):
+        raise PACSError("not a valid DICOM UID: not requested")
+    return value
 
 
 def _value(item: Dict[str, Any], tag: str, many: bool = False):
@@ -81,34 +98,106 @@ class DICOMwebClient:
             raise PACSError(f"QIDO-RS {path}: unexpected response (not a list of studies)")
         return data
 
+    def _study(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        uid = _value(item, TAG["study_uid"])
+        if not uid:
+            return None
+        return {
+            "study_uid": uid, "accession": _value(item, TAG["accession"]),
+            "study_date": _value(item, TAG["study_date"]), "study_time": _value(item, TAG["study_time"]),
+            "description": _value(item, TAG["description"]),
+            "modalities": _value(item, TAG["modalities"], many=True),
+            "n_series": _value(item, TAG["n_series"]), "n_instances": _value(item, TAG["n_instances"]),
+            "series": [],
+        }
+
+    def series(self, study_uid: str) -> List[Dict[str, Any]]:
+        out = []
+        for s in self._get(f"/studies/{_uid(study_uid)}/series", {"includefield": list(SERIES_FIELDS)}):
+            out.append({"uid": _value(s, TAG["series_uid"]) or "", "modality": _value(s, TAG["modality"]) or "",
+                        "description": _value(s, TAG["series_description"]), "body_part": _value(s, TAG["body_part"])})
+        return out
+
+    def new_studies(self, date_from: str, date_to: str, modalities: List[str],
+                    page: int = 100, max_studies: int = 2000) -> List[Dict[str, Any]]:
+        """Studies acquired between two dates (YYYYMMDD), any patient, with their PatientID (for the scanner)."""
+        fields = STUDY_FIELDS + [TAG["patient_id"], TAG["study_date"]]   # repeated includefield: widest support
+        found: Dict[str, Dict[str, Any]] = {}
+        for modality in modalities or [""]:
+            offset = 0
+            while len(found) < max_studies:
+                params = {"StudyDate": f"{date_from}-{date_to}", "includefield": fields,
+                          "limit": page, "offset": offset}
+                if modality:
+                    params["ModalitiesInStudy"] = modality
+                items = self._get("/studies", params)
+                for item in items:
+                    study = self._study(item)
+                    pid = _value(item, TAG["patient_id"])
+                    if study and pid is not None:
+                        study["pacs_patient_id"] = str(pid)
+                        found.setdefault(study["study_uid"], study)
+                if len(items) < page:
+                    break
+                offset += page
+        return list(found.values())[:max_studies]
+
+    def instances(self, study_uid: str, series_uid: str) -> List[Dict[str, Any]]:
+        """Instance UIDs of one series, in instance-number order."""
+        items = self._get(f"/studies/{_uid(study_uid)}/series/{_uid(series_uid)}/instances",
+                          {"includefield": TAG["instance_number"]})
+        out = []
+        for i in items:
+            uid = _value(i, TAG["sop_uid"])
+            if uid:
+                try:
+                    num = int(_value(i, TAG["instance_number"]) or 0)
+                except (TypeError, ValueError):
+                    num = 0
+                out.append({"uid": uid, "number": num})
+        return sorted(out, key=lambda x: x["number"])
+
+    def instance_header(self, study_uid: str, series_uid: str, instance_uid: str) -> Dict[str, Any]:
+        """Body part and descriptions from one image's metadata (WADO-RS JSON, no pixel data). Some PACS
+        (e.g. Orthanc) do not return BodyPartExamined in series queries."""
+        items = self._get(f"/studies/{_uid(study_uid)}/series/{_uid(series_uid)}/instances/{_uid(instance_uid)}/metadata", {})
+        item = items[0] if items else {}
+        return {"body_part": _value(item, TAG["body_part"]), "description": _value(item, TAG["series_description"]),
+                "study_description": _value(item, TAG["description"]), "modality": _value(item, TAG["modality"])}
+
+    def retrieve_instance(self, study_uid: str, series_uid: str, instance_uid: str,
+                          max_bytes: int = 200 * 1024 * 1024) -> bytes:
+        """One DICOM instance (WADO-RS). Held in memory only; never written to disk."""
+        headers = {k: v for k, v in self.headers.items() if k != "Accept"}
+        headers["Accept"] = 'multipart/related; type="application/dicom"; transfer-syntax=*'
+        r = self.session.get(f"{self.base}/studies/{_uid(study_uid)}/series/{_uid(series_uid)}/instances/{_uid(instance_uid)}",
+                             headers=headers, timeout=self.timeout, stream=True)
+        if r.status_code != 200:
+            raise PACSError(f"WADO-RS instance → HTTP {r.status_code}")
+        body = bytearray()
+        for chunk in r.iter_content(1024 * 1024):
+            body += chunk
+            if len(body) > max_bytes:
+                r.close()
+                raise PACSError("WADO-RS instance larger than the size limit: not retrieved")
+        return _first_dicom_part(bytes(body), r.headers.get("Content-Type", ""))
+
     def studies(self, pacs_patient_id: str) -> List[Dict[str, Any]]:
         """Study labels for one patient (with each study's series body parts), as plain dicts."""
         if not pacs_patient_id or any(c in pacs_patient_id for c in "*?\\"):
             raise PACSError("Patient ID contains DICOM wildcard characters: not queried")
         out = []
-        fields = ",".join(STUDY_FIELDS + [TAG["patient_id"]])
+        fields = STUDY_FIELDS + [TAG["patient_id"]]
         for item in self._get("/studies", {"PatientID": pacs_patient_id, "includefield": fields}):
-            uid = _value(item, TAG["study_uid"])
-            if not uid:
+            study = self._study(item)
+            if not study:
                 continue
             returned = _value(item, TAG["patient_id"])
             if returned is not None and str(returned) != pacs_patient_id:
                 logger.error("PACS returned a study of another PatientID for a query: study skipped")
                 continue
-            study = {
-                "study_uid": uid, "accession": _value(item, TAG["accession"]),
-                "study_date": _value(item, TAG["study_date"]), "study_time": _value(item, TAG["study_time"]),
-                "description": _value(item, TAG["description"]),
-                "modalities": _value(item, TAG["modalities"], many=True),
-                "n_series": _value(item, TAG["n_series"]), "n_instances": _value(item, TAG["n_instances"]),
-                "series": [],
-            }
             try:   # body part lives at series level
-                for s in self._get(f"/studies/{uid}/series", {"includefield": ",".join(SERIES_FIELDS)}):
-                    study["series"].append({"uid": _value(s, TAG["series_uid"]) or "",
-                                            "modality": _value(s, TAG["modality"]) or "",
-                                            "description": _value(s, TAG["series_description"]),
-                                            "body_part": _value(s, TAG["body_part"])})
+                study["series"] = self.series(study["study_uid"])
             except PACSError as e:
                 logger.warning("Series query failed for a study: %s", e)
             if not study["modalities"]:
@@ -122,6 +211,32 @@ class DICOMwebClient:
             return True
         except (PACSError, requests.RequestException):
             return False
+
+
+def _first_dicom_part(body: bytes, content_type: str) -> bytes:
+    """The DICOM file in a WADO-RS response (multipart/related, or a bare application/dicom body)."""
+    if "multipart" not in content_type.lower():
+        return body
+    import email
+    msg = email.message_from_bytes(b"Content-Type: " + content_type.encode("latin-1") + b"\r\n\r\n" + body)
+    for part in msg.walk():
+        if part.is_multipart():
+            continue
+        payload = part.get_payload(decode=True)
+        if payload:
+            return payload
+    raise PACSError("WADO-RS response had no DICOM part")
+
+
+def dicom_patient_ids(patient: Dict[str, Any]) -> List[str]:
+    """What an image's DICOM PatientID may be: the FHIR id and the MRN (or the configured identifier system)."""
+    system = os.environ.get("CLINLOOP_PACS_ID_SYSTEM")
+    ids = [patient["id"]]
+    for i in patient.get("identifier", []):
+        is_mrn = any(c.get("code") == "MR" for c in (i.get("type") or {}).get("coding", []))
+        if i.get("value") and (is_mrn or (system and i.get("system") == system)):
+            ids.append(i["value"])
+    return list(dict.fromkeys(ids))
 
 
 def pacs_patient_ids(patient_resource: Optional[Dict[str, Any]], fhir_id: str) -> List[str]:

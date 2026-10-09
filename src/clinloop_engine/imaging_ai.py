@@ -26,6 +26,8 @@ Models (CLINLOOP_IMAGING_MODELS, comma-separated):
     e.g. an MFDS-approved product's on-premise inference endpoint, for any
     modality (CT, MRI, ultrasound, mammography). ClinLoop POSTs the DICOM
     file and reads {"findings": [{"label", "score", "positive"?}]}.
+    A product that reads a whole CT/MRI series sets "input": "series": it
+    receives every image of the series in one multipart/related request.
 
 The AI is a second reader. It never diagnoses, never reaches the patient, and
 its findings only ever ask a radiologist to look again. Pixel data is never
@@ -58,7 +60,7 @@ class ImagingError(ValueError):
 
 # ── Reading DICOM ───────────────────────────────────────────────────────────
 
-def read_dicom(content: bytes):
+def read_dicom(content: bytes, header_only: bool = False):
     try:
         import pydicom
     except ImportError as e:
@@ -68,7 +70,7 @@ def read_dicom(content: bytes):
     if len(content) > MAX_DICOM_BYTES:
         raise ImagingError("DICOM file too large")
     try:
-        ds = pydicom.dcmread(io.BytesIO(content), force=True)
+        ds = pydicom.dcmread(io.BytesIO(content), force=True, stop_before_pixels=header_only)
     except Exception as e:
         raise ImagingError(f"Not a readable DICOM file ({type(e).__name__})") from e
     # force=True reads almost anything: require the basic identity of a DICOM object
@@ -199,6 +201,7 @@ def preview_png(img: np.ndarray, size: int = 512) -> str:
 
 class ImagingModel:
     name = "model"
+    input = "instance"          # "series": the model reads a whole series (CT, MRI) in one request
     version = ""
     regulatory = "not stated"
     intended_use = ""
@@ -224,6 +227,7 @@ class ImagingModel:
     def describe(self) -> Dict[str, Any]:
         return {"name": self.name, "version": self.version, "regulatory": self.regulatory,
                 "research_use": is_research_use(self.regulatory), "intended_use": self.intended_use,
+                "input": getattr(self, "input", "instance"),
                 "modalities": self.modalities, "body_regions": self.body_regions, "threshold": self.threshold,
                 "status": "ready" if self.available() is None else self.available()}
 
@@ -299,13 +303,24 @@ class HTTPImagingModel(ImagingModel):
         self.token = os.environ.get(cfg["token_env"]) if cfg.get("token_env") else None
         self.label_map = cfg.get("label_map", {})
         self.timeout = float(cfg.get("timeout", 60))
+        self.input = "series" if str(cfg.get("input", "instance")).lower() == "series" else "instance"
 
     def predict(self, ds, img, content):
+        return self._post(content, "application/dicom")
+
+    def predict_series(self, contents: List[bytes]) -> List[Dict[str, Any]]:
+        """Every image of one series in a single multipart/related request (as STOW-RS sends them)."""
+        boundary = "clinloop-" + hashlib.sha256(b"".join(c[:64] for c in contents)).hexdigest()[:24]
+        body = b"".join(b"--" + boundary.encode() + b"\r\nContent-Type: application/dicom\r\n\r\n" + c + b"\r\n"
+                        for c in contents) + b"--" + boundary.encode() + b"--\r\n"
+        return self._post(body, f'multipart/related; type="application/dicom"; boundary={boundary}')
+
+    def _post(self, data: bytes, content_type: str) -> List[Dict[str, Any]]:
         import requests
-        headers = {"Content-Type": "application/dicom", "Accept": "application/json"}
+        headers = {"Content-Type": content_type, "Accept": "application/json"}
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
-        r = requests.post(self.url, data=content, headers=headers, timeout=self.timeout)
+        r = requests.post(self.url, data=data, headers=headers, timeout=self.timeout)
         if r.status_code != 200:
             raise ImagingError(f"{self.name}: HTTP {r.status_code}")
         out = []
@@ -482,9 +497,56 @@ def registered_models() -> List[ImagingModel]:
 
 # ── One file, end to end ────────────────────────────────────────────────────
 
+def _findings(raw: List[Dict[str, Any]], model: ImagingModel, summary: Dict[str, Any], patient_id: str,
+              study_ref: str, when: str, source: str):
+    """A model's raw findings → (findings for display, one FHIR Observation per positive finding type)."""
+    by_key: Dict[str, Dict[str, Any]] = {}
+    findings = []
+    for f in raw:
+        try:
+            score = float(f["score"]) if f.get("score") is not None else None
+        except (TypeError, ValueError):
+            score = None
+        positive = f.get("positive")
+        if isinstance(positive, str):
+            positive = positive.strip().lower() in ("true", "1", "yes", "positive", "pos")
+        if positive is None and isinstance(score, (int, float)):
+            positive = score >= model.threshold
+        key = f.get("finding_key") or ai_finding_key(f["label"], summary["regions"])
+        findings.append({"label": f["label"], "score": score, "positive": bool(positive), "finding_key": key})
+        k = key or f["label"]
+        if positive and (k not in by_key or (score or 0) > (by_key[k]["score"] or 0)):
+            by_key[k] = {"label": f["label"], "score": score}
+    observations = []
+    for k, best in by_key.items():
+        labels = " / ".join(sorted({x["label"] for x in findings if (x["finding_key"] or x["label"]) == k and x["positive"]}))
+        observations.append(ai_observation_resource(
+            patient_id, labels, best["score"], True, model.name, model.version, model.regulatory,
+            study_ref, when, body_part=summary["body_part"] or None, source=source,
+            finding_key=k, study_uid=summary["study_uid"]))
+    findings.sort(key=lambda x: -(x["score"] if isinstance(x["score"], float) else 0))
+    return findings, observations
+
+
+def _study_resource(summary: Dict[str, Any], patient_id: str, source: str) -> Dict[str, Any]:
+    return imaging_study_resource({
+        "study_uid": summary["study_uid"], "accession": summary["accession"],
+        "modalities": [summary["modality"]] if summary["modality"] else [],
+        "description": summary["study_description"] or summary["series_description"],
+        "study_date": summary["study_date"], "study_time": summary["study_time"], "tz_offset": summary["tz_offset"],
+        "series": [{"uid": summary["series_uid"] or "", "modality": summary["modality"],
+                    "description": summary["series_description"], "body_part": summary["body_part"]}],
+    }, patient_id, source=source)
+
+
+def _when(summary: Dict[str, Any]) -> str:
+    return (dicom_datetime(summary["study_date"], summary["study_time"], summary["tz_offset"])
+            or datetime.now(timezone.utc).replace(tzinfo=None).replace(microsecond=0).isoformat())
+
+
 def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optional[List[str]] = None,
                   expected_modality: Optional[str] = None, models: Optional[List[ImagingModel]] = None,
-                  with_preview: bool = True) -> Dict[str, Any]:
+                  with_preview: bool = True, source: str = "dicom-upload") -> Dict[str, Any]:
     """Header summary, QA checks, model findings and the FHIR resources to file (if safe to file)."""
     ds = read_dicom(content)
     summary = dicom_summary(ds)
@@ -497,21 +559,15 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
         except Exception as e:
             qa.append({"level": "warning", "code": "pixels_unreadable",
                        "message": f"Pixel data could not be decoded ({type(e).__name__}): models skipped."})
-    when = dicom_datetime(summary["study_date"], summary["study_time"], summary["tz_offset"]) or datetime.now(timezone.utc).replace(tzinfo=None).replace(microsecond=0).isoformat()
-    study = imaging_study_resource({
-        "study_uid": summary["study_uid"], "accession": summary["accession"],
-        "modalities": [summary["modality"]] if summary["modality"] else [],
-        "description": summary["study_description"] or summary["series_description"],
-        "study_date": summary["study_date"], "study_time": summary["study_time"], "tz_offset": summary["tz_offset"],
-        "series": [{"uid": summary["series_uid"] or "", "modality": summary["modality"],
-                    "description": summary["series_description"], "body_part": summary["body_part"]}],
-    }, patient_id, source="dicom-upload")
+    when = _when(summary)
+    study = _study_resource(summary, patient_id, source)
     study_ref = f"ImagingStudy/{study['id']}"
 
     model_results, observations = [], []
     for model in (models if models is not None else registered_models()):
         info = model.describe()
-        reason = model.available() or model.applies(summary) or (None if img is not None else "no image")
+        reason = model.available() or model.applies(summary) or (None if img is not None else "no image") \
+            or ("reads a whole series: run by the PACS scanner" if getattr(model, "input", "instance") == "series" else None)
         if reason:
             model_results.append({**info, "ran": False, "reason": reason, "findings": []})
             continue
@@ -528,30 +584,9 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
             model_results.append({**info, "ran": False, "reason": f"failed: {type(e).__name__}", "findings": []})
             continue
         # One observation per finding type: the strongest of the labels that mean it (e.g. "Nodule", "Mass")
-        by_key: Dict[str, Dict[str, Any]] = {}
-        findings = []
-        for f in raw:
-            try:
-                score = float(f["score"]) if f.get("score") is not None else None
-            except (TypeError, ValueError):
-                score = None
-            positive = f.get("positive")
-            if isinstance(positive, str):
-                positive = positive.strip().lower() in ("true", "1", "yes", "positive", "pos")
-            if positive is None and isinstance(score, (int, float)):
-                positive = score >= model.threshold
-            key = f.get("finding_key") or ai_finding_key(f["label"], summary["regions"])
-            findings.append({"label": f["label"], "score": score, "positive": bool(positive), "finding_key": key})
-            k = key or f["label"]
-            if positive and (k not in by_key or (score or 0) > (by_key[k]["score"] or 0)):
-                by_key[k] = {"label": f["label"], "score": score}
-        for k, best in by_key.items():
-            labels = " / ".join(sorted({x["label"] for x in findings if (x["finding_key"] or x["label"]) == k and x["positive"]}))
-            observations.append(ai_observation_resource(
-                patient_id, labels, best["score"], True, model.name, model.version, model.regulatory,
-                study_ref, when, body_part=summary["body_part"] or None, source="imaging-ai",
-                finding_key=k, study_uid=summary["study_uid"]))
-        findings.sort(key=lambda x: -(x["score"] if isinstance(x["score"], float) else 0))
+        findings, obs = _findings(raw, model, summary, patient_id, study_ref, when,
+                                  "imaging-ai" if source == "dicom-upload" else source)
+        observations.extend(obs)
         model_results.append({**info, "ran": True, "findings": findings, **extra})
 
     critical = [c for c in qa if c["level"] == "critical"]
@@ -562,6 +597,58 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
         "preview": _safe_preview(img) if with_preview else None,
         "sha256": hashlib.sha256(content).hexdigest(),
     }
+
+
+def analyze_series(contents: List[bytes], patient_id: str, expected_patient_ids: List[str],
+                   models: List[ImagingModel], source: str = "pacs-scan") -> Dict[str, Any]:
+    """
+    One whole series (CT, MRI) for the products that read a series. Every image's header is checked
+    first: one image of another patient, or a screenshot instead of an acquisition, and nothing is
+    sent or filed.
+    """
+    if not contents:
+        raise ImagingError("empty series")
+    qa: List[Dict[str, Any]] = []
+    first = None
+    for i, content in enumerate(contents):
+        ds = read_dicom(content, header_only=True)
+        summary = dicom_summary(ds)
+        checks = [c for c in qa_checks(ds, summary, expected_patient_ids, None) if c["level"] == "critical"]
+        if checks:
+            qa = [{**c, "message": f"image {i + 1} of {len(contents)}: {c['message']}"} for c in checks]
+            break
+        if first is None:
+            first = summary
+        elif summary["series_uid"] != first["series_uid"]:
+            qa = [{"level": "critical", "code": "mixed_series",
+                   "message": "images of more than one series were sent as one: not analysed"}]
+            break
+    summary = first or summary
+    if qa:
+        return {"summary": summary, "qa": qa, "models": [], "filed": False, "resources": [],
+                "sha256": hashlib.sha256(b"".join(hashlib.sha256(c).digest() for c in contents)).hexdigest()}
+    when = _when(summary)
+    study = _study_resource(summary, patient_id, source)
+    study_ref = f"ImagingStudy/{study['id']}"
+    model_results, observations = [], []
+    for model in models:
+        info = model.describe()
+        reason = model.available() or model.applies(summary)
+        if reason:
+            model_results.append({**info, "ran": False, "reason": reason, "findings": []})
+            continue
+        try:
+            raw = model.predict_series(contents)
+        except Exception as e:
+            logger.warning("Imaging model %s failed on a series: %s", model.name, type(e).__name__)
+            model_results.append({**info, "ran": False, "reason": f"failed: {type(e).__name__}", "findings": []})
+            continue
+        findings, obs = _findings(raw, model, summary, patient_id, study_ref, when, source)
+        observations.extend(obs)
+        model_results.append({**info, "ran": True, "findings": findings, "images": len(contents)})
+    return {"summary": summary, "qa": [], "models": model_results, "filed": True,
+            "resources": [study] + observations,
+            "sha256": hashlib.sha256(b"".join(hashlib.sha256(c).digest() for c in contents)).hexdigest()}
 
 
 # ── Results that an approved product sends as DICOM SR ─────────────────────
