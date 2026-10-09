@@ -44,6 +44,7 @@ with transparent, rule-grounded logic and an audit trail.
    | R047 | Imaging-AI finding (approved product or ClinLoop's model runner) that the radiology report does not address → radiologist review (1 day for critical findings, 7 days otherwise) |
    | R056 | The same lung nodule, linked across reports by lobe and size, measured ≥ 2 mm larger than before when the report does not say so (with volume-doubling time) → radiologist confirmation and work-up |
    | R057 | Critical imaging-AI finding (intracranial haemorrhage, pneumothorax, free air) on a study with no report yet → read the study now (60 minutes by default); closed by the study's first report |
+   | R058 | Report item no rule tracked, found by the hospital's own model as a second reader (exact quote required) → clinician review; never opens or closes a clinical obligation itself |
    | R052–R055 | Diagnostic patterns across events: iron-deficiency anaemia → GI investigation; creatinine rise (AKI warning) → repeat creatinine; atrial fibrillation with high CHA₂DS₂-VASc and no anticoagulant → anticoagulation decision; persistent microscopic haematuria → urology. See [`docs/DIAGNOSTIC_PATTERNS.md`](docs/DIAGNOSTIC_PATTERNS.md) |
    | R048–R051 | Plans written in clinicians' notes (English and Korean): repeat a lab test, imaging, a specialist referral, a follow-up visit. Each closes only on the matching event (same test, same modality and region, same specialty). Conditional, cancelled and already-done plans are not tracked |
 2. **Temporal hypergraph** (`temporal_hypergraph.py`): builds one hyperedge per triggered rule and
@@ -478,6 +479,14 @@ See [`docs/IMAGING.md`](docs/IMAGING.md). In short:
 
   Method, every defect found and the limits are in
   [`docs/ACCURACY_EVALUATION.md`](docs/ACCURACY_EVALUATION.md).
+- **Model-based second reader** (`CLINLOOP_SECOND_READER=1`, off by default): the hospital's own
+  on-premise model reads each recent report. Any item it quotes word for word that no rule tracked
+  goes to a clinician for review (R058).
+  - **Coverage:** with a small stand-in model, 16 of the rules' 17 first-pass misses would have
+    reached a person.
+  - **Workload:** 8% of normal reports were flagged.
+
+  See [`docs/SECOND_READER.md`](docs/SECOND_READER.md).
 - **Patient knowledge graph** (`patient.html`, `GET /api/v1/patients/{id}/graph`): every event the
   engine read (diagnoses, lab values, orders, medications, appointments, imaging studies,
   radiology reports, AI findings) on one time axis. Each obligation is drawn as a hyperedge from

@@ -149,8 +149,15 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
         patients, newest = client.changed_patients(since)
         detector = ClinLoopDetector(evaluation_time=now)
         n_events, n_warnings, counts = 0, 0, {"new": 0, "updated": 0, "resolved_by_engine": 0}
+        from . import second_reader
+        budget = {"left": int(os.environ.get("CLINLOOP_SECOND_READER_MAX", "20"))}
         for pid in sorted(patients):
             history, record_warnings = patient_record(pid, store, client, pacs)
+            if second_reader.enabled():
+                try:     # the second reader never blocks the sync: on any failure the rules' result stands
+                    history = history + second_reader.second_read_patient(store, pid, history, budget=budget, now=now)
+                except Exception as e:
+                    logger.warning("Second reader failed for a patient: %s", type(e).__name__)
             events_by_patient, warnings = bundle_to_events(history)
             warnings += record_warnings
             n_warnings += len(warnings)

@@ -48,6 +48,9 @@ services:
       CLINLOOP_IMAGING_RESEARCH_AI: ${CLINLOOP_IMAGING_RESEARCH_AI:-0}
       # Automatic scanning of new PACS studies with the approved products above (docs/IMAGING.md §4a)
       CLINLOOP_IMAGE_SCAN: ${CLINLOOP_IMAGE_SCAN:-0}
+      # Model-based second reader of reports with the on-premise model (ollama service); flags go to a person (R058)
+      CLINLOOP_SECOND_READER: ${CLINLOOP_SECOND_READER:-0}
+      CLINLOOP_SECOND_READER_MAX: ${CLINLOOP_SECOND_READER_MAX:-20}
       CLINLOOP_IMAGE_SCAN_MINUTES: ${CLINLOOP_IMAGE_SCAN_MINUTES:-10}
       CLINLOOP_IMAGE_SCAN_MODALITIES: ${CLINLOOP_IMAGE_SCAN_MODALITIES:-CR,DX,MG,CT,MR,US}
       # Vision-language model (add "vlm" to CLINLOOP_IMAGING_MODELS), e.g. MedGemma pulled into the ollama service

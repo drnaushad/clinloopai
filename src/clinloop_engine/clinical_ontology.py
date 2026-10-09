@@ -61,6 +61,7 @@ class EventType(Enum):
     AI_FINDING_REVIEWED = "ai_finding_reviewed"   # a radiologist addressed the AI finding (report/addendum)
     CLINICAL_NOTE_PLAN = "clinical_note_plan"     # a concrete plan written in a clinician's note (note_reader)
     DIAGNOSTIC_PATTERN = "diagnostic_pattern"     # a dangerous combination across events (motifs.py)
+    SECOND_READER_FLAG = "second_reader_flag"     # an actionable report item no rule tracked (second_reader.py)
 
 
 # ── Severity Classification ─────────────────────────────────────────────────
@@ -1003,6 +1004,33 @@ OBLIGATION_RULES: List[ObligationRule] = [
                        "(CLINLOOP_AI_CRITICAL_READ_MINUTES); research-use products count only when the hospital enables them."),
         patient_outreach=False,
     ),
+    ObligationRule(
+        rule_id="R058",
+        name="Report Item No Rule Tracked (Second Reader) → Clinician Review",
+        description=("The hospital's own language model, reading the report as a second reader, found an action the "
+                     "report calls for (follow-up imaging, work-up, referral, a critical finding, abnormal pathology) that "
+                     "no rule tracked; a clinician reads the report and acts or closes it as not needed"),
+        trigger_event=EventType.SECOND_READER_FLAG,
+        trigger_condition="second_reader_flag",
+        required_followups=[EventType.IMAGING_ORDER, EventType.IMAGING_CT, EventType.IMAGING_MRI,
+                            EventType.IMAGING_ULTRASOUND, EventType.IMAGING_XRAY, EventType.IMAGING_PET,
+                            EventType.FOLLOWUP_CT, EventType.BIOPSY_ORDER, EventType.BIOPSY_RESULT, EventType.BREAST_BIOPSY,
+                            EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT, EventType.ENDOSCOPIC_ULTRASOUND,
+                            EventType.CRITICAL_VALUE_NOTIFICATION, EventType.PATIENT_NOTIFICATION],
+        followup_logic="any",
+        deadline_days=7.0,
+        severity=Severity.HIGH,
+        clinical_domain="diagnostic safety",
+        ltl_formula="□(SECOND_READER_FLAG[quote verified ∧ no rule opened] → ◇_{≤7d} (matching follow-up ∨ clinician closes))",
+        references=["Singh H et al. Types and origins of diagnostic errors in primary care. JAMA Intern Med 2013;173:418-25",
+                    "Lacson R et al. Factors associated with radiologists' recommendations. JACR 2015"],
+        evidence_note=("A safety net for the rules' long tail. Every flag quotes the report word for word (or is discarded), "
+                       "only items no rule tracked are flagged, and each is marked for human review: the model never "
+                       "opens or closes a clinical obligation itself. Closed by the follow-up of its kind (imaging, "
+                       "work-up, referral, communication) or by a clinician. Critical findings 1 day, pathology 3 days, "
+                       "otherwise 7 days to review. On-premise model only; off unless CLINLOOP_SECOND_READER=1."),
+        patient_outreach=False,
+    ),
 ]
 
 
@@ -1066,6 +1094,7 @@ RULE_NAMES_KO: Dict[str, str] = {
     "R055": "지속 현미경적 혈뇨 → 비뇨의학과 평가",
     "R056": "보고서 간 폐결절 크기 증가 → 재검토 및 정밀검사",
     "R057": "판독 전 검사의 영상 AI 위급 소견 → 즉시 판독",
+    "R058": "규칙이 놓친 판독문 조치 사항(2차 판독 모델) → 의료진 검토",
 }
 assert set(RULE_NAMES_KO) == {r.rule_id for r in OBLIGATION_RULES}, "every rule needs a Korean name"
 
