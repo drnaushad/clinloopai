@@ -43,6 +43,7 @@ with transparent, rule-grounded logic and an audit trail.
    | R037–R046 | ACR incidental findings without a written recommendation: adrenal nodule (1–4 cm → CT/MRI; ≥4 cm or with cancer → work-up), renal mass (solid/Bosniak III–IV → urology; IIF or indeterminate → CT/MRI), pancreatic cyst (size-based MRI; worrisome features → EUS), thyroid nodule on CT/MRI/PET (→ ultrasound), abdominal aortic aneurysm (diameter-based surveillance; ≥5.5 cm, ≥5.0 cm in women → vascular surgery); growing or suspicious lung nodule → work-up |
    | R047 | Imaging-AI finding (approved product or ClinLoop's model runner) that the radiology report does not address → radiologist review (1 day for critical findings, 7 days otherwise) |
    | R056 | The same lung nodule, linked across reports by lobe and size, measured ≥ 2 mm larger than before when the report does not say so (with volume-doubling time) → radiologist confirmation and work-up |
+   | R057 | Critical imaging-AI finding (intracranial haemorrhage, pneumothorax, free air) on a study with no report yet → read the study now (60 minutes by default); closed by the study's first report |
    | R052–R055 | Diagnostic patterns across events: iron-deficiency anaemia → GI investigation; creatinine rise (AKI warning) → repeat creatinine; atrial fibrillation with high CHA₂DS₂-VASc and no anticoagulant → anticoagulation decision; persistent microscopic haematuria → urology. See [`docs/DIAGNOSTIC_PATTERNS.md`](docs/DIAGNOSTIC_PATTERNS.md) |
    | R048–R051 | Plans written in clinicians' notes (English and Korean): repeat a lab test, imaging, a specialist referral, a follow-up visit. Each closes only on the matching event (same test, same modality and region, same specialty). Conditional, cancelled and already-done plans are not tracked |
 2. **Temporal hypergraph** (`temporal_hypergraph.py`): builds one hyperedge per triggered rule and
@@ -109,7 +110,7 @@ clinloopai/
 │       ├── governance.py             # Specialist rule sign-off, critical-finding list approval, shadow mode
 │       ├── imaging_fhir.py           # Imaging studies and imaging-AI findings as FHIR resources
 │       ├── pacs_client.py            # PACS study labels over DICOMweb QIDO-RS (read-only, no pixels)
-│       ├── ai_review.py              # Imaging AI as second reader: findings the report does not address (R047)
+│       ├── ai_review.py              # Imaging AI: findings the report does not address (R047); critical findings on unread studies (R057)
 │       ├── imaging_ai.py             # DICOM analysis: header safety checks, study record, imaging models
 │       ├── document_reader.py        # Outside reports: PDF text and OCR (Korean/English)
 │       ├── ct_organs.py              # CT series: organ segmentation (TotalSegmentator) and measurements

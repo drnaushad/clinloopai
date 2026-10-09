@@ -58,7 +58,13 @@ SR. Alternatively, ClinLoop's own model runner produces them (section 4). Then:
 - **The report does not mention it**: R047 opens, asking a radiologist to review. The review is due
   within 1 day for pneumothorax, free air or intracranial haemorrhage, and within 7 days otherwise.
 - **A later addendum addresses it**: the loop closes. A clinician can also close it with evidence.
-- **No report yet**: nothing happens. The comparison runs once the report arrives.
+- **No report yet**: the comparison runs once the report arrives. The exception is a **critical**
+  finding (intracranial haemorrhage, pneumothorax, free air): the unreported study must be read now
+  (**R057**, within 60 minutes by default; `CLINLOOP_AI_CRITICAL_READ_MINUTES`). This is worklist
+  triage, the purpose of approved triage products. The first report of the study closes R057, and
+  R047 then checks that the report addressed the finding. A study already reported when the AI
+  result arrived raises no R057, and there is one R057 per study however many critical findings it
+  has.
 - **One loop per finding**: reviewing one finding never closes another.
 
 **Positive or not:**
