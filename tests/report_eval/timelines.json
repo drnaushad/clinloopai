@@ -1573,5 +1573,675 @@
    "R033": "done"
   },
   "rationale": "Follow-up chest radiograph at day 42."
+ },
+ {
+  "id": "U01",
+  "patient": {
+   "age": 58,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2025-09-10",
+    "category": "RAD",
+    "title": "CT Chest with contrast",
+    "text": "EXAM: CT CHEST WITH CONTRAST. HISTORY: Cough. Former smoker 30 pack-years.\nFINDINGS: 7 mm solid nodule right upper lobe. No adenopathy.\nIMPRESSION: 7 mm solid RUL nodule, high-risk patient.\nRECOMMENDATION: CT chest in 6-12 months per Fleischner 2017."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-03-19",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest without contrast - nodule follow-up"
+   }
+  ],
+  "evaluation_date": "2026-09-01",
+  "expected": {
+   "R003": "done",
+   "R030": "done"
+  },
+  "rationale": "Follow-up chest CT at 190 days, inside both the 6-month (+grace) and 12-month readings of the interval."
+ },
+ {
+  "id": "U02",
+  "patient": {
+   "age": 64,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-01-05",
+    "category": "RAD",
+    "title": "CT Chest",
+    "text": "FINDINGS: 9 mm solid nodule left lower lobe.\nIMPRESSION: 9 mm solid LLL nodule.\nRECOMMENDATION: Follow-up CT chest in 3 months."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-02-20",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen/pelvis with contrast - abdominal pain"
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-08-10",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "CT chest without contrast - follow-up LLL nodule"
+   }
+  ],
+  "evaluation_date": "2026-09-15",
+  "expected": {
+   "R003": "done_late",
+   "R030": "done_late"
+  },
+  "rationale": "Trap: abdominal CT (wrong region) at 46 days does not close a chest CT recommendation; chest CT at 217 days is well past 3 months + grace."
+ },
+ {
+  "id": "U03",
+  "patient": {
+   "age": 67,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-03-02",
+    "category": "RAD",
+    "title": "LDCT Lung Cancer Screening",
+    "text": "LOW-DOSE CT LUNG SCREENING (baseline). 10 mm solid nodule RML.\nIMPRESSION: Lung-RADS 4A.\nRECOMMENDATION: 3-month low-dose CT."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-04-10",
+    "modality": "DX",
+    "body_part": "CHEST",
+    "description": "XR chest PA and lateral"
+   }
+  ],
+  "evaluation_date": "2026-08-20",
+  "expected": {
+   "R019": "missed",
+   "R030": "missed"
+  },
+  "rationale": "Trap: chest radiograph is the wrong modality; no LDCT by 171 days (deadline ~113)."
+ },
+ {
+  "id": "U04",
+  "patient": {
+   "age": 55,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-05-04",
+    "category": "RAD",
+    "title": "Diagnostic Mammogram + US Right",
+    "text": "FINDINGS: Right breast 10 o'clock 1.1 cm irregular hypoechoic mass with indistinct margins.\nIMPRESSION: BI-RADS 4C.\nRECOMMENDATION: US-guided core biopsy."
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2026-05-20",
+    "description": "US-guided FNA, right thyroid nodule"
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2026-05-25",
+    "description": "US-guided core needle biopsy, right breast 10 o'clock mass"
+   }
+  ],
+  "evaluation_date": "2026-07-01",
+  "expected": {
+   "R018": "done"
+  },
+  "rationale": "Trap: thyroid FNA (other organ) does not close; breast core biopsy at 21 days does."
+ },
+ {
+  "id": "U05",
+  "patient": {
+   "age": 61,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-06-01",
+    "category": "RAD",
+    "title": "Screening/Diagnostic Mammogram Left",
+    "text": "FINDINGS: Left breast UOQ 1.6 cm spiculated mass with associated pleomorphic calcifications.\nIMPRESSION: BI-RADS 5, highly suggestive of malignancy.\nRECOMMENDATION: Tissue sampling."
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2026-06-10",
+    "description": "Punch biopsy, skin lesion of upper back (dermatology)"
+   },
+   {
+    "type": "specialist_visit",
+    "date": "2026-07-02",
+    "description": "Dermatology follow-up visit"
+   }
+  ],
+  "evaluation_date": "2026-08-15",
+  "expected": {
+   "R018": "missed"
+  },
+  "rationale": "Trap: skin biopsy of another site; no breast biopsy by 75 days (target 30)."
+ },
+ {
+  "id": "U06",
+  "patient": {
+   "age": 76,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-07-01",
+    "category": "RAD",
+    "title": "CT Abdomen Pelvis",
+    "text": "FINDINGS: Infrarenal abdominal aortic aneurysm 5.8 cm, no rupture.\nIMPRESSION: 5.8 cm AAA, above repair threshold.\nRECOMMENDATION: Vascular surgery referral."
+   },
+   {
+    "type": "referral",
+    "date": "2026-07-05",
+    "description": "Referral to cardiology - hypertension management"
+   },
+   {
+    "type": "referral",
+    "date": "2026-08-20",
+    "description": "Referral to vascular surgery - AAA 5.8 cm"
+   },
+   {
+    "type": "specialist_visit",
+    "date": "2026-09-10",
+    "description": "Vascular surgery clinic - EVAR planning"
+   }
+  ],
+  "evaluation_date": "2026-09-30",
+  "expected": {
+   "R045": "done_late"
+  },
+  "rationale": "Trap: cardiology referral is the wrong specialty; vascular surgery referral at 50 days exceeds the 14-day target."
+ },
+ {
+  "id": "U07",
+  "patient": {
+   "age": 59,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-08-20",
+    "category": "RAD",
+    "title": "CT Abdomen",
+    "text": "FINDINGS: 3.0 cm enhancing solid mass, left kidney lower pole (unenh 32 HU, nephrographic 118 HU).\nIMPRESSION: Solid enhancing left renal mass, suspicious for RCC.\nRECOMMENDATION: Urology referral."
+   },
+   {
+    "type": "referral",
+    "date": "2026-09-25",
+    "description": "Referral to urology - left renal mass"
+   }
+  ],
+  "evaluation_date": "2026-09-05",
+  "expected": {
+   "R039": "pending"
+  },
+  "rationale": "Evaluated at 16 days (target 30); the urology referral occurs after the evaluation date and must be ignored."
+ },
+ {
+  "id": "U08",
+  "patient": {
+   "age": 62,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2025-06-01",
+    "category": "RAD",
+    "title": "CT Abdomen Pelvis with contrast",
+    "text": "FINDINGS: 1.5 cm left adrenal nodule, 35 HU portal venous phase, indeterminate. No history of malignancy.\nIMPRESSION: Indeterminate 1.5 cm left adrenal nodule.\nRECOMMENDATION: Adrenal protocol CT in 12 months."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-03-12",
+    "modality": "CT",
+    "body_part": "HEAD",
+    "description": "CT head without contrast - dizziness"
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-05-20",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT adrenal protocol (unenhanced + washout)"
+   }
+  ],
+  "evaluation_date": "2026-09-01",
+  "expected": {
+   "R037": "done",
+   "R030": "done"
+  },
+  "rationale": "Trap: head CT does not cover adrenals; adrenal CT at 353 days is inside 12 months + grace."
+ },
+ {
+  "id": "U09",
+  "patient": {
+   "age": 48,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-02-10",
+    "category": "RAD",
+    "title": "CT Neck with contrast",
+    "text": "FINDINGS: 2.0 cm right thyroid nodule, heterogeneous.\nIMPRESSION: Incidental 2.0 cm thyroid nodule.\nRECOMMENDATION: Thyroid ultrasound."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-03-15",
+    "modality": "US",
+    "body_part": "ABDOMEN",
+    "description": "US abdomen complete - RUQ pain"
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-07-20",
+    "modality": "US",
+    "body_part": "NECK",
+    "description": "US thyroid - nodule evaluation"
+   }
+  ],
+  "evaluation_date": "2026-09-01",
+  "expected": {
+   "R043": "done_late",
+   "R032": "done_late"
+  },
+  "rationale": "Trap: abdominal US is wrong region; thyroid US at 160 days is past the 90-day (+grace) target."
+ },
+ {
+  "id": "U10",
+  "patient": {
+   "age": 66,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "imaging_done",
+    "date": "2025-10-20",
+    "modality": "MR",
+    "body_part": "ABDOMEN",
+    "description": "MRI abdomen with MRCP - outside referral"
+   },
+   {
+    "type": "report",
+    "date": "2025-11-03",
+    "category": "RAD",
+    "title": "CT Abdomen with contrast",
+    "text": "FINDINGS: 1.8 cm unilocular pancreatic body cyst, no mural nodule, MPD 2 mm.\nIMPRESSION: 1.8 cm pancreatic cyst without worrisome features.\nRECOMMENDATION: MRI/MRCP in 1 year."
+   }
+  ],
+  "evaluation_date": "2026-08-01",
+  "expected": {
+   "R041": "pending",
+   "R031": "pending"
+  },
+  "rationale": "Trap: the MRI precedes the report and cannot be its follow-up; at 271 days the 1-year interval is not yet due."
+ },
+ {
+  "id": "U11",
+  "patient": {
+   "age": 70,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-01-12",
+    "category": "RAD",
+    "title": "LDCT Lung Screening",
+    "text": "LDCT baseline. 7 mm solid nodule LUL.\nIMPRESSION: Lung-RADS 3.\nRECOMMENDATION: 6-month LDCT."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-07-08",
+    "modality": "CT",
+    "body_part": "CHEST",
+    "description": "Low-dose CT chest - Lung-RADS 3 follow-up"
+   }
+  ],
+  "evaluation_date": "2026-09-01",
+  "expected": {
+   "R034": "done",
+   "R030": "done"
+  },
+  "rationale": "6-month LDCT done at 177 days."
+ },
+ {
+  "id": "U12",
+  "patient": {
+   "age": 57,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-04-01",
+    "category": "RAD",
+    "title": "XR Chest PA/Lat",
+    "text": "FINDINGS: Left lower lobe consolidation.\nIMPRESSION: Left lower lobe pneumonia.\nRECOMMENDATION: Repeat chest radiograph in 6 weeks to document resolution."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-04-20",
+    "modality": "DX",
+    "body_part": "KNEE",
+    "description": "XR knee right 3 views - fall"
+   }
+  ],
+  "evaluation_date": "2026-07-15",
+  "expected": {
+   "R033": "missed"
+  },
+  "rationale": "Trap: knee radiograph is wrong body region; no chest radiograph by 105 days (6 weeks + grace ~52)."
+ },
+ {
+  "id": "U13",
+  "patient": {
+   "age": 63,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-03-10",
+    "category": "RAD",
+    "title": "CT Chest follow-up",
+    "text": "COMPARISON: 2025-09-08. FINDINGS: LUL solid nodule now 10 mm, previously 7 mm.\nIMPRESSION: Interval growth of LUL nodule, suspicious.\nRECOMMENDATION: PET/CT and pulmonology referral."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-03-25",
+    "modality": "PT",
+    "body_part": "WHOLEBODY",
+    "description": "FDG PET/CT skull base to mid-thigh"
+   },
+   {
+    "type": "referral",
+    "date": "2026-03-27",
+    "description": "Referral to pulmonology - growing LUL nodule"
+   }
+  ],
+  "evaluation_date": "2026-06-01",
+  "expected": {
+   "R046": "done"
+  },
+  "rationale": "PET/CT at 15 days closes the growing-nodule work-up."
+ },
+ {
+  "id": "U14",
+  "patient": {
+   "age": 61,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-05-02",
+    "category": "PAT",
+    "title": "Surgical Pathology - Colon biopsy",
+    "text": "SPECIMEN: Ascending colon mass, endoscopic biopsy.\nDIAGNOSIS: ADENOCARCINOMA, moderately differentiated."
+   },
+   {
+    "type": "referral",
+    "date": "2026-05-05",
+    "description": "Referral to colorectal surgery - ascending colon adenocarcinoma"
+   }
+  ],
+  "evaluation_date": "2026-06-01",
+  "expected": {
+   "R009": "done"
+  },
+  "rationale": "Colorectal surgery referral at 3 days."
+ },
+ {
+  "id": "U15",
+  "patient": {
+   "age": 52,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-06-10",
+    "category": "PAT",
+    "title": "Surgical Pathology - Breast core biopsy",
+    "text": "SPECIMEN: Right breast core biopsy.\nDIAGNOSIS: INVASIVE DUCTAL CARCINOMA, grade 2. ER+/PR+/HER2-."
+   },
+   {
+    "type": "specialist_visit",
+    "date": "2026-06-12",
+    "description": "Dermatology visit - eczema"
+   },
+   {
+    "type": "referral",
+    "date": "2026-07-20",
+    "description": "Referral to breast surgery - invasive ductal carcinoma"
+   }
+  ],
+  "evaluation_date": "2026-08-30",
+  "expected": {
+   "R009": "done_late"
+  },
+  "rationale": "Trap: dermatology visit is the wrong specialty; breast surgery referral at 40 days exceeds 5-day target."
+ },
+ {
+  "id": "U16",
+  "patient": {
+   "age": 44,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-07-01",
+    "category": "RAD",
+    "title": "US Thyroid",
+    "text": "FINDINGS: Right lobe 1.6 cm solid markedly hypoechoic nodule, irregular margins, punctate echogenic foci. TI-RADS TR5.\nRECOMMENDATION: US-guided FNA."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-07-10",
+    "modality": "US",
+    "body_part": "NECK",
+    "description": "US thyroid repeat for FNA planning"
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2026-07-15",
+    "description": "US-guided FNA right thyroid nodule"
+   }
+  ],
+  "evaluation_date": "2026-08-15",
+  "expected": {
+   "R036": "done"
+  },
+  "rationale": "Trap: repeat ultrasound is imaging, not tissue sampling; FNA at 14 days closes."
+ },
+ {
+  "id": "U17",
+  "patient": {
+   "age": 71,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2025-12-01",
+    "category": "RAD",
+    "title": "CT Abdomen renal mass protocol",
+    "text": "FINDINGS: 3.2 cm right renal cyst with multiple thin enhancing septa.\nIMPRESSION: Bosniak IIF.\nRECOMMENDATION: Follow-up renal mass protocol CT in 6 months."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-05-20",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen renal mass protocol"
+   },
+   {
+    "type": "report",
+    "date": "2026-05-20",
+    "category": "RAD",
+    "title": "CT Abdomen renal mass protocol - follow-up",
+    "text": "COMPARISON: 2025-12-01. FINDINGS: Right Bosniak IIF cyst unchanged, 3.2 cm.\nIMPRESSION: Stable Bosniak IIF cyst.\nRECOMMENDATION: Renal mass protocol CT in 12 months."
+   }
+  ],
+  "evaluation_date": "2026-08-01",
+  "expected": {
+   "R040": "done",
+   "R030": "done"
+  },
+  "rationale": "The later report is itself the follow-up study (170 days, inside 6 months + grace). Its own new 12-month recommendation is not evaluated here."
+ },
+ {
+  "id": "U18",
+  "patient": {
+   "age": 66,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-02-02",
+    "category": "RAD",
+    "title": "MRI Prostate",
+    "text": "FINDINGS: 1.2 cm left PZ lesion, PI-RADS 4.\nRECOMMENDATION: MRI-targeted prostate biopsy."
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2026-02-20",
+    "description": "Colonoscopic biopsy, sigmoid polyp"
+   },
+   {
+    "type": "biopsy_done",
+    "date": "2026-05-10",
+    "description": "MRI-fusion targeted prostate biopsy"
+   }
+  ],
+  "evaluation_date": "2026-07-01",
+  "expected": {
+   "R036": "done_late"
+  },
+  "rationale": "Trap: colon biopsy is another organ; prostate biopsy at 97 days exceeds the 30-day target."
+ },
+ {
+  "id": "U19",
+  "patient": {
+   "age": 72,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2025-10-15",
+    "category": "RAD",
+    "title": "CT Abdomen Pelvis",
+    "text": "FINDINGS: Infrarenal abdominal aorta 4.2 cm.\nIMPRESSION: 4.2 cm abdominal aortic aneurysm.\nRECOMMENDATION: Ultrasound surveillance in 12 months."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-03-04",
+    "modality": "US",
+    "body_part": "SCROTUM",
+    "description": "US scrotum - testicular pain"
+   }
+  ],
+  "evaluation_date": "2026-09-01",
+  "expected": {
+   "R044": "pending",
+   "R032": "pending"
+  },
+  "rationale": "Trap: scrotal US is the wrong region; at 321 days the 12-month surveillance is not yet due."
+ },
+ {
+  "id": "U20",
+  "patient": {
+   "age": 60,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false
+  },
+  "events": [
+   {
+    "type": "report",
+    "date": "2026-01-20",
+    "category": "RAD",
+    "title": "MRI Liver",
+    "text": "HBV cirrhosis. FINDINGS: S5 1.5 cm observation, APHE without washout or capsule.\nIMPRESSION: LI-RADS LR-3.\nRECOMMENDATION: Repeat multiphasic MRI in 3-6 months."
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-04-15",
+    "modality": "CT",
+    "body_part": "ABDOMEN",
+    "description": "CT abdomen multiphase"
+   },
+   {
+    "type": "imaging_done",
+    "date": "2026-09-25",
+    "modality": "MR",
+    "body_part": "ABDOMEN",
+    "description": "MRI liver with gadoxetate"
+   }
+  ],
+  "evaluation_date": "2026-10-05",
+  "expected": {
+   "R031": "done_late"
+  },
+  "rationale": "Trap: CT is the wrong modality for an MRI recommendation; MRI at 248 days is past 6 months + grace."
  }
 ]

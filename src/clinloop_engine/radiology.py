@@ -238,7 +238,8 @@ _SOLID_COMPONENT = re.compile(rf"solid (?:component|portion|part){_GAP}{{0,20}}?
 _MULTIPLE = re.compile(r"\b(multiple|numerous|several|nodules)\b|다발성|여러\s*개", re.I)
 _BENIGN_NODULE = re.compile(r"(?<!non-)(?<!non )\b(calcified|granulomas?|hamartoma|intrapulmonary lymph node)\b"
                             r"|benign (?:pattern of )?calcification|(?<!비)석회화"
-                            r"|consistent with (?:a )?benign (?:etiology|aetiology|lesion|nodule)", re.I)
+                            r"|consistent with (?:a )?benign (?:etiology|aetiology|lesion|nodule)"
+                            r"|(?:→|->)\s*benign|benign\s*(?:으로|로)\s*판단|양성\s*(?:으로|로)?\s*판단", re.I)
 _PERIFISSURAL = re.compile(r"perifissural", re.I)
 _GROWING = re.compile(r"\b(increas\w*|enlarg(?:ed|ing|ement)(?!\s+(?:\w+\s+){0,2}(?:lymph|nodes?|heart|cardiac|liver|spleen|thyroid))"
                       r"|grow\w*|grew|grown|larger|new(?:ly)?\s+(?:developed\s+)?(?:\d+(?:\.\d+)?\s*mm\s+)?solid component)\b|증가|커[졌짐]|새로\s*(?:생긴|발생한)\s*고형\s*성분", re.I)
@@ -249,7 +250,9 @@ _STABLE = re.compile(r"\b(stable|unchanged|redemonstrat\w*|again (?:seen|noted|d
 _DECREASING = re.compile(r"\b(decreas\w*|smaller|shrink\w*|shrunk|regress\w*)\b|감소", re.I)
 _NEW = re.compile(r"\bnew\b|신규|새로", re.I)
 _STABLE_FOR = re.compile(r"(?:stable|unchanged)[^.;]{0,30}?\bfor\s+(\d+(?:\.\d+)?)\s*(year|month)s?"
-                         r"|(?:more than |over |≥\s*)?(\d+(?:\.\d+)?)\s*(year|month)s?\s+of\s+stability", re.I)
+                         r"|(?:more than |over |≥\s*)?(\d+(?:\.\d+)?)\s*(year|month)s?\s+of\s+stability"
+                         r"|stable\s*(?:>|≥|over|more than)\s*(\d+(?:\.\d+)?)\s*(year|month)s?"
+                         r"|(\d+(?:\.\d+)?)\s*(년|개월)\s*간?[^.\n]{0,30}?변화\s*(?:가\s*)?없", re.I)
 _SINCE_YEAR = re.compile(r"\bsince\s+(?:\w+\s+)?((?:19|20)\d{2})\b|((?:19|20)\d{2})년\s*이후", re.I)
 _COMPARED_DATE = re.compile(r"compar\w*\s+(?:to|with)[^.;]{0,40}?((?:19|20)\d{2})-(\d{2})(?:-(\d{2}))?", re.I)
 # "unchanged since CT of 03/2024"
@@ -353,8 +356,8 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
             stable_since = None
             sf = _STABLE_FOR.search(s)
             if sf:
-                num, unit = (sf.group(1), sf.group(2)) if sf.group(1) else (sf.group(3), sf.group(4))
-                stable_since = ("for", float(num) * (12 if unit.lower() == "year" else 1))
+                num, unit = next((sf.group(i), sf.group(i + 1)) for i in (1, 3, 5, 7) if sf.group(i))
+                stable_since = ("for", float(num) * (12 if unit.lower() in ("year", "년") else 1))
             else:
                 sy = _SINCE_YEAR.search(s) or _SINCE_YEAR.search(text)
                 cd = _COMPARED_DATE.search(text)
@@ -411,7 +414,9 @@ _BOSNIAK = re.compile(r"bosniak\s*(?:class(?:ification)?|category|type)?\s*:?\s*
 _RENAL_SUSPICIOUS = re.compile(r"\b(?:solid|enhancing)\s+(?:\w+\s+){0,2}(?:mass|lesion|nodule|component)|renal cell carcinoma|\brcc\b|"
                                r"(?:suspicious|concerning) for (?:malignan\w*|neoplasm|carcinoma)|"
                                r"(?:조영\s*증강(?:되는|을\s*보이는)\s*|고형\s*(?:성\s*)?)(?:종괴|결절|병변|벽재?\s*결절)|"
-                               r"enhancing (?:\w+\s+){0,2}(?:septa\w*|walls?|mural nodul\w*)|\bmural nodul\w*|"
+                               # Thin smooth enhancing septa are Bosniak II/IIF; thick or irregular ones are suspicious
+                               r"(?:thick\w*|irregular\w*|nodular)[^.;]{0,25}?enhancing (?:\w+\s+){0,2}(?:septa\w*|walls?)|"
+                               r"enhancing (?:\w+\s+){0,2}(?:mural nodul\w*)|\bmural nodul\w*|"
                                r"신세포암(?!\s*(?:을|를|은)?\s*(?:배제|감별))", re.I)
 _RENAL_BENIGN = re.compile(r"simple (?:renal )?cysts?|angiomyolipoma|macroscopic fat|too small to characteri[sz]e|"
                            r"\btstc\b|hyperdense cyst|단순\s*낭종|혈관근지방종", re.I)
@@ -422,16 +427,22 @@ _RENAL_STATED_SUSPICIOUS = re.compile(r"(?:suspicious|concerning) for|의심", r
 _RENAL_INDETERMINATE = re.compile(r"indeterminate|incompletely characteri[sz]ed|cannot be (?:excluded|characteri[sz]ed)|"
                                   r"to (?:exclude|rule out)|불확정|배제|감별", re.I)
 
-_PANCREAS = re.compile(r"(?:pancrea\w*|췌장)(?:[^.;]|(?<=\d)\.(?=\d)){0,40}?(?:cyst\w*|ipmn|intraductal papillary|낭종|낭성)|"
+_PANCREAS = re.compile(r"\b(?:BD-|MD-|branch[- ]duct\s+|main[- ]duct\s+)?IPMN\b|intraductal papillary mucinous|"  # pancreatic by definition
+                       r"(?:pancrea\w*|췌장)(?:[^.;]|(?<=\d)\.(?=\d)){0,40}?(?:cyst\w*|ipmn|intraductal papillary|낭종|낭성)|"
                        r"(?:cyst\w*|ipmn|낭종|낭성)(?:[^.;]|(?<=\d)\.(?=\d)){0,60}?(?:pancrea\w*|췌장)", re.I)
 _STABLE_YEARS = re.compile(r"(?:stable|unchanged)[^.;]{0,60}?\b(\d+(?:\.\d+)?)\s*(?:years?|yrs?)\b|"
                            r"(?:변화\s*없|안정)[^.]{0,30}?(\d+)\s*년", re.I)
 _SURVEILLANCE_ENDED = re.compile(r"surveillance (?:can|may|should) be (?:discontinued|stopped)|no further (?:surveillance|follow-up)"
                                  r"|추적\s*(?:검사\s*)?(?:중단|종료|불필요)", re.I)
 _PSEUDOCYST = re.compile(r"pseudocyst|가성낭종", re.I)
-_MAIN_DUCT = re.compile(rf"main (?:pancreatic )?duct{_GAP}{{0,40}}?{_SIZE}|주췌관{_GAP}{{0,20}}?{_SIZE}", re.I)
+_MAIN_DUCT = re.compile(rf"(?:main (?:pancreatic )?duct|\bMPD\b){_GAP}{{0,40}}?{_SIZE}|주췌관{_GAP}{{0,20}}?{_SIZE}", re.I)
+_KNOWN_CANCER = re.compile(r"\b(?:known|history of|newly diagnosed|staging (?:of|for))\s+(?:\w+\s+){0,3}?"
+                           r"(?:malignancy|cancer|carcinoma|adenocarcinoma|lymphoma|melanoma|sarcoma|primary)\b"
+                           r"|in a patient with (?:\w+\s+){0,2}?(?:cancer|carcinoma|malignancy|lymphoma)"
+                           r"|(?:암|악성\s*종양)\s*(?:환자|병력|과거력)", re.I)
 _PANCREAS_WORRISOME = re.compile(r"mural nodule|enhancing (?:solid )?component|solid component|고형\s*성분|조영\s*증강되는\s*(?:고형|벽)|"
-                                 r"thick(?:ened)?,? (?:enhancing )?(?:cyst )?wall|obstructive jaundice|벽결절", re.I)
+                                 r"thick(?:ened)?,? (?:enhancing )?(?:cyst )?wall|obstructive jaundice|벽결절|"
+                                 r"worrisome features?|high-risk stigmata", re.I)
 
 _THYROID = re.compile(rf"(?:thyroid|갑상선){_GAP}{{0,40}}?{_LESION}|{_LESION}{_GAP}{{0,60}}?(?:thyroid|갑상선)", re.I)
 _THYROID_SUSPICIOUS = re.compile(r"invasi\w*|invad\w*|extrathyroidal|abnormal (?:cervical )?lymph nodes?|suspicious", re.I)
@@ -469,7 +480,7 @@ def _incidental_findings(text: str, code_text: str, study_modality: Optional[str
                        "III": "III", "3": "III", "IV": "IV", "4": "IV"}.get(b.group(1).upper())
             out.append({"kind": "renal", "organ": "kidney", "size_mm": max(sizes) if sizes else None,
                         "bosniak": bos,
-                        "suspicious": bos in ("III", "IV") or (bool(_RENAL_SUSPICIOUS.search(s)) and (
+                        "suspicious": bos in ("III", "IV") or (bool(first_affirmed(_RENAL_SUSPICIOUS, s)) and (
                             not _DIFFERENTIAL.search(s) or bool(_RENAL_STATED_SUSPICIOUS.search(s)))),
                         "benign": bos in ("I", "II") or (bool(_RENAL_BENIGN.search(s))
                                                          and not _RENAL_INDETERMINATE.search(s)),
@@ -548,11 +559,13 @@ _REC_PATTERNS = [
                rf"(?P<unit>days?|wks?|weeks?|mos?|months?|yrs?|years?)\b", re.I),
 ]
 _KO_REC = r"(?:권고|권장|권함|권합니다|추천|요망|바람|바랍니다)"     # Korean "recommend" endings
+_REC_ANNUAL = re.compile(rf"\b(?:annual(?:ly)?|yearly)\s+(?:follow[- ]?up\s+|surveillance\s+)?(?:\w+\s+){{0,2}}?{_MOD}\b"
+                         rf"|\b{_MOD}\b[^.;]{{0,30}}?\b(?:annually|yearly|every year)\b", re.I)
 _REC_CUE = re.compile(r"recommend|suggest|advis|권고|권장|권함|권합니다|추천", re.I)
 # A description of a study that already happened is not a recommendation
 _PAST_STUDY = re.compile(r"\b(showed|shows|demonstrat\w*|revealed|was performed|were performed|performed on|dated)\b", re.I)
 MAX_REC_INTERVAL_DAYS = 10 * 365.25
-_KO_MOD = r"(CTA|CT|MRI|MRA|MRCP|초음파|X선|엑스레이)"
+_KO_MOD = r"(CTA|CT|MRI|MRA|MRCP|초음파|흉부\s*X선|X선|엑스레이|CXR|X-?ray|radiographs?)"
 _REC_KO = re.compile(rf"(\d+)\s*(?:[-~]\s*(\d+))?\s*(개월|주|일|년)\s*(?:후|뒤|이내|내)?\s*(?:에\s*)?(?:추적\s*)?(?:검사\s*)?"
                      rf"(?:[A-Za-z가-힣/-]+\s+){{0,3}}?{_KO_MOD}[^.]{{0,20}}?(?:{_KO_REC[3:-1]}|(?<!불)필요|f/u)", re.I)
 _NOT_GUIDED = r"(?![\s-]*(?:guided|targeted|fusion))"   # "MRI-targeted biopsy" is a biopsy
@@ -565,7 +578,7 @@ _REC_KO_NO_INTERVAL = re.compile(rf"(?:추가|추적|정밀)\s*(?:검사\s*)?(?:
                                  rf"|(?:조영\s*증강|조영제|역동적?|dynamic)\s*(?:[A-Za-z가-힣/-]+\s+){{0,2}}?{_KO_MOD}\s*"
                                  rf"(?:검사|촬영)?\s*(?:를|을|이)?\s*(?:권고|권장)"
                                  # "Chest CT 권함", "liver MRI (dynamic) 권함"
-                                 rf"|{_KO_MOD}\s*(?:\([^)]{{0,20}}\)\s*)?(?:검사|촬영)?\s*(?:를|을)?\s*{_KO_REC}", re.I)
+                                 rf"|{_KO_MOD}\s*(?:\([^)]{{0,20}}\)\s*)?(?:검사|촬영|시행)?\s*(?:를|을)?\s*{_KO_REC}", re.I)
 DEFAULT_REC_INTERVAL_DAYS = 30.0
 _BIOPSY = r"(biops(?:y|ies)|tissue sampling|fine[-\s]needle aspiration|\bFNA\b|core[-\s]needle|조직검사|세침\s*흡인)"
 _BIOPSY_REC = [
@@ -575,7 +588,7 @@ _BIOPSY_REC = [
 ]
 _ALTERNATIVE = re.compile(r"\bor\s+(?:[\w/]+[-\s]){0,2}$|또는\s*(?:[\w/]+[-\s]){0,2}$", re.I)
 _HEDGE = re.compile(r"if clinically|as clinically (?:indicated|appropriate)|if (?:desired|needed|warranted|appropriate)|"
-                    r"as appropriate|could be considered|"
+                    r"as appropriate|as indicated|could be considered|"
                     r"may be considered|can be considered|\boptional|필요\s*시|임상적으로\s*필요", re.I)
 _NOT_A_REC = re.compile(r"\b(no|not|without|prior|previous|outside|comparison|compared)\b", re.I)
 REC_RULE = {"ct": "R030", "mri": "R031", "ultrasound": "R032", "xray": "R033"}
@@ -589,7 +602,7 @@ def _norm_modality(text: str) -> Optional[str]:
         return "mri"
     if t == "us" or "sonograph" in t or "ultrasound" in t or t == "초음파":
         return "ultrasound"
-    if "radiograph" in t or t.replace("-", "").rstrip("s") in ("xray", "cxr") or t in ("x선", "엑스레이"):
+    if "radiograph" in t or t.replace("-", "").rstrip("s") in ("xray", "cxr") or "x선" in t or t == "엑스레이":
         return "xray"
     return None
 
@@ -636,6 +649,12 @@ def _extract_recommendation(text: str, code_text: str = "") -> Optional[Dict[str
             if modality and number is not None:
                 # An implausible interval ("in 0 months") is not replaced by a guessed default
                 return result(m, modality, round(number * _UNIT_DAYS[m.group("unit").lower().rstrip("s")], 1), True)
+    for m in _REC_ANNUAL.finditer(text):
+        s = sentence(text, m.start(), m.end())
+        if _usable_rec(text, m) and (_REC_CUE.search(s) or s.strip().lower().startswith(m.group(0).lower()[:8])):
+            modality = _norm_modality(next(g for g in m.groups() if g))
+            if modality:
+                return result(m, modality, YEAR, True)
     for m in _REC_KO.finditer(text):
         if affirmed(text, m) and not _HEDGE.search(sentence(text, m.start(), m.end())):
             number = float(m.group(2) or m.group(1))
@@ -757,13 +776,17 @@ def clean_report_text(text: str) -> str:
     """
     t = re.sub(r"(\w)-\n(\w)", r"\1\2", text or "")
     t = re.sub(r"(?<![.:;)\]\n])\n(?=[a-z])", " ", t)
-    t = re.sub(r"(?<=\d)[Oo](?=\s*(?:mm|cm)\b|\d)", "0", t)
+    t = re.sub(r"(?<=[\dOo])(\s?)rnm\b", r"\1mm", t)           # '9 rnm', '1O rnm' → 'mm' (before the O→0 step)
+    t = re.sub(r"(?<=\d)[Oo](?=\s*(?:mm|cm|rnm)\b|\d)", "0", t)
     t = re.sub(r"(?<=[A-Za-z])0(?=[a-z])", "o", t)
+    t = re.sub(r"\b0(?=[a-z]{1,})", "o", t)                    # '0r' → 'or'
+    t = re.sub(r"(?<=[A-Za-z])1(?=[a-z])", "i", t)             # 'Fle1schner' → 'Fleischner'
     return t
 
 
 # The heading only ("ADDENDUM (2026-05-08):"): text on the same line belongs to the addendum
-_ADDENDUM = re.compile(r"\n\s*(?:ADDENDUM|Addendum|추가\s*판독|수정\s*판독)\b(?:\s*\([^)\n]*\))?\s*[:：]?", re.I)
+_ADDENDUM = re.compile(r"\n\s*[\[(*]*\s*(?:ADDENDUM|Addendum|추가\s*판독|수정\s*판독)\b(?:[^\]\n:：]*\])?"
+                       r"(?:\s*\([^)\n]*\))?\s*[:：]?", re.I)
 _WITHDRAWN = re.compile(r"withdrawn|retract\w*|disregard|no (?:further )?(?:follow-?up|imaging|work-?up)(?: is)? "
                         r"(?:needed|required|necessary|recommended)|철회|취소|추적\s*(?:검사\s*)?(?:는\s*)?불필요", re.I)
 
@@ -789,7 +812,8 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
             value = next(g for g in m.groups() if g).upper()
             details[key] = value
             mapping.append(f"{label} {value}")
-    nodules = _lung_nodules(conclusion, code_text)
+    nodules = (_lung_nodules(addendum, code_text) if addendum else []) or \
+        _lung_nodules(main if addendum else conclusion, code_text)
     if nodules:
         dominant = max(nodules, key=lambda n: (n["size_mm"], n["type"] != "ggn"))
         dominant["multiple"] = dominant["multiple"] or len(nodules) > 1
@@ -1171,6 +1195,9 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
         when = ts(e)
         ctx = context_at(when)
         ctx["emphysema"] = bool(re.search(r"emphysema|폐기종", d.get("conclusion") or "", re.I))
+        # The radiologist stating the patient has cancer counts even when the problem list does not say so
+        if first_affirmed(_KNOWN_CANCER, d.get("conclusion") or ""):       # not "암 병력 없음", "no known malignancy"
+            ctx["malignancy"] = True
         mapping: List[str] = d["mapping"]
         conds: List[str] = []
         deadlines: Dict[str, float] = {}
@@ -1245,9 +1272,18 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
                     tirads_followup = decision
                 continue
             if rec_tracked and _same_target(rec["regions"], f["organ"]):
-                mapping.append(f"{decision['note']} — radiologist's recommendation tracked instead "
-                               f"({REC_RULE[rec['recommended_modality']]})")
-                continue
+                if decision["rule_id"] in WORKUP_SPECIALTIES:
+                    # A work-up (specialist, biopsy) is more than the imaging the radiologist names: it stands
+                    rec_tracked = False
+                    mapping.append(f"work-up ({decision['rule_id']}) covers the radiologist's imaging recommendation")
+                else:
+                    if not rec["recommended_interval_stated"]:
+                        rec["recommended_interval_days"] = decision["days"]
+                        rec["interval_source"] = "guideline"
+                    mapping.append(f"{decision['note']} — radiologist's recommendation tracked instead "
+                                   f"({REC_RULE[rec['recommended_modality']]})"
+                                   + (" with the guideline's interval (none stated)" if rec.get("interval_source") else ""))
+                    continue
             mapping.append(decision["note"])
             add(decision["rule_id"], decision["condition"], decision["days"], decision["regions"],
                 evidence=f["evidence_span"])

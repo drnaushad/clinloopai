@@ -25,7 +25,8 @@ NEGATION_AFTER = re.compile(
     r"visualized|evident|appreciated)\b|\bno\s+longer\b|\b(?:has|have)\s+resolved\b|\b(?:excluded|ruled out)\b"
     r"|^\s*[:=-]\s*(?:not\s+(?:identified|seen|present|detected|found)|absent|negative|none)\b)"
     # Korean negation closes its own clause: "낭성 병변, 주췌관 확장이나 고형 성분 없음" negates the solid part only
-    r"|^[^.;,]{0,25}?(?:없|음성|아님|배제|않|안\s*(?:함|됨|보임))",
+    # "변화 없음", "크기 증가 없음" (no change, no growth) speak about change, not absence
+    r"|^[^.;,]{0,25}?(?<!변화 )(?<!변화)(?<!변화가 )(?<!증가 )(?<!증가)(?<!차이 )(?:없|음성|아님|배제|않|안\s*(?:함|됨|보임))",
     re.IGNORECASE,
 )
 # "No change", "no significant interval change": a statement about change, not absence
@@ -46,6 +47,16 @@ def not_negated(text: str, start: int) -> bool:
         return len(gap) > 60          # too far away to apply
     last_item = gap.rsplit(",", 1)[1]
     in_list = re.search(r"\b(?:or|nor)\b", last_item) or re.match(r"\s*and\b", last_item)
+    if not in_list:
+        # A middle item of a negated list: "without septation, mural nodule, calcification or enhancing
+        # component" (short items, and the list goes on to "or"/"nor" before the clause ends)
+        rest = re.split(r"[.;\n]", text[start:start + 120], maxsplit=1)[0]
+        items = gap.split(",")[1:]
+        head = re.split(r",|\b(?:or|nor)\b", rest)[0]
+        # A measured finding ("9 mm nodule") is reported as present, whatever list it sits in
+        in_list = all(len(i.split()) <= 4 for i in items) and re.search(r"\b(?:or|nor)\b", rest) \
+            and not re.search(r"\b(?:is|are|was|were|with|measur\w*|seen|noted)\b|\d\s*(?:mm|cm)\b", head, re.I) \
+            and not re.search(r"\d\s*(?:mm|cm)\b", items[-1] if items else "", re.I)
     return not in_list
 
 

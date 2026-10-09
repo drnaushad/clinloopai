@@ -308,7 +308,9 @@ _MALIGNANT = re.compile(r"(adenocarcinoma|carcinoma|malignan\w*|high-grade dyspl
                         r"\bHSIL\b|high[- ]grade squamous intraepithelial lesion|\bASC-H\b|\bAGC\b|"
                         r"atypical glandular cells|\bCIN\s*(?:2|3|II|III)\b|"
                         # High-risk breast lesions: surgical excision is usually advised
-                        r"atypical (?:ductal|lobular) hyperplasia|\bADH\b|\bALH\b|lobular (?:carcinoma|neoplasia) in situ|\bLCIS\b)",
+                        r"atypical (?:ductal|lobular) hyperplasia|\bADH\b|\bALH\b|lobular (?:carcinoma|neoplasia) in situ|\bLCIS\b|"
+                        # Precancer of the endometrium: gynecologic oncology referral
+                        r"atypical endometrial hyperplasia|endometrioid intraepithelial neoplasia|\bEIN\b)",
                         re.I)
 
 
@@ -613,12 +615,21 @@ _LUNG_SITE = re.compile(r"\blung|pulmonary|\blobe\b|\b(?:RUL|RML|RLL|LUL|LLL)\b|
                         r"\bEBUS\b|폐|[우좌][상중하]엽|기관지", re.I)
 
 
+_OTHER_BIOPSY_SITES = [(site, re.compile(rx, re.I)) for site, rx in (
+    ("colon", r"\bcolon|colonic|rect(?:um|al)|sigmoid|대장|직장"), ("stomach", r"stomach|gastric|위\s*조직|위내시경"),
+    ("esophagus", r"esophag\w*|oesophag\w*|식도"), ("skin", r"\bskin\b|punch|피부"),
+    ("cervix", r"cervi(?:x|cal)|자궁경부"), ("uterus", r"endometri\w*|자궁내막"), ("prostate", r"prostat\w*|전립선"))]
+
+
 def biopsy_regions(text: str) -> List[str]:
     """Where tissue was (or will be) sampled, from the procedure wording; [] when it does not say."""
     from .radiology import expand_regions, regions_in
     found = set(regions_in(text or ""))
     if _LUNG_SITE.search(text or ""):
         found |= {"lung", "chest"}
+    for site, rx in _OTHER_BIOPSY_SITES:
+        if rx.search(text or ""):
+            found.add(site)
     return expand_regions(found) if found else []
 
 

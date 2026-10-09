@@ -234,6 +234,59 @@ class TestRealWorldReportWriting(unittest.TestCase):
             self.assertEqual(rules(text, title="Pathology", category="PAT"), set(), text)
 
 
+class TestConfirmationRoundFixes(unittest.TestCase):
+    """Defects found by the second real-style confirmation set (reworded)."""
+
+    def test_korean_xray_and_perform_wording(self):
+        self.assertEqual(rules("결론: LLL pneumonia.\n권고: 치료 후 8주 뒤 f/u CXR 권함.", title="Chest PA"), {"R033"})
+        self.assertEqual(rules("결론: Lt distal radius fracture.\n권고: 10일 후 f/u X-ray 권함.", title="Wrist X-ray"), {"R033"})
+        self.assertIn("R031", rules("결론: Lt adnexal cyst with solid component, O-RADS US 4.\n권고: O-RADS MRI 시행 권함.",
+                                    title="Pelvis US", sex="female"))
+
+    def test_bracketed_korean_addendum_with_long_stability(self):
+        text = ("결론:\nRUL 6 mm solid nodule. 12개월 후 f/u CT 권함.\n[추가판독 2026-06-01]\n"
+                "타병원 2023년 CT와 비교: RUL 6 mm nodule은 3년간 크기 변화 없음 → benign으로 판단. 이전 권고 취소.")
+        self.assertEqual(rules(text, title="Chest CT", smoking="8517006"), set())
+
+    def test_ocr_rn_for_m(self):
+        text = "IMPRESSl0N:\n1. 1O rnm s0lid RLL n0dule.\nREC0MMENDATI0N: f0llow-up CT chest in 3 m0nths."
+        self.assertTrue(rules(text, title="CT chest", smoking="8517006") & {"R003", "R030"})
+
+    def test_mpd_dilatation_is_worrisome(self):
+        self.assertIn("R042", rules("결론: BD-IPMN 2.6 cm, MPD 8 mm로 확장. 권고: EUS 권함.", title="MRCP"))
+
+    def test_hedged_fna_and_endometrial_precancer(self):
+        self.assertNotIn("R036", rules("RECOMMENDATION: Thyroid ultrasound (with FNA as indicated) for the FDG-avid "
+                                       "1.2 cm thyroid nodule.", title="PET/CT"))
+        self.assertEqual(rules("DIAGNOSIS:\nEndometrium, biopsy: ATYPICAL ENDOMETRIAL HYPERPLASIA (EIN).",
+                               title="Pathology", category="PAT", sex="female"), {"R009"})
+
+    def test_workup_is_not_replaced_by_an_imaging_recommendation(self):
+        got = rules("IMPRESSION: 1.7 cm indeterminate left adrenal nodule in a patient with known malignancy.\n"
+                    "RECOMMENDATION: Adrenal chemical-shift MRI for characterization.", title="CT abdomen")
+        self.assertNotIn("R031", got)
+
+    def test_unstated_interval_takes_the_guideline_interval(self):
+        from datetime import datetime as dt
+        res = [{"resourceType": "Patient", "id": "A", "gender": "male", "birthDate": "1960-03-01"},
+               {"resourceType": "DiagnosticReport", "id": "r", "status": "final", "category": [{"coding": [{"code": "RAD"}]}],
+                "code": {"text": "CT chest"}, "subject": {"reference": "Patient/A"}, "effectiveDateTime": "2026-09-01T09:00:00Z",
+                "conclusion": "IMPRESSION: Incidental 1.8 cm left thyroid nodule. Recommend thyroid ultrasound."}]
+        events, _ = bundle_to_events(res)
+        d = [x for x in ClinLoopDetector(evaluation_time=dt(2026, 9, 2)).process_patient("t", "A", events["A"]) if x.rule_id == "R032"][0]
+        self.assertGreater((dt.fromisoformat(d.deadline) - dt.fromisoformat(d.trigger_time)).days, 60)
+
+    def test_annual_imaging_recommendation(self):
+        self.assertIn("R030", rules("IMPRESSION: Ascending aortic aneurysm 4.6 cm. Recommend annual CT angiography.",
+                                    title="CTA chest"))
+
+    def test_middle_item_of_a_negated_list_and_thin_septa(self):
+        self.assertNotIn("R042", rules("IMPRESSION: 1.6 cm pancreatic tail cyst without septation, mural nodule, "
+                                       "calcification or enhancing component. MRI/MRCP in 1 year.", title="CT abdomen"))
+        self.assertNotIn("R039", rules("Right kidney: 3.1 cm cyst with multiple thin, smooth enhancing septa and no measurable "
+                                       "enhancing nodule. Bosniak IIF. RECOMMENDATION: Follow-up CT in 6 months."))
+
+
 class TestBlindCaseSets(unittest.TestCase):
     """The 270 blind-written cases (docs/ACCURACY_EVALUATION.md) stay above a floor: a change that loses
     findings or adds false alerts fails CI."""

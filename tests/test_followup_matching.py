@@ -71,6 +71,14 @@ class TestRightServiceAndOrgan(unittest.TestCase):
         self.assertEqual(kidney.get("R046"), "missed")
 
 
+    def test_biopsy_of_another_organ_does_not_close_a_prostate_biopsy(self):
+        base = [report("2026-02-02", "MRI prostate",
+                       "IMPRESSION: 1.6 cm PI-RADS 5 lesion, left peripheral zone. Targeted prostate biopsy recommended.")]
+        colon = run_case(timeline(base + [{"type": "biopsy_done", "date": "2026-02-10",
+                                           "description": "Colonoscopic biopsy, sigmoid colon"}], "2026-04-15"))
+        self.assertEqual(colon.get("R036"), "missed")
+
+
 class TestReportWording(unittest.TestCase):
 
     def test_korean_birads_category(self):
