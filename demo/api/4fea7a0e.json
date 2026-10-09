@@ -1,0 +1,1 @@
+{"definition":"Loops not closed within their guideline window per 1,000 loops whose deadline has passed","stratified_by":"age_group","groups":{"50s":{"eligible":1,"missed":1,"rate_per_1000":1000.0},"60s":{"eligible":17,"missed":14,"rate_per_1000":823.5},"70s":{"eligible":11,"missed":8,"rate_per_1000":727.3},"80+":{"eligible":2,"missed":1,"rate_per_1000":500.0}}}
