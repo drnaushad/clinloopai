@@ -1,0 +1,2 @@
+note_id,person_id,note_date,note_datetime,note_type_concept_id,note_class_concept_id,note_title,note_text,encoding_concept_id,language_concept_id,provider_id,visit_occurrence_id,visit_detail_id,note_source_value
+7000,1,2023-02-03,2023-02-03 14:00:00,0,0,Radiology report CT chest,"IMPRESSION: 9 mm solid right upper lobe nodule. Recommend follow-up chest CT in 3 months.",0,0,,10,,

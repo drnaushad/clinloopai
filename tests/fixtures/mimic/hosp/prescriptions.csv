@@ -1,0 +1,2 @@
+subject_id,hadm_id,pharmacy_id,poe_id,poe_seq,order_provider_id,starttime,stoptime,drug_type,drug,formulary_drug_cd,gsn,ndc,prod_strength,form_rx,dose_val_rx,dose_unit_rx,form_val_disp,form_unit_disp,doses_per_24_hrs,route
+19990001,29990001,501,19990001-1,1,P1,2150-03-04 09:00:00,2150-03-05 12:00:00,MAIN,Lisinopril,LISI10,,,10mg Tablet,,10,mg,1,TAB,1,PO

@@ -1,0 +1,3 @@
+visit_occurrence_id,person_id,visit_concept_id,visit_start_date,visit_start_datetime,visit_end_date,visit_end_datetime,visit_type_concept_id,provider_id,care_site_id,visit_source_value,visit_source_concept_id,admitting_source_concept_id,admitting_source_value,discharge_to_concept_id,discharge_to_source_value,preceding_visit_occurrence_id
+10,1,9201,2023-02-01,2023-02-01 08:00:00,2023-02-05,2023-02-05 10:00:00,32817,,,,0,,,,,
+11,1,9202,2023-03-20,2023-03-20 09:00:00,2023-03-20,2023-03-20 09:30:00,32817,,,,0,,,,,

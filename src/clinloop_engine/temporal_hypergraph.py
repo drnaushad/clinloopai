@@ -307,6 +307,10 @@ class DynamicTemporalHypergraph:
         is_abnormal = conditions[0] not in ("", "normal") or flag in (
             "ABNORMAL", "HIGH", "LOW", "CRITICAL", "PANIC")
 
+        if details.get("abnormal_handled"):
+            # Taken in hospital, part of a sample already under review, or a known abnormality (fhir_ingest)
+            conditions = [c for c in conditions if c != "abnormal"]
+            is_abnormal = False
         if flag in ("CRITICAL", "PANIC") or details.get("critical") is True:
             conditions.append("critical_value")
         if details.get("resulted_after_discharge") is True and is_abnormal:
@@ -475,8 +479,10 @@ class DynamicTemporalHypergraph:
         required_values = {ft.value for ft in required_types}
         required_regions = _required_regions(trigger, rule) if rule else []
 
+        since = (trigger.details.get("followup_since") or {}).get(rule.rule_id) if rule else None
+        start = normalize_timestamp(since) if since else trigger.timestamp
         for node in all_nodes:
-            if node.timestamp <= trigger.timestamp:
+            if node.timestamp <= start or node is trigger:
                 continue
             if node.timestamp > self.evaluation_time:
                 continue

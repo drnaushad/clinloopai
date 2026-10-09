@@ -62,6 +62,7 @@ class EventType(Enum):
     CLINICAL_NOTE_PLAN = "clinical_note_plan"     # a concrete plan written in a clinician's note (note_reader)
     DIAGNOSTIC_PATTERN = "diagnostic_pattern"     # a dangerous combination across events (motifs.py)
     SECOND_READER_FLAG = "second_reader_flag"     # an actionable report item no rule tracked (second_reader.py)
+    ECG = "ecg"                                   # an electrocardiogram and its interpretation (fhir_ingest, ecg)
 
 
 # ── Severity Classification ─────────────────────────────────────────────────
@@ -291,7 +292,8 @@ OBLIGATION_RULES: List[ObligationRule] = [
         description="Abnormal TSH/T4 requires repeat labs within 6-8 weeks",
         trigger_event=EventType.LAB_RESULT,
         trigger_condition="abnormal_thyroid",
-        required_followups=[EventType.FOLLOWUP_LAB],
+        required_followups=[EventType.FOLLOWUP_LAB, EventType.LAB_RESULT],
+        followup_logic="any",
         deadline_days=56.0,
         severity=Severity.MODERATE,
         clinical_domain="laboratory",
@@ -1031,6 +1033,28 @@ OBLIGATION_RULES: List[ObligationRule] = [
                        "otherwise 7 days to review. On-premise model only; off unless CLINLOOP_SECOND_READER=1."),
         patient_outreach=False,
     ),
+    ObligationRule(
+        rule_id="R059",
+        name="Prolonged QTc ≥500 ms → Medication Review / Repeat ECG ≤24 h",
+        description=("An ECG with a corrected QT interval of 500 ms or more: a clinician reviews QT-prolonging "
+                     "medicines and electrolytes, and repeats the ECG, within 24 hours"),
+        trigger_event=EventType.ECG,
+        trigger_condition="prolonged_qtc",
+        required_followups=[EventType.PROVIDER_REVIEW, EventType.ECG],
+        followup_logic="any",
+        deadline_days=1.0,
+        severity=Severity.HIGH,
+        clinical_domain="cardiology",
+        ltl_formula="□(ECG[QTc ≥ 500 ms] → ◇_{≤1d} (PROVIDER_REVIEW ∨ ECG))",
+        references=["Drew BJ et al. Prevention of torsade de pointes in hospital settings: AHA/ACCF scientific "
+                    "statement. Circulation 2010;121:1047-60",
+                    "Rautaharju PM et al. AHA/ACCF/HRS recommendations for the standardization and interpretation of "
+                    "the ECG, part IV (ST segment, T and U waves, QT interval). Circulation 2009;119:e241-50"],
+        evidence_note=("QTc ≥ 500 ms (or a rise of ≥ 60 ms) markedly raises the risk of torsade de pointes. The "
+                       "repeat ECG or a documented review closes it; the review checks QT-prolonging drugs, potassium "
+                       "and magnesium."),
+        patient_outreach=False,
+    ),
 ]
 
 
@@ -1095,6 +1119,7 @@ RULE_NAMES_KO: Dict[str, str] = {
     "R056": "보고서 간 폐결절 크기 증가 → 재검토 및 정밀검사",
     "R057": "판독 전 검사의 영상 AI 위급 소견 → 즉시 판독",
     "R058": "규칙이 놓친 판독문 조치 사항(2차 판독 모델) → 의료진 검토",
+    "R059": "QTc 500ms 이상 연장 → 24시간 내 약물 검토·심전도 재검",
 }
 assert set(RULE_NAMES_KO) == {r.rule_id for r in OBLIGATION_RULES}, "every rule needs a Korean name"
 

@@ -1,0 +1,4 @@
+note_id,subject_id,hadm_id,note_type,note_seq,charttime,storetime,text
+19990001-DS-1,19990001,29990001,DS,1,2150-03-05 12:00:00,2150-03-05 13:00:00,"Discharge Diagnosis: Acute on chronic systolic heart failure.
+
+Discharge Instructions: Please follow up with cardiology in 2 weeks. Repeat potassium in 1 week."

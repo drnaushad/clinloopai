@@ -175,6 +175,7 @@ def pattern_creatinine(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: L
                    for r in rrt)
 
     labs = [e for e in labs if not on_rrt(_t(e))]     # neither a warning nor a baseline while on dialysis
+    labs = [e for e in labs if creatinine_mg_dl(e) >= 0.3]   # 0.1–0.2 mg/dL is an error, not a baseline
 
     # Like with like: a result is compared with earlier results of the same test (LOINC code), so a
     # point-of-care whole-blood creatinine never becomes the baseline for a laboratory serum one
@@ -196,6 +197,12 @@ def pattern_creatinine(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: L
         value = creatinine_mg_dl(e)
         if baseline <= 0 or value < 1.5 * baseline or value - baseline < 0.3:     # KDIGO: ≥ 0.3 mg/dL
             continue
+        if e["details"].get("in_stay"):
+            continue        # in hospital the team repeats creatinine daily: not a follow-up at risk of being lost
+        high = e["details"].get("ref_high")
+        if isinstance(high, (int, float)) and e["details"].get("value") is not None and \
+                float(e["details"]["value"]) <= high:
+            continue        # still within the laboratory's normal range: not a warning on its own
         if last and when - last < timedelta(days=30):
             continue
         ratio = value / baseline
