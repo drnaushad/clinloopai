@@ -13,6 +13,9 @@ Roles (each includes the permissions of the ones before it):
 
 If CLINLOOP_API_TOKENS is unset, a random admin token is generated for this
 process and logged once, so the API is never open by default.
+
+In public demo mode (CLINLOOP_DEMO=1, see demo.py) a published view-only token is
+added; it can read only the synthetic demo data and cannot upload or change anything.
 """
 
 import hmac
@@ -50,6 +53,9 @@ def _load_tokens() -> Dict[str, User]:
         token = secrets.token_urlsafe(24)
         tokens[token] = User("local-admin", "admin")
         logger.warning("CLINLOOP_API_TOKENS not set. Generated a one-time admin token for this process: %s", token)
+    if os.environ.get("CLINLOOP_DEMO", "").strip().lower() in ("1", "true", "yes"):
+        from .demo import DEMO_TOKEN, DEMO_USER
+        tokens[DEMO_TOKEN] = User(DEMO_USER, "viewer")   # published, read-only, synthetic data only
     return tokens
 
 

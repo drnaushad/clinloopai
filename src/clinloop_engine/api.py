@@ -43,10 +43,16 @@ from src.clinloop_engine.imaging_api import router as imaging_router
 from src.clinloop_engine.patient_graph import router as graph_router
 from src.clinloop_engine.fhir_sync import sync_loop
 from src.clinloop_engine.imaging_scanner import scan_loop
+from src.clinloop_engine.loop_store import LoopStore
+from src.clinloop_engine import demo
 
 # Initialize FastAPI App
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    if demo.enabled():
+        # Public demo: synthetic patients in a fresh in-memory database, no hospital links
+        demo.disconnect_hospital()
+        demo.seed(LoopStore(":memory:"))
     # Background safety tasks: the Safety Clock watchdog over the demo cases,
     # and escalation of unacknowledged overdue loops in the pilot registry
     tasks = [asyncio.create_task(safety_clock_loop()), asyncio.create_task(escalation_loop()),
@@ -558,7 +564,10 @@ _WEB_ROOT = os.environ.get("CLINLOOP_WEB_ROOT")
 @app.get("/config.js", include_in_schema=False)
 def web_config():
     """Point the pages at this server: same origin, so no CORS and no address to type."""
-    return Response("window.CLINLOOP_API_BASE = window.location.origin;\n",
+    body = "window.CLINLOOP_API_BASE = window.location.origin;\n"
+    if demo.enabled():
+        body += demo.web_config()
+    return Response(body,
                     media_type="application/javascript", headers={"Cache-Control": "no-store"})
 
 

@@ -1,7 +1,9 @@
 # ClinLoop AI — Closed-Loop Clinical Safety Monitoring
 
 > 설명가능 AI 기반 미완결 진료루프 탐지·종결 지원 플랫폼
-> **Live demo:** [https://clinloopai.app](https://clinloopai.app)
+> **Website:** [https://clinloopai.app](https://clinloopai.app) shows the cockpit on five synthetic
+> cases. The clinical pages (worklist, patient graph, imaging, quality, rule sign-off) need a ClinLoop
+> server; to try them, run the [public demo](#try-the-full-app-public-demo) (one click or one command).
 
 ClinLoop AI tracks **clinical obligations**, not diagnoses. Examples: an abnormal lab that must be
 communicated, an incidental lung nodule that needs a follow-up CT, a warfarin dose change that needs
@@ -28,7 +30,7 @@ with transparent, rule-grounded logic and an audit trail.
                                                                   Patient outreach: draft → clinician approval → send
 ```
 
-1. **Obligation rules** (`clinical_ontology.py`): 47 guideline-based rules, each with a trigger, its
+1. **Obligation rules** (`clinical_ontology.py`): 58 guideline-based rules, each with a trigger, its
    required follow-ups (all or any), a deadline, a severity, references and a Korean name. None is
    fit for patient care until a specialist signs it off (see **Governance** below). Example:
    `□(LAB_RESULT[abnormal_pap] → ◇≤30d COLPOSCOPY_REFERRAL)`.
@@ -129,6 +131,7 @@ clinloopai/
 │       ├── loop_store.py             # SQLite loop registry, workflow, escalation, audit, open-loop rate
 │       ├── clinical_api.py           # Pilot endpoints: ingest, worklist, actions, metrics
 │       ├── auth.py                   # Bearer-token roles: viewer / navigator / clinician / admin
+│       ├── demo.py                   # Public demo mode: synthetic seed, view-only token, no hospital links
 │       ├── api.py                    # FastAPI backend (mounts clinical_api)
 │       ├── biomcp_server.py          # Guideline lookup tools (MCP-style, static data)
 │       ├── ehr_mcp_server.py         # Mock EHR connector (returns canned responses)
@@ -159,6 +162,7 @@ clinloopai/
 ├── requirements-api.txt          # API dependencies
 ├── Dockerfile                    # On-premise image: API + worklist + cockpit + BioMCP
 ├── docker-compose.yml            # Full stack (API, BioMCP, optional Ollama)
+├── render.yaml                   # One-click public demo (CLINLOOP_DEMO=1, synthetic data only)
 ├── install.sh                    # One-command hospital install
 ├── config.js                     # Tells the pages where the API is (rewritten by the container)
 ├── .github/workflows/            # Test → build → smoke-test → publish image to GHCR
@@ -425,6 +429,32 @@ docker run -p 127.0.0.1:8124:8124 -v clinloop-data:/var/lib/clinloop \
 Build locally instead of pulling: `docker build -t ghcr.io/drnaushad/clinloopai:latest .`
 
 `/api/v1/agent/safety-clock/status` reports the background watchdog over the cockpit demo cases.
+
+#### Try the full app (public demo)
+
+Demo mode lets anyone use every page through a link, with no risk to real patients:
+
+- **Synthetic data only:** 37 synthetic patients from `data/fhir_example_bundle.json` and
+  `data/radiology_test_bundle.json`, loaded into an in-memory database that resets on every restart.
+- **View-only token:** a published token, `clinloop-public-demo-viewer`, with the viewer role. The pages
+  fill it in and sign in by themselves. It cannot upload reports or images, ingest data, or change a loop.
+- **No hospital connections:** FHIR sync, PACS scanning and the second reader are switched off, even if
+  their settings are present.
+- **Clearly marked:** every page shows a "synthetic patients only" banner.
+
+One command:
+
+```bash
+docker run -p 8124:8124 -e CLINLOOP_DEMO=1 ghcr.io/drnaushad/clinloopai:latest
+# open http://localhost:8124/worklist.html
+```
+
+One click: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/drnaushad/clinloopai)
+uses [`render.yaml`](render.yaml), which runs the same image with `CLINLOOP_DEMO=1` on a free Render
+web service; the service's address is then a link anyone can open. The image honours `PORT`, so other
+container hosts (Fly.io, Railway, Cloud Run) work the same way.
+
+Never set `CLINLOOP_DEMO` on a server that holds real patient data.
 
 ### 5. Web cockpit (static demo)
 

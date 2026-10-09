@@ -52,7 +52,7 @@ RUN if [ "$WITH_CT_SEGMENTATION" = "1" ]; then \
     fi
 
 COPY src ./src
-COPY data/cases.json data/fhir_example_bundle.json ./data/
+COPY data/cases.json data/fhir_example_bundle.json data/radiology_test_bundle.json ./data/
 
 # Web UI, served by the API at / (only these files are exposed)
 COPY index.html worklist.html governance.html imaging.html patient.html quality.html config.js manifest.json sw.js ./web/
@@ -70,7 +70,8 @@ VOLUME ["/var/lib/clinloop"]
 
 EXPOSE 8124
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD python -c "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8124/api/v1/health', timeout=4).status == 200 else 1)"
+  CMD python -c "import os, sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:%s/api/v1/health' % os.environ.get('PORT', '8124'), timeout=4).status == 200 else 1)"
 
-# CLINLOOP_API_TOKENS and CLINLOOP_SIGNING_KEY must be supplied at runtime
-CMD ["uvicorn", "src.clinloop_engine.api:app", "--host", "0.0.0.0", "--port", "8124"]
+# CLINLOOP_API_TOKENS and CLINLOOP_SIGNING_KEY must be supplied at runtime.
+# PORT may be set by a hosting platform; CLINLOOP_DEMO=1 starts the public demo (synthetic data only).
+CMD ["sh", "-c", "exec uvicorn src.clinloop_engine.api:app --host 0.0.0.0 --port ${PORT:-8124}"]
