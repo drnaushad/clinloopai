@@ -490,6 +490,8 @@ svg .ob-label { font: 700 10px var(--font-mono); }
   window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (state.graph && !$('graph-wrap').hidden) render(); }, 150); });
   $('btn-lang').addEventListener('click', () => { lang = lang === 'ko' ? 'en' : 'ko'; store.set('clinloop_lang', lang, localStorage); applyLang(); });
   applyLang();
+  const linked = location.hash.match(/^#patient=(.+)$/);     // a link from the EHR (CDS Hooks card)
+  if (linked) $('patient').value = decodeURIComponent(linked[1]);
   if ($('api-base').value && $('token').value) $('connect-form').requestSubmit();
 })();
 </script>

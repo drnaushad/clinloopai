@@ -375,6 +375,9 @@ Configuration:
 | `CLINLOOP_DB` | Loop registry (SQLite) | `data/clinloop.db` |
 | `CLINLOOP_FHIR_BASE` / `CLINLOOP_FHIR_TOKEN` | Hospital FHIR server and read-only token; enables background sync | sync off |
 | `CLINLOOP_FHIR_SYNC_MINUTES` / `CLINLOOP_FHIR_INITIAL_DAYS` | Sync interval / first-sync look-back | 15 / 365 |
+| `CLINLOOP_CDS_CLIENTS` | EHRs trusted to call the CDS Hooks service: JSON list of `{"iss", "jwks_url"}` (or inline `"jwks"`) | none |
+| `CLINLOOP_PUBLIC_URL` | ClinLoop's address as clinicians reach it, for links on EHR cards | none |
+| `CLINLOOP_CDS_MAX_CARDS` | Cards per chart before a summary card | 5 |
 | `CLINLOOP_HISTORY_DAYS` | Obligations whose deadline passed more than this many days ago stay off the worklist (0 = keep all) | 365 |
 | `CLINLOOP_FEED_MAX_SILENCE_HOURS` | Feed alarm threshold | 24 |
 | `CLINLOOP_OUTREACH_PROVIDER` | `outbox` (local JSONL, nothing leaves the server) or `webhook` | `outbox` |
@@ -405,6 +408,37 @@ preferred, any installed model is used as a fallback, and reasoning text from mo
 DeepSeek-R1 (`<think>…</think>`) is removed before anyone sees it.
 
 Both appear in the Connections panel with their live status.
+
+#### Inside the EHR: CDS Hooks
+
+Clinicians should not need another website. ClinLoop is a CDS Hooks 2.0 service, the HL7 standard
+EHRs such as Epic and Oracle Health use for decision-support cards. When a clinician opens a chart (the
+`patient-view` hook), the patient's open follow-ups appear as cards.
+
+**What a card shows:**
+- what is missing, and how overdue it is;
+- the record that started it, quoted;
+- the rule;
+- a link to that loop in the worklist.
+
+**Safety:**
+- **Read-only:** cards change nothing. Acting, deferring or closing with evidence happens in the worklist.
+- **Shadow mode:** rules not yet signed off stay silent.
+- **Limited:** at most 5 cards per chart, then one summary card.
+- **Audited:** each display and each clinician response ("done elsewhere", "not indicated") goes into
+  the audit log.
+
+**To register it:**
+1. Register `https://<clinloop>/cds-services` in the EHR's CDS Hooks configuration.
+2. Set `CLINLOOP_CDS_CLIENTS` to the EHR's issuer and key-set URL. Only those EHRs are trusted.
+   Each call's signed JWT is checked for issuer, audience, expiry and single use.
+3. Set `CLINLOOP_PUBLIC_URL` so the card links open ClinLoop.
+
+The patient ids the EHR sends must be the FHIR ids ClinLoop syncs.
+
+```bash
+curl https://<clinloop>/cds-services        # discovery: the patient-view service
+```
 
 #### Docker
 
@@ -581,6 +615,10 @@ python -m src.validation.chart_review analyze --packet review/review_packet.csv 
 The analysis reports weighted sensitivity, specificity, PPV and NPV with stratified-bootstrap 95% CIs,
 per-rule results, and Cohen's kappa between reviewers. This is the study that turns ClinLoop's
 accuracy from a claim into a measurement.
+
+**The full study** (retrospective accuracy → silent shadow run → stepped-wedge trial, with go/no-go
+criteria, endpoints, sample sizes and ethics) is drafted for a partner hospital in
+[`docs/STUDY_PROTOCOL.md`](docs/STUDY_PROTOCOL.md).
 
 ---
 
