@@ -222,9 +222,15 @@ def loop_key(patient_id: str, rule_id: str, trigger_event_id: str) -> str:
 class LoopStore:
     def __init__(self, path: str = ":memory:"):
         self._lock = threading.RLock()
-        self._db = sqlite3.connect(path, check_same_thread=False)
+        self._db = sqlite3.connect(path, check_same_thread=False, timeout=30)
         self._db.row_factory = sqlite3.Row
         with self._lock:
+            # Many users at once: within this server, the lock serialises writes. WAL lets a second
+            # process (a command-line ingest, a backup) read while the server writes, and the busy
+            # timeout makes it wait its turn instead of failing with "database is locked".
+            if path != ":memory:":
+                self._db.execute("PRAGMA journal_mode=WAL")
+            self._db.execute("PRAGMA busy_timeout=30000")
             self._db.executescript(SCHEMA)
             # Databases created before a column existed
             cols = {r["name"] for r in self._db.execute("PRAGMA table_info(image_scan_studies)")}

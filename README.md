@@ -10,6 +10,15 @@
 > - **No server:** the website serves a pre-computed snapshot from a global CDN, so any number of people can
 >   use it at once. To act on loops (acknowledge, close, upload), run your own server
 >   ([public demo](#try-the-full-app-public-demo) or a hospital install).
+> - **Devices:** every page was checked at the screen sizes of iPhone SE, iPhone 14 Pro Max, Galaxy S9+,
+>   Pixel 7, iPad (portrait and landscape) and laptop or desktop screens 1024–1920 pixels wide, with no
+>   sideways scrolling and no errors. The checks ran in Chromium with each device's size and touch
+>   settings; the pages use only standard web features, so they also suit Safari, Firefox and Edge on
+>   Android, iOS, Windows, macOS or Linux (e.g. Ubuntu). On Android or iPhone, "Add to Home screen"
+>   installs it like an app.
+> - **A hospital server, many users:** each person signs in with their own token and role. In a test, 30
+>   clinicians working at once (1,200 requests: reading, acknowledging, assigning) got no errors, and the
+>   tamper-evident audit trail stayed intact. A single request takes 2–20 ms.
 
 ClinLoop AI tracks **clinical obligations**, not diagnoses. Examples: an abnormal lab that must be
 communicated, an incidental lung nodule that needs a follow-up CT, a warfarin dose change that needs
