@@ -102,6 +102,18 @@ th { white-space: nowrap; }
    background; on the old solid purple, grey "DEMO · NO SERVER" could not be read */
 .api-status-pill { background: var(--bg-surface) !important; border: 1px solid var(--border-card); }
 
+/* Logo: rod of Asclepius (medicine) inside a loop closed by an arrow (follow-up completed).
+   Loop and rod take the page's accent colour; the serpent is teal, lighter on dark backgrounds. */
+.brand-mark { display: block; width: 100%; height: 100%; }
+.brand-logo .brand-mark { width: 26px; height: 26px; }
+.bm-serpent { stroke: #0d9488; fill: #0d9488; }
+.bm-serpent path { fill: none; }
+body.dark-theme .bm-serpent { stroke: #2dd4bf; fill: #2dd4bf; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) h1 .bm-serpent { stroke: #2dd4bf; fill: #2dd4bf; } }
+:root[data-theme="dark"] h1 .bm-serpent { stroke: #2dd4bf; fill: #2dd4bf; }
+h1 .brand-home { display: inline-block; width: 1.25em; height: 1.25em; vertical-align: -0.24em; margin-right: 0.4em;
+                 color: var(--accent); }
+
 /* Public static demo: no server to connect to, so the connection form is not shown */
 .static-demo #connect-form { display: none; }
 

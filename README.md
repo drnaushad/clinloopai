@@ -1,3 +1,5 @@
+<img src="icons/logo.svg" width="72" alt="ClinLoop logo: the rod of Asclepius inside a loop closed by an arrow">
+
 # ClinLoop AI — Closed-Loop Clinical Safety Monitoring
 
 > 설명가능 AI 기반 미완결 진료루프 탐지·종결 지원 플랫폼

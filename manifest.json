@@ -1,23 +1,30 @@
 {
   "name": "ClinLoop AI - Clinical Safety Cockpit",
   "short_name": "ClinLoop AI",
-  "description": "Neuro-Symbolic Closed-Loop Clinical Safety Platform",
+  "description": "Closed-loop clinical safety: tracks the follow-ups that findings and results require",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#03060c",
-  "theme_color": "#00f0ff",
+  "background_color": "#0e7490",
+  "theme_color": "#0e7490",
   "orientation": "any",
   "icons": [
     {
       "src": "icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }
