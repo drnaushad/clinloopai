@@ -1443,8 +1443,9 @@ class ClinLoopApp {
   _connText() {
     const ko = this.currentLang === 'ko';
     return ko ? {
-      checking: '확인 중…', summaryNone: 'ClinLoop 서버에 연결되지 않음 (공개 데모): 실시간 연결 0개',
-      summary: (n) => `실시간 연결 ${n}개 (서버에서 직접 확인)`, live: '실시간 연결',
+      checking: '확인 중…', summaryNone: '공개 데모: 서버 없음. 실시간 연결(병원 EMR, PACS, 문헌 검색)은 병원에 설치된 ClinLoop 서버가 만듭니다.',
+      summary: (n) => `실시간 연결 ${n}개 (서버에서 직접 확인)`, live: '실시간 연결', demoValue: '데모', liveNone: '서버 없음 (공개 데모)',
+      sourcesDown: (n) => `실행 중 · 도구 ${n}개 · 문헌 출처 연결 안 됨`,
       names: { clinloop_api: 'ClinLoop API 서버', biomcp: 'BioMCP 서버 (MCP)', pubmed: 'PubMed (NCBI E-utilities)', europe_pmc: 'Europe PMC',
         fhir_server: '병원 FHIR 서버 (Epic·Cerner 등)', local_llm: '원내 LLM (Ollama)', cloud_llm: '클라우드 LLM (Claude·GPT·Gemini)',
         omop_cdm: 'OMOP CDM 데이터베이스', ehr_writeback: 'EHR 오더 기록 (writeback)', guideline_library: '내장 가이드라인 라이브러리' },
@@ -1458,8 +1459,9 @@ class ClinLoopApp {
       litQuery: '검색어 (규칙 단위, 환자 정보 없음): ',
       tools: (n) => `도구 ${n}개`, notInstalled: '설치 안 됨', pillBiomcp: 'BIOMCP 실시간', bioTitle: 'BioMCP 실시간 검색',
     } : {
-      checking: 'Checking…', summaryNone: 'Not connected to a ClinLoop server (public demo): 0 live connections',
-      summary: (n) => `${n} live connection${n === 1 ? '' : 's'} (verified by the server)`, live: 'Live connections',
+      checking: 'Checking…', summaryNone: 'Public demo, no server. Live connections (hospital records, PACS, literature search) are made by a ClinLoop server installed at a hospital.',
+      summary: (n) => `${n} live connection${n === 1 ? '' : 's'} (verified by the server)`, live: 'Live connections', demoValue: 'Demo', liveNone: 'No server (public demo)',
+      sourcesDown: (n) => `Running · ${n} tools · literature sources unreachable`,
       names: { clinloop_api: 'ClinLoop API server', biomcp: 'BioMCP server (MCP)', pubmed: 'PubMed (NCBI E-utilities)', europe_pmc: 'Europe PMC',
         fhir_server: 'Hospital FHIR server (Epic, Cerner, …)', local_llm: 'On-premise LLM (Ollama)', cloud_llm: 'Cloud LLMs (Claude, GPT, Gemini)',
         omop_cdm: 'OMOP CDM database', ehr_writeback: 'EHR order writeback', guideline_library: 'Built-in guideline library' },
@@ -1495,6 +1497,8 @@ class ClinLoopApp {
         case 'clinloop_api': return { ...row, tone: 'ok', text: t.connected };
         case 'biomcp':
           if (v.status === 'ok') return { ...row, tone: 'ok', text: `${t.connected} · ${t.tools(v.tools)}` };
+          // BioMCP started but its test search found nothing: PubMed etc. cannot be reached from the server
+          if (v.status === 'sources_unreachable') return { ...row, tone: 'warn', text: t.sourcesDown(v.tools) };
           return { ...row, tone: v.status === 'unreachable' ? 'warn' : 'off', text: v.status === 'unreachable' ? t.unreachable : t.notInstalled };
         case 'pubmed': case 'europe_pmc':
           if (v.status === 'ok') return { ...row, tone: 'ok', text: `${t.connected} · ${v.latency_ms} ms` };
@@ -1542,9 +1546,11 @@ class ClinLoopApp {
     if (summary) summary.textContent = this.connStatus === undefined ? t.checking : this.connStatus === null ? t.summaryNone : t.summary(live);
 
     const imp = document.getElementById('imp-connections');
-    if (imp) { imp.textContent = this.connStatus === undefined ? '–' : String(live); imp.style.color = live ? 'var(--emerald-safe)' : 'var(--text-dim)'; }
+    // No server (the public website): say so, rather than a bare 0 that reads as a fault
+    const noServer = this.connStatus === null;
+    if (imp) { imp.textContent = this.connStatus === undefined ? '–' : noServer ? t.demoValue : String(live); imp.style.color = live ? 'var(--emerald-safe)' : 'var(--text-dim)'; }
     const impLbl = document.getElementById('imp-connections-lbl');
-    if (impLbl) impLbl.textContent = t.live;
+    if (impLbl) { impLbl.textContent = noServer ? t.liveNone : t.live; impLbl.title = noServer ? t.summaryNone : ''; }
 
     const s = this.connStatus;
     const apiPill = document.getElementById('api-status-pill');
