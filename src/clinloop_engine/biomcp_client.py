@@ -16,6 +16,8 @@ search terms; it never puts patient data into a BioMCP query.
 
 BioMCP returns an empty result (not an error) when its upstream sources are
 unreachable, so callers must not read "no results" as "no evidence exists".
+For the same reason the health check runs one small article search: BioMCP counts
+as connected only when that search returns an article, not merely when it starts.
 """
 
 import asyncio
@@ -44,6 +46,11 @@ ALLOWED_TOOLS = {
     "openfda_adverse_searcher", "openfda_recall_searcher",
     "openfda_shortage_searcher", "openfda_approval_searcher",
 }
+
+
+# Health probe: one well-indexed topic, peer-reviewed sources only, one result
+PROBE_ARGS = {"keywords": ["pulmonary nodule"], "include_preprints": False,
+              "include_cbioportal": False, "page_size": 1}
 
 
 class BioMCPError(RuntimeError):
@@ -103,13 +110,23 @@ def status(force: bool = False) -> Dict:
 
     async def probe(session, init):
         tools = await session.list_tools()
-        return init, [tool.name for tool in tools.tools]
+        names = [tool.name for tool in tools.tools]
+        found = None
+        if "article_searcher" in names:
+            try:
+                res = await session.call_tool("article_searcher", PROBE_ARGS)
+                found = 0 if res.isError else _count_results("\n".join(getattr(c, "text", "") for c in res.content))
+            except Exception:
+                found = 0
+        return init, names, found
 
     try:
-        init, names = _run(_with_session(probe))
-        result = {"status": "ok", "transport": t["kind"], "server": init.serverInfo.name,
-                  "version": init.serverInfo.version, "tools": len(names),
+        init, names, found = _run(_with_session(probe))
+        # Running is not enough: the literature sources behind it must answer too
+        result = {"status": "ok" if found else "sources_unreachable", "transport": t["kind"],
+                  "server": init.serverInfo.name, "version": init.serverInfo.version, "tools": len(names),
                   "allowed_tools": sorted(set(names) & ALLOWED_TOOLS),
+                  "literature_sources": "reachable" if found else "unreachable",
                   "latency_ms": round((time.perf_counter() - t0) * 1000)}
     except BioMCPError as e:
         result = {"status": "not_installed" if t["kind"] == "unavailable" else "unreachable",
@@ -117,6 +134,17 @@ def status(force: bool = False) -> Dict:
     result["checked_at"] = datetime.now(timezone.utc).isoformat()
     _cache.put("health|biomcp", result)
     return result
+
+
+def _count_results(text: str) -> int:
+    """Number of articles in an article_searcher answer (JSON list, or an object holding one)."""
+    try:
+        data = json.loads(text)
+    except ValueError:
+        return 1 if text.strip() else 0
+    if isinstance(data, dict):
+        data = data.get("results") or data.get("articles") or []
+    return len(data) if isinstance(data, list) else 0
 
 
 def call_tool(name: str, arguments: Dict[str, Any]) -> Dict:

@@ -46,7 +46,9 @@ class TestBioMCPConnection(unittest.TestCase):
 
     def test_stdio_connection_lists_tools(self):
         s = biomcp_client.status(force=True)
-        self.assertEqual(s["status"], "ok", s)
+        # "ok" needs the literature sources too; without internet BioMCP still runs and says so
+        self.assertIn(s["status"], ("ok", "sources_unreachable"), s)
+        self.assertEqual(s["literature_sources"], "reachable" if s["status"] == "ok" else "unreachable")
         self.assertEqual(s["transport"], "stdio")
         self.assertIn("BioMCP", s["server"])
         self.assertGreaterEqual(s["tools"], 10)
@@ -65,7 +67,8 @@ class TestBioMCPConnection(unittest.TestCase):
                     time.sleep(0.5)
             os.environ["CLINLOOP_BIOMCP_URL"] = f"http://127.0.0.1:{port}/mcp"
             s = biomcp_client.status(force=True)
-            self.assertEqual((s["status"], s["transport"]), ("ok", "streamable_http"), s)
+            self.assertIn(s["status"], ("ok", "sources_unreachable"), s)
+            self.assertEqual(s["transport"], "streamable_http")
         finally:
             os.environ.pop("CLINLOOP_BIOMCP_URL", None)
             proc.terminate()
@@ -83,6 +86,19 @@ class TestBioMCPGuards(unittest.TestCase):
 
     def setUp(self):
         literature.clear_cache()
+
+    def test_connected_only_when_the_test_search_returns_an_article(self):
+        from types import SimpleNamespace
+        from unittest import mock
+        init = SimpleNamespace(serverInfo=SimpleNamespace(name="BioMCP", version="1"))
+        with mock.patch.object(biomcp_client, "_transport", return_value={"kind": "stdio", "argv": ["biomcp"]}):
+            for found, expected in ((0, "sources_unreachable"), (1, "ok")):
+                with mock.patch.object(biomcp_client, "_run", return_value=(init, ["article_searcher"], found)):
+                    s = biomcp_client.status(force=True)
+                self.assertEqual(s["status"], expected)
+        self.assertEqual(biomcp_client._count_results("[]"), 0)
+        self.assertEqual(biomcp_client._count_results('[{"pmid": "1"}]'), 1)
+        self.assertEqual(biomcp_client._count_results('{"results": [{"pmid": "1"}, {"pmid": "2"}]}'), 2)
 
     def test_tools_outside_allowlist_are_refused(self):
         with self.assertRaises(biomcp_client.BioMCPError):
