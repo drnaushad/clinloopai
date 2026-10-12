@@ -226,7 +226,8 @@ def totalsegmentator_segmenter(img) -> Tuple[Any, Dict[int, str]]:
     import nibabel as nib
     from totalsegmentator.map_to_binary import class_map
     fast = os.environ.get("CLINLOOP_CT_SEG_FAST", "1").strip() not in ("0", "false", "no")
-    device = os.environ.get("CLINLOOP_CT_SEG_DEVICE", "cpu")
+    from .compute import ct_segmentation_device
+    device = ct_segmentation_device()          # CLINLOOP_CT_SEG_DEVICE; "auto" uses a GPU when present
     timeout = float(os.environ.get("CLINLOOP_CT_SEG_TIMEOUT", "900"))
     with tempfile.TemporaryDirectory(prefix="clinloop-ct-") as tmp:
         in_path, out_path = os.path.join(tmp, "ct.nii.gz"), os.path.join(tmp, "seg.nii.gz")

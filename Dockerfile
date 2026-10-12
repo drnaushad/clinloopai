@@ -29,23 +29,26 @@ COPY requirements.txt requirements-api.txt ./
 RUN pip install --no-cache-dir -r requirements-api.txt
 
 # Optional on-premise imaging model (research use only): docker build --build-arg WITH_IMAGING_AI=1
-# Installs CPU PyTorch + TorchXRayVision and bakes the weights into the image, so no internet is needed.
+# Installs PyTorch + TorchXRayVision and bakes the weights into the image, so no internet is needed.
 ARG WITH_IMAGING_AI=0
+# PyTorch build for the optional imaging models: CPU by default. For an NVIDIA GPU, build with
+# --build-arg TORCH_INDEX=https://download.pytorch.org/whl/cu124 and run with --gpus all.
+ARG TORCH_INDEX=https://download.pytorch.org/whl/cpu
 ENV CLINLOOP_MODEL_DIR=/opt/clinloop/models
 RUN if [ "$WITH_IMAGING_AI" = "1" ]; then \
-      pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+      pip install --no-cache-dir torch --index-url "$TORCH_INDEX" \
       && pip install --no-cache-dir torchxrayvision \
       && python -c "import torchxrayvision as x; x.models.DenseNet(weights='densenet121-res224-all', cache_dir='/opt/clinloop/models')"; \
     fi
 
 # Optional CT organ segmentation (research use only): docker build --build-arg WITH_CT_SEGMENTATION=1
-# Installs CPU PyTorch + TotalSegmentator and bakes the 3 mm "total_fast" weights into the image.
+# Installs PyTorch + TotalSegmentator and bakes the 3 mm "total_fast" weights into the image.
 # Its usage statistics are switched off by ClinLoop before every run (config on the data volume).
 ARG WITH_CT_SEGMENTATION=0
 ENV TOTALSEG_WEIGHTS_PATH=/opt/clinloop/totalseg \
     TOTALSEG_HOME_DIR=/var/lib/clinloop/totalseg
 RUN if [ "$WITH_CT_SEGMENTATION" = "1" ]; then \
-      pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+      pip install --no-cache-dir torch --index-url "$TORCH_INDEX" \
       && pip install --no-cache-dir TotalSegmentator \
       && TOTALSEG_HOME_DIR=/tmp/totalseg totalseg_download_weights -t total_fast \
       && rm -rf /tmp/totalseg; \
