@@ -75,7 +75,7 @@ const CLINLOOP_I18N = {
     lblFhir: '원내 EMR / SMART on FHIR OAuth 토큰',
     descFhir: 'ClinLoop 서버가 병원 FHIR 서버에서 읽기 전용으로 데이터를 가져옵니다.',
     txtTestPing: '상태 확인',
-    txtResetKeys: '키 초기화 (GPU 전용 복귀)',
+    txtResetKeys: '키 초기화 (온프레미스 전용 복귀)',
     txtSaveKeys: 'API 설정 저장 & 적용 (Save Keys)',
     lblActiveEngine: '🤖 환자 메시지 초안 엔진:',
     descEngineAnthropic: '최고 임상 추론 & 의료 윤리 정렬',
@@ -154,7 +154,7 @@ const CLINLOOP_I18N = {
     lblFhir: 'Hospital EHR / SMART on FHIR OAuth Token',
     descFhir: 'The ClinLoop server reads hospital data from the FHIR server, read-only.',
     txtTestPing: 'Check status',
-    txtResetKeys: 'Reset to GPU Only',
+    txtResetKeys: 'Reset to on-premise only',
     txtSaveKeys: 'Save & Apply Keys',
     lblActiveEngine: '🤖 Patient-message drafting engine:',
     descEngineAnthropic: 'State-of-the-Art Reasoning & Ethics',
@@ -513,23 +513,44 @@ class ClinLoopApp {
 
   setupEventListeners() {
     // -----------------------------------------------------------------------
-    // NVIDIA RTX A4500 GPU Telemetry & Benchmark Integration
+    // Compute: the hardware the ClinLoop server really has (CPU or GPU), and what uses it.
+    // The rules engine never needs a GPU, so with no server (the public website) the badge
+    // is not shown at all rather than reporting a problem that does not exist.
     // -----------------------------------------------------------------------
     const btnGpuHud = document.getElementById('btn-gpu-hud');
     const gpuModal = document.getElementById('gpu-modal');
     const btnCloseGpuModal = document.getElementById('btn-close-gpu-modal');
-    const btnRunBenchmark = document.getElementById('btn-run-gpu-benchmark');
 
     this.fetchGpuTelemetry = async () => {
-      const hudLabel = document.getElementById('gpu-hud-label');
-      if (hudLabel) hudLabel.textContent = 'GPU: not connected';
-      for (const id of ['gpu-val-device', 'gpu-val-vram-total', 'gpu-val-vram-alloc', 'gpu-val-lat']) {
-        const element = document.getElementById(id);
-        if (element) element.textContent = 'Not connected';
+      if (!btnGpuHud || !CLINLOOP_API_BASE) return;
+      const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+      const label = document.getElementById('gpu-hud-label');
+      const dot = document.getElementById('gpu-hud-dot');
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 8000);
+        const resp = await fetch(`${CLINLOOP_API_BASE}/api/v1/compute/status`, { signal: ctrl.signal });
+        clearTimeout(timer);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const c = await resp.json();
+        const ko = this.currentLang === 'ko';
+        if (label) label.textContent = c.gpu_available ? `GPU: ${c.gpu_name}` : (ko ? 'CPU 전용' : 'CPU only');
+        if (dot) dot.style.background = c.gpu_available ? 'var(--emerald-safe)' : 'var(--text-dim)';
+        btnGpuHud.title = c.summary;
+        set('gpu-val-device', c.gpu_available ? c.gpu_name : `CPU · ${c.cpu_count || '?'} cores`);
+        set('gpu-val-vram-total', c.gpu_memory_total_gb ? `${c.gpu_memory_total_gb} GB` : '—');
+        const ct = (c.uses || {}).ct_organ_segmentation || {};
+        set('gpu-val-ct', ct.installed ? `Installed · runs on ${String(ct.runs_on).toUpperCase()}` : 'Not installed');
+        set('compute-sub', c.summary);
+        btnGpuHud.hidden = false;
+      } catch (e) {
+        if (label) label.textContent = 'Compute: unknown';
+        btnGpuHud.title = 'Could not reach the ClinLoop server to check its hardware';
+        set('compute-sub', 'Could not reach the ClinLoop server to check its hardware.');
+        btnGpuHud.hidden = false;
       }
     };
 
-    // Initial GPU telemetry poll
     this.fetchGpuTelemetry();
 
     if (btnGpuHud && gpuModal) {
@@ -547,11 +568,6 @@ class ClinLoopApp {
       gpuModal.addEventListener('click', (e) => {
         if (e.target === gpuModal) gpuModal.classList.remove('open');
       });
-    }
-
-    if (btnRunBenchmark) {
-      btnRunBenchmark.disabled = true;
-      btnRunBenchmark.textContent = 'GPU benchmark unavailable in this environment';
     }
 
     // Action button

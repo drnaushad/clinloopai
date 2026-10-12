@@ -6,10 +6,7 @@ Run from the repository root:
     uvicorn src.clinloop_engine.api:app --host 127.0.0.1 --port 8124
 """
 
-try:  # PyTorch is optional; only the GPU demo endpoints need it
-    from src.clinloop_engine.gpu_engine import gpu_engine
-except ImportError:
-    gpu_engine = None
+from src.clinloop_engine.compute import compute_status
 from src.clinloop_engine.local_llm_engine import (
     get_engine_status as get_local_llm_status,
     get_best_model,
@@ -390,43 +387,20 @@ def generate_with_local_llm(req: LocalLLMRequest):
 
 
 # ---------------------------------------------------------------------------
-# GPU-Accelerated Neural-Symbolic Safety Telemetry (NVIDIA RTX A4500 20GB)
+# Compute: measured hardware (CPU or GPU) and where each part of ClinLoop runs
 # ---------------------------------------------------------------------------
-def _require_gpu_engine():
-    if gpu_engine is None:
-        raise HTTPException(status_code=503, detail="GPU engine unavailable: install PyTorch to enable it")
+@app.get("/api/v1/compute/status", tags=["System"])
+def get_compute_status():
+    """The hardware this server really has (CPU, or the GPU it found) and where each part of
+    ClinLoop runs. The rules engine always runs on the CPU; a GPU only speeds up optional imaging
+    models. Values are measured on this machine, never assumed."""
+    return compute_status()
 
 
-class GPUVerificationRequest(BaseModel):
-    scenario_id: str
-    clinical_text: str
-    deadline_days: int = 30
-    elapsed_days: int = 35
-    severity: str = 'critical'
-
-@app.get("/api/v1/gpu/telemetry", tags=["GPU Acceleration (NVIDIA RTX A4500)"])
+@app.get("/api/v1/gpu/telemetry", tags=["System"], include_in_schema=False)
 def get_gpu_telemetry():
-    """Returns live hardware telemetry and memory statistics for the NVIDIA RTX A4500."""
-    _require_gpu_engine()
-    return gpu_engine.get_telemetry()
-
-@app.post("/api/v1/gpu/verify-trajectory", tags=["GPU Acceleration (NVIDIA RTX A4500)"])
-def verify_trajectory_on_gpu(req: GPUVerificationRequest):
-    """Runs PyTorch CUDA tensor kernels for Metric Temporal Logic robustness margin & obligation matching."""
-    _require_gpu_engine()
-    return gpu_engine.verify_trajectory_gpu(
-        scenario_id=req.scenario_id,
-        clinical_text=req.clinical_text,
-        deadline_days=req.deadline_days,
-        elapsed_days=req.elapsed_days,
-        severity=req.severity
-    )
-
-@app.post("/api/v1/gpu/benchmark", tags=["GPU Acceleration (NVIDIA RTX A4500)"])
-def run_gpu_benchmark(batch_size: int = 1000):
-    """Runs vectorized PyTorch CUDA benchmark across N parallel trajectories on RTX A4500."""
-    _require_gpu_engine()
-    return gpu_engine.run_benchmark(batch_size=min(50000, max(100, batch_size)))
+    """Older name for /api/v1/compute/status."""
+    return compute_status()
 
 
 # ---------------------------------------------------------------------------
@@ -438,7 +412,7 @@ class APIKeyConfigRequest(BaseModel):
     openai_key: Optional[str] = None
     ncbi_key: Optional[str] = None
     fhir_token: Optional[str] = None
-    active_mode: Optional[str] = 'on_prem_gpu'
+    active_mode: Optional[str] = 'on_premise'
 
 class TestKeyRequest(BaseModel):
     provider: str  # 'gemini', 'ncbi', 'fhir'
@@ -450,7 +424,7 @@ _configured_keys = {
     'openai': bool(os.getenv('OPENAI_API_KEY')),
     'ncbi': bool(os.getenv('NCBI_API_KEY')),
     'fhir': bool(os.getenv('FHIR_TOKEN')),
-    'active_mode': 'on_prem_gpu'
+    'active_mode': 'on_premise'
 }
 
 @app.get('/api/v1/config/api-keys', tags=['API Key & Credential Management'])
@@ -466,11 +440,9 @@ def get_api_key_status():
             'ncbi': {'configured': _configured_keys['ncbi'], 'engine': 'NCBI Entrez E-Utilities (PubMed)'},
             'fhir': {'configured': _configured_keys['fhir'], 'engine': 'HL7 FHIR R4 SMART on FHIR'}
         },
-        'on_premise_gpu': {
-            'device': 'NVIDIA RTX A4500 (20GB GDDR6 ECC)',
-            'air_gapped_privacy': True,
-            'zero_cloud_egress': True
-        }
+        # Measured on this server, not assumed
+        'compute': compute_status()['summary'],
+        'outbound_literature_calls': os.environ.get('CLINLOOP_LITERATURE', 'on').strip().lower() != 'off',
     }
 
 @app.post('/api/v1/config/api-keys', tags=['API Key & Credential Management'])

@@ -114,6 +114,12 @@ body.dark-theme .bm-serpent { stroke: #2dd4bf; fill: #2dd4bf; }
 h1 .brand-home { display: inline-block; width: 1.25em; height: 1.25em; vertical-align: -0.24em; margin-right: 0.4em;
                  color: var(--accent); }
 
+/* Compute badge: shown only when a ClinLoop server answered (the public website has none) */
+#btn-gpu-hud[hidden] { display: none !important; }
+#btn-gpu-hud:not([hidden]) { display: inline-flex; }
+.compute-k { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+.compute-v { font-size: 1rem; font-weight: 800; color: var(--text-main); margin-top: 0.25rem; overflow-wrap: anywhere; }
+
 /* Public static demo: no server to connect to, so the connection form is not shown */
 .static-demo #connect-form { display: none; }
 

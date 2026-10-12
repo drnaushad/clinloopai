@@ -159,7 +159,7 @@ clinloopai/
 │       ├── local_llm_engine.py       # Ollama client (localhost:11434)
 │       ├── phi_deidentifier.py       # Pseudonymisation + regex PHI scrubbing
 │       ├── counterfactual_engine.py  # Fixed survival-trajectory examples per case
-│       ├── gpu_engine.py             # PyTorch demo kernels (untrained model)
+│       ├── compute.py                # Measured hardware (CPU/GPU) and where each part runs
 │       ├── fhir_integration.py       # FHIR Task / Observation builders
 │       ├── digital_signature.py      # HMAC signing of agent execution envelopes
 │       ├── agent_execution.py        # Agent execution envelope (audit fields)
@@ -253,7 +253,7 @@ pip install pytest                 # to run the test suite
 | Feature | Extra install |
 | --- | --- |
 | REST API, worklist, FHIR ingest | `pip install -r requirements-api.txt` |
-| GPU demo endpoints | `pip install torch` (optional; without it those endpoints return 503) |
+| A GPU | **Not needed.** The rules engine runs on any CPU. An NVIDIA GPU only speeds up CT organ measurement (about 20 s to minutes per scan on a CPU, seconds on a GPU), and is used automatically when present (`CLINLOOP_CT_SEG_DEVICE=auto`). For Docker, build with a CUDA PyTorch: `--build-arg TORCH_INDEX=https://download.pytorch.org/whl/cu124` and run with `--gpus all`. `GET /api/v1/compute/status` reports what the server has |
 | Local LLM (patient-message drafts) | Install [Ollama](https://ollama.com), then `./scripts/setup_local_llm.sh` (pulls `exaone3.5:7.8b`). Without it, messages use a fixed safe template |
 | BioMCP | Included in `requirements-api.txt` (`biomcp-python`); ClinLoop starts it automatically |
 | DICOM, outside-report PDFs | Included in `requirements-api.txt` (`pydicom`, `pdfplumber`) |
@@ -718,7 +718,7 @@ synthetic event, so results are identical on every run.
 | Connection status | The cockpit's badges, the "Live connections" count and the Connections panel show only what the server has verified. On the public site, with no server, they read "not connected" |
 | OMOP CDM, EHR writeback, cloud LLMs | **Not connected** (OMOP: no database; EHR: read-only by design; cloud LLMs: not used) |
 | Counterfactual engine | **Fixed lookup table** of hand-written, illustrative trajectories for specific case IDs; no Markov simulation runs. The API and cockpit label them as not clinically validated |
-| GPU engine | PyTorch network with **untrained random weights**; its "confidence" output has no clinical meaning |
+| Compute status | **Measured**: the cockpit's Compute badge shows the server's real hardware (GPU name, or CPU only) and where each part runs. Hidden on the public site, which has no server. The earlier GPU demo (an untrained network) was removed |
 | Safety-clock watchdog | **Implemented**: runs the detection engine over the demo cases and escalates deadline violations |
 | Patient outreach agent | Drafts messages with the local LLM (Ollama, configurable address and model) from diagnosis-free facts. It strips model reasoning, blocks definitive clinical claims, and falls back to a fixed safe message |
 | PHI de-identifier | Pseudonymises structured fields and scrubs embedded names, MRNs, resident numbers, phone numbers, dates and Korean addresses from free text. It **cannot** detect names of people absent from the structured record, so human review is still required before any external transmission |

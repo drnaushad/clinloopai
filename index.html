@@ -102,9 +102,9 @@
     </div>
 
     <div class="header-badges">
-      <button id="btn-gpu-hud" class="badge badge-gpu" style="cursor: pointer; background: rgba(5, 150, 105, 0.12); border-color: rgba(5, 150, 105, 0.35); color: var(--emerald-safe); font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;" title="No GPU is connected to this public page">
-        <span class="pulse-dot" style="background: var(--emerald-safe); box-shadow: 0 0 8px var(--emerald-safe);"></span>
-        <span id="gpu-hud-label">GPU: not connected</span>
+      <button id="btn-gpu-hud" class="badge badge-gpu" hidden style="cursor: pointer; color: var(--text-muted); font-weight: 700; align-items: center; gap: 0.4rem;" title="Hardware on the ClinLoop server, and what uses it">
+        <span class="pulse-dot" id="gpu-hud-dot" style="background: var(--text-dim);"></span>
+        <span id="gpu-hud-label">Compute</span>
       </button>
       <span class="badge" id="badge-hospital" style="border-color: rgba(2, 132, 199, 0.25); color: var(--text-muted); display: inline-flex; align-items: center; gap: 0.4rem;">
         <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--emerald-safe);"></span>
@@ -1182,11 +1182,11 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div class="prv-layer-card prv-status-active" id="prv-layer-1">
             <div class="prv-layer-header">
               <div class="prv-layer-num">01</div>
-              <div class="prv-layer-status-badge prv-badge-active" id="prv-l1-status">✅ Active</div>
+              <div class="prv-layer-status-badge" id="prv-l1-status">○ Optional · not connected here</div>
             </div>
             <div class="prv-layer-icon">🔒</div>
-            <h3 id="prv-l1-title" class="prv-layer-title">On-Premise Local Sovereign Ensemble</h3>
-            <p id="prv-l1-desc" class="prv-layer-desc">An ensemble of world-class open models (DeepSeek-R1, MedLlama2, Llama 3) runs entirely on the NVIDIA RTX A4500 GPU inside the hospital firewall via Ollama. DeepSeek-R1 handles complex clinical reasoning while MedLlama2 manages specialized communication. Zero internet required.</p>
+            <h3 id="prv-l1-title" class="prv-layer-title">Local language model (optional)</h3>
+            <p id="prv-l1-desc" class="prv-layer-desc">Optional: a local language model (for example EXAONE 3.5 or Llama 3, via Ollama) can run on the hospital's own server, inside its firewall, on a CPU or a GPU. Patient text then never leaves the hospital. This public page has no model connected.</p>
             <div class="prv-layer-tech">
               <span class="tech-tag">MedLlama2 7B ★</span>
               <span class="tech-tag">Llama 3.1 Medical</span>
@@ -1199,7 +1199,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <span id="local-llm-status-badge" style="font-size:0.68rem;color:var(--text-dim);margin-left:0.5rem;">Checking...</span>
             </div>
             <div id="local-llm-test-output" style="display:none;font-size:0.7rem;color:#86efac;background:rgba(0,0,0,0.3);border-radius:6px;padding:0.4rem;margin-bottom:0.5rem;font-family:var(--font-mono);white-space:pre-wrap;max-height:80px;overflow-y:auto;"></div>
-            <div class="prv-layer-metric"><span class="metric-icon">⚡</span> <span id="prv-l1-metric">DeepSeek-R1 / MedLlama2 · Zero Cloud Egress: 100%</span></div>
+            <div class="prv-layer-metric"><span class="metric-icon">⚡</span> <span id="prv-l1-metric">Runs on the hospital's server · CPU or GPU</span></div>
           </div>
 
           <!-- Layer 2 -->
@@ -1357,8 +1357,8 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div id="audit-log-entries" class="audit-log-entries">
             <div class="audit-entry audit-entry-system">
               <span class="audit-ts" id="audit-ts-init"></span>
-              <span class="audit-engine">🔒 ON-PREM GPU</span>
-              <span class="audit-action">System initialized · PHI De-identifier active · Zero cloud egress</span>
+              <span class="audit-engine">🔒 ON-PREMISE</span>
+              <span class="audit-action">System initialized · PHI de-identifier active</span>
               <span class="audit-phi-badge">✅ No PHI</span>
             </div>
           </div>
@@ -1662,7 +1662,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #a78bfa; font-size: 0.65rem;">Individualized Compassion</span>
             </div>
             <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
-              A privacy-preserving behavioral twin running strictly on the on-premise GPU that models an individual patient's psychological barriers to care before dispatch, ensuring communication meets their emotional needs.
+              Research idea (not built): model an individual patient's barriers to care, privately on the hospital's own server, so that a reminder addresses what actually stops them from coming back.
             </p>
           </div>
 
@@ -1687,101 +1687,29 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
 
   <!-- Modal: GPU Acceleration & On-Premise Privacy HUD -->
   <div class="modal-overlay" id="gpu-modal">
-    <div class="comparison-modal" style="max-width: 880px; max-height: 90vh; overflow-y: auto;">
+    <div class="comparison-modal" style="max-width: 760px; max-height: 90vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.85rem;">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <div style="font-size: 1.6rem; background: rgba(5, 150, 105, 0.15); border: 1px solid rgba(5, 150, 105, 0.4); border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">⚡</div>
-          <div>
-            <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-              GPU Telemetry
-              <span class="badge" style="font-size: 0.65rem; color: #64748b; border-color: rgba(100,116,139,0.3);">NOT CONNECTED</span>
-            </h2>
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
-              This public page has no GPU or server attached. Local models run only on a hospital server.
-            </p>
-          </div>
+        <div>
+          <h2 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin: 0;" id="compute-title">Compute: what runs where</h2>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.2rem 0 0 0;" id="compute-sub">Checked on the ClinLoop server, not assumed.</p>
         </div>
-        <button id="btn-close-gpu-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
+        <button id="btn-close-gpu-modal" aria-label="Close" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
       </div>
-
-      <!-- GPU Specs Grid -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.85rem; margin-top: 1rem;">
-        <div class="modal-inner-box">
-          <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">GPU Model</div>
-          <div style="font-size: 1.05rem; font-weight: 800; color: var(--emerald-safe); margin-top: 0.25rem;" id="gpu-val-device">Not connected</div>
-          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">No telemetry</div>
-        </div>
-        <div class="modal-inner-box">
-          <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Total VRAM</div>
-          <div style="font-size: 1.05rem; font-weight: 800; color: var(--cyan-neon); margin-top: 0.25rem;" id="gpu-val-vram-total">Not connected</div>
-          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">No telemetry</div>
-        </div>
-        <div class="modal-inner-box">
-          <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Allocated VRAM</div>
-          <div style="font-size: 1.05rem; font-weight: 800; color: var(--violet-neuro); margin-top: 0.25rem;" id="gpu-val-vram-alloc">Not connected</div>
-          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">No telemetry</div>
-        </div>
-        <div class="modal-inner-box">
-          <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Inference Latency</div>
-          <div style="font-size: 1.05rem; font-weight: 800; color: var(--amber-warning); margin-top: 0.25rem;" id="gpu-val-lat">Not connected</div>
-          <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem;">No telemetry</div>
-        </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.85rem; margin-top: 1rem;">
+        <div class="modal-inner-box"><div class="compute-k">Hardware</div><div class="compute-v" id="gpu-val-device">–</div></div>
+        <div class="modal-inner-box"><div class="compute-k">GPU memory</div><div class="compute-v" id="gpu-val-vram-total">–</div></div>
+        <div class="modal-inner-box"><div class="compute-k">Rules engine</div><div class="compute-v" id="gpu-val-rules">CPU · no GPU needed</div></div>
+        <div class="modal-inner-box"><div class="compute-k">CT organ measurement</div><div class="compute-v" id="gpu-val-ct">–</div></div>
       </div>
-
-      
-      
-
-
-      <!-- platform limitation notice -->
-      <div style="background: rgba(5, 150, 105, 0.08); border: 1.5px solid rgba(5, 150, 105, 0.25); border-radius: 10px; padding: 1.1rem; margin-top: 1rem;">
-        <div style="font-size: 0.82rem; font-weight: 800; color: var(--emerald-safe); display: flex; align-items: center; gap: 0.4rem;">
-          platform limitation
-        </div>
-        <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; margin: 0.4rem 0 0 0;">
-          This public page is not connected to any GPU, language model or hospital system. Local models and hospital connections work only when ClinLoop runs on a hospital server.
-        </p>
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem; margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;">
+        <b style="color: var(--text-main);">Does ClinLoop need a GPU? No.</b> Finding and tracking open loops (the 59 rules, deadlines,
+        risk scores and audit trail) is deterministic and runs on any CPU in milliseconds. A GPU only speeds up optional
+        imaging models on a hospital server: CT organ measurement takes about 20 seconds to a few minutes per scan on a CPU and seconds on an NVIDIA GPU
+        (used automatically when present). The chest X-ray model runs well on a CPU. A vision-language model such as MedGemma
+        runs in its own server, which manages its GPU.
       </div>
-
-      <!-- Live GPU Benchmark Box -->
-      <div class="modal-inner-box" style="margin-top: 1rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
-          <div>
-            <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-main);">
-              GPU benchmark unavailable in this platform
-            </div>
-            <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.15rem;">
-              No GPU is attached to this page.
-            </div>
-          </div>
-          <button id="btn-run-gpu-benchmark" class="btn-close-loop" style="padding: 0.5rem 1.1rem; font-size: 0.82rem;">
-            GPU benchmark unavailable
-          </button>
-        </div>
-
-        <div id="gpu-benchmark-result" style="display: none; margin-top: 0.85rem; padding: 0.85rem; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px;">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.65rem; text-align: center;">
-            <div>
-              <div style="font-size: 0.7rem; color: var(--text-dim);">총 소요 시간</div>
-              <div id="bench-time" style="font-size: 1.1rem; font-weight: 800; color: var(--cyan-neon); font-family: var(--font-mono);">--</div>
-            </div>
-            <div>
-              <div style="font-size: 0.7rem; color: var(--text-dim);">초당 처리 환자 수</div>
-              <div id="bench-throughput" style="font-size: 1.1rem; font-weight: 800; color: var(--emerald-safe); font-family: var(--font-mono);">--</div>
-            </div>
-            <div>
-              <div style="font-size: 0.7rem; color: var(--text-dim);">감지된 위반 건수</div>
-              <div id="bench-violations" style="font-size: 1.1rem; font-weight: 800; color: var(--crimson-danger); font-family: var(--font-mono);">--</div>
-            </div>
-            <div>
-              <div style="font-size: 0.7rem; color: var(--text-dim);">가용 VRAM</div>
-              <div id="bench-vram" style="font-size: 1.1rem; font-weight: 800; color: var(--violet-neuro); font-family: var(--font-mono);">--</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div style="display: flex; justify-content: flex-end; margin-top: 1.25rem;">
-        <button class="btn-secondary" onclick="document.getElementById('gpu-modal').classList.remove('open')">닫기 (Close HUD)</button>
+        <button class="btn-secondary" onclick="document.getElementById('gpu-modal').classList.remove('open')">Close</button>
       </div>
     </div>
   </div>

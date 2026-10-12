@@ -305,6 +305,9 @@ segments 117 structures.
 - It is research use only and not a medical device.
 - By default the 3 mm model runs, which takes about 20 s on a CPU. `CLINLOOP_CT_SEG_FAST=0` runs
   the 1.5 mm model, which is more precise but takes minutes.
+- It runs on an NVIDIA GPU automatically when the server has one (`CLINLOOP_CT_SEG_DEVICE=auto`;
+  set `cpu`, `gpu` or `mps` to choose). The cockpit's Compute badge and `/api/v1/compute/status`
+  show which.
 - Each CT runs in its own short-lived process, with a time limit (`CLINLOOP_CT_SEG_TIMEOUT`,
   default 900 s). nnU-Net's internal multiprocessing hung on the second CT when called inside the
   web server; this was found in the live run and is why.
