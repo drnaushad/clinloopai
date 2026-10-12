@@ -90,7 +90,9 @@ MODALITY_EVENTS = {
 }
 
 SPECIALTIES: List[Tuple[str, str]] = [
-    ("cardiology", r"cardiolog\w*|cardiac clinic|heart clinic|심장\s*내과|순환기\s*내과"),
+    ("cardiac_surgery", r"cardiac surg\w*|cardiothoracic|heart surgeon|흉부\s*외과|심장\s*외과"),
+    ("cardiology", r"cardiolog\w*|cardiac clinic|heart clinic|heart (?:valve|failure) (?:clinic|team|program)|"
+                   r"(?:valve|structural heart) (?:clinic|team)|\bHF clinic|심장\s*내과|순환기\s*내과|심부전\s*클리닉|판막\s*(?:팀|클리닉)"),
     ("gastroenterology", r"gastroenterolog\w*|\bgi\b(?=\s*(?:clinic|referral|consult|for|team|\.|,|$))|"
                          r"(?:(?<=to )|(?<=with ))gi\b|소화기\s*내과"),
     ("hepatology", r"hepatolog\w*|간\s*클리닉|간\s*내과"),
@@ -109,7 +111,8 @@ SPECIALTIES: List[Tuple[str, str]] = [
     ("ophthalmology", r"ophthalmolog\w*|eye clinic|안과"),
     ("ent", r"\bent\b|otolaryngolog\w*|이비인후과"),
     ("psychiatry", r"psychiatr\w*|mental health|정신\s*건강\s*의학과|정신과"),
-    ("infectious_disease", r"infectious disease|\bid\b(?=\s*(?:clinic|consult|referral))|감염\s*내과"),
+    ("infectious_disease", r"infectious disease|\bid\b(?=\s*(?:clinic|consult|referral))|\bhiv (?:clinic|care|specialist|service)|"
+                           r"감염\s*내과"),
 ]
 
 

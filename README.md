@@ -47,7 +47,7 @@ with transparent, rule-grounded logic and an audit trail.
                                                                   Patient outreach: draft → clinician approval → send
 ```
 
-1. **Obligation rules** (`clinical_ontology.py`): 59 guideline-based rules, each with a trigger, its
+1. **Obligation rules** (`clinical_ontology.py`): 65 guideline-based rules, each with a trigger, its
    required follow-ups (all or any), a deadline, a severity, references and a Korean name. None is
    fit for patient care until a specialist signs it off (see **Governance** below). Example:
    `□(LAB_RESULT[abnormal_pap] → ◇≤30d COLPOSCOPY_REFERRAL)`.
@@ -65,6 +65,7 @@ with transparent, rule-grounded logic and an audit trail.
    | R057 | Critical imaging-AI finding (intracranial haemorrhage, pneumothorax, free air) on a study with no report yet → read the study now (60 minutes by default); closed by the study's first report |
    | R058 | Report item no rule tracked, found by the hospital's own model as a second reader (exact quote required) → clinician review; never opens or closes a clinical obligation itself |
    | R059 | ECG QTc ≥ 500 ms → review of QT-prolonging medicines and electrolytes, or a repeat ECG, within 24 h (AHA/ACCF 2010). AF found on an ECG also feeds the AF anticoagulation decision (R054) |
+   | R060–R065 | Read by `guideline_reports.py`, each with the words or numbers that decided it: reactive HIV screen → supplemental test or HIV care ≤30 d (CDC 2014/2018); HBsAg positive → HBV DNA or hepatology ≤30 d (AASLD 2018; anti-HBs is immunity, not a trigger); IGRA positive or TST ≥10 mm → chest radiograph ≤30 d (ATS/IDSA/CDC 2017); colonoscopy and polyp pathology → surveillance colonoscopy at the USMSTF 2020 interval (poor prep 1 y, piecemeal ≥20 mm 6 mo, advanced findings 3 y; one obligation per colonoscopy; cancer goes to R009); echo severe aortic stenosis → cardiology/valve team ≤30 d (ACC/AHA 2020); new LVEF ≤40% → cardiology ≤30 d (AHA/ACC/HFSA 2022). Known HIV, hepatitis B or heart failure is not alerted again. Blind accuracy: [`docs/ACCURACY_EVALUATION.md`](docs/ACCURACY_EVALUATION.md#guideline-reports-r060r065) |
    | R052–R055 | Diagnostic patterns across events: iron-deficiency anaemia → GI investigation; creatinine rise (AKI warning) → repeat creatinine; atrial fibrillation with high CHA₂DS₂-VASc and no anticoagulant → anticoagulation decision; persistent microscopic haematuria → urology. See [`docs/DIAGNOSTIC_PATTERNS.md`](docs/DIAGNOSTIC_PATTERNS.md) |
    | R048–R051 | Plans written in clinicians' notes (English and Korean): repeat a lab test, imaging, a specialist referral, a follow-up visit. Each closes only on the matching event (same test, same modality and region, same specialty). Conditional, cancelled and already-done plans are not tracked |
 2. **Temporal hypergraph** (`temporal_hypergraph.py`): builds one hyperedge per triggered rule and

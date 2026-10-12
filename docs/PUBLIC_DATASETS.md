@@ -21,7 +21,7 @@ where your access was approved. Commit only code and aggregate counts, never rec
 | `mimic_ingest.py` | MIMIC-IV `hosp/` and `ed/`, MIMIC-IV-Note `note/`, MIMIC-CXR reports | `python -m src.clinloop_engine.mimic_ingest --mimic <dir> --note <dir> --cxr <dir> --sample 500 --out fhir/` |
 | `ecg.py` | ECGs in FHIR (LOINC 11524-6, 8636-3 QTc …); PTB-XL `ptbxl_database.csv` | `ecg.load_ptbxl(path)` |
 
-Each reader turns the records into FHIR R4 resources, so all 59 rules run on them unchanged.
+Each reader turns the records into FHIR R4 resources, so all 65 rules run on them unchanged.
 `mimic_ingest --out` writes FHIR bulk NDJSON. These two tools then work on it directly:
 - **`tests/hospital_eval/run_bulk.py`:** runs every rule over each patient's record.
 - **The chart-review tools (`src/validation/chart_review.py`):** draw a blinded sample for two clinicians

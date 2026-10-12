@@ -90,6 +90,12 @@ EVIDENCE_QUERIES: Dict[str, str] = {
     "R057": "artificial intelligence worklist triage intracranial hemorrhage turnaround time",
     "R058": "large language model radiology report follow-up recommendation extraction",
     "R059": "QTc prolongation torsade de pointes prevention hospital",
+    "R060": "HIV testing algorithm supplemental test linkage to care",
+    "R061": "hepatitis B surface antigen positive evaluation linkage to care",
+    "R062": "latent tuberculosis infection chest radiograph IGRA positive",
+    "R063": "post-polypectomy surveillance colonoscopy interval adherence",
+    "R064": "severe aortic stenosis referral delay valve replacement outcomes",
+    "R065": "heart failure reduced ejection fraction guideline-directed therapy initiation",
 }
 
 
