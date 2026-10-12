@@ -32,6 +32,10 @@ class TestEveryDevice(unittest.TestCase):
                 self.assertIn('rel="icon"', html)
                 self.assertIn('rel="manifest"', html)
                 self.assertIn('rel="apple-touch-icon"', html)
+                self.assertIn('class="brand-mark"', html)          # the logo in the page header
+                self.assertIn('href="icons/logo.svg"', html)       # and in the browser tab
+        for icon in ("logo.svg", "app-icon.svg", "icon-192.png", "icon-512.png", "favicon-32.png"):
+            self.assertTrue(os.path.exists(os.path.join(ROOT, "icons", icon)), icon)
 
     def test_shared_stylesheet_keeps_the_key_fixes(self):
         with open(os.path.join(ROOT, "css", "responsive.css"), encoding="utf-8") as f:
