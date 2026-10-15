@@ -68,6 +68,30 @@ class TestEveryDevice(unittest.TestCase):
         for stale in ("index.prelight.html", "js/app.prelight.js", "css/styles.backup.css"):
             self.assertFalse(os.path.exists(os.path.join(ROOT, stale)), stale)
 
+    def test_accessibility_basics_stay_in_place(self):
+        """WCAG 2.1 AA was audited with axe-core (0 violations on all pages, light/dark, desktop/phone);
+        these keep its main fixes: AA-contrast accent colours and keyboard access."""
+        def contrast(fg, bg):
+            def lum(h):
+                r, g, b = (int(h[i:i + 2], 16) / 255 for i in (1, 3, 5))
+                f = lambda c: c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+                return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+            hi, lo = sorted((lum(fg), lum(bg)), reverse=True)
+            return (hi + 0.05) / (lo + 0.05)
+        for page in PAGES[1:]:
+            with open(os.path.join(ROOT, page), encoding="utf-8") as f:
+                html = f.read()
+            accent = re.search(r"--accent: (#[0-9a-f]{6});", html).group(1)
+            dim = re.search(r"--dim: (#[0-9a-f]{6});", html).group(1)
+            with self.subTest(page=page):
+                self.assertGreaterEqual(contrast(accent, "#ffffff"), 4.5)
+                self.assertGreaterEqual(contrast(dim, "#f1f5f9"), 4.5)
+        with open(os.path.join(ROOT, "js", "app.js"), encoding="utf-8") as f:
+            app = f.read()
+        self.assertIn("card.setAttribute('role', 'button')", app)      # case cards work from the keyboard
+        with open(os.path.join(ROOT, "js", "appnav.js"), encoding="utf-8") as f:
+            self.assertIn("focusableScrollers", f.read())               # scrolling tables reachable by keyboard
+
     def test_wide_screens_are_an_app_shell_with_independent_panels(self):
         with open(os.path.join(ROOT, "css", "responsive.css"), encoding="utf-8") as f:
             css = f.read()

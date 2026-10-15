@@ -9,21 +9,21 @@
   
   --border-subtle: #e2e8f0;
   --border-card: #cbd5e1;
-  --border-cyan: #0284c7;
+  --border-cyan: #0369a1;
   
   --text-main: #0f172a;
   --text-muted: #475569;
-  --text-dim: #64748b;
+  --text-dim: #556274;
   
-  --cyan-neon: #0284c7;
+  --cyan-neon: #0369a1;
   --cyan-glow: rgba(2, 132, 199, 0.12);
   --violet-neuro: #7c3aed;
   --violet-glow: rgba(124, 58, 237, 0.12);
-  --crimson-danger: #e11d48;
+  --crimson-danger: #be123c;
   --crimson-glow: rgba(225, 29, 72, 0.15);
   --amber-warning: #d97706;
   --amber-glow: rgba(217, 119, 6, 0.15);
-  --emerald-safe: #059669;
+  --emerald-safe: #065f46;
   --emerald-glow: rgba(5, 150, 105, 0.15);
   
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -52,13 +52,13 @@ body.dark-theme {
   
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-dim: #94a3b8;
   
   --cyan-neon: #00f0ff;
   --cyan-glow: rgba(0, 240, 255, 0.25);
   --violet-neuro: #a855f7;
   --violet-glow: rgba(168, 85, 247, 0.25);
-  --crimson-danger: #ff2a5f;
+  --crimson-danger: #ff6b8a;
   --crimson-glow: rgba(255, 42, 95, 0.35);
   --amber-warning: #f59e0b;
   --amber-glow: rgba(245, 158, 11, 0.25);
@@ -78,13 +78,13 @@ body.dark-theme {
   
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-dim: #94a3b8;
   
   --cyan-neon: #00f0ff;
   --cyan-glow: rgba(0, 240, 255, 0.25);
   --violet-neuro: #a855f7;
   --violet-glow: rgba(168, 85, 247, 0.25);
-  --crimson-danger: #ff2a5f;
+  --crimson-danger: #ff6b8a;
   --crimson-glow: rgba(255, 42, 95, 0.35);
   --amber-warning: #f59e0b;
   --amber-glow: rgba(245, 158, 11, 0.25);
@@ -2486,7 +2486,7 @@ body {
 }
 
 .stage-tab-btn.active {
-  color: #0d9488;
+  color: #0f766e;
   background: var(--bg-deep);
   border: 1px solid var(--border-subtle);
   border-bottom: 2px solid #0d9488;
@@ -2601,7 +2601,7 @@ body.dark-theme .theme-segmented-control {
 
 .theme-opt-btn.active {
   background: #ffffff;
-  color: #0284c7;
+  color: #0369a1;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
   font-weight: 700;
 }
@@ -2864,7 +2864,7 @@ body.dark-theme .prominent-theme-pill {
 
 .prominent-theme-pill .theme-opt-btn.active {
   background: #ffffff;
-  color: #0284c7;
+  color: #0369a1;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
 }
 
@@ -2915,7 +2915,7 @@ body.dark-theme .prominent-theme-pill .theme-opt-btn.active {
 }
 
 .dock-theme-btn.active {
-  background: #0284c7;
+  background: #0369a1;
   color: #ffffff;
   box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
 }
@@ -2997,7 +2997,7 @@ body.dark-theme .guide-step {
 }
 
 .guide-arrow {
-  color: #0284c7;
+  color: #0369a1;
   font-weight: 800;
   font-size: 0.85rem;
 }
@@ -3049,7 +3049,7 @@ body.dark-theme .prominent-lang-pill {
 
 .prominent-lang-pill .lang-opt-btn.active {
   background: #ffffff;
-  color: #0284c7;
+  color: #0369a1;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
 }
 
@@ -3091,7 +3091,7 @@ body.dark-theme .prominent-lang-pill .lang-opt-btn.active {
 }
 
 .dock-lang-btn.active {
-  background: #0284c7;
+  background: #0369a1;
   color: #ffffff;
   box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
 }

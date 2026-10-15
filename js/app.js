@@ -8,13 +8,13 @@ const CLINLOOP_I18N = {
   ko: {
     platformLabel: '의료기기(SaMD) 시판 전 임상 실증 PoC',
     platformNotice: '임상 사례만 사용 · 실시간 EHR, 메시징, 가이드라인 연결 없음 · 환자 진료용 아님',
-    brandSubtitle: '결정론적 임상 지식그래프 추론 및 환자안전 폐쇄루프 엔진',
+    brandSubtitle: '검사·영상 결과의 후속 조치 누락을 찾는 임상 안전 시스템',
     hospitalText: '합성 임상 궤적 데이터 기반',
-    nobilityBtn: '🏛️ 의료 노블리티 & 윤리 헌장',
-    outreachBtn: '📱 환자 알림톡',
-    biomcpBtn: '🧬 Triple-MCP 의학 근거',
+    nobilityBtn: '윤리·안전 헌장',
+    outreachBtn: '환자 안내 메시지',
+    biomcpBtn: '근거 문헌',
     emrBtn: '기존 EMR과 비교',
-    triageTitle: '임상 의무(Obligation) 하이퍼그래프 대기열',
+    triageTitle: '사례 목록',
     triageCount: '임상 사례 5건',
     searchPlaceholder: '환자번호, 진단명, 검사 항목 검색...',
     filterAll: '전체 (5)',
@@ -59,7 +59,7 @@ const CLINLOOP_I18N = {
     auditTrailTitle: '설명 가능한 AI 감사 추적 (Audit Trail)',
     dockLblTheme: '테마:',
     dockLblLang: '언어:',
-    apiKeysBtn: '🔌 연결 상태',
+    apiKeysBtn: '연결 상태',
     apiModalTitle: '실제 연결 상태',
     apiModalSub: 'ClinLoop 서버가 직접 확인한 연결만 표시합니다.',
     apiNobilityTitle: '🔒 자격 증명은 브라우저에 입력하지 않습니다',
@@ -87,13 +87,13 @@ const CLINLOOP_I18N = {
   en: {
     platformLabel: 'Pre-Market Clinical Proof-of-Concept',
     platformNotice: 'Synthetic example cases only · No EHR, messaging or hospital connection · Not for patient care.',
-    brandSubtitle: 'Deterministic Clinical Graph Reasoning & Closed-Loop Safety Engine',
+    brandSubtitle: 'Finds and closes missed follow-up of clinical results',
     hospitalText: 'Synthetic Clinical Trajectories',
-    nobilityBtn: '🏛️ Medical Nobility & Ethics',
-    outreachBtn: '📱 Patient Outreach',
-    biomcpBtn: '🧬 Triple-MCP Evidence',
+    nobilityBtn: 'Ethics & safety charter',
+    outreachBtn: 'Patient outreach',
+    biomcpBtn: 'Evidence',
     emrBtn: 'Compare vs EMR',
-    triageTitle: 'Clinical Obligation Hypergraph Queue',
+    triageTitle: 'Case queue',
     triageCount: '5 example cases',
     searchPlaceholder: 'Search PT-ID, condition, rule, finding...',
     filterAll: 'All (5)',
@@ -138,7 +138,7 @@ const CLINLOOP_I18N = {
     auditTrailTitle: 'Explainable AI Audit Trail',
     dockLblTheme: 'Theme:',
     dockLblLang: 'Language:',
-    apiKeysBtn: '🔌 Connections',
+    apiKeysBtn: 'Connections',
     apiModalTitle: 'Connection status',
     apiModalSub: 'Shows only connections the ClinLoop server has verified.',
     apiNobilityTitle: '🔒 Credentials are never entered in the browser',
@@ -1214,6 +1214,14 @@ class ClinLoopApp {
       `;
 
       card.addEventListener('click', () => this.selectCase(c.scenario_id));
+      // Keyboard: each case is a button (Tab to it, Enter or Space to open)
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-pressed', this.currentCase?.scenario_id === c.scenario_id ? 'true' : 'false');
+      card.setAttribute('aria-label', `${ptName}: ${ptCondition}`);
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.selectCase(c.scenario_id); }
+      });
       container.appendChild(card);
     });
   }

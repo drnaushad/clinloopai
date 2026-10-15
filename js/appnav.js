@@ -40,8 +40,28 @@
     });
   }
 
+  // A table or list that scrolls but holds nothing focusable cannot be scrolled from the keyboard
+  // (WCAG 2.1.1): make it a focusable, labelled region. Pages render their tables later, so this re-runs.
+  function focusableScrollers() {
+    document.querySelectorAll('table, .case-queue-list, .scroll, .table-wrap').forEach(function (el) {
+      if (el.hasAttribute('data-scroll-focus')) return;
+      var scrolls = el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1;
+      if (!scrolls || el.querySelector('a, button, input, select, textarea, [tabindex]')) return;
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('data-scroll-focus', '');
+      if (!el.getAttribute('role') && el.tagName !== 'TABLE') el.setAttribute('role', 'region');
+      var heading = el.closest('section, .card, div') && el.closest('section, .card, div').querySelector('h2, h3');
+      if (!el.getAttribute('aria-label') && heading) el.setAttribute('aria-label', heading.textContent.trim().slice(0, 80));
+    });
+  }
+  var pending = null;
+  function soon() { if (!pending) pending = setTimeout(function () { pending = null; focusableScrollers(); }, 300); }
+
   function start() {
     render();
+    focusableScrollers();
+    new MutationObserver(soon).observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('resize', soon);
     // Each page's language switch sets <html lang>; follow it
     new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   }
