@@ -64,12 +64,15 @@
       100% { transform: scale(0.95); opacity: 0.8; }
     }
   </style>
-<link rel="stylesheet" href="css/responsive.css?v=20261010">
+<link rel="stylesheet" href="css/responsive.css?v=20261015">
 </head>
 
 <body>
 
   <!-- Full-Width Cockpit Header -->
+  <!-- Top bar: brand, actions, safety notice and example-data strip. Stays at the top while the page
+       scrolls, and condenses to one row once the reader scrolls down (js/app.js, css/responsive.css). -->
+  <div class="top-chrome" id="top-chrome">
   <header class="app-header">
     <div class="brand-section">
       <div class="brand-logo">
@@ -197,6 +200,8 @@
   </div>
 
   <!-- 3-Column Full-Viewport Workstation Cockpit -->
+  </div>
+
   <main class="cockpit-workspace">
 
     <!-- ====================================================================
@@ -1773,6 +1778,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
   </div>
   <script src="config.js"></script>
 <script src="js/demo.js"></script>
+<script src="js/top-chrome.js"></script>
   <script src="js/safety_clock.js?v=20260930_final"></script>
   <script src="js/hypergraph.js?v=20260930_final"></script>
   <script src="js/app.js?v=20260930_final"></script>
