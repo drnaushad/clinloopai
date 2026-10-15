@@ -42,13 +42,31 @@ class TestEveryDevice(unittest.TestCase):
         with open(os.path.join(ROOT, "index.html"), encoding="utf-8") as f:
             html = f.read()
         top = html.index('id="top-chrome"')
-        self.assertTrue(top < html.index('class="app-header"') < html.index('id="global-impact-bar"')
+        self.assertTrue(top < html.index('class="app-header') < html.index('id="global-impact-bar"')
                         < html.index('<main class="cockpit-workspace">'))
         self.assertIn('src="js/top-chrome.js"', html)
         with open(os.path.join(ROOT, "css", "responsive.css"), encoding="utf-8") as f:
             css = f.read()
         self.assertRegex(css, r"\.top-chrome \{[^}]*position: sticky")
         self.assertIn(".top-chrome.is-condensed", css)
+
+    def test_every_page_has_the_shared_navigation_and_no_stale_copies(self):
+        for page in PAGES:
+            with open(os.path.join(ROOT, page), encoding="utf-8") as f:
+                html = f.read()
+            with self.subTest(page=page):
+                self.assertIn('<nav class="app-nav">', html)
+                self.assertIn('src="js/appnav.js"', html)
+        with open(os.path.join(ROOT, "js", "appnav.js"), encoding="utf-8") as f:
+            nav = f.read()
+        for page in PAGES:
+            self.assertIn(f"'{page}'", nav)
+        with open(os.path.join(ROOT, "index.html"), encoding="utf-8") as f:
+            cockpit = f.read()
+        self.assertNotIn("run.app", cockpit)                          # no link to an outside, unvetted app
+        self.assertIn('class="more-menu"', cockpit)
+        for stale in ("index.prelight.html", "js/app.prelight.js", "css/styles.backup.css"):
+            self.assertFalse(os.path.exists(os.path.join(ROOT, stale)), stale)
 
     def test_wide_screens_are_an_app_shell_with_independent_panels(self):
         with open(os.path.join(ROOT, "css", "responsive.css"), encoding="utf-8") as f:
