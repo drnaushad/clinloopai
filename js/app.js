@@ -179,6 +179,7 @@ async function testLocalLLM() {
   const badge = document.getElementById('local-llm-status-badge');
   const output = document.getElementById('local-llm-test-output');
   if (!btn) return;
+  const label = btn.dataset.label || (btn.dataset.label = btn.textContent);   // put back afterwards, unchanged
 
   btn.textContent = '⏳ Generating...';
   btn.disabled = true;
@@ -188,7 +189,7 @@ async function testLocalLLM() {
   if (!CLINLOOP_API_BASE && !OLLAMA_BASE) {
     if (badge) badge.innerHTML = `<span style="color:#f59e0b">⚠️ On-premise LLM not available in the public demo</span>`;
     if (output) output.textContent = 'The local LLM runs only inside the hospital network (ClinLoop API on port 8124 with Ollama). Nothing was generated. Run the cockpit and API locally to try this panel.';
-    btn.textContent = '▶ Initialize Secure Local LLM';
+    btn.textContent = label;
     btn.disabled = false;
     return;
   }
@@ -247,7 +248,7 @@ async function testLocalLLM() {
       if (output) { output.textContent = 'No message was generated: the on-premise LLM did not respond. Start Ollama and the ClinLoop API, then try again.'; output.style.display = 'block'; }
     }
   }
-  btn.textContent = '▶ Initialize Secure Local LLM';
+  btn.textContent = label;
   btn.disabled = false;
 }
 
@@ -278,14 +279,7 @@ class ClinLoopApp {
     await this.loadData();
     this.setupEventListeners();
 
-    // Automatically toggle body.modal-open to hide floating dock when any modal is open
-    const modalObserver = new MutationObserver(() => {
-      const isAnyModalOpen = document.querySelectorAll('.modal-overlay.open').length > 0;
-      document.body.classList.toggle('modal-open', isAnyModalOpen);
-    });
-    document.querySelectorAll('.modal-overlay').forEach(m => {
-      modalObserver.observe(m, { attributes: true, attributeFilter: ['class'] });
-    });
+    this.setupDialogs();
 
     this.setupLiveClock();
     this.applyFilters();
@@ -1442,6 +1436,73 @@ class ClinLoopApp {
     };
     update();
     if (this._clockInterval) clearInterval(this._clockInterval); this._clockInterval = setInterval(update, 1000);
+  }
+
+  /**
+   * One behaviour for every pop-up window (.modal-overlay): it opens as a labelled dialog with the
+   * keyboard focus inside it, and closes with its ✕ or Close button, the Escape key, or a click
+   * outside it; focus then returns to the button that opened it. Before this, Escape closed nothing
+   * and the Evidence window's ✕ had no handler, so a reader could be stuck in it.
+   */
+  setupDialogs() {
+    const overlays = [...document.querySelectorAll('.modal-overlay')];
+    const openOnes = () => overlays.filter((m) => m.classList.contains('open'));
+    const openers = new WeakMap();
+    let lastControl = null;     // the More menu closes as its item is clicked, which drops the focus
+    document.addEventListener('click', (e) => { lastControl = e.target.closest('button, summary, a') || lastControl; }, true);
+    const focusable = (m) => [...m.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+      .filter((el) => !el.disabled && el.offsetParent !== null);
+    const close = (m) => {
+      m.classList.remove('open');
+      // A window opened from a link (#biomcp, #outreach) can then be opened again by the same link
+      if (['#biomcp', '#outreach'].includes(window.location.hash)) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    };
+    overlays.forEach((m) => {
+      const box = m.firstElementChild;
+      if (box) {
+        box.setAttribute('role', 'dialog');
+        box.setAttribute('aria-modal', 'true');
+        box.tabIndex = -1;
+        const heading = box.querySelector('h1, h2, h3');
+        if (heading) {
+          heading.id = heading.id || `${m.id}-title`;
+          box.setAttribute('aria-labelledby', heading.id);
+        }
+      }
+      new MutationObserver(() => {
+        const isOpen = m.classList.contains('open');
+        document.body.classList.toggle('modal-open', openOnes().length > 0);
+        if (isOpen && !openers.has(m)) {
+          const active = document.activeElement;
+          openers.set(m, active && active !== document.body ? active : lastControl);
+          requestAnimationFrame(() => (box || m).focus({ preventScroll: true }));
+        } else if (!isOpen && openers.has(m)) {
+          let back = openers.get(m);
+          openers.delete(m);
+          if (back && back.focus && document.contains(back)) back.focus({ preventScroll: true });
+          // Opened from the (now closed) More menu, whose items cannot take focus: return to the menu's button
+          if (back && document.activeElement !== back) back.closest('details')?.querySelector('summary')?.focus({ preventScroll: true });
+        }
+      }).observe(m, { attributes: true, attributeFilter: ['class'] });
+      m.addEventListener('click', (e) => {
+        if (e.target === m) { close(m); return; }                       // click outside the window
+        const btn = e.target.closest('button');
+        if (btn && (/^btn-(close|cancel)/.test(btn.id) || btn.matches('[data-close-dialog]'))) close(m);
+      });
+    });
+    document.addEventListener('keydown', (e) => {
+      const top = openOnes().pop();
+      if (!top) return;
+      if (e.key === 'Escape') { e.preventDefault(); close(top); return; }
+      if (e.key !== 'Tab') return;
+      const items = focusable(top);                                    // keep Tab inside the window
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !top.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
   }
 
   async refreshConnections(force = false) {

@@ -63,6 +63,22 @@ _TOKENS = _load_tokens()
 _bearer = HTTPBearer(auto_error=False)
 
 
+def known_users() -> Dict[str, str]:
+    """{user name: role} for every configured person (the read-only public demo account excluded).
+    Used to offer real names when a loop is assigned, and to refuse a name nobody signs in with."""
+    demo_user = None
+    if os.environ.get("CLINLOOP_DEMO", "").strip().lower() in ("1", "true", "yes"):
+        from .demo import DEMO_USER
+        demo_user = DEMO_USER
+    out: Dict[str, str] = {}
+    for user in _TOKENS.values():
+        if user.name == demo_user:
+            continue
+        if user.name not in out or ROLE_RANK[user.role] > ROLE_RANK[out[user.name]]:
+            out[user.name] = user.role          # one person with several tokens: their highest role
+    return out
+
+
 def authenticate(token: str) -> Optional[User]:
     for known, user in _TOKENS.items():
         if hmac.compare_digest(known, token):   # constant-time comparison

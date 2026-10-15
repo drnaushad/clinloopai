@@ -28,7 +28,7 @@ import re
 import sqlite3
 import threading
 from datetime import datetime, timedelta
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from .clinical_ontology import LoopStatus
 from .safety_clock import utc_now
@@ -490,11 +490,16 @@ class LoopStore:
 
     # ── clinician actions ────────────────────────────────────────────────────
     def _transition(self, key: str, actor: str, role: str, action: str,
-                    allowed_from: Iterable[str], updates: Dict, detail: Dict) -> Dict:
+                    allowed_from: Iterable[str], updates: Dict, detail: Dict,
+                    extra: Optional[Callable[[Dict], Dict]] = None) -> Dict:
+        """``extra(loop)`` adds updates that depend on the loop's current row, read under the same lock."""
         with self._lock:
             loop = self.get(key)
             if loop["workflow_state"] not in allowed_from:
                 raise WorkflowError(f"Cannot {action} a loop in state '{loop['workflow_state']}'")
+            if extra:
+                more = extra(loop)
+                updates, detail = {**updates, **more}, {**detail, **more}
             updates = {**updates, "updated_at": utc_now().isoformat()}
             self._db.execute(f"UPDATE loops SET {', '.join(f'{k}=?' for k in updates)} WHERE loop_key=?",
                              (*updates.values(), key))
@@ -503,8 +508,10 @@ class LoopStore:
             return self.get(key)
 
     def acknowledge(self, key: str, actor: str, role: str = "clinician") -> Dict:
+        """Take the next step: an unassigned loop becomes the acknowledger's (an assigned one keeps its owner)."""
         return self._transition(key, actor, role, "acknowledge", ("new", "deferred"),
-                                {"workflow_state": "acknowledged"}, {})
+                                {"workflow_state": "acknowledged"}, {},
+                                extra=lambda loop: {"owner": actor} if loop["owner"] == "unassigned" else {})
 
     def assign(self, key: str, owner: str, actor: str, role: str = "admin") -> Dict:
         return self._transition(key, actor, role, "assign", ACTIVE_WORKFLOW_STATES + ("deferred",),

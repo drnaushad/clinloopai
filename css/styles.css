@@ -1153,12 +1153,16 @@ body.dark-theme .hypergraph-canvas-container {
   padding: 2rem;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s ease;
+  /* Hidden, not just transparent: a closed window's buttons must not take keyboard focus or be read out */
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0s linear 0.25s;
 }
 
 .modal-overlay.open {
   opacity: 1;
   pointer-events: auto;
+  visibility: visible;
+  transition: opacity 0.25s ease, visibility 0s;
 }
 
 .comparison-modal {

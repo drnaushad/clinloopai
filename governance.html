@@ -311,7 +311,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     if (state.token) headers.Authorization = `Bearer ${state.token}`;
     const res = await fetch(state.base + path, { ...opts, headers });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body.detail || `HTTP ${res.status}`);
+    if (!res.ok) {
+      // FastAPI lists form problems as objects; show their text, not "[object Object]"
+      const d = body.detail;
+      throw new Error(Array.isArray(d) ? d.map((x) => (x.loc ? x.loc[x.loc.length - 1] + ': ' : '') + (x.msg || '')).join('; ')
+        : d || (res.status === 401 ? 'Not signed in, or the token is not recognised' : `HTTP ${res.status}`));
+    }
     return body;
   }
 

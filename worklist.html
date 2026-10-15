@@ -178,6 +178,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       <label class="check"><input type="checkbox" id="show-inactive"> <span data-i18n="showInactive"></span></label>
       <span class="spacer"></span>
       <button type="button" id="btn-refresh" data-i18n="refresh"></button>
+      <span class="sub" id="updated" style="font-size:.8rem;"></span>
       <button type="button" id="btn-load-example" data-i18n="loadExample" hidden></button>
       <button type="button" id="btn-load-radiology" data-i18n="loadRadiology" hidden></button>
       <button type="button" id="btn-escalate" data-i18n="escalate" hidden></button>
@@ -240,7 +241,8 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       ack: '확인', defer: '보류…', close: '근거와 함께 종결…', assignMe: '나에게 배정', assignTo: '배정…', message: '환자 메시지…',
       reason: '사유', resurface: '재표시 날짜 (선택)', note: '메모', notePh: '임상적 판단 또는 기타 사유일 때 필수', recordDefer: '보류 기록',
       evidence: '완료된 후속 조치의 근거', evidencePh: '예: 대장내시경 오더 C-2231, 2026-09-10 예약', closeLoop: '루프 종결',
-      assignee: '담당자 ID', assign: '배정',
+      assignee: '담당자', assign: '배정', choose: '선택…',
+      updated: (tm) => `${tm} 갱신 · 30초마다 자동 갱신`, conflict: (e) => `다른 사용자가 먼저 이 루프를 변경했습니다 (${e}). 최신 상태로 갱신했습니다.`,
       msgLang: '언어', msgChannel: '채널', draft: '초안 작성', msgHelp: '메시지에는 진단명이나 결과가 포함되지 않습니다. 의료진 승인 전에는 발송되지 않습니다.',
       msgStatus: { draft: '승인 대기', sent: '발송됨', rejected: '반려', failed: '발송 실패' },
       approveSend: '승인 후 발송', reject: '반려', awaitingClinician: '의료진 승인 대기 중',
@@ -279,7 +281,8 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       ack: 'Acknowledge', defer: 'Defer…', close: 'Close with evidence…', assignMe: 'Assign to me', assignTo: 'Assign…', message: 'Message patient…',
       reason: 'Reason', resurface: 'Resurface on (optional)', note: 'Note', notePh: "Required for clinical judgment or 'other'", recordDefer: 'Record deferral',
       evidence: 'Evidence of the completed follow-up', evidencePh: 'e.g. Colonoscopy order C-2231 booked for 2026-09-10', closeLoop: 'Close loop',
-      assignee: 'Assignee ID', assign: 'Assign',
+      assignee: 'Assignee', assign: 'Assign', choose: 'Choose…',
+      updated: (tm) => `Updated ${tm} · refreshes every 30 s`, conflict: (e) => `Someone else changed this loop first (${e}). The list now shows its current state.`,
       msgLang: 'Language', msgChannel: 'Channel', draft: 'Create draft', msgHelp: 'Messages never name a diagnosis or result. Nothing is sent until a clinician approves.',
       msgStatus: { draft: 'awaiting approval', sent: 'sent', rejected: 'rejected', failed: 'delivery failed' },
       approveSend: 'Approve & send', reject: 'Reject', awaitingClinician: 'Awaiting clinician approval',
@@ -320,7 +323,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   }
 
   // ── State & API ───────────────────────────────────────────────────────────
-  const state = { base: '', token: '', user: null, deferReasons: {}, rules: {}, loops: [] };
+  const state = { base: '', token: '', user: null, deferReasons: {}, rules: {}, loops: [], staff: [] };
   const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
   $('api-base').value = store.get('clinloop_api') || window.CLINLOOP_API_BASE || (isLocal ? 'http://localhost:8124' : '');
   $('token').value = store.get('clinloop_token');   // session storage: gone when the tab closes
@@ -336,7 +339,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
     });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body.detail || `HTTP ${res.status}`);
+    if (!res.ok) {
+      // FastAPI lists form problems as objects; show their text, not "[object Object]"
+      const d = body.detail;
+      throw new Error(Array.isArray(d) ? d.map((x) => (x.loc ? x.loc[x.loc.length - 1] + ': ' : '') + (x.msg || '')).join('; ')
+        : d || (res.status === 401 ? 'Not signed in, or the token is not recognised' : `HTTP ${res.status}`));
+    }
     return body;
   }
 
@@ -417,7 +425,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       </div>
       ${rule.patient_outreach === false ? `<div class="action" style="margin-top:8px;">${esc(t().clinicianOnly)}</div>` : ''}
       <form class="form" data-form="assign">
-        <div><label for="${id}-assignee">${esc(t().assignee)}</label><input id="${id}-assignee" name="owner" required></div>
+        <div><label for="${id}-assignee">${esc(t().assignee)}</label>${state.staff.length
+          ? `<select id="${id}-assignee" name="owner" required><option value="">${esc(t().choose)}</option>${state.staff
+              .filter((u) => u.user !== l.owner).map((u) => `<option value="${esc(u.user)}">${esc(u.user)} (${esc(u.role)})</option>`).join('')}</select>`
+          : `<input id="${id}-assignee" name="owner" required>`}</div>
         <div><button class="primary" type="submit">${esc(t().assign)}</button></div>
       </form>
       <form class="form" data-form="defer">
@@ -515,6 +526,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         ? wl.loops.map(loopCard).join('')
         : `<div class="card empty">${esc(t().noLoops)}${can('admin') ? esc(t().loadHint) : ''}</div>`;
       document.querySelectorAll('article.loop').forEach(renderMessages);
+      $('updated').textContent = t().updated(new Date().toLocaleTimeString(lang === 'ko' ? 'ko-KR' : 'en-GB', { hour: '2-digit', minute: '2-digit' }));
       focusLinkedLoop();
       await renderRates();
     } catch (e) {
@@ -533,6 +545,27 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         <thead><tr><th>${esc($('strata').selectedOptions[0].textContent)}</th><th class="num">${esc(c1)}</th><th class="num">${esc(c2)}</th><th class="num">${esc(c3)}</th></tr></thead>
         <tbody>${rows.map(([g, v]) => `<tr><td>${esc(label(g))}</td><td class="num">${v.eligible}</td><td class="num">${v.missed}</td><td class="num">${v.rate_per_1000.toLocaleString()}</td></tr>`).join('')}</tbody>
       </table>` : `<p class="sub">${esc(t().noRates)}</p>`;
+  }
+
+  // ── Several people at once ────────────────────────────────────────────────
+  // The list refreshes itself every 30 s and when the tab comes back into view, so everyone sees
+  // what colleagues have just done, but never while this person is typing or has a form or an
+  // audit trail open (a refresh redraws the cards).
+  function busy() {
+    const a = document.activeElement;
+    return document.hidden || !!document.querySelector('#worklist form.open, #worklist details[open]')
+      || (a && a.closest('#worklist') && a.matches('input, textarea, select'));
+  }
+  let autoTimer = null;
+  function startAutoRefresh() {
+    if (autoTimer) return;
+    autoTimer = setInterval(() => { if (state.user && !busy()) refresh(); }, 30000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && state.user && !busy()) refresh(); });
+  }
+  // A colleague acted first (the server refuses the second of two conflicting actions): say so and show the current state
+  async function failed(err) {
+    if (/^Cannot /.test(err.message)) { setStatus(t().conflict(err.message), true); await refresh(); }
+    else setStatus(err.message, true);
   }
 
   // ── Events ────────────────────────────────────────────────────────────────
@@ -559,7 +592,9 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       $('btn-load-example').hidden = !can('admin');
       $('btn-escalate').hidden = !can('admin');
       $('btn-load-radiology').hidden = !can('admin');
+      state.staff = can('clinician') ? await api('/api/v1/users').then((r) => r.users).catch(() => []) : [];
       await refresh();
+      startAutoRefresh();
     } catch (err) {
       $('app').hidden = true;
       setStatus(t().signinFailed(err.message), true);
@@ -639,7 +674,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         setStatus(r.status === 'sent' ? t().sent : r.status === 'rejected' ? t().rejected : `${r.status}: ${r.note || ''}`, r.status === 'failed');
       }
       await refresh();
-    } catch (err) { setStatus(err.message, true); btn.disabled = false; }
+    } catch (err) { btn.disabled = false; await failed(err); }
   });
 
   $('worklist').addEventListener('submit', async (e) => {
@@ -666,7 +701,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         setStatus(t().drafted);
       }
       await refresh();
-    } catch (err) { setStatus(err.message, true); }
+    } catch (err) { await failed(err); }
   });
 
   applyLang();

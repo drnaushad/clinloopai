@@ -21,11 +21,12 @@ ClinLoop records that review; it cannot replace it.
 Every review and approval is written to the hash-chained audit log.
 """
 
+import copy
 import hashlib
 import json
 import re
 import os
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from .clinical_ontology import OBLIGATION_RULES, EventType, ObligationRule
 from .radiology import load_critical_findings
@@ -35,9 +36,32 @@ CRITICAL_FINDINGS_KIND = "critical_findings"
 CRITICAL_RULE = "R035"
 
 
-def _radiology_logic_hash() -> str:
-    with open(_RADIOLOGY_SOURCE, "rb") as f:
+# Files read on every worklist request (once per rule) are read once and reused until they change
+# on disk: the worklist is what every signed-in person's page refreshes, so this is the hot path.
+_FILE_CACHE: Dict[Tuple[str, str], Tuple[Tuple[int, int], object]] = {}
+
+
+def _cached(kind: str, path: str, load):
+    try:
+        st = os.stat(path)
+        stamp = (st.st_mtime_ns, st.st_size)
+    except OSError:
+        return load(path)
+    hit = _FILE_CACHE.get((kind, path))
+    if hit and hit[0] == stamp:
+        return hit[1]
+    value = load(path)
+    _FILE_CACHE[(kind, path)] = (stamp, value)
+    return value
+
+
+def _sha256_file(path: str) -> str:
+    with open(path, "rb") as f:
         return hashlib.sha256(f.read()).hexdigest()
+
+
+def _radiology_logic_hash() -> str:
+    return _cached("sha256", _RADIOLOGY_SOURCE, _sha256_file)
 
 
 def rule_fingerprint(rule: ObligationRule) -> str:
@@ -70,14 +94,22 @@ def enforcement_enabled() -> bool:
 GUIDELINES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "guidelines.json")
 
 
-def load_guidelines() -> Dict:
-    """The guideline registry (CLINLOOP_GUIDELINES overrides the bundled one)."""
-    path = os.environ.get("CLINLOOP_GUIDELINES") or GUIDELINES_PATH
+def _read_guidelines(path: str) -> Dict:
     try:
         with open(path, encoding="utf-8") as f:
             return json.load(f)
     except (OSError, ValueError):
         return {"guidelines": []}
+
+
+def _guidelines() -> Dict:
+    """The registry, shared and read-only (callers here never change it)."""
+    return _cached("json", os.environ.get("CLINLOOP_GUIDELINES") or GUIDELINES_PATH, _read_guidelines)
+
+
+def load_guidelines() -> Dict:
+    """The guideline registry (CLINLOOP_GUIDELINES overrides the bundled one). A copy: safe to edit."""
+    return copy.deepcopy(_guidelines())
 
 
 def _version(text: str) -> Optional[int]:
@@ -88,7 +120,7 @@ def _version(text: str) -> Optional[int]:
 
 def guideline_alerts(rule: ObligationRule, registry: Optional[Dict] = None) -> List[Dict]:
     """Citations of an older edition than the registry's current one: the rule needs specialist re-review."""
-    registry = registry if registry is not None else load_guidelines()
+    registry = registry if registry is not None else _guidelines()
     alerts = []
     for g in registry.get("guidelines", []):
         current = _version(str(g.get("current")))
@@ -104,7 +136,7 @@ def guideline_alerts(rule: ObligationRule, registry: Optional[Dict] = None) -> L
     return alerts
 
 
-def rule_status(rule: ObligationRule, reviews: List[Dict]) -> Dict:
+def rule_status(rule: ObligationRule, reviews: List[Dict], registry: Optional[Dict] = None) -> Dict:
     current = rule_fingerprint(rule)
     on_current = [r for r in reviews if r["rule_hash"] == current]
     latest_by_reviewer: Dict[str, Dict] = {}
@@ -123,7 +155,7 @@ def rule_status(rule: ObligationRule, reviews: List[Dict]) -> Dict:
     else:
         status = "pending"
     return {"rule_id": rule.rule_id, "fingerprint": current, "status": status,
-            "guideline_alerts": guideline_alerts(rule),
+            "guideline_alerts": guideline_alerts(rule, registry),
             "approvals": len(approvers), "approvals_required": approvals_required(), "approvers": approvers,
             "reviews": [{k: r[k] for k in ("decision", "reviewer", "specialty", "note", "decided_at", "rule_hash")}
                         for r in reviews]}
@@ -133,7 +165,8 @@ def all_rule_statuses(store) -> Dict[str, Dict]:
     by_rule: Dict[str, List[Dict]] = {}
     for r in store.rule_reviews():
         by_rule.setdefault(r["rule_id"], []).append(r)
-    return {rule.rule_id: rule_status(rule, by_rule.get(rule.rule_id, [])) for rule in OBLIGATION_RULES}
+    registry = _guidelines()
+    return {rule.rule_id: rule_status(rule, by_rule.get(rule.rule_id, []), registry) for rule in OBLIGATION_RULES}
 
 
 def critical_list_status(store) -> Dict:
@@ -153,8 +186,9 @@ def critical_list_status(store) -> Dict:
                          if approval else None)}
 
 
-def summary(store) -> Dict:
-    statuses = all_rule_statuses(store)
+def summary(store, statuses: Optional[Dict[str, Dict]] = None) -> Dict:
+    """``statuses``: all_rule_statuses(store) when the caller already has it (saves computing it twice)."""
+    statuses = statuses if statuses is not None else all_rule_statuses(store)
     counts: Dict[str, int] = {}
     for s in statuses.values():
         counts[s["status"]] = counts.get(s["status"], 0) + 1
@@ -166,11 +200,11 @@ def summary(store) -> Dict:
                                         if any(not a["accepted"] for a in st.get("guideline_alerts") or []))}
 
 
-def live_rule_ids(store) -> Optional[set]:
+def live_rule_ids(store, statuses: Optional[Dict[str, Dict]] = None) -> Optional[set]:
     """Rules allowed on the worklist, or None when sign-off is not enforced."""
     if not enforcement_enabled():
         return None
-    statuses = all_rule_statuses(store)
+    statuses = statuses if statuses is not None else all_rule_statuses(store)
     live = {rid for rid, s in statuses.items() if s["status"] == "approved"}
     if critical_list_status(store)["status"] != "approved":
         live.discard(CRITICAL_RULE)
