@@ -5,20 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="icons/logo.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-  <title>ClinLoop AI | Noble Clinical Safety & Causal Reasoning Platform</title>
-  <meta name="description" content="ClinLoop AI research prototype: tracks clinical follow-up obligations on synthetic example cases. Not a medical device; not for patient care.">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+  <title>ClinLoop AI | Closed-Loop Follow-up of Clinical Results</title>
+  <meta name="description" content="Research prototype that finds and tracks missed follow-up of abnormal lab results, imaging findings and referrals, with guideline-based rules. Synthetic examples only; not a medical device.">
+  <link rel="canonical" href="https://clinloopai.app/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ClinLoop AI">
+  <meta property="og:title" content="ClinLoop AI | Closed-Loop Follow-up of Clinical Results">
+  <meta property="og:description" content="Finds and tracks missed follow-up of abnormal results, imaging findings and referrals. Research prototype; synthetic examples only.">
+  <meta property="og:url" content="https://clinloopai.app/">
+  <meta property="og:image" content="https://clinloopai.app/icons/icon-512.png">
+  <meta name="twitter:card" content="summary">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="css/styles.css?v=20261015">
+  <link rel="stylesheet" href="css/styles.css?v=20261020">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0e7490">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<link rel="stylesheet" href="css/responsive.css?v=20261019">
+<link rel="stylesheet" href="css/responsive.css?v=20261020">
 </head>
 
 <body>
@@ -50,7 +59,7 @@
         <span id="txt-api-btn">Connections</span>
         <span class="api-status-pill" id="api-status-pill" style="color: var(--text-dim); border-color: var(--border-card);">CHECKING…</span>
       </button>
-      <button id="btn-biomcp" class="btn-secondary btn-biomcp-highlight" title="Inspect Model Context Protocol Biomedical Grounding">
+      <button id="btn-biomcp" class="btn-secondary btn-biomcp-highlight" title="Guidelines and literature behind each rule">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
           <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
@@ -59,13 +68,13 @@
         <span id="txt-biomcp-btn">Evidence</span>
         <span class="biomcp-status-pill" id="biomcp-status-pill" style="color: var(--text-dim); border-color: var(--border-card);">CHECKING…</span>
       </button>
-      <button id="btn-patient-outreach" class="btn-secondary btn-outreach" title="Test Patient Plain-Language Empathy Notification Simulator">
+      <button id="btn-patient-outreach" class="btn-secondary btn-outreach" title="Preview a plain-language patient message (example)">
         <span id="txt-outreach-btn">Patient outreach</span>
       </button>
       <details class="more-menu">
         <summary class="btn-secondary" aria-label="More">⋯ <span id="txt-more-btn">More</span></summary>
         <div class="more-menu-list" role="menu">
-          <button id="btn-nobility-charter" class="btn-secondary" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399; display: inline-flex; align-items: center; gap: 0.4rem;" title="Medical Nobility, Hippocratic Charter & Clinical Whitepaper">
+          <button id="btn-nobility-charter" class="btn-secondary" title="How ClinLoop is meant to be built and used">
         <span id="txt-nobility-btn">Ethics &amp; safety charter</span>
       </button>
           <button id="btn-emr-comparison" class="btn-secondary">
@@ -75,59 +84,40 @@
         </svg>
         <span id="txt-emr-btn">Compare vs EMR</span>
       </button>
-          <button id="sound-toggle" class="btn-secondary" title="Toggle audio telemetry">🔇 Audio: Off</button>
+          <button id="sound-toggle" class="btn-secondary" title="Alert sounds">Sound: off</button>
         </div>
       </details>
       <div class="theme-segmented-control prominent-theme-pill" role="group" aria-label="Theme Switcher">
-        <button id="theme-opt-light" class="theme-opt-btn active" title="Light Mode">
-          ☀️ Light
-        </button>
-        <button id="theme-opt-dark" class="theme-opt-btn" title="Dark Mode">
-          🌙 Dark
-        </button>
+        <button id="theme-opt-light" class="theme-opt-btn active" title="Light theme">Light</button>
+        <button id="theme-opt-dark" class="theme-opt-btn" title="Dark theme">Dark</button>
       </div>
       <div class="prominent-lang-pill" role="group" aria-label="Language Selector">
-        <button id="lang-opt-ko" class="lang-opt-btn" title="Korean">
-          🇰🇷 Korean
-        </button>
-        <button id="lang-opt-en" class="lang-opt-btn active" title="English">
-          🇺🇸 English
-        </button>
+        <button id="lang-opt-ko" class="lang-opt-btn" title="한국어" lang="ko">한국어</button>
+        <button id="lang-opt-en" class="lang-opt-btn active" title="English" lang="en">EN</button>
       </div>
     </div>
   </header>
 
-  <div class="platform-status" role="note" aria-label="platform safety notice" style="background-color: #1e293b; color: #f8fafc; border-bottom: 1px solid #334155; padding: 0.4rem 1rem;">
-    <span class="platform-status-label" id="platform-notice-label" style="background-color: #1d4ed8; color: white; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: bold; margin-right: 0.5rem;">research prototype</span>
-    <span class="platform-status-copy" id="platform-notice-copy" style="color: #e2e8f0; font-weight: 500;">Synthetic example cases only · No EHR, messaging or hospital connection · Not for patient care.</span>
-  </div>
-
-  <!-- Real-time patient safety metrics. -->
-  <div id="global-impact-bar" style="background: linear-gradient(135deg, #0f2027 0%, #1a3a3a 50%, #0f2027 100%); border-bottom: 1px solid rgba(0, 240, 255, 0.18); padding: 0.5rem 1.5rem; display: flex; align-items: center; gap: 0; overflow: hidden; position: relative;">
-    <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(90deg,transparent,transparent 48px,rgba(0,240,255,0.03) 48px,rgba(0,240,255,0.03) 49px);pointer-events:none;"></div>
-    <div style="font-size:0.65rem;font-weight:800;color:rgba(0,240,255,0.7);text-transform:uppercase;letter-spacing:0.12em;margin-right:1.5rem;white-space:nowrap;font-family:var(--font-mono);">SYNTHETIC EXAMPLE DATA</div>
-    <div style="display:flex;align-items:center;gap:1.8rem;flex:1;">
-      <div class="impact-stat-item" title="Number of patients currently monitored">
-        <div class="impact-stat-val" id="imp-loops" style="color:#f43f5e;">0</div>
-        <div class="impact-stat-lbl">Examples loaded</div>
+  <!-- One status strip: the safety notice, then the example data at a glance -->
+  <div class="status-strip">
+    <div class="platform-status" role="note" aria-label="Safety notice">
+      <span class="platform-status-label" id="platform-notice-label">Research prototype</span>
+      <span class="platform-status-copy" id="platform-notice-copy">Synthetic example cases only · No EHR, messaging or hospital connection · Not for patient care.</span>
+    </div>
+    <div id="global-impact-bar" class="kpi-strip" aria-label="Example data at a glance">
+      <div class="impact-stat-item" title="Example cases loaded on this page">
+        <span class="impact-stat-val" id="imp-loops">0</span><span class="impact-stat-lbl" id="kpi-lbl-examples">Examples</span>
       </div>
-      <div class="impact-stat-divider"></div>
-      <div class="impact-stat-item" title="Active unresolved obligations">
-        <div class="impact-stat-val" id="imp-qalys" style="color:#10b981;">0.0</div>
-        <div class="impact-stat-lbl">Open examples</div>
+      <div class="impact-stat-item" title="Examples with a follow-up still open">
+        <span class="impact-stat-val" id="imp-qalys">0</span><span class="impact-stat-lbl" id="kpi-lbl-open">Open</span>
       </div>
-      <div class="impact-stat-divider"></div>
-      <div class="impact-stat-item" title="Clinical obligation rules encoded (R001–R016)">
-        <div class="impact-stat-val" id="imp-rules" style="color:#38bdf8;">0</div>
-        <div class="impact-stat-lbl">Rule IDs represented</div>
+      <div class="impact-stat-item" title="Guideline rules these examples use">
+        <span class="impact-stat-val" id="imp-rules">0</span><span class="impact-stat-lbl" id="kpi-lbl-rules">Rules</span>
       </div>
-      <div class="impact-stat-divider"></div>
       <div class="impact-stat-item" title="Services this ClinLoop instance is connected to right now (checked live)">
-        <div class="impact-stat-val" id="imp-connections" style="color:var(--text-dim);">–</div>
-        <div class="impact-stat-lbl" id="imp-connections-lbl">Server connections</div>
+        <span class="impact-stat-val" id="imp-connections">–</span><span class="impact-stat-lbl" id="imp-connections-lbl">Server connections</span>
       </div>
     </div>
-    <div style="font-size:0.58rem;color:rgba(255,255,255,0.65);margin-left:1rem;white-space:nowrap;font-family:var(--font-mono);">LOCAL UI SIMULATION</div>
   </div>
 
   <!-- 3-Column Full-Viewport Workstation Cockpit -->
@@ -198,7 +188,6 @@
             <line x1="16" y1="17" x2="8" y2="17"/>
           </svg>
           <span id="tab-txt-summary">🩺 환자 진료 요약 (Clinical Overview)</span>
-          <span class="tab-pill tab-pill-success" id="tab-pill-summary">추천 / Primary</span>
         </button>
 
         <button class="stage-tab-btn" id="tab-btn-counterfactual" data-view="counterfactual">
@@ -206,7 +195,6 @@
             <path d="M18 20V10M12 20V4M6 20v-6"/>
           </svg>
           <span id="tab-txt-counterfactual">⚖️ 인과추론 시뮬레이터 (Counterfactual)</span>
-          <span class="tab-pill" id="tab-pill-delta">active</span>
         </button>
 
         <button class="stage-tab-btn" id="tab-btn-standards" data-view="standards">
@@ -214,7 +202,6 @@
             <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 9h6M15 15h6"/>
           </svg>
           <span id="tab-txt-standards">🏥 보건의료 표준 (OMOP / FHIR)</span>
-          <span class="tab-pill tab-pill-info">HL7 R4</span>
         </button>
 
         <button class="stage-tab-btn" id="tab-btn-hypergraph" data-view="hypergraph">
@@ -223,7 +210,6 @@
             <path d="M6 9v6M9 6h6M18 9v6M9 18h6"/>
           </svg>
           <span id="tab-txt-hypergraph">🕸️ 지식 하이퍼그래프 (AI Graph)</span>
-          <span class="tab-pill">Neuro-Symbolic</span>
         </button>
 
         <button class="stage-tab-btn" id="tab-btn-privacy" data-view="privacy">
@@ -231,7 +217,6 @@
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
           <span id="tab-txt-privacy">🛡️ Privacy Shield</span>
-          <span class="tab-pill">Design notes</span>
         </button>
       </div>
       
@@ -243,7 +228,7 @@
         <!-- 1. Patient Profile Banner -->
         <div class="summary-hero-card">
           <div class="summary-hero-left">
-            <div class="summary-avatar">👤</div>
+            
             <div>
               <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                 <h2 id="summary-patient-name" style="font-size: 1.45rem; font-weight: 800; color: var(--text-main); margin: 0;">
@@ -260,7 +245,7 @@
           <div class="summary-hero-right">
             <div style="text-align: right;">
               <div id="summary-deadline-lbl" style="font-size: 0.74rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">추적 관리 의무 기한</div>
-              <div id="summary-timer-text" style="font-size: 1.35rem; font-weight: 800; color: var(--crimson-danger); font-family: var(--font-mono);">
+              <div id="summary-timer-text">
                 ⏳ 24일 남음
               </div>
               <div id="summary-deadline-date" style="font-size: 0.74rem; color: var(--text-dim);">안전 마감일자: 2026-10-15</div>
@@ -273,7 +258,7 @@
           
           <div class="summary-q-card">
             <div class="summary-q-header">
-              <span class="q-icon">🔍</span>
+              
               <h3 class="q-title" id="q1-title">1. 무엇이 발견되었나요?</h3>
             </div>
             <div class="q-body" id="summary-q1-finding">
@@ -283,8 +268,8 @@
 
           <div class="summary-q-card">
             <div class="summary-q-header">
-              <span class="q-icon" style="color: var(--crimson-danger);">⚠️</span>
-              <h3 class="q-title" id="q2-title" style="color: var(--crimson-danger);">2. 왜 즉시 조치가 필요한가요?</h3>
+              
+              <h3 class="q-title" id="q2-title">2. 왜 즉시 조치가 필요한가요?</h3>
             </div>
             <div class="q-body" id="summary-q2-problem">
               응급실에서 갈비뼈 골절 치료만 완료되고, <strong>폐 결절에 대한 외래 추적검사나 호흡기내과 진료 예약이 누락</strong>된 채 66일 동안 병원 컴퓨터 안에 방치되어 있었습니다.
@@ -293,8 +278,8 @@
 
           <div class="summary-q-card">
             <div class="summary-q-header">
-              <span class="q-icon" style="color: var(--cyan-neon);">📋</span>
-              <h3 class="q-title" id="q3-title" style="color: var(--cyan-neon);">3. 권고되는 임상 조치는 무엇인가요?</h3>
+              
+              <h3 class="q-title" id="q3-title">3. 권고되는 임상 조치는 무엇인가요?</h3>
             </div>
             <div class="q-body" id="summary-q3-action">
               <strong>Fleischner Society 2017 가이드라인</strong>에 따라 6–8mm 고형 결절은 6–12개월 내 흉부 CT로 추적해야 합니다. 침상형(Spiculated) 등 고위험 형태는 더 이른 추적을 고려합니다.
@@ -380,22 +365,22 @@
           <div class="summary-buttons-row">
             <!-- Button 1: Patient KakaoTalk -->
             <button class="summary-action-btn btn-outreach-highlight" id="summary-btn-kakao">
-              <div class="btn-icon">📱</div>
+              
               <div class="btn-text-block">
                 <div class="btn-main-label" id="summary-kakao-lbl">환자에게 안심 연락문 발송 (카카오톡 · SMS)</div>
                 <div class="btn-sub-label" id="summary-kakao-sub">어려운 의학 용어를 쉬운 말로 바꿔 설명하고, 바로 예약 가능한 링크를 전송합니다.</div>
               </div>
-              <div class="btn-arrow">▶</div>
+              <div class="btn-arrow" aria-hidden="true">›</div>
             </button>
 
             <!-- Button 2: Order and Close Loop -->
             <button class="summary-action-btn btn-order-highlight" id="summary-btn-order">
-              <div class="btn-icon">🩺</div>
+              
               <div class="btn-text-block">
                 <div class="btn-main-label" id="summary-order-btn-label">추적 처방 오더 발행 및 진료 루프 종결</div>
                 <div class="btn-sub-label" id="summary-order-sub">HL7 FHIR 형식으로 전자의무기록에 처방을 등록하고 임상 안전 시계를 해제합니다.</div>
               </div>
-              <div class="btn-arrow">✓</div>
+              <div class="btn-arrow" aria-hidden="true">›</div>
             </button>
           </div>
         </div>
@@ -713,7 +698,7 @@
     <!-- ====================================================================
          COLUMN 3: Right Telemetry & Clinical Action Hub
          ==================================================================== -->
-    <aside class="cockpit-sidebar-right" aria-label="Safety clock and audit trail">
+    <aside class="cockpit-sidebar-right" aria-label="Deadline status and audit trail">
       
       <!-- Safety Clock & Sigmoid Widget -->
       <div class="card-widget">
@@ -723,9 +708,8 @@
               <circle cx="12" cy="12" r="10"/>
               <polyline points="12 6 12 12 16 14"/>
             </svg>
-            <span id="clock-telemetry-title" style="color: #0f172a; font-weight: 800;">Safety Clock example · not live monitoring</span>
+            <span id="clock-telemetry-title">Deadline status (example)</span>
           </h3>
-          <span class="badge" style="font-size: 0.62rem;">Sigmoid Decay</span>
         </div>
 
         <!-- Dial Gauge -->
@@ -740,11 +724,11 @@
         <!-- Ontology & Severity Stats -->
         <div class="clock-stats">
           <div class="stat-item">
-            <span class="stat-title" id="stat-rule-title">Ontology Rule</span>
+            <span class="stat-title" id="stat-rule-title">Rule</span>
             <span class="stat-val" id="stat-rule-id">R003</span>
           </div>
           <div class="stat-item">
-            <span class="stat-title" id="stat-severity-title">Case severity</span>
+            <span class="stat-title" id="stat-severity-title">Severity</span>
             <span class="stat-val" id="stat-severity" style="color: var(--crimson-danger);">CRITICAL</span>
           </div>
         </div>
@@ -752,7 +736,7 @@
         <!-- Mathematical Sigmoid Plotter (Collapsible for Clinicians) -->
         <details class="collapsible-ai-math">
           <summary class="math-summary-toggle">
-            <span id="math-toggle-summary">🔬 AI 감쇠곡선 수학식 (Technical Math)</span>
+            <span id="math-toggle-summary">How the urgency score is calculated</span>
             <span class="toggle-arrow">▾</span>
           </summary>
           <div class="sigmoid-container">
@@ -779,7 +763,7 @@
           Loading obligation...
         </p>
         <button class="btn-close-loop" id="btn-close-action">
-          ⚡ Mark research example resolved locally
+          Mark closed in this browser (example)
         </button>
       </div>
 
@@ -794,19 +778,13 @@
               <line x1="16" y1="17" x2="8" y2="17"/>
               <polyline points="10 9 9 9 8 9"/>
             </svg>
-            <span id="audit-trail-title">Explainable Audit Trail</span>
+            <span id="audit-trail-title">Audit trail</span>
           </h3>
         </div>
         <div class="evidence-chain" id="evidence-chain-list">
           <!-- Injected via JavaScript -->
         </div>
-        <div class="audit-meta-footer" style="margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; font-size: 0.68rem; color: #64748b; font-family: var(--font-mono);">
-          <span>Model: DTH-Hybrid-v2.0</span>
-          <span style="color: var(--emerald-safe); display: inline-flex; align-items: center; gap: 0.3rem;">
-            <span style="width: 5px; height: 5px; border-radius: 50%; background: var(--emerald-safe);"></span>
-            FHIR & HL7 Standard
-          </span>
-        </div>
+        <div class="audit-meta-footer">Rule-based · no AI determination · FHIR R4 data model</div>
       </div>
 
     </aside>
@@ -930,8 +908,7 @@
           <div style="font-size: 1.6rem; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">🧬</div>
           <div>
             <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-              BioMCP Evidence & Guideline Grounding Hub
-              <span class="badge badge-live" style="font-size: 0.62rem; padding: 0.15rem 0.55rem;">MCP v1.2 Protocol</span>
+              Evidence and guidelines
             </h2>
             <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
               Literature search: <span style="font-family: var(--font-mono); color: var(--cyan-neon);">needs the ClinLoop server</span> • no EMR context on this page
@@ -1070,14 +1047,12 @@
         <div class="privacy-hero-banner">
           <div class="privacy-hero-icon">🛡️</div>
           <div class="privacy-hero-text">
-            <h2 id="privacy-hero-title" class="privacy-hero-title">Privacy-by-Design Architecture — 8 Protection Layers</h2>
-            <p id="privacy-hero-sub" class="privacy-hero-sub">Design principles for privacy. ClinLoop sends no patient data to any external AI; local models run only on the hospital's own server. Layers marked Roadmap are not built. Nothing here has been independently audited.</p>
+            <h2 id="privacy-hero-title" class="privacy-hero-title">Data protection: what is built and what is not</h2>
+            <p id="privacy-hero-sub" class="privacy-hero-sub">ClinLoop sends no patient data to any external AI service. Each item below is marked <b>In use</b>, <b>Optional</b>, <b>Demo</b> or <b>Not built</b>. Nothing here has been independently audited or certified.</p>
           </div>
           <div class="privacy-compliance-badges">
-            <span class="prv-badge prv-badge-green">Not certified</span>
-            <span class="prv-badge prv-badge-blue">Korean PIPA</span>
-            <span class="prv-badge prv-badge-purple">ISO 29101</span>
-            <span class="prv-badge prv-badge-gold">Zero PHI Egress</span>
+            <span class="prv-badge prv-badge-gold">Not certified</span>
+            <span class="prv-badge prv-badge-green">No patient data to external AI</span>
           </div>
         </div>
 
@@ -1093,7 +1068,7 @@
           </div>
           <div class="firewall-io-grid">
             <div class="firewall-io-col">
-              <label id="firewall-input-label" class="firewall-io-label firewall-label-danger">🔴 Raw Input (Contains PHI — NEVER sent to cloud)</label>
+              <label id="firewall-input-label" class="firewall-io-label firewall-label-danger">Input (stays in this browser)</label>
               <textarea id="phi-firewall-input" class="firewall-textarea firewall-input-area" placeholder="Try typing: 김민준 (1978-03-12), 주민번호 780312-1234567, 010-1234-5678, minjun@hospital.kr
 CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <div class="firewall-input-meta">
@@ -1108,12 +1083,12 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
                 <div class="firewall-stats" id="firewall-stats">
                   <div class="fstat">Stripped: <span id="fstat-stripped">0</span></div>
                   <div class="fstat">Pseudonymized: <span id="fstat-pseudo">0</span></div>
-                  <div class="fstat">Safe: <span id="fstat-safe" style="color:#10b981;">✓</span></div>
+                  
                 </div>
               </div>
             </div>
             <div class="firewall-io-col">
-              <label id="firewall-output-label" class="firewall-io-label firewall-label-safe">✅ De-identified Output (Safe for Claude / OpenAI)</label>
+              <label id="firewall-output-label" class="firewall-io-label firewall-label-safe">Masked output (demo, in this browser only)</label>
               <div id="phi-firewall-output" class="firewall-textarea firewall-output-area">[De-identified output will appear here in real-time as you type above]</div>
             </div>
           </div>
@@ -1126,7 +1101,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div class="prv-layer-card prv-status-active" id="prv-layer-1">
             <div class="prv-layer-header">
               <div class="prv-layer-num">01</div>
-              <div class="prv-layer-status-badge" id="prv-l1-status">○ Optional · not connected here</div>
+              <div class="prv-layer-status-badge prv-badge-roadmap" id="prv-l1-status">Optional · hospital server only</div>
             </div>
             <div class="prv-layer-icon">🔒</div>
             <h3 id="prv-l1-title" class="prv-layer-title">Local language model (optional)</h3>
@@ -1150,11 +1125,11 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div class="prv-layer-card prv-status-roadmap" id="prv-layer-2">
             <div class="prv-layer-header">
               <div class="prv-layer-num">02</div>
-              <div class="prv-layer-status-badge prv-badge-roadmap" id="prv-l2-status">📋 Architecture Ready</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l2-status">Not built</div>
             </div>
             <div class="prv-layer-icon">🌐</div>
             <h3 id="prv-l2-title" class="prv-layer-title">Federated Learning</h3>
-            <p id="prv-l2-desc" class="prv-layer-desc">The model travels to each hospital's data — data never travels to the model. Only mathematical gradients (weight updates) are shared across institutions. Patient records never leave.</p>
+            <p id="prv-l2-desc" class="prv-layer-desc">Idea for multi-hospital research: share model updates instead of records. Not built; ClinLoop's rules need no training data.</p>
             <div class="prv-federated-diagram">
               <div class="fed-node fed-hospital">🏥 Seoul</div>
               <div class="fed-node fed-hospital">🏥 Busan</div>
@@ -1173,11 +1148,11 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div class="prv-layer-card prv-status-active" id="prv-layer-3">
             <div class="prv-layer-header">
               <div class="prv-layer-num">03</div>
-              <div class="prv-layer-status-badge prv-badge-active" id="prv-l3-status">✅ Active</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l3-status">Not built</div>
             </div>
             <div class="prv-layer-icon">📊</div>
             <h3 id="prv-l3-title" class="prv-layer-title">Differential Privacy (ε-DP)</h3>
-            <p id="prv-l3-desc" class="prv-layer-desc">Statistical noise is mathematically added to risk scores and population analytics. Any output is indistinguishable from ~20 other patients. Provably prevents individual re-identification.</p>
+            <p id="prv-l3-desc" class="prv-layer-desc">Idea for published statistics: add calibrated noise so no individual can be singled out. Not built; the slider below only illustrates the idea.</p>
             <div class="prv-dp-platform">
               <div class="dp-formula">Mechanism: X̃ = X + Lap(Δf/ε) where ε=0.1, Δf=sensitivity</div>
               <div class="dp-row"><span class="dp-label">Exact value:</span><span class="dp-val dp-danger">42.1%</span><span class="dp-note">(re-identifies individual)</span></div>
@@ -1193,18 +1168,18 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <span class="tech-tag">Laplace Noise</span>
               <span class="tech-tag">Apple / Google standard</span>
             </div>
-            <div class="prv-layer-metric"><span class="metric-icon">🔢</span> <span id="prv-l3-metric">Privacy Budget ε = 0.1 · Re-ID Risk: &lt;0.001%</span></div>
+            <div class="prv-layer-metric"><span class="metric-icon">🔢</span> <span id="prv-l3-metric">Illustration only · no privacy guarantee</span></div>
           </div>
 
           <!-- Layer 4 -->
           <div class="prv-layer-card prv-status-roadmap" id="prv-layer-4">
             <div class="prv-layer-header">
               <div class="prv-layer-num">04</div>
-              <div class="prv-layer-status-badge prv-badge-roadmap" id="prv-l4-status">📋 Partnership Roadmap</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l4-status">Not built</div>
             </div>
             <div class="prv-layer-icon">💻</div>
             <h3 id="prv-l4-title" class="prv-layer-title">Confidential Computing (TEE)</h3>
-            <p id="prv-l4-desc" class="prv-layer-desc">Intel SGX / AMD SEV hardware-isolated secure enclaves process encrypted patient data in the cloud. Roadmap idea only, not built.</p>
+            <p id="prv-l4-desc" class="prv-layer-desc">Hardware-isolated processing in a cloud (Intel SGX / AMD SEV). Not built and not needed: ClinLoop runs on the hospital's own server.</p>
             <div class="prv-layer-tech">
               <span class="tech-tag">Intel SGX</span>
               <span class="tech-tag">Azure Confidential</span>
@@ -1217,11 +1192,11 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div class="prv-layer-card prv-status-active" id="prv-layer-5">
             <div class="prv-layer-header">
               <div class="prv-layer-num">05</div>
-              <div class="prv-layer-status-badge prv-badge-active" id="prv-l5-status">📋 Roadmap</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l5-status">Not built</div>
             </div>
             <div class="prv-layer-icon">🧬</div>
-            <h3 id="prv-l5-title" class="prv-layer-title">clinical data Twins</h3>
-            <p id="prv-l5-desc" class="prv-layer-desc">Idea: synthetic copies of records for research. Not built; this site uses hand-made synthetic data.</p>
+            <h3 id="prv-l5-title" class="prv-layer-title">Synthetic data for research</h3>
+            <p id="prv-l5-desc" class="prv-layer-desc">The public site uses hand-written synthetic patients only. Generating realistic synthetic copies of real records is not built.</p>
             <div class="prv-layer-tech">
               <span class="tech-tag">Encrypted EMR Sync</span>
               <span class="tech-tag">CTGAN</span>
@@ -1234,11 +1209,11 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div class="prv-layer-card prv-status-active" id="prv-layer-6">
             <div class="prv-layer-header">
               <div class="prv-layer-num">06</div>
-              <div class="prv-layer-status-badge prv-badge-active" id="prv-l6-status">✅ Active</div>
+              <div class="prv-layer-status-badge prv-badge-roadmap" id="prv-l6-status">Demo · in this browser</div>
             </div>
             <div class="prv-layer-icon">🔥</div>
-            <h3 id="prv-l6-title" class="prv-layer-title">PHI Firewall (Prompt Interceptor)</h3>
-            <p id="prv-l6-desc" class="prv-layer-desc">No live PHI scanner or LLM connection is configured. Do not enter patient-identifiable information.</p>
+            <h3 id="prv-l6-title" class="prv-layer-title">Identifier screening (demo)</h3>
+            <p id="prv-l6-desc" class="prv-layer-desc">Try the box above: it finds identifier patterns (phone, resident number, e-mail, dates) and masks them, in your browser only. Pattern matching misses identifiers it has no pattern for; do not enter real patient information.</p>
             <div class="prv-layer-tech">
               <span class="tech-tag">18 PHI Categories</span>
               <span class="tech-tag">Korean PIPA</span>
@@ -1251,28 +1226,28 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div class="prv-layer-card prv-status-future" id="prv-layer-7">
             <div class="prv-layer-header">
               <div class="prv-layer-num">07</div>
-              <div class="prv-layer-status-badge prv-badge-future" id="prv-l7-status">🔭 Research Frontier</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l7-status">Not built</div>
             </div>
             <div class="prv-layer-icon">🔮</div>
             <h3 id="prv-l7-title" class="prv-layer-title">Homomorphic Encryption (HE)</h3>
-            <p id="prv-l7-desc" class="prv-layer-desc">Run AI inference directly on encrypted ciphertext — the model never sees plaintext. Mathematically perfect privacy. Currently 10-100x slower than plaintext; on ClinLoop's 2027 roadmap as hardware matures.</p>
+            <p id="prv-l7-desc" class="prv-layer-desc">Computing on encrypted data. A research field, far too slow for this use today; not planned.</p>
             <div class="prv-layer-tech">
               <span class="tech-tag">Microsoft SEAL</span>
               <span class="tech-tag">IBM HElib</span>
               <span class="tech-tag">Zama.ai</span>
             </div>
-            <div class="prv-layer-metric"><span class="metric-icon">🔮</span> <span id="prv-l7-metric">Mathematically Perfect · 2027 Roadmap</span></div>
+            <div class="prv-layer-metric"><span class="metric-icon">🔮</span> <span id="prv-l7-metric">Not planned</span></div>
           </div>
 
           <!-- Layer 8 -->
           <div class="prv-layer-card prv-status-active" id="prv-layer-8">
             <div class="prv-layer-header">
               <div class="prv-layer-num">08</div>
-              <div class="prv-layer-status-badge prv-badge-active" id="prv-l8-status">✅ Active</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l8-status">Not in use</div>
             </div>
             <div class="prv-layer-icon">🏦</div>
-            <h3 id="prv-l8-title" class="prv-layer-title">PHI Vault + Token Substitution</h3>
-            <p id="prv-l8-desc" class="prv-layer-desc">Real identifiers are swapped for cryptographic pseudonyms (like credit card tokenization). The vault stays on-premise. Cloud LLMs only ever see tokens like PT-99F74B58 — never the real patient identity.</p>
+            <h3 id="prv-l8-title" class="prv-layer-title">Pseudonymised identifiers</h3>
+            <p id="prv-l8-desc" class="prv-layer-desc">A pattern-based de-identification module exists in the code (phi_deidentifier.py) but nothing uses it, because no patient data is sent outside the hospital. Its output would need review before being called de-identified.</p>
             <div class="prv-vault-platform">
               <div class="vault-row"><span class="vault-before">김민준</span><span class="vault-arrow">→</span><span class="vault-after">PT-99F74B58</span></div>
               <div class="vault-row"><span class="vault-before">780312-1234567</span><span class="vault-arrow">→</span><span class="vault-after">[주민번호 삭제]</span></div>
@@ -1283,7 +1258,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <span class="tech-tag">On-Premise Vault</span>
               <span class="tech-tag">PCI-DSS model</span>
             </div>
-            <div class="prv-layer-metric"><span class="metric-icon">🏦</span> <span id="prv-l8-metric">Vault On-Premise · Cloud Sees Tokens Only</span></div>
+            <div class="prv-layer-metric"><span class="metric-icon">🏦</span> <span id="prv-l8-metric">Module present · not used</span></div>
           </div>
 
         </div><!-- end privacy-layers-grid -->
@@ -1293,7 +1268,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div class="audit-trail-header">
             <span style="font-size:1rem;">📋</span>
             <div>
-              <div id="audit-trail-privacy-title" class="audit-trail-title">Real-Time Privacy Audit Trail</div>
+              <div id="audit-trail-privacy-title" class="audit-trail-title">Example activity log</div>
               <div id="audit-trail-sub" class="audit-trail-sub">Example log of actions in this browser. On a server, ClinLoop keeps an append-only audit log of every detection and clinician action.</div>
             </div>
             <button id="audit-export-btn" class="audit-export-btn">⬇ Export Audit Report</button>
@@ -1301,21 +1276,19 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div id="audit-log-entries" class="audit-log-entries">
             <div class="audit-entry audit-entry-system">
               <span class="audit-ts" id="audit-ts-init"></span>
-              <span class="audit-engine">🔒 ON-PREMISE</span>
-              <span class="audit-action">System initialized · PHI de-identifier active</span>
-              <span class="audit-phi-badge">✅ No PHI</span>
+              <span class="audit-engine">EXAMPLE</span>
+              <span class="audit-action">Example log started (this browser only)</span>
             </div>
           </div>
         </div>
 
         <!-- Summary Score Bar -->
         <div class="privacy-score-bar">
-          <div class="pscore-title" id="pscore-title">ClinLoop AI Privacy Score</div>
+          <div class="pscore-title" id="pscore-title">Summary</div>
           <div class="pscore-items">
-            <div class="pscore-item"><span class="pscore-icon">✅</span><span id="pscore-active">5 Active Now</span></div>
-            <div class="pscore-item"><span class="pscore-icon">📋</span><span id="pscore-roadmap">2 Architecture Ready</span></div>
-            <div class="pscore-item"><span class="pscore-icon">🔭</span><span id="pscore-future">1 Research Frontier</span></div>
-            <div class="pscore-total"><span class="pscore-score">8/8</span><span id="pscore-label">Privacy Layers Covered</span></div>
+            <div class="pscore-item"><span id="pscore-active">In use: no patient data to external AI; role-based access; audit trail</span></div>
+            <div class="pscore-item"><span id="pscore-roadmap">Optional: local language model · Demo: identifier screening</span></div>
+            <div class="pscore-item"><span id="pscore-future">Not built: 6 of the ideas above</span></div>
           </div>
         </div>
 
@@ -1329,11 +1302,10 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div style="font-size: 1.5rem; background: rgba(254, 229, 0, 0.15); border: 1px solid rgba(254, 229, 0, 0.4); border-radius: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">📱</div>
           <div>
             <h2 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-              Patient Plain-Language Empathy Outreach Simulator (환자 공감형 알림톡 시뮬레이터)
-              <span class="badge" style="background: rgba(254, 229, 0, 0.15); border-color: rgba(254, 229, 0, 0.4); color: #fee500; font-size: 0.62rem;">Dual-Loop Human Centric</span>
+              Patient message preview (example)
             </h2>
             <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
-              Bridging health literacy gaps: Translating complex diagnostic findings into compassionate, actionable mobile communications.
+              Plain-language reminder drafts for the synthetic cases. In the real workflow a message never names a diagnosis or result, and is sent only after a clinician approves it.
             </p>
           </div>
         </div>
@@ -1428,11 +1400,11 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <!-- Model Selection Pill for Outreach -->
           <div style="background: var(--bg-card); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; padding: 0.7rem 0.85rem; display: flex; flex-direction: column; gap: 0.4rem;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.72rem; font-weight: 800; color: #c084fc;">AI Empathy Engine Selection:</span>
+              <span style="font-size: 0.72rem; font-weight: 800; color: #c084fc;">Drafting engine:</span>
               <span class="badge" id="outreach-model-pill" style="font-size: 0.62rem; color: var(--text-dim); border-color: var(--border-card);">CHECKING…</span>
             </div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 0.35rem;">
-              <button class="filter-btn active btn-outreach-engine" data-engine="local" id="btn-engine-local" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">🧬 Local Ensemble</button>
+              <button class="filter-btn active btn-outreach-engine" data-engine="local" id="btn-engine-local" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">Local model</button>
             </div>
           </div>
 
@@ -1450,173 +1422,46 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
   </div>
 
 
-  <!-- Modal: Medical Nobility, Hippocratic Charter & Health Economics -->
+  <!-- Modal: ethics & safety charter -->
   <div class="modal-overlay" id="nobility-modal">
-    <div class="comparison-modal" style="max-width: 980px; max-height: 90vh; overflow-y: auto; background: var(--bg-card); border: 1px solid rgba(16, 185, 129, 0.35); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(16, 185, 129, 0.15);">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 1rem;">
-        <div style="display: flex; align-items: center; gap: 0.8rem;">
-          <div style="font-size: 1.8rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">🏛️</div>
-          <div>
-            <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.6rem;">
-              Medical Nobility & Digital Hippocratic Safety Charter (의료 노블리티 및 디지털 히포크라테스 윤리 헌장)
-              <span class="badge badge-live" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.4); font-size: 0.65rem;">Primum Non Nocere</span>
-            </h2>
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
-              ClinLoop Medical AI Research • Transforming AI from Alert Fatigue into Autonomous Life-Saving Guardianship
-            </p>
-          </div>
+    <div class="comparison-modal charter">
+      <div class="charter-head">
+        <div>
+          <h2 id="charter-title">Ethics &amp; safety charter</h2>
+          <p class="charter-sub">How ClinLoop is meant to be built and used. Status: research prototype; not a medical device.</p>
         </div>
-        <button id="btn-close-nobility" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0.25rem 0.5rem;">✕</button>
+        <button id="btn-close-nobility" aria-label="Close">✕</button>
       </div>
 
-        <!-- Col 3: Health Economics & Value-Based Healthcare -->
-        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 1rem;">
-          <div style="font-size: 0.72rem; color: #fbbf24; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">
-            Pillar 3 • Health Economics
-          </div>
-          <h4 style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.6rem;">Health Economics Evaluation Status</h4>
-          <div style="font-size: 0.76rem; color: #94a3b8; line-height: 1.5; display: flex; flex-direction: column; gap: 0.4rem;">
-            <div><strong style="color: #e2e8f0;">QALY Impact:</strong> Not evaluated with clinical data</div>
-            <div><strong style="color: #e2e8f0;">Cost-Effectiveness Ratio (ICER):</strong> Not analyzed</div>
-            <div><strong style="color: #e2e8f0;">Health Insurance Cost Savings:</strong> Not yet proven</div>
-            <div><strong style="color: #e2e8f0;">Malpractice Litigation Reduction:</strong> Not evaluated</div>
-          </div>
-        </div>
+      <h3>Principles the software follows today</h3>
+      <ul class="charter-list">
+        <li><b>First, do no harm.</b> ClinLoop never diagnoses, orders or treats. It shows which follow-up a result requires and whether it happened; a clinician decides and acts.</li>
+        <li><b>Rules, not black boxes.</b> Every alert comes from a written rule with its guideline reference and deadline. The same record always gives the same answer.</li>
+        <li><b>Specialist sign-off.</b> A rule is marked “unsigned” until a specialist approves its current version; any change to the rule needs a new sign-off.</li>
+        <li><b>Says when it does not know.</b> When a record is too sparse to judge, the loop is marked <i>needs human review</i> instead of guessed.</li>
+        <li><b>People stay in charge of patients.</b> A message to a patient never names a diagnosis or result, and is sent only after a clinician approves it.</li>
+        <li><b>Everything is recorded.</b> Each action (acknowledge, defer with a coded reason, close with evidence) goes into a tamper-evident audit trail.</li>
+        <li><b>Patient data stays in the hospital.</b> No patient data is sent to an external AI service. Literature searches send rule-level search terms only.</li>
+        <li><b>Fair to every patient.</b> The missed-follow-up rate is shown by language, age group and sex, so a group being missed becomes visible.</li>
+      </ul>
 
-      </div>
+      <h3>What has not been shown yet</h3>
+      <ul class="charter-list muted">
+        <li>No clinical validation on real hospital data, and no outcome evidence (no effect on patient outcomes, safety events, cost or workload has been measured).</li>
+        <li>No regulatory review (MFDS / FDA). Not for use in patient care.</li>
+        <li>Accuracy so far comes from synthetic and independently written test cases (docs/ACCURACY_EVALUATION.md).</li>
+      </ul>
 
-      <!-- Footer action -->
-      <!-- PART I: THE COMPLETE WORKFLOW TO MEDICAL NOBILITY (PHASES 0 - 3) -->
-      <div style="margin-top: 1.5rem; background: var(--bg-card); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 1.3rem;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.7rem;">
-          <div style="font-size: 1.05rem; font-weight: 800; color: #34d399; display: flex; align-items: center; gap: 0.5rem;">
-            🏛️ Part I: The Operational Workflow to Medical Nobility (4-Phase Progression)
-          </div>
-          <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.72rem;">From Local Rigor to Global Influence</span>
-        </div>
+      <h3>Before any clinical use</h3>
+      <ol class="charter-list">
+        <li>Ethics committee (IRB) approval and a registered study protocol (docs/STUDY_PROTOCOL.md).</li>
+        <li>Specialist sign-off of every rule used, at the partner hospital.</li>
+        <li>Silent (shadow) running against chart review, before any clinician sees an alert.</li>
+        <li>Independent review of results, and the applicable regulatory pathway.</li>
+      </ol>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.9rem;">
-          <!-- Phase 0 -->
-          <div style="background: var(--bg-surface); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 0.9rem;">
-            <div style="font-size: 0.7rem; font-family: var(--font-mono); color: #38bdf8; font-weight: 800;">PHASE 0 • FOUNDATION</div>
-            <div style="font-size: 0.88rem; font-weight: 700; color: #fff; margin: 0.3rem 0;">The Nobility Audit & Self-Governance</div>
-            <ul style="font-size: 0.73rem; color: #94a3b8; line-height: 1.5; padding-left: 1rem; margin: 0;">
-              <li><strong>Machine-Readable Invariants:</strong> Continuous tracking of hazard clock vs guideline deadlines.</li>
-              <li><strong>Physician Ergonomics:</strong> Quantified cognitive load reduction and alert suppression.</li>
-              <li><strong>Patient Empathy:</strong> NLP on patient replies and adherence subgroup tracking.</li>
-              <li><strong>Cryptographic Ledger:</strong> Tamper-evident immutable audit trail for every loop event.</li>
-            </ul>
-          </div>
-
-          <!-- Phase 1 -->
-          <div style="background: var(--bg-surface); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.9rem;">
-            <div style="font-size: 0.7rem; font-family: var(--font-mono); color: #34d399; font-weight: 800;">PHASE 1 • LOCAL PROOF</div>
-            <div style="font-size: 0.88rem; font-weight: 700; color: #fff; margin: 0.3rem 0;">Planned Prospective Study (not started)</div>
-            <ul style="font-size: 0.73rem; color: #94a3b8; line-height: 1.5; padding-left: 1rem; margin: 0;">
-              <li><strong>Registration:</strong> Required before any prospective enrollment; not yet registered.</li>
-              <li><strong>Potential design:</strong> Compare standard workflow with clinician-reviewed decision support.</li>
-              <li><strong>Candidate endpoints:</strong> Follow-up completion, time-to-action, workload, and safety events.</li>
-              <li><strong>Reporting plan:</strong> Publish results only after independent review and applicable approvals.</li>
-            </ul>
-          </div>
-
-          <!-- Phase 2 -->
-          <div style="background: var(--bg-surface); border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 8px; padding: 0.9rem;">
-            <div style="font-size: 0.7rem; font-family: var(--font-mono); color: #a78bfa; font-weight: 800;">PHASE 2 • NETWORKED PROOF</div>
-            <div style="font-size: 0.88rem; font-weight: 700; color: #fff; margin: 0.3rem 0;">Federated Post-Market Surveillance</div>
-            <ul style="font-size: 0.73rem; color: #94a3b8; line-height: 1.5; padding-left: 1rem; margin: 0;">
-              <li><strong>Federated Architecture:</strong> Encrypted gradients shared across hospitals without PHI egress.</li>
-              <li><strong>Continuous Drift Monitoring:</strong> Statistical process control for calibration & distribution shift.</li>
-              <li><strong>Multi-Stakeholder Governance:</strong> Independent committee of clinicians, ethicists, and patients.</li>
-            </ul>
-          </div>
-
-          <!-- Phase 3 -->
-          <div style="background: var(--bg-surface); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px; padding: 0.9rem;">
-            <div style="font-size: 0.7rem; font-family: var(--font-mono); color: #fbbf24; font-weight: 800;">PHASE 3 • REGULATION</div>
-            <div style="font-size: 0.88rem; font-weight: 700; color: #fff; margin: 0.3rem 0;">The Nobility Standard & SaMD PCCP</div>
-            <ul style="font-size: 0.73rem; color: #94a3b8; line-height: 1.5; padding-left: 1rem; margin: 0;">
-              <li><strong>FDA / MFDS PCCP:</strong> Predetermined Change Control Plan for adaptive continuous calibration.</li>
-              <li><strong>Human Dignity Alignment:</strong> Subordination of AI to human reasoning (Pontifical Academy for Life).</li>
-              <li><strong>Nobility Certification:</strong> Audited transparency, non-maleficence, and patient empathy standard.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- PART II: OUTSTANDING BRAINSTORM IDEAS TO DEFINE A LEGACY (IDEAS 1 - 6) -->
-      <div style="margin-top: 1.5rem; background: var(--bg-card); border: 1.5px solid rgba(167, 139, 250, 0.4); border-radius: 12px; padding: 1.3rem;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.7rem;">
-          <div style="font-size: 1.05rem; font-weight: 800; color: #c084fc; display: flex; align-items: center; gap: 0.5rem;">
-            💡 Part II: 6 Breakthrough Institutional Innovations (Defining a Medical Legacy)
-          </div>
-          <span class="badge" style="background: rgba(167, 139, 250, 0.2); color: #c084fc; font-size: 0.72rem;">Transforming AI into an Enduring Institution</span>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 0.9rem;">
-          
-          <!-- Idea 1: HIR -->
-          <div style="background: var(--bg-surface); border-left: 4px solid #38bdf8; border-radius: 8px; padding: 0.9rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.85rem; font-weight: 800; color: #fff;">1. Hippocratic Invariant Registry (HIR)</span>
-              <span class="badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-size: 0.65rem;">Radical Transparency</span>
-            </div>
-            <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
-              Publicly auditable, cryptographically signed ledger that records closed loops and <strong>transparently publishes all delayed closures</strong> alongside their root-cause postmortems. It is the medical AI equivalent of open flight recorder black boxes.
-            </p>
-          </div>
-
-          <!-- Idea 2: DEP -->
-          <div style="background: var(--bg-surface); border-left: 4px solid #ef4444; border-radius: 8px; padding: 0.9rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.85rem; font-weight: 800; color: #fff;">2. Deterministic Escalation Protocol (DEP)</span>
-              <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; font-size: 0.65rem;">Dead-Man's Switch</span>
-            </div>
-            <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
-              A non-probabilistic hard safety net. If a D-5d loop remains unclosed at D-2d, the system escalates to the responsible clinician and then the department lead. Patient messages always need a clinician's approval; escalation reduces, but cannot remove, the risk of a missed follow-up.
-            </p>
-          </div>
-
-          <!-- Idea 3: PNC -->
-          <div style="background: var(--bg-surface); border-left: 4px solid #ec4899; border-radius: 8px; padding: 0.9rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.85rem; font-weight: 800; color: #fff;">3. Patient Narrative Corpus (PNC)</span>
-              <span class="badge" style="background: rgba(236, 72, 153, 0.2); color: #f472b6; font-size: 0.65rem;">Precision Empathy</span>
-            </div>
-            <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
-              Research idea (not built): micro-randomized trials could learn which narrative structure (fear reduction, social reassurance, family impact) achieves the highest adherence across specific demographic and clinical subpopulations.
-            </p>
-          </div>
-
-          <!-- Idea 4: Dignity Layer -->
-          <div style="background: var(--bg-surface); border-left: 4px solid #10b981; border-radius: 8px; padding: 0.9rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.85rem; font-weight: 800; color: #fff;">4. The "Human Dignity" Interface Layer</span>
-              <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.65rem;">Patient Sovereignty</span>
-            </div>
-            <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
-              Research idea (not built): explain to the patient, in plain words and with the guideline cited, why the follow-up was needed and that it is now done. It would never quote a personal survival probability.
-            </p>
-          </div>
-
-          <!-- Idea 5: Digital Twin of Fear -->
-          <div style="background: var(--bg-surface); border-left: 4px solid #8b5cf6; border-radius: 8px; padding: 0.9rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.85rem; font-weight: 800; color: #fff;">5. Digital Twin of the Patient's Fear</span>
-              <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #a78bfa; font-size: 0.65rem;">Individualized Compassion</span>
-            </div>
-            <p style="font-size: 0.74rem; color: #94a3b8; line-height: 1.5; margin: 0.4rem 0 0 0;">
-              Research idea (not built): model an individual patient's barriers to care, privately on the hospital's own server, so that a reminder addresses what actually stops them from coming back.
-            </p>
-          </div>
-
-        </div>
-      </div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 0.8rem; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 0.8rem;">
-        <button id="btn-close-nobility-bottom" class="btn-primary" style="padding: 0.5rem 1.2rem; font-size: 0.82rem;">
-          Acknowledge & Close
-        </button>
+      <div class="charter-foot">
+        <button id="btn-close-nobility-bottom" class="btn-primary">Close</button>
       </div>
     </div>
   </div>
@@ -1721,6 +1566,6 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
 <script src="js/appnav.js"></script>
   <script src="js/safety_clock.js?v=20260930_final"></script>
   <script src="js/hypergraph.js?v=20260930_final"></script>
-  <script src="js/app.js?v=20261015"></script>
+  <script src="js/app.js?v=20261020"></script>
 </body>
 </html>

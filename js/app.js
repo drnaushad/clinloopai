@@ -6,8 +6,9 @@
 const CLINLOOP_I18N = {
 
   ko: {
-    platformLabel: '의료기기(SaMD) 시판 전 임상 실증 PoC',
-    platformNotice: '임상 사례만 사용 · 실시간 EHR, 메시징, 가이드라인 연결 없음 · 환자 진료용 아님',
+    platformLabel: '연구용 프로토타입',
+    kpiExamples: '예시', kpiOpen: '미완료', kpiRules: '규칙',
+    platformNotice: '합성(가상) 예시 사례만 사용 · EHR·메시지·병원 연결 없음 · 환자 진료용 아님',
     brandSubtitle: '검사·영상 결과의 후속 조치 누락을 찾는 임상 안전 시스템',
     hospitalText: '합성 임상 궤적 데이터 기반',
     nobilityBtn: '윤리·안전 헌장',
@@ -18,22 +19,22 @@ const CLINLOOP_I18N = {
     triageCount: '임상 사례 5건',
     searchPlaceholder: '환자번호, 진단명, 검사 항목 검색...',
     filterAll: '전체 (5)',
-    filterOpen: '미완료 예시 (3)',
-    filterDelayed: '지연 예시 (1)',
-    filterClosed: '종결 예시 (1)',
-    tabSummary: '🩺 환자 진료 요약 (Clinical Overview)',
-    tabSummaryPill: '추천 / Primary',
-    tabCounterfactual: '⚖️ 가상 시나리오 (검증되지 않음)',
-    tabStandards: '🏥 보건의료 표준 (OMOP / FHIR)',
-    tabHypergraph: '🕸️ 지식 하이퍼그래프 (AI Graph)',
-    tabPrivacy: '🛡️ 개인정보 보호 (Privacy Shield)',
-    guideTitle: '💡 ClinLoop AI는 어떤 시스템인가요? (System Purpose & Core Value)',
+    filterOpen: '미완료 (3)',
+    filterDelayed: '지연 (1)',
+    filterClosed: '종결 (1)',
+    tabSummary: '임상 요약',
+    tabSummaryPill: '',
+    tabCounterfactual: '가상 시나리오 (예시)',
+    tabStandards: '데이터 표준',
+    tabHypergraph: '지식 그래프',
+    tabPrivacy: '데이터 보호',
+    guideTitle: 'ClinLoop AI는 무엇인가요?',
     guideDesc: 'ClinLoop AI는 후속 조치 업무 흐름을 검토하기 위한 연구 프로토타입입니다. 이 화면은 임상 사례만 사용하며 진단, 치료 권고, 환자 연락 또는 병원 연동을 수행하지 않습니다.',
     guideSteps: '<span class="guide-step">임상 사례 선택</span> <span class="guide-arrow">➔</span> <span class="guide-step">규칙 매칭과 근거를 검토</span> <span class="guide-arrow">➔</span> <span class="guide-step">브라우저에서만 시뮬레이션</span>',
-    deadlineLabel: '추적 관리 의무 기한',
-    q1Title: '1. 무엇이 발견되었나요? (What was found?)',
-    q2Title: '2. 왜 위험한 상황인가요? (The Unclosed Loop)',
-    q3Title: '3. 권고되는 조치는 무엇인가요? (Action Plan)',
+    deadlineLabel: '후속 조치 기한',
+    q1Title: '발견 소견',
+    q2Title: '왜 중요한가',
+    q3Title: '권고 조치 (가이드라인)',
     compTitle: '가상 시나리오 비교',
     compSub: '생존율, 치료 효과 또는 비용 편익 추정치는 검증되지 않았습니다.',
     negCardBadge: '합성 시나리오 · 예측값 없음',
@@ -44,26 +45,26 @@ const CLINLOOP_I18N = {
     posMetric1: '치료 결과 추정치',
     posMetric2: '생존율 추정치',
     posCardNote: 'QALY, 생존율 또는 비용 절감 효과는 입증되지 않았습니다.',
-    actionSecTitle: '⚡ 지금 즉시 취할 수 있는 2가지 해결 방법 (One-Click Actions)',
+    actionSecTitle: '조치 (시뮬레이션)',
     actionSecDesc: '아래 컨트롤은 브라우저 내 시뮬레이션입니다. 환자 메시지나 임상 오더는 전송되지 않습니다.',
     summaryKakaoLbl: '환자 안내문 시뮬레이션 열기',
     summaryKakaoSub: '임상 사례 기반 예시만 표시합니다. 실제 환자에게 보내지 마십시오.',
     summaryOrderLblDefault: '브라우저 로컬 종결 시뮬레이션 (전송 안 됨)',
     summaryOrderLblClosed: '브라우저에서만 상태 변경 (전송 안 됨)',
     summaryOrderSub: '이 프로토타입은 오더나 환자 메시지를 전송하지 않습니다.',
-    clockTelemetryTitle: '시간 모델 예시 · 실시간 감시 아님',
+    clockTelemetryTitle: '기한 상태 (예시)',
     riskMetricLabel: '연구용 점수 · 임상 검증 안 됨',
-    statRuleTitle: '온톨로지 규칙',
-    statSeverityTitle: '임상 사례 중증도',
-    mathToggleSummary: '🔬 AI 감쇠곡선 수학식 (Technical Math)',
-    auditTrailTitle: '설명 가능한 AI 감사 추적 (Audit Trail)',
+    statRuleTitle: '규칙',
+    statSeverityTitle: '중증도',
+    mathToggleSummary: '긴급도 점수 계산 방법',
+    auditTrailTitle: '감사 기록',
     dockLblTheme: '테마:',
     dockLblLang: '언어:',
     apiKeysBtn: '연결 상태',
     apiModalTitle: '실제 연결 상태',
     apiModalSub: 'ClinLoop 서버가 직접 확인한 연결만 표시합니다.',
-    apiNobilityTitle: '🔒 자격 증명은 브라우저에 입력하지 않습니다',
-    apiNobilityDesc: 'API 키와 FHIR 토큰은 ClinLoop 서버의 환경 변수(NCBI_API_KEY, CLINLOOP_FHIR_BASE·CLINLOOP_FHIR_TOKEN)로만 설정합니다. PubMed·Europe PMC에는 규칙 단위 검색어만 전송되며 환자 정보는 외부로 전송되지 않습니다.',
+    apiCredTitle: '자격 증명은 브라우저에 입력하지 않습니다',
+    apiCredDesc: 'API 키와 FHIR 토큰은 ClinLoop 서버의 환경 변수(NCBI_API_KEY, CLINLOOP_FHIR_BASE·CLINLOOP_FHIR_TOKEN)로만 설정합니다. PubMed·Europe PMC에는 규칙 단위 검색어만 전송되며 환자 정보는 외부로 전송되지 않습니다.',
     lblGemini: 'Google Gemini / 임상 파운데이션 모델 API',
     descGemini: '이 버전에서는 클라우드 AI를 사용하지 않습니다.',
     lblAnthropic: 'Anthropic Claude (클로드 3.5 소넷 / 오퍼스)',
@@ -77,15 +78,16 @@ const CLINLOOP_I18N = {
     txtTestPing: '상태 확인',
     txtResetKeys: '키 초기화 (온프레미스 전용 복귀)',
     txtSaveKeys: 'API 설정 저장 & 적용 (Save Keys)',
-    lblActiveEngine: '🤖 환자 메시지 초안 엔진:',
+    lblActiveEngine: '환자 메시지 초안 엔진:',
     descEngineAnthropic: '최고 임상 추론 & 의료 윤리 정렬',
     descEngineOpenai: '실시간 다중모달 & 심층 CoT 추론',
     descEngineGemini: '초고속 다국어 건강 문해력 요약',
     descEngineLocal: '연결 안 됨 · 연구용 표시',
-    btnCancelApi: '닫기 (Close)'
+    btnCancelApi: '닫기'
   },
   en: {
-    platformLabel: 'Pre-Market Clinical Proof-of-Concept',
+    platformLabel: 'Research prototype',
+    kpiExamples: 'Examples', kpiOpen: 'Open', kpiRules: 'Rules',
     platformNotice: 'Synthetic example cases only · No EHR, messaging or hospital connection · Not for patient care.',
     brandSubtitle: 'Finds and closes missed follow-up of clinical results',
     hospitalText: 'Synthetic Clinical Trajectories',
@@ -97,22 +99,22 @@ const CLINLOOP_I18N = {
     triageCount: '5 example cases',
     searchPlaceholder: 'Search PT-ID, condition, rule, finding...',
     filterAll: 'All (5)',
-    filterOpen: 'Open examples (3)',
-    filterDelayed: 'Delayed example (1)',
-    filterClosed: 'Closed example (1)',
-    tabSummary: '🩺 Clinical Overview (Summary)',
-    tabSummaryPill: 'Primary / Recommended',
-    tabCounterfactual: '⚖️ Hypothetical scenarios (not validated)',
-    tabStandards: '🏥 Health Standards (OMOP / FHIR)',
-    tabHypergraph: '🕸️ Knowledge Hypergraph (AI Graph)',
-    tabPrivacy: '🛡️ Privacy Shield',
-    guideTitle: '💡 What is ClinLoop AI? (System Purpose & Core Value)',
+    filterOpen: 'Open (3)',
+    filterDelayed: 'Delayed (1)',
+    filterClosed: 'Closed (1)',
+    tabSummary: 'Clinical overview',
+    tabSummaryPill: '',
+    tabCounterfactual: 'Scenarios (illustration)',
+    tabStandards: 'Data standards',
+    tabHypergraph: 'Knowledge graph',
+    tabPrivacy: 'Data protection',
+    guideTitle: 'What is ClinLoop AI?',
     guideDesc: 'ClinLoop AI is a research prototype for reviewing follow-up workflows. This page uses synthetic example cases only and does not diagnose, recommend treatment, contact patients or connect to a hospital.',
     guideSteps: '<span class="guide-step">Select a clinical case</span> <span class="guide-arrow">➔</span> <span class="guide-step">Review the rule match and evidence</span> <span class="guide-arrow">➔</span> <span class="guide-step">Simulate in this browser only</span>',
-    deadlineLabel: 'Mandatory Tracking Deadline',
-    q1Title: '1. What was clinically detected? (Diagnostic Finding)',
-    q2Title: '2. Why is this dangerous? (The Unclosed Loop Failure)',
-    q3Title: '3. What is the recommended action? (Clinical Guideline)',
+    deadlineLabel: 'Follow-up deadline',
+    q1Title: 'Finding',
+    q2Title: 'Why it matters',
+    q3Title: 'Recommended action (guideline)',
     compTitle: 'Hypothetical scenario comparison',
     compSub: 'Survival, treatment, and cost-benefit estimates are illustrative and not clinically validated.',
     negCardBadge: 'Synthetic scenario · no prediction',
@@ -123,26 +125,26 @@ const CLINLOOP_I18N = {
     posMetric1: 'Estimated Treatment Outcome',
     posMetric2: 'Estimated Survival Rate',
     posCardNote: 'No QALY, survival or cost benefit has been shown.',
-    actionSecTitle: '⚡ Two Immediate One-Click Solutions to Close the Loop',
+    actionSecTitle: 'Actions (simulation)',
     actionSecDesc: 'These controls are a simulation in your browser. No patient message or clinical order is sent.',
     summaryKakaoLbl: 'Preview a sample patient message',
     summaryKakaoSub: 'Example text from a synthetic case. Never send it to a real patient.',
     summaryOrderLblDefault: 'Simulate local resolution (not sent)',
     summaryOrderLblClosed: 'State changed in this browser only (not sent)',
     summaryOrderSub: 'This prototype sends no orders or patient messages.',
-    clockTelemetryTitle: 'Safety Clock example · not live monitoring',
+    clockTelemetryTitle: 'Deadline status (example)',
     riskMetricLabel: 'Research score · not clinically validated',
-    statRuleTitle: 'Ontology Rule',
-    statSeverityTitle: 'Case severity',
-    mathToggleSummary: '🔬 Exponential Hazard Sigmoid Formula (Math)',
-    auditTrailTitle: 'Explainable AI Audit Trail',
+    statRuleTitle: 'Rule',
+    statSeverityTitle: 'Severity',
+    mathToggleSummary: 'How the urgency score is calculated',
+    auditTrailTitle: 'Audit trail',
     dockLblTheme: 'Theme:',
     dockLblLang: 'Language:',
     apiKeysBtn: 'Connections',
     apiModalTitle: 'Connection status',
     apiModalSub: 'Shows only connections the ClinLoop server has verified.',
-    apiNobilityTitle: '🔒 Credentials are never entered in the browser',
-    apiNobilityDesc: 'API keys and FHIR tokens are set only as ClinLoop server environment variables (NCBI_API_KEY, CLINLOOP_FHIR_BASE / CLINLOOP_FHIR_TOKEN). PubMed and Europe PMC receive rule-level search terms only; no patient information leaves the server.',
+    apiCredTitle: 'Credentials are never entered in the browser',
+    apiCredDesc: 'API keys and FHIR tokens are set only as ClinLoop server environment variables (NCBI_API_KEY, CLINLOOP_FHIR_BASE / CLINLOOP_FHIR_TOKEN). PubMed and Europe PMC receive rule-level search terms only; no patient information leaves the server.',
     lblGemini: 'Google Gemini / Medical Foundation Model API',
     descGemini: 'Cloud AI is not used in this build.',
     lblAnthropic: 'Anthropic Claude (Claude 3.5 Sonnet / Opus)',
@@ -156,7 +158,7 @@ const CLINLOOP_I18N = {
     txtTestPing: 'Check status',
     txtResetKeys: 'Reset to on-premise only',
     txtSaveKeys: 'Save & Apply Keys',
-    lblActiveEngine: '🤖 Patient-message drafting engine:',
+    lblActiveEngine: 'Patient-message drafting engine:',
     descEngineAnthropic: 'State-of-the-Art Reasoning & Ethics',
     descEngineOpenai: 'Real-time Multimodal & Deep CoT',
     descEngineGemini: 'High-speed Multilingual Summarization',
@@ -766,24 +768,24 @@ class ClinLoopApp {
       });
     }
 
-    // Nobility & Hippocratic Charter Modal
-    const btnNobility = document.getElementById('btn-nobility-charter');
+    // Ethics & safety charter modal
+    const btnCharter = document.getElementById('btn-nobility-charter');
     const nobilityModal = document.getElementById('nobility-modal');
-    const btnCloseNobility = document.getElementById('btn-close-nobility');
-    const btnCloseNobilityBottom = document.getElementById('btn-close-nobility-bottom');
+    const btnCloseCharter = document.getElementById('btn-close-nobility');
+    const btnCloseCharterBottom = document.getElementById('btn-close-nobility-bottom');
 
-    if (btnNobility && nobilityModal) {
-      btnNobility.addEventListener('click', () => {
+    if (btnCharter && nobilityModal) {
+      btnCharter.addEventListener('click', () => {
         nobilityModal.classList.add('open');
       });
     }
 
-    if (btnCloseNobility && nobilityModal) {
-      btnCloseNobility.addEventListener('click', () => nobilityModal.classList.remove('open'));
+    if (btnCloseCharter && nobilityModal) {
+      btnCloseCharter.addEventListener('click', () => nobilityModal.classList.remove('open'));
     }
 
-    if (btnCloseNobilityBottom && nobilityModal) {
-      btnCloseNobilityBottom.addEventListener('click', () => nobilityModal.classList.remove('open'));
+    if (btnCloseCharterBottom && nobilityModal) {
+      btnCloseCharterBottom.addEventListener('click', () => nobilityModal.classList.remove('open'));
     }
 
     if (nobilityModal) {
@@ -988,7 +990,7 @@ class ClinLoopApp {
     if (soundToggle) {
       soundToggle.addEventListener('click', () => {
         this.soundEnabled = !this.soundEnabled;
-        soundToggle.textContent = this.soundEnabled ? '🔊 Audio: On' : '🔇 Audio: Off';
+        soundToggle.textContent = this.soundEnabled ? 'Sound: on' : 'Sound: off';
       });
     }
 
@@ -1019,6 +1021,9 @@ class ClinLoopApp {
     setTxt('badge-hospital-text', t.hospitalText);
     setTxt('platform-notice-label', t.platformLabel);
     setTxt('platform-notice-copy', t.platformNotice);
+    setTxt('kpi-lbl-examples', t.kpiExamples);
+    setTxt('kpi-lbl-open', t.kpiOpen);
+    setTxt('kpi-lbl-rules', t.kpiRules);
     setTxt('txt-nobility-btn', t.nobilityBtn);
     setTxt('txt-outreach-btn', t.outreachBtn);
     setTxt('txt-biomcp-btn', t.biomcpBtn);
@@ -1081,8 +1086,8 @@ class ClinLoopApp {
     setTxt('txt-api-btn', t.apiKeysBtn);
     setTxt('modal-api-title', t.apiModalTitle);
     setTxt('modal-api-sub', t.apiModalSub);
-    setTxt('modal-api-nobility-title', t.apiNobilityTitle);
-    setHtml('modal-api-nobility-desc', t.apiNobilityDesc);
+    setTxt('modal-api-nobility-title', t.apiCredTitle);
+    setHtml('modal-api-nobility-desc', t.apiCredDesc);
     setTxt('lbl-gemini-title', t.lblGemini);
     setTxt('desc-gemini-key', t.descGemini);
     setTxt('lbl-anthropic-title', t.lblAnthropic);
@@ -1178,14 +1183,12 @@ class ClinLoopApp {
       const isClosed = (c.ground_truth_status === 'closed') || this.closedOverrides.has(c.scenario_id);
       const statusClass = isClosed ? 'status-closed' : (c.ground_truth_status === 'delayed' ? 'status-delayed' : 'status-open');
       
-      let statusText = '';
-      if (isClosed) {
-        statusText = isKo ? '✅ 연구 예시 종결' : '✅ Sample closed';
-      } else if (c.ground_truth_status === 'delayed') {
-        statusText = isKo ? '🧪 연구용 지연 예시' : '🧪 Delayed sample';
-      } else {
-        statusText = isKo ? '🧪 연구용 사례' : '🧪 Research sample';
-      }
+      // A worklist row: patient, status chip, finding, then severity · rule · department · ID
+      const statusText = isClosed ? (isKo ? '종결' : 'Closed')
+        : c.ground_truth_status === 'delayed' ? (isKo ? '지연' : 'Delayed') : (isKo ? '미완료' : 'Open');
+      const sev = c.ground_truth_severity || 'moderate';
+      const sevText = isKo ? ({ critical: '위급', high: '높음', moderate: '중간', low: '낮음' })[sev] || sev : sev;
+      card.classList.add(`sev-${sev}`);
 
       const ptName = isKo
         ? (c.patient_name_kr ? `${c.patient_name_kr} (${c.patient_sex === 'M' ? '남' : '여'} ${c.patient_age}세)` : `${c.patient_id}`)
@@ -1195,15 +1198,15 @@ class ClinLoopApp {
 
       card.innerHTML = `
         <div class="case-header">
-          <span class="patient-id" style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">${ptName}</span>
+          <span class="case-name">${ptName}</span>
           <span class="case-status-badge ${statusClass}">${statusText}</span>
         </div>
-        <div class="case-title" style="font-size: 0.86rem; font-weight: 600; color: var(--text-main); line-height: 1.35;" title="${c.scenario_name}">
-          ${ptCondition}
-        </div>
-        <div class="case-meta" style="font-size: 0.74rem; margin-top: 0.2rem; display: flex; justify-content: space-between; color: var(--text-muted);">
-          <span>🏥 ${ptDept}</span>
-          <span style="font-family: var(--font-mono); color: var(--cyan-neon); font-weight: 600;">${c.patient_id}</span>
+        <div class="case-title" title="${c.scenario_name}">${ptCondition}</div>
+        <div class="case-meta">
+          <span class="case-sev">${sevText}</span>
+          <span>${c.applicable_rule_id || ''}</span>
+          <span class="case-dept">${ptDept}</span>
+          <span class="case-pid">${c.patient_id}</span>
         </div>
       `;
 
@@ -1284,7 +1287,8 @@ class ClinLoopApp {
     document.getElementById('case-display-desc').textContent = scenario.clinical_narrative;
 
     document.getElementById('stat-rule-id').textContent = scenario.applicable_rule_id;
-    document.getElementById('stat-severity').textContent = scenario.ground_truth_severity.toUpperCase();
+    const sevKo = { critical: '위급', high: '높음', moderate: '중간', low: '낮음' };
+    document.getElementById('stat-severity').textContent = isKo ? (sevKo[scenario.ground_truth_severity] || scenario.ground_truth_severity) : scenario.ground_truth_severity;
     
     const actionBox = document.getElementById('action-card');
     const actionTitle = document.getElementById('action-required-title');
@@ -1293,17 +1297,20 @@ class ClinLoopApp {
 
     if (isClosed) {
       actionBox.classList.add('resolved');
-      actionTitle.textContent = isKo ? '연구 예시: 이 브라우저에서 상태 변경' : 'Research sample: state changed in this browser';
-      actionDesc.textContent = isKo ? '시뮬레이션 상태이며 임상 조치, 오더 또는 환자 메시지는 전송되지 않았습니다.' : 'Simulation state only. No clinical action, order, or patient message was sent.';
-      actionBtn.textContent = isKo ? '로컬 상태 변경 완료' : 'Local state change complete';
+      actionTitle.textContent = isKo ? '종결됨 (예시 · 이 브라우저)' : 'Closed (example · this browser)';
+      actionDesc.textContent = isKo ? '이 브라우저에서만 표시가 바뀌었습니다. 오더나 환자 메시지는 전송되지 않았습니다.' : 'Changed in this browser only. No order or patient message was sent.';
+      actionBtn.textContent = isKo ? '종결로 표시됨' : 'Marked closed';
       actionBtn.classList.add('resolved');
     } else {
       actionBox.classList.remove('resolved');
-      actionTitle.textContent = isKo ? '임상 사례: 후속조치 규칙 매칭' : 'Clinical case: follow-up rule match';
+      // "COLPOSCOPY_REFERRAL within 30 days" → "Colposcopy referral within 30 days"
+      const missing = (scenario.missing_followup || '').replace(/\b[A-Z][A-Z0-9_]{2,}\b/g, (w) => w.replace(/_/g, ' ').toLowerCase())
+        .replace(/^./, (ch) => ch.toUpperCase());
+      actionTitle.textContent = isKo ? '누락된 후속 조치' : 'Missing follow-up';
       actionDesc.textContent = isKo
-        ? `시연 데이터의 예시 항목: ${scenario.missing_followup || '후속조치'}. 실제 환자 우선순위나 임상 권고가 아닙니다.`
-        : `Synthetic example gap: ${scenario.missing_followup || 'follow-up'}. Ordered by a research score that is not clinically validated.`;
-      actionBtn.textContent = isKo ? '⚡ 브라우저에서 예시 상태 변경' : '⚡ Change sample state locally';
+        ? `${scenario.action_kr || scenario.title_kr || '후속 조치'} (예시 사례)`
+        : `${missing || 'Follow-up'} (example case)`;
+      actionBtn.textContent = isKo ? '이 브라우저에서 종결로 표시 (예시)' : 'Mark closed in this browser (example)';
       actionBtn.classList.remove('resolved');
     }
 
@@ -1316,26 +1323,33 @@ class ClinLoopApp {
     container.innerHTML = '';
 
     const firstEvent = scenario.events[0];
+    const isKo = this.currentLang === 'ko';
+    // Codes such as COLPOSCOPY_REFERRAL read as words
+    const words = (text) => (text || '').replace(/\b[A-Z][A-Z0-9_]{2,}\b/g, (w) => w.replace(/_/g, ' ').toLowerCase());
+    const ev = scenario.biomcp_evidence;
     const steps = [
       {
-        num: '01',
-        title: `Ingestion: ${firstEvent.event_type.replace(/_/g, ' ')}`,
-        sub: `Timestamp: ${firstEvent.timestamp.split('T')[0]}`
+        num: '1',
+        title: isKo ? `결과 수신: ${({ lab_result: '검사 결과', imaging_order: '영상 검사', radiology_report: '영상 판독', pathology_result: '병리 결과',
+          medication_change: '약물 변경', discharge: '퇴원' })[firstEvent.event_type] || firstEvent.event_type.replace(/_/g, ' ')}`
+          : `Result received: ${firstEvent.event_type.replace(/_/g, ' ')}`,
+        sub: firstEvent.timestamp.split('T')[0]
       },
       {
-        num: '02',
-        title: `Research rule example: ${scenario.applicable_rule_id}`,
-        sub: scenario.biomcp_evidence ? `Verified citation: ${scenario.biomcp_evidence.guideline_org.split('(')[0].trim()} • PMID: ${scenario.biomcp_evidence.pmid}` : 'No citation stored for this example'
+        num: '2',
+        title: isKo ? `규칙 ${scenario.applicable_rule_id} 해당` : `Rule ${scenario.applicable_rule_id} matched`,
+        sub: ev ? `${isKo ? '가이드라인' : 'Guideline'}: ${ev.guideline_org.split('(')[0].trim()} · PMID ${ev.pmid}` : (isKo ? '저장된 인용 없음' : 'No citation stored for this example')
       },
       {
-        num: '03',
-        title: isClosed ? 'Verification: Closed in Graph' : `Identified Gap: ${scenario.missing_followup}`,
-        sub: isClosed ? 'Closed in this browser only (nothing sent).' : 'Rule-based example; no AI determination.'
+        num: '3',
+        title: isClosed ? (isKo ? '종결로 표시 (이 브라우저)' : 'Marked closed (this browser)')
+          : isKo ? (scenario.title_kr || `누락: ${words(scenario.missing_followup)}`) : `Missing: ${words(scenario.missing_followup)}`,
+        sub: isClosed ? (isKo ? '전송된 내용 없음' : 'Nothing was sent') : (isKo ? '규칙 기반 · AI 판단 아님' : 'Rule-based · no AI judgement')
       },
       {
-        num: '04',
-        title: isClosed ? 'Local sample state changed' : 'No alert was dispatched',
-        sub: 'Demo only: no EHR write-back, messaging or escalation is connected'
+        num: '4',
+        title: isKo ? '알림 발송 안 함' : 'No alert sent',
+        sub: isKo ? '데모: EHR·메시지·에스컬레이션 연결 없음' : 'Demo: no EHR, messaging or escalation connected'
       }
     ];
 
@@ -2089,7 +2103,7 @@ class ClinLoopApp {
     if (isClosed) {
       if (badge) {
         badge.className = 'badge-pill badge-safe';
-        badge.textContent = isKo ? '연구 예시 상태 (브라우저에만 저장)' : 'Sample state (browser only)';
+        badge.textContent = isKo ? '종결 (예시 · 이 브라우저)' : 'Closed (example · this browser)';
       }
       if (timerText) {
         timerText.textContent = isKo ? '시뮬레이션 종결' : 'Simulation resolved';
@@ -2100,11 +2114,11 @@ class ClinLoopApp {
       }
     } else {
       if (badge) {
-        badge.className = 'badge-pill badge-urgent';
-        badge.textContent = isKo ? '합성 예시 사례 · 임상 우선순위 아님' : 'Synthetic example · not a clinical priority';
+        badge.className = 'badge-pill badge-open';
+        badge.textContent = isKo ? '미완료 (예시)' : 'Open (example)';
       }
       if (timerText) {
-        timerText.textContent = isKo ? '예시 마감일 (실시간 감시 아님)' : 'Example deadline (not live monitoring)';
+        timerText.textContent = isKo ? '예시 기한 (실시간 아님)' : 'Example deadline (not live)';
         timerText.style.color = 'var(--text-muted)';
       }
       if (orderBtnLabel) {

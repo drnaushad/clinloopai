@@ -1,6 +1,11 @@
 """
-ClinLoop AI — PHI De-identification Engine
-HIPAA Safe Harbor (45 CFR §164.514(b)) + Korean PIPA compliant
+ClinLoop AI — PHI de-identification (pattern-based)
+
+Removes or generalises the identifier types listed in the HIPAA Safe Harbor method
+(45 CFR §164.514(b)) and in Korea's PIPA, by regular expressions. Pattern matching misses
+identifiers it has no pattern for (for example names in free text), so its output is not
+de-identified in the legal sense until reviewed; it has not been independently validated.
+Not used by the clinical pipeline (ClinLoop sends no patient data to external AI services).
 """
 import re, hashlib, secrets, logging
 from datetime import datetime, timezone
