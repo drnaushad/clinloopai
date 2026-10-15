@@ -200,7 +200,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
       <h2 id="h-note" data-i18n="noteTitle"></h2>
       <p class="sub" data-i18n="noteHelp"></p>
       <form id="note-form" style="display:grid;gap:8px;">
-        <textarea id="note-text" rows="7" data-i18n-ph="notePh"></textarea>
+        <textarea id="note-text" rows="7" data-i18n-ph="notePh" required minlength="10"></textarea>
         <div class="row3">
           <div><label for="note-type" data-i18n="noteType"></label><input id="note-type" value="Outpatient progress note"></div>
           <div><label for="note-date" data-i18n="noteDate"></label><input id="note-date" type="date"></div>
@@ -284,7 +284,12 @@ svg .ob-label { font: 700 10px var(--font-mono); }
       headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' } }
       : { headers: { 'Authorization': `Bearer ${state.token}` } });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body.detail || `HTTP ${res.status}`);
+    if (!res.ok) {
+      // FastAPI lists form problems as objects; show their text, not "[object Object]"
+      const d = body.detail;
+      throw new Error(Array.isArray(d) ? d.map((x) => (x.loc ? x.loc[x.loc.length - 1] + ': ' : '') + (x.msg || '')).join('; ')
+        : d || (res.status === 401 ? 'Not signed in, or the token is not recognised' : `HTTP ${res.status}`));
+    }
     return body;
   }
   const day = (iso) => (iso || '').slice(0, 10);
@@ -458,8 +463,14 @@ svg .ob-label { font: 700 10px var(--font-mono); }
   }
   const noteBody = () => ({ patient_id: $('patient').value.trim(), text: $('note-text').value, note_type: $('note-type').value || 'Clinical note',
     date: $('note-date').value || null, suggest_with_llm: $('note-llm').checked });
+  // A note is read for one patient: ask for the patient and the text here rather than send an empty request
+  const noteReady = () => {
+    if (!$('patient').value.trim()) { $('patient').required = true; $('patient').reportValidity(); $('patient').focus(); return false; }
+    return $('note-form').reportValidity();
+  };
   $('note-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (!noteReady()) return;
     try {
       setStatus(t().working);
       const r = await api('/api/v1/documents/clinical-note/extract', noteBody());
@@ -473,6 +484,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
     } catch (err) { setStatus(err.message, true); }
   });
   $('note-file').addEventListener('click', async () => {
+    if (!noteReady()) return;
     try {
       setStatus(t().working);
       const r = await api('/api/v1/documents/clinical-note', noteBody());
@@ -499,7 +511,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
   applyLang();
   const linked = location.hash.match(/^#patient=(.+)$/);     // a link from the EHR (CDS Hooks card)
   if (linked) $('patient').value = decodeURIComponent(linked[1]);
-  if ($('api-base').value && $('token').value) $('connect-form').requestSubmit();
+  // A token from this tab signs in automatically (js/appnav.js)
 })();
 </script>
 </body>

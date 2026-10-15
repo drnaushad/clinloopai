@@ -61,6 +61,22 @@ class TestEveryDevice(unittest.TestCase):
             self.assertNotIn("@import url", f.read())
         self.assertIn('rel="preconnect" href="https://fonts.gstatic.com" crossorigin', html)
 
+    def test_many_people_at_once_in_the_browser(self):
+        """Dialogs close by Escape/✕/outside click; one sign-in per tab with sign-out; the worklist
+        refreshes itself (never mid-typing), offers real staff when assigning, and explains conflicts."""
+        read = lambda *p: open(os.path.join(ROOT, *p), encoding="utf-8").read()
+        app, nav, wl, css = read("js", "app.js"), read("js", "appnav.js"), read("worklist.html"), read("css", "styles.css")
+        self.assertIn("setupDialogs()", app)
+        self.assertIn("e.key === 'Escape'", app)
+        self.assertRegex(css, r"\.modal-overlay \{[^}]*visibility: hidden")
+        self.assertIn("btn-signout", nav)
+        self.assertIn("form.requestSubmit()", nav)
+        self.assertIn("setInterval(() => { if (state.user && !busy()) refresh(); }, 30000)", wl)
+        self.assertIn("/api/v1/users", wl)
+        self.assertIn("Someone else changed this loop first", wl)
+        for page in ("worklist.html", "patient.html", "quality.html", "governance.html", "imaging.html"):
+            self.assertNotIn("throw new Error(body.detail ||", read(page), page)   # FastAPI lists → readable text
+
     def test_every_page_has_the_shared_navigation_and_no_stale_copies(self):
         for page in PAGES:
             with open(os.path.join(ROOT, page), encoding="utf-8") as f:

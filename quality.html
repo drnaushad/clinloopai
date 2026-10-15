@@ -220,7 +220,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   async function api(path) {
     const res = await fetch(state.base + path, { headers: { 'Authorization': `Bearer ${state.token}` } });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body.detail || `HTTP ${res.status}`);
+    if (!res.ok) {
+      // FastAPI lists form problems as objects; show their text, not "[object Object]"
+      const d = body.detail;
+      throw new Error(Array.isArray(d) ? d.map((x) => (x.loc ? x.loc[x.loc.length - 1] + ': ' : '') + (x.msg || '')).join('; ')
+        : d || (res.status === 401 ? 'Not signed in, or the token is not recognised' : `HTTP ${res.status}`));
+    }
     return body;
   }
   const pct = (x) => x == null ? '–' : `${Math.round(x * 100)}%`;
@@ -275,7 +280,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   });
   $('btn-lang').addEventListener('click', () => { lang = lang === 'ko' ? 'en' : 'ko'; store.set('clinloop_lang', lang, localStorage); render(); });
   render();
-  if ($('api-base').value && $('token').value) $('connect-form').requestSubmit();
+  // A token from this tab signs in automatically (js/appnav.js)
 })();
 </script>
 </body>

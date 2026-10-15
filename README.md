@@ -340,7 +340,18 @@ first:
 - a positive FIT with no colonoscopy.
 
 The worklist opens in Korean or English, following the browser setting; the toggle switches
-between them. For each loop you can:
+between them.
+
+Several people can work on it at once:
+- Sign in once per browser tab; the other pages sign in by themselves. **Sign out** forgets the token
+  (for shared ward computers). When the ClinLoop server serves the pages, there is no address to type.
+- The list refreshes itself every 30 seconds and when you return to the tab, so colleagues' actions
+  appear without pressing Refresh. It never refreshes while you are typing or have a form or audit
+  trail open.
+- If a colleague acted on the same loop first, the server refuses the second action and the page
+  says so, then shows the loop's current state; nothing is silently overwritten.
+- Acknowledging an unassigned loop makes it yours. Assigning picks a person from the list of staff
+  who can act on loops, so a typo cannot hand a loop to nobody. For each loop you can:
 - acknowledge it, assign it (to yourself or someone else), and filter to **my loops**;
 - defer it with a coded reason;
 - close it with evidence;
@@ -365,7 +376,9 @@ Key endpoints (all except `/rules` and `/health` require a token):
 | `GET /api/v1/rules` | public | The rule library, with references and review status |
 | `POST /api/v1/fhir/ingest` | admin | Map a FHIR Bundle, run the engine, record loops |
 | `GET /api/v1/worklist` | viewer | Active loops, ranked |
-| `POST /api/v1/loops/{key}/acknowledge` | navigator | Take ownership of the next step |
+| `POST /api/v1/loops/{key}/acknowledge` | navigator | Take ownership of the next step (an unassigned loop becomes yours) |
+| `POST /api/v1/loops/{key}/assign` | clinician | Hand a loop to someone in `GET /api/v1/users` |
+| `GET /api/v1/users` | clinician | Staff a loop can be assigned to (navigator and above; names and roles only) |
 | `POST /api/v1/loops/{key}/defer` | navigator / clinician | Coded reason; clinical reasons need a clinician |
 | `POST /api/v1/loops/{key}/close` | navigator | Requires evidence of the completed follow-up |
 | `GET /api/v1/metrics/open-loop-rate?stratify_by=` | viewer | Quality measure by rule, language, age group, sex |

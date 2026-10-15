@@ -103,6 +103,34 @@ class TestClinicalAPI(unittest.TestCase):
         loops = self.client.get("/api/v1/worklist", headers=_h("viewer")).json()["loops"]
         return f"/api/v1/loops/{quote(next(l['loop_key'] for l in loops if l['rule_id'] == rule_id), safe='')}"
 
+    def test_several_people_on_one_loop(self):
+        """Acknowledging takes an unassigned loop; assignment offers and accepts only real staff names;
+        the second of two conflicting actions is refused rather than silently overwriting the first."""
+        self._ingest()
+        loops = self.client.get("/api/v1/worklist", headers=_h("viewer")).json()["loops"]
+        a, b = (l["loop_key"] for l in loops[:2])
+        path = lambda key, act: f"/api/v1/loops/{quote(key, safe='')}/{act}"
+        r = self.client.post(path(a, "acknowledge"), headers=_h("navigator"))
+        self.assertEqual(r.json()["owner"], "navigator.user")
+        self.assertEqual(self.client.post(path(a, "acknowledge"), headers=_h("clinician")).status_code, 409)
+        staff = self.client.get("/api/v1/users", headers=_h("clinician")).json()["users"]
+        self.assertIn({"user": "navigator.user", "role": "navigator"}, staff)
+        self.assertNotIn("viewer.user", [u["user"] for u in staff])          # view-only: cannot act on a loop
+        self.assertNotIn("token", json.dumps(staff).lower())
+        self.assertEqual(self.client.get("/api/v1/users", headers=_h("navigator")).status_code, 403)
+        r = self.client.post(path(b, "assign"), json={"owner": "navigator.usr"}, headers=_h("clinician"))
+        self.assertEqual(r.status_code, 422)
+        self.assertIn("Unknown user", r.json()["detail"])
+        r = self.client.post(path(b, "assign"), json={"owner": "navigator.user"}, headers=_h("clinician"))
+        self.assertEqual(r.json()["owner"], "navigator.user")
+        # an assigned loop keeps its owner when someone else acknowledges it
+        r = self.client.post(path(b, "acknowledge"), headers=_h("clinician"))
+        self.assertEqual(r.json()["owner"], "navigator.user")
+        self.assertEqual(self.client.post(path(b, "close"), json={"evidence": "Referral seen 2026-09-02"},
+                                          headers=_h("navigator")).status_code, 200)
+        r = self.client.post(path(b, "defer"), json={"reason_code": "patient_declined"}, headers=_h("clinician"))
+        self.assertEqual(r.status_code, 409)
+
     def test_get_single_loop_and_subroutes_resolve(self):
         self._ingest()
         path = self._key("R017")

@@ -15,7 +15,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from . import governance
-from .auth import ROLE_RANK, User, require_role
+from .auth import ROLE_RANK, User, known_users, require_role
 from .clinical_ontology import OBLIGATION_RULES, RULE_NAMES_KO, format_window
 from .fhir_ingest import bundle_to_events, patient_strata
 from .loop_detector import ClinLoopDetector, hospital_detector, lapse_after_death
@@ -299,13 +299,13 @@ def worklist(owner: Optional[str] = None, include_inactive: bool = False,
     statuses = governance.all_rule_statuses(store)
     for loop in loops:
         loop["rule_signoff"] = statuses.get(loop["rule_id"], {}).get("status", "pending")
-    live = governance.live_rule_ids(store)
+    live = governance.live_rule_ids(store, statuses)
     shadow = 0
     if live is not None:
         shadow = sum(1 for loop in loops if loop["rule_id"] not in live)
         loops = [loop for loop in loops if loop["rule_id"] in live]
     return {"count": len(loops), "loops": loops, "defer_reasons": DEFER_REASONS,
-            "shadow_count": shadow, "governance": governance.summary(store)}
+            "shadow_count": shadow, "governance": governance.summary(store, statuses)}
 
 
 @router.get("/loops/{loop_key:path}/audit", tags=["Clinical Pilot"])
@@ -330,9 +330,24 @@ def close(loop_key: str, req: CloseRequest, user: User = Depends(require_role("n
     return _workflow(get_store().close, loop_key, user.name, req.evidence, role=user.role)
 
 
+@router.get("/users", tags=["Clinical Pilot"])
+def users(user: User = Depends(require_role("clinician"))):
+    """The people a loop can be assigned to: everyone who can act on one (navigator and above).
+    Names and roles only, never tokens."""
+    return {"users": [{"user": name, "role": role} for name, role in sorted(_assignable().items())]}
+
+
+def _assignable() -> Dict[str, str]:
+    return {name: role for name, role in known_users().items() if ROLE_RANK[role] >= ROLE_RANK["navigator"]}
+
+
 @router.post("/loops/{loop_key:path}/assign", tags=["Clinical Pilot"])
 def assign(loop_key: str, req: AssignRequest, user: User = Depends(require_role("clinician"))):
-    return _workflow(get_store().assign, loop_key, req.owner, user.name, role=user.role)
+    owner = req.owner.strip()
+    if owner not in _assignable():
+        # A typo (or a view-only account) would hand the loop to nobody who can act on it
+        raise HTTPException(status_code=422, detail=f"Unknown user '{owner[:60]}'. Choose someone who can act on loops.")
+    return _workflow(get_store().assign, loop_key, owner, user.name, role=user.role)
 
 
 # ── Patient outreach ─────────────────────────────────────────────────────────
