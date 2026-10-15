@@ -77,6 +77,24 @@ class TestEveryDevice(unittest.TestCase):
         for page in ("worklist.html", "patient.html", "quality.html", "governance.html", "imaging.html"):
             self.assertNotIn("throw new Error(body.detail ||", read(page), page)   # FastAPI lists → readable text
 
+    def test_plain_professional_wording_and_no_overclaims(self):
+        """Search title without marketing words; nothing claims a privacy layer, certification or
+        model that is not built; the charter states what has not been shown."""
+        read = lambda *p: open(os.path.join(ROOT, *p), encoding="utf-8").read()
+        html, app = read("index.html"), read("js", "app.js")
+        self.assertIn("<title>ClinLoop AI | Closed-Loop Follow-up of Clinical Results</title>", html)
+        self.assertIn('rel="canonical" href="https://clinloopai.app/"', html)
+        self.assertTrue(os.path.exists(os.path.join(ROOT, "favicon.ico")))
+        for phrase in ("Noble", "Nobility", "Hippocratic", "Causal Reasoning", "DTH-Hybrid", "ISO 29101", "8/8",
+                       "Re-ID Risk", "Safe for Claude", "Empathy", "Pre-Market", "Explainable AI Audit Trail",
+                       "Exponential Hazard", "Autonomous Life-Saving"):
+            self.assertNotIn(phrase, html + app, phrase)
+        privacy = html[html.index('id="view-privacy"'):html.index("end view-privacy")]
+        self.assertNotIn("✅ Active", privacy)
+        self.assertIn("Not built", privacy)
+        self.assertIn("What has not been shown yet", html)
+        self.assertIn('class="status-strip"', html)
+
     def test_every_page_has_the_shared_navigation_and_no_stale_copies(self):
         for page in PAGES:
             with open(os.path.join(ROOT, page), encoding="utf-8") as f:

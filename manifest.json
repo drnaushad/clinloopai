@@ -1,7 +1,7 @@
 {
-  "name": "ClinLoop AI - Clinical Safety Cockpit",
+  "name": "ClinLoop AI - Follow-up of Clinical Results",
   "short_name": "ClinLoop AI",
-  "description": "Closed-loop clinical safety: tracks the follow-ups that findings and results require",
+  "description": "Finds and tracks missed follow-up of clinical results (research prototype)",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
