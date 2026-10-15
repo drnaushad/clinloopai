@@ -195,6 +195,66 @@ list.
 CI keeps all 450 cases at or above 97% equivalent and 97% specificity (`TestBlindCaseSets`), and fails on
 any false closure among the 60 timelines (`tests/test_followup_matching.py`).
 
+## Guideline reports (R060–R065)
+
+**What is read:**
+- **Lab results:** HIV screening tests (R060), hepatitis B surface antigen (R061), TB infection tests (R062).
+- **Colonoscopy and polyp pathology reports:** surveillance intervals (R063).
+- **Echocardiogram reports:** severe aortic stenosis (R064) and reduced ejection fraction (R065).
+
+The readers are in `src/clinloop_engine/guideline_reports.py`. Each alert carries the words or numbers that
+decided it.
+
+**Method:**
+- **Two independent authors.** Each wrote a blind set of synthetic FHIR records from the guideline
+  definitions alone (CDC, AASLD, ATS/IDSA/CDC, USMSTF 2020, ACC/AHA 2020, AHA/ACC/HFSA 2022). Neither saw
+  ClinLoop's code.
+- **The sets:**
+  - `tests/blind_reports_2`: 157 cases.
+  - `tests/blind_reports_3`: 100 cases, written in the style of real hospital documents (mixed Korean and
+    English, flattened measurement tables, QuantiFERON panels sent as five results, multi-part pathology,
+    records over several years).
+- **Scoring:** each set was scored once, before any fix based on it. The second set was scored only after
+  the code was frozen.
+
+**Results:**
+
+| Set (first pass) | Cases | Fully correct | Sensitivity | Precision | Deadline correct |
+|---|---|---|---|---|---|
+| First set (`blind_reports_2`) | 157 | 95.5% (95% CI 91.1–97.8) | 95.0% | 98.0% | 100% |
+| **Confirmation set (`blind_reports_3`)** | 100 | **96.0% (95% CI 90.2–98.4)** | **95.0%** | **100%** (no false alarms) | 98.2% |
+
+- **Status:** where an obligation was found, its status (open or done) was correct in 100% of cases on both
+  sets.
+- **After fixes:** both sets now pass in full. These after-fix scores are not unbiased.
+
+**Defects found by the blind sets and fixed** (each has a test in `tests/test_guideline_reports.py`):
+- **"Exposure to HIV" read as a diagnosis:** a needlestick exposure on the problem list was taken as known
+  HIV, so a reactive screen was ignored. Exposure, PrEP and screening entries are now excluded.
+- **Reference ranges and comments read as the result:**
+  - "REACTIVE … ref: Non-reactive" and "양성 … ** 이전(2021) 음성 **" were read as negative.
+  - The first result word now decides. Reference ranges and comments are ignored.
+- **Size limits read as polyps:** "four adenomas, all < 10 mm" was read as a 10 mm polyp. Sizes after "<",
+  "less than" or "under" are limits.
+- **Adenoma counts:** counts written as "(x5)", "5 of 5", part ranges ("A-E.") and Korean ("6개: 모두 선종")
+  were missed.
+- **"Sessile serrated lesion WITH low-grade dysplasia"** was missed because of the hyphenated qualifier.
+- **"BBPS 3-3-3":** three segment scores were read as a total of 3, meaning inadequate preparation.
+- **Cancer on pathology:**
+  - When the pathology of the same colonoscopy shows cancer, the endoscopy report must not open
+    surveillance. Cancer follows the pathology pathway (R009).
+  - High-grade dysplasia is not cancer and stays on surveillance.
+- **Unsited pathology:** a polyp pathology report that names no organ ("Polyps x7: tubular adenomas") is
+  read as colonic unless another site (stomach, duodenum) is named.
+
+**What these sets do not show:**
+- **Sparse records:** with only one or two records per patient, many open obligations are shown as "needs
+  human review" (sparse record) rather than "open". Both still put the obligation on the worklist.
+- **No real-data test:** the MIMIC-IV demo used for the real-data test contains none of these tests or
+  reports, so their accuracy on real hospital data is still unmeasured.
+- **Thresholds:** they follow one reading of each guideline (for example TST ≥ 10 mm; intervals over 3
+  years not tracked). A hospital's specialists must review and sign off each rule before clinical use.
+
 ## Images (separate question)
 
 ClinLoop's job is the follow-up loop, not reading images. Image findings come from plug-in models.

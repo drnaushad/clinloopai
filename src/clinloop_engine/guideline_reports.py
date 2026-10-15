@@ -58,15 +58,21 @@ _NEGATIVE = re.compile(r"non[- ]?reactive|\bnegative\b|not detected|undetected|\
 _POSITIVE = re.compile(r"\breactive\b|\bpositive\b|\bdetected\b|양성|반응성", re.I)
 
 
+# Parts of a result text that are not the result: the reference range ("ref: Non-reactive", "[<1.00]",
+# "참고치 음성") and comments ("** 이전(2021) 음성 **", "(previous: negative)")
+_NOT_THE_RESULT = re.compile(r"\*\*.*?\*\*|\[[^\]]*\]|\((?:[^)]*?)(?:prev|prior|이전|과거|ref)[^)]*\)|"
+                             r"\b(?:ref(?:erence)?(?:\s*(?:range|interval|value))?|normal|cut-?off)\s*[:=].*$|"
+                             r"(?:참고치|참고\s*범위|정상\s*범위|기준치)\s*[:=]?.*$", re.I | re.S)
+
+
 def _result_sign(value_text: str, flag: Optional[str], interp_codes: Iterable[str]) -> Optional[str]:
-    """'positive', 'negative', 'unclear' or None (no result stated)."""
-    text = value_text or ""
-    if _UNCLEAR.search(text):
-        return "unclear"
-    if _NEGATIVE.search(text):
-        return "negative"
-    if _POSITIVE.search(text):
-        return "positive"
+    """'positive', 'negative', 'unclear' or None (no result stated): the first result word decides."""
+    text = _NOT_THE_RESULT.sub(" ", value_text or "")
+    hits = [(m.start(), sign) for rx, sign in ((_UNCLEAR, "unclear"), (_NEGATIVE, "negative"), (_POSITIVE, "positive"))
+            for m in [rx.search(text)] if m]
+    if hits:
+        # Leftmost wins; at the same place the longer reading ("non-reactive" over "reactive") is listed first
+        return min(hits, key=lambda h: (h[0], ("unclear", "negative", "positive").index(h[1])))[1]
     codes = {str(c).upper() for c in interp_codes}
     if codes & {"IND", "EQV", "I"}:
         return "unclear"
@@ -246,6 +252,11 @@ def colonoscopy_interval(text: str) -> Dict[str, Any]:
     for b in _BBPS.finditer(text):
         total = int(b.group(1))
         segments = [int(x) for x in b.group(2, 3, 4) if x is not None]
+        # "BBPS 3-3-3" or "BBPS 2/1/2": three segment scores, no total
+        seg_only = re.match(r"\s*([0-3])\s*[-/,]\s*([0-3])\s*[-/,]\s*([0-3])(?!\d)", text[b.start(1):])
+        if seg_only and not segments:
+            segments = [int(x) for x in seg_only.groups()]
+            total = sum(segments)
         if total <= 9 and (total < 6 or any(s < 2 for s in segments)):
             reasons.append((INTERVAL_POOR_PREP_DAYS, f"BBPS {total}{' (' + '/'.join(map(str, segments)) + ')' if segments else ''}"
                                                      ": inadequate preparation (needs ≥ 6 with every segment ≥ 2)"))

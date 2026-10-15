@@ -83,6 +83,14 @@ class TestLabs(unittest.TestCase):
                                 referral("i", "Referral to infectious disease clinic", "2026-03-03")])["R060"].loop_status,
                          "closed")
 
+    def test_reference_ranges_and_comments_are_not_the_result(self):
+        from src.clinloop_engine.guideline_reports import _result_sign
+        self.assertEqual(_result_sign("REACTIVE  (S/CO 212.7)  ref: Non-reactive", None, []), "positive")
+        self.assertEqual(_result_sign("양성  15.6 S/CO  [<1.00]   ** 이전(2021) 음성 **", None, []), "positive")
+        self.assertEqual(_result_sign("음성 (Negative)", None, []), "negative")
+        self.assertEqual(_result_sign("Non-reactive", None, []), "negative")
+        self.assertEqual(_result_sign("Negative (previous: positive)", None, []), "negative")
+
     def test_known_hiv_but_not_exposure(self):
         self.assertNotIn("R060", loops([condition("c", "HIV infection"), obs("h", "HIV Ag/Ab Combo", "Reactive")]))
         self.assertIn("R060", loops([condition("c", "Exposure to HIV (needlestick)"),
@@ -110,6 +118,8 @@ class TestColonoscopy(unittest.TestCase):
 
     def test_intervals(self):
         self.assertEqual(colonoscopy_interval("BBPS 5 (1/2/2). Two 4 mm polyps removed.")["days"], 365)
+        self.assertIsNone(colonoscopy_interval("장정결 상태: 양호 (BBPS 3-3-3). 5 mm 용종 절제.")["days"])
+        self.assertEqual(colonoscopy_interval("BBPS 2-1-2. No polyps.")["days"], 365)
         self.assertEqual(colonoscopy_interval("A 25 mm LST removed by piecemeal EMR.")["days"], 183)
         self.assertEqual(colonoscopy_interval("Tubular adenoma, 12 mm.")["days"], 1096)
         self.assertEqual(colonoscopy_interval("Tubulovillous adenoma, 8 mm.")["days"], 1096)
@@ -171,11 +181,12 @@ class TestEcho(unittest.TestCase):
 
 class TestBlindSet(unittest.TestCase):
 
-    def test_first_blind_set_stays_correct(self):
+    def test_both_blind_sets_stay_correct(self):
         from score import score
-        with open(os.path.join(ROOT, "tests", "blind_reports_2", "cases.json"), encoding="utf-8") as f:
-            result = score(json.load(f), show_misses=True)
-        self.assertEqual(result["misses"], [])
+        for name in ("blind_reports_2", "blind_reports_3"):
+            with open(os.path.join(ROOT, "tests", name, "cases.json"), encoding="utf-8") as f:
+                result = score(json.load(f), show_misses=True)
+            self.assertEqual(result["misses"], [], name)
 
 
 if __name__ == "__main__":
