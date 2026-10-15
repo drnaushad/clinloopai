@@ -7,6 +7,7 @@ home-screen icon, and a loop registry that serves many users and processes witho
 """
 
 import os
+import re
 import sys
 import tempfile
 import threading
@@ -48,6 +49,17 @@ class TestEveryDevice(unittest.TestCase):
             css = f.read()
         self.assertRegex(css, r"\.top-chrome \{[^}]*position: sticky")
         self.assertIn(".top-chrome.is-condensed", css)
+
+    def test_wide_screens_are_an_app_shell_with_independent_panels(self):
+        with open(os.path.join(ROOT, "css", "responsive.css"), encoding="utf-8") as f:
+            css = f.read()
+        shell = css[css.index("@media (min-width: 1151px) {"):]
+        shell = shell[:shell.index("\n}\n")]
+        self.assertIn("overflow: hidden !important", shell)          # the page itself never scrolls
+        for panel in (".case-queue-list", ".cockpit-center-stage", ".cockpit-sidebar-right"):
+            self.assertRegex(shell, re.escape(panel) + r" \{[^}]*overflow-y: auto")
+        self.assertRegex(shell, r"\.stage-view-tabs \{[^}]*position: sticky")
+        self.assertNotIn("max-height: 900px", css)                    # no whole-page scrolling on short laptops
 
     def test_shared_stylesheet_keeps_the_key_fixes(self):
         with open(os.path.join(ROOT, "css", "responsive.css"), encoding="utf-8") as f:
