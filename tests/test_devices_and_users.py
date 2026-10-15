@@ -38,17 +38,28 @@ class TestEveryDevice(unittest.TestCase):
         for icon in ("logo.svg", "app-icon.svg", "icon-192.png", "icon-512.png", "favicon-32.png"):
             self.assertTrue(os.path.exists(os.path.join(ROOT, "icons", icon)), icon)
 
-    def test_cockpit_top_bar_stays_pinned_and_condenses(self):
+    def test_cockpit_top_bar_never_changes_the_layout_while_scrolling(self):
+        # Phones and tablets: the top bar scrolls away and a fixed slim bar slides in. A bar that shrank
+        # on scroll moved the page under the reader's finger and flickered (seen on a phone recording).
         with open(os.path.join(ROOT, "index.html"), encoding="utf-8") as f:
             html = f.read()
         top = html.index('id="top-chrome"')
         self.assertTrue(top < html.index('class="app-header') < html.index('id="global-impact-bar"')
-                        < html.index('<main class="cockpit-workspace">'))
-        self.assertIn('src="js/top-chrome.js"', html)
+                        < html.index('id="mini-bar"') < html.index('<main class="cockpit-workspace">'))
+        self.assertIn('src="js/top-chrome.js', html)
         with open(os.path.join(ROOT, "css", "responsive.css"), encoding="utf-8") as f:
             css = f.read()
-        self.assertRegex(css, r"\.top-chrome \{[^}]*position: sticky")
-        self.assertIn(".top-chrome.is-condensed", css)
+        self.assertNotIn("is-condensed", css)
+        self.assertRegex(css, r"\.mini-bar \{ position: fixed;[^}]*transform: translateY")
+        self.assertIn("backdrop-filter: none !important", css)
+        with open(os.path.join(ROOT, "js", "top-chrome.js"), encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn("IntersectionObserver", js)
+        self.assertNotIn("addEventListener('scroll'", js)
+        # First paint: fonts are linked from the page, not chained through an @import in the stylesheet
+        with open(os.path.join(ROOT, "css", "styles.css"), encoding="utf-8") as f:
+            self.assertNotIn("@import url", f.read())
+        self.assertIn('rel="preconnect" href="https://fonts.gstatic.com" crossorigin', html)
 
     def test_every_page_has_the_shared_navigation_and_no_stale_copies(self):
         for page in PAGES:

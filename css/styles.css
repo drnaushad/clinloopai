@@ -1,5 +1,6 @@
 /* ClinLoop AI - Professional Medical Workstation Cockpit Design System */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+/* Web fonts are linked from the page's <head> (with preconnect), not @import-ed: an @import here
+   held back the first paint until a second stylesheet had downloaded */
 
 :root {
   --bg-deep: #f1f5f9;

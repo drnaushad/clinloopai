@@ -1341,7 +1341,7 @@ class ClinLoopApp {
       {
         num: '04',
         title: isClosed ? 'Local sample state changed' : 'No alert was dispatched',
-        sub: 'Active EHR Writeback, FHIR Messaging, and Clinician Escalation Connected'
+        sub: 'Demo only: no EHR write-back, messaging or escalation is connected'
       }
     ];
 
@@ -2363,14 +2363,11 @@ class ClinLoopApp {
       dpNoise.textContent = noise;
       if (epsilonVal) epsilonVal.textContent = eps.toFixed(2);
     };
+    // Recomputed only when the reader moves the slider: a number that changes by itself every few
+    // seconds looks like live data, and it is not
     if (epsilonSlider) {
       epsilonSlider.addEventListener('input', updateDpNoise);
-      if (this._dpInterval) clearInterval(this._dpInterval); this._dpInterval = setInterval(updateDpNoise, 2200);
-    } else if (dpNoise) {
-      setInterval(() => {
-        const noise = (1.8 + Math.random() * 1.0).toFixed(1);
-        dpNoise.textContent = noise;
-      }, 2200);
+      updateDpNoise();
     }
 
     // Audit trail timestamp init
