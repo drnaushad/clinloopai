@@ -217,7 +217,7 @@ h1 .brand-home { display: inline-block; width: 1.25em; height: 1.25em; vertical-
                 white-space: nowrap; text-decoration: none; color: var(--text-muted, var(--muted, #475569)); }
 .app-nav-link:hover { color: var(--text-main, var(--text, #0f172a)); background: rgba(14, 116, 144, 0.08); }
 .app-nav-link:focus-visible { outline: 2px solid #0e7490; outline-offset: 2px; }
-.app-nav-link[aria-current="page"] { color: #0e7490; background: rgba(14, 116, 144, 0.12); }
+.app-nav-link[aria-current="page"] { color: #0b5f75; background: rgba(14, 116, 144, 0.12); }
 body.dark-theme .app-nav-link[aria-current="page"] { color: #5eead4; background: rgba(94, 234, 212, 0.12); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wrap .app-nav-link[aria-current="page"] { color: #5eead4; } }
 /* Clinical pages: the navigation is the header's first row */
@@ -237,6 +237,20 @@ body.dark-theme .app-nav-link[aria-current="page"] { color: #5eead4; background:
                   border: 1px solid var(--border-card); box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18); }
 .more-menu-list > button { width: 100%; justify-content: flex-start; display: flex !important; }
 .top-chrome.is-condensed .app-nav { display: none; }
+
+/* ── Contrast (WCAG 2.1 AA, 4.5:1): in dark mode the accent and alert colours are light, so the text on
+   them is dark rather than white ──────────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .wrap button.primary, :root:not([data-theme="light"]) .chip.overdue,
+  :root:not([data-theme="light"]) #policy, :root:not([data-theme="light"]) .alarm { color: #0b1220 !important; }
+}
+:root[data-theme="dark"] .wrap button.primary, :root[data-theme="dark"] .chip.overdue,
+:root[data-theme="dark"] #policy, :root[data-theme="dark"] .alarm { color: #0b1220 !important; }
+body.dark-theme .stage-tab-btn.active, body.dark-theme .stage-tab-btn.active span { color: #5eead4 !important; }
+body.dark-theme .comp-badge-danger { color: #fda4af !important; }
+body.dark-theme .comp-badge-success { color: #86efac !important; }
+/* Scrollable tables and lists can be reached and scrolled with the keyboard (tabindex added in appnav.js) */
+[data-scroll-focus]:focus-visible, .case-card:focus-visible { outline: 2px solid #0e7490; outline-offset: 2px; }
 
 /* Public static demo: no server to connect to, so the connection form is not shown */
 .static-demo #connect-form { display: none; }
