@@ -37,6 +37,18 @@ class TestEveryDevice(unittest.TestCase):
         for icon in ("logo.svg", "app-icon.svg", "icon-192.png", "icon-512.png", "favicon-32.png"):
             self.assertTrue(os.path.exists(os.path.join(ROOT, "icons", icon)), icon)
 
+    def test_cockpit_top_bar_stays_pinned_and_condenses(self):
+        with open(os.path.join(ROOT, "index.html"), encoding="utf-8") as f:
+            html = f.read()
+        top = html.index('id="top-chrome"')
+        self.assertTrue(top < html.index('class="app-header"') < html.index('id="global-impact-bar"')
+                        < html.index('<main class="cockpit-workspace">'))
+        self.assertIn('src="js/top-chrome.js"', html)
+        with open(os.path.join(ROOT, "css", "responsive.css"), encoding="utf-8") as f:
+            css = f.read()
+        self.assertRegex(css, r"\.top-chrome \{[^}]*position: sticky")
+        self.assertIn(".top-chrome.is-condensed", css)
+
     def test_shared_stylesheet_keeps_the_key_fixes(self):
         with open(os.path.join(ROOT, "css", "responsive.css"), encoding="utf-8") as f:
             css = f.read()
