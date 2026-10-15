@@ -161,54 +161,49 @@ h1 .brand-home { display: inline-block; width: 1.25em; height: 1.25em; vertical-
 .compute-k { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
 .compute-v { font-size: 1rem; font-weight: 800; color: var(--text-main); margin-top: 0.25rem; overflow-wrap: anywhere; }
 
-/* ── Cockpit top bar. Wide screens: always in place (app shell below). Tablets and phones, where the
-   page scrolls: pinned at the top, condensing to one slim row once the reader scrolls down ───────── */
-.top-chrome { position: sticky; top: 0; z-index: 120; flex-shrink: 0; background: var(--bg-surface);
-              transition: box-shadow 0.2s ease; }
-.top-chrome.is-condensed { box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14); }
-.top-chrome .app-header, .top-chrome .platform-status, .top-chrome #global-impact-bar {
-  transition: padding 0.2s ease, min-height 0.2s ease; }
-/* When the page itself scrolls, the window must be the scroller: a body that clips its overflow would
-   be the sticky bar's scroll container, and the bar would scroll away with it */
+/* ── Cockpit top bar. Wide screens: always in place (app shell above). Tablets and phones, where the
+   page scrolls: the top bar scrolls away with the page and a slim bar (#mini-bar, js/top-chrome.js)
+   slides in over the top. Nothing in the page's layout changes while the reader scrolls: an earlier
+   bar that shrank on scroll moved the page under the finger and flickered. ───────────────────────── */
+.top-chrome { position: relative; z-index: 120; flex-shrink: 0; background: var(--bg-surface); }
+/* When the page itself scrolls, the window is the scroller */
 @media (max-width: 1150px) {
   body { overflow: visible !important; }
   html { overflow-x: hidden; }
 }
-.top-chrome.is-condensed .app-header { flex-wrap: nowrap; min-height: 0; padding-top: 0.35rem; padding-bottom: 0.35rem;
-                                       gap: 0.75rem; }
-.top-chrome.is-condensed .brand-subtitle, .top-chrome.is-condensed .header-badges,
-.top-chrome.is-condensed .theme-segmented-control, .top-chrome.is-condensed .prominent-lang-pill { display: none !important; }
-.top-chrome.is-condensed .brand-section { flex: 0 0 auto; gap: 0.6rem; }
-.top-chrome.is-condensed .brand-logo { width: 32px; height: 32px; }
-.top-chrome.is-condensed .brand-title { font-size: 1.1rem; white-space: nowrap; }
-.top-chrome.is-condensed .header-actions { flex: 1 1 auto; min-width: 0; width: auto !important; flex-wrap: nowrap !important;
-                                           justify-content: flex-start !important; overflow-x: auto; scrollbar-width: none;
-                                           -webkit-overflow-scrolling: touch; padding: 2px 0; }
-.top-chrome.is-condensed .header-actions::-webkit-scrollbar { display: none; }
-.top-chrome.is-condensed .header-actions > * { flex-shrink: 0; }
-.top-chrome.is-condensed .platform-status { display: block !important; padding-top: 0.2rem !important; padding-bottom: 0.2rem !important;
-                                            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.top-chrome.is-condensed #global-impact-bar { padding-top: 0.2rem !important; padding-bottom: 0.2rem !important;
-                                              flex-wrap: nowrap !important; }
-/* Condensed example-data strip: the four counts on one line ("5 examples loaded · 4 open …") */
-.top-chrome.is-condensed #global-impact-bar > div:nth-child(2),
-.top-chrome.is-condensed #global-impact-bar > div:nth-child(4),
-.top-chrome.is-condensed #global-impact-bar .impact-stat-divider { display: none !important; }
-.top-chrome.is-condensed #global-impact-bar > div:nth-child(3) { display: flex !important; flex-wrap: nowrap !important;
-  gap: 1.25rem !important; overflow-x: auto; scrollbar-width: none; flex: 1 1 100% !important; }
-.top-chrome.is-condensed #global-impact-bar .impact-stat-item { flex-direction: row; align-items: baseline; gap: 0.35rem;
-                                                               white-space: nowrap; flex-shrink: 0; }
-.top-chrome.is-condensed #global-impact-bar .impact-stat-lbl { white-space: nowrap; }
-.top-chrome.is-condensed .header-actions .btn-secondary, .top-chrome.is-condensed .header-actions .btn-primary,
-.top-chrome.is-condensed .header-actions .badge { padding: 0.3rem 0.7rem !important; font-size: 0.78rem !important;
-                                                 min-height: 34px; }
-@media (max-width: 640px) {
-  /* A phone keeps the essentials: brand, actions (swipe sideways) and the safety notice */
-  .top-chrome.is-condensed #global-impact-bar { display: none !important; }
-  .top-chrome.is-condensed .platform-status-copy { display: none !important; }
+.mini-bar { display: none; }
+@media (max-width: 1150px) {
+  .mini-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 140; display: flex; align-items: center; gap: 0.5rem;
+              height: 52px; padding: 0 max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
+              padding-top: env(safe-area-inset-top); box-sizing: content-box;
+              background: var(--bg-surface); border-bottom: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.35));
+              box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+              transform: translateY(-110%); visibility: hidden;
+              transition: transform 0.18s ease-out, visibility 0s linear 0.18s; }
+  .mini-bar.is-visible { transform: none; visibility: visible; transition: transform 0.18s ease-out, visibility 0s; }
+  .mini-bar-home { flex: 0 0 auto; display: inline-flex; width: 34px; height: 34px; border-radius: 8px; color: #0e7490; }
+  .mini-bar-home:focus-visible { outline: 2px solid #0e7490; outline-offset: 2px; }
+  .mini-bar-home .brand-mark { width: 100%; height: 100%; }
+  .mini-bar .app-nav { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+                       -webkit-overflow-scrolling: touch; }
+  .mini-bar .app-nav::-webkit-scrollbar { display: none; }
+  /* Jumping to a section leaves it below the slim bar, not under it */
+  html { scroll-padding-top: 60px; }
+}
+body.dark-theme .mini-bar-home { color: #2dd4bf; }
+
+/* ── Smooth scrolling on phones and tablets: blur behind translucent panels makes the browser repaint
+   every frame while scrolling, which leaves blank patches on phones. The panels are opaque anyway. ── */
+@media (max-width: 1150px) {
+  *, *::before, *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}
+/* Endless pulsing and flowing effects: off for anyone who asks for less motion, and on phones and tablets */
+@media (prefers-reduced-motion: reduce), (max-width: 1150px) {
+  .pulse-dot, .firewall-live-badge, [class*="pulse"], [class*="live-dot"] { animation: none !important; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .top-chrome, .top-chrome .app-header, .top-chrome .platform-status, .top-chrome #global-impact-bar { transition: none; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+                           transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
 
 /* ── One navigation on every page (js/appnav.js) ─────────────────────────────────────────────── */
@@ -236,7 +231,6 @@ body.dark-theme .app-nav-link[aria-current="page"] { color: #5eead4; background:
                   gap: 0.25rem; min-width: 240px; padding: 0.4rem; border-radius: 10px; background: var(--bg-surface);
                   border: 1px solid var(--border-card); box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18); }
 .more-menu-list > button { width: 100%; justify-content: flex-start; display: flex !important; }
-.top-chrome.is-condensed .app-nav { display: none; }
 
 /* ── Contrast (WCAG 2.1 AA, 4.5:1): in dark mode the accent and alert colours are light, so the text on
    them is dark rather than white ──────────────────────────────────────────────────────────────── */
