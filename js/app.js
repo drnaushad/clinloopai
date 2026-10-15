@@ -258,7 +258,7 @@ class ClinLoopApp {
     this.currentCase = null;
     this.hypergraph = null;
     this.safetyGauge = null;
-    this.soundEnabled = true;
+    this.soundEnabled = false;   // sound off by default: a cockpit in a clinic should be quiet until asked
     this.audioCtx = null;
     this.closedOverrides = new Set();
     this.scheduledOverrides = new Set();
@@ -517,6 +517,22 @@ class ClinLoopApp {
     // The rules engine never needs a GPU, so with no server (the public website) the badge
     // is not shown at all rather than reporting a problem that does not exist.
     // -----------------------------------------------------------------------
+    // Evidence (BioMCP) button: opens the evidence panel for the selected case
+    const btnBiomcp = document.getElementById('btn-biomcp');
+    if (btnBiomcp) {
+      btnBiomcp.addEventListener('click', () => {
+        if (typeof this.populateBioMcpModal === 'function') this.populateBioMcpModal();
+        document.getElementById('biomcp-modal')?.classList.add('open');
+      });
+    }
+    // "More" menu: close after choosing an item, on Escape, or on a click elsewhere
+    const moreMenu = document.querySelector('details.more-menu');
+    if (moreMenu) {
+      moreMenu.querySelectorAll('.more-menu-list button').forEach((b) => b.addEventListener('click', () => { moreMenu.open = false; }));
+      document.addEventListener('click', (e) => { if (moreMenu.open && !moreMenu.contains(e.target)) moreMenu.open = false; });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') moreMenu.open = false; });
+    }
+
     const btnGpuHud = document.getElementById('btn-gpu-hud');
     const gpuModal = document.getElementById('gpu-modal');
     const btnCloseGpuModal = document.getElementById('btn-close-gpu-modal');
@@ -929,6 +945,7 @@ class ClinLoopApp {
       if (dockBtnEn) dockBtnEn.classList.toggle('active', isEn);
 
       localStorage.setItem('clinloop_lang', this.currentLang);
+      document.documentElement.lang = this.currentLang;   // the shared page navigation follows it (appnav.js)
 
     
 
@@ -977,7 +994,7 @@ class ClinLoopApp {
     if (soundToggle) {
       soundToggle.addEventListener('click', () => {
         this.soundEnabled = !this.soundEnabled;
-        soundToggle.textContent = this.soundEnabled ? '🔊 Audio: On' : '🔇 Audio: Muted';
+        soundToggle.textContent = this.soundEnabled ? '🔊 Audio: On' : '🔇 Audio: Off';
       });
     }
 
@@ -1011,6 +1028,7 @@ class ClinLoopApp {
     setTxt('txt-nobility-btn', t.nobilityBtn);
     setTxt('txt-outreach-btn', t.outreachBtn);
     setTxt('txt-biomcp-btn', t.biomcpBtn);
+    setTxt('txt-more-btn', this.currentLang === 'ko' ? '더보기' : 'More');
     setTxt('txt-emr-btn', t.emrBtn);
     setTxt('triage-title', t.triageTitle);
     setTxt('triage-count', t.triageCount);

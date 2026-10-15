@@ -64,7 +64,7 @@
       100% { transform: scale(0.95); opacity: 0.8; }
     }
   </style>
-<link rel="stylesheet" href="css/responsive.css?v=20261016">
+<link rel="stylesheet" href="css/responsive.css?v=20261017">
 </head>
 
 <body>
@@ -73,7 +73,7 @@
   <!-- Top bar: brand, actions, safety notice and example-data strip. Stays at the top while the page
        scrolls, and condenses to one row once the reader scrolls down (js/app.js, css/responsive.css). -->
   <div class="top-chrome" id="top-chrome">
-  <header class="app-header">
+  <header class="app-header app-header--pro">
     <div class="brand-section">
       <div class="brand-logo">
         <svg class="brand-mark" viewBox="0 0 48 48" role="img" aria-label="ClinLoop logo: rod of Asclepius inside a closing loop"><path d="M37.6 10.4A19 19 0 1 0 43 24" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/><path d="M44.2 8.6 43.9 18.9 34 16.2Z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M24 8.6v30.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><g class="bm-serpent"><path d="M27 14.2C21.2 13.8 19 17.4 24 18.6 29 19.8 29 22.8 24 23.8 19 24.8 19 28 24 29 28 29.8 27.8 32.6 25 34.2" fill="none" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="28.6" cy="13.4" rx="3" ry="2.1" transform="rotate(-18 28.6 13.4)" stroke="none"/></g></svg>
@@ -82,64 +82,19 @@
         <h1 class="brand-title">ClinLoop AI</h1>
         <div class="brand-subtitle" id="i18n-brand-sub">Closed-Loop Clinical Safety Surveillance Platform</div>
       </div>
-
-      <!-- 1-CLICK PROMINENT THEME SWITCHER (Right next to ClinLoop AI Title) -->
-      <div class="theme-segmented-control prominent-theme-pill" role="group" aria-label="Theme Switcher">
-        <button id="theme-opt-light" class="theme-opt-btn active" title="Light Mode">
-          ☀️ Light
-        </button>
-        <button id="theme-opt-dark" class="theme-opt-btn" title="Dark Mode">
-          🌙 Dark
-        </button>
-      </div>
-
-      <!-- 1-CLICK PROMINENT LANGUAGE SWITCHER (KO / EN / HI) -->
-      <div class="prominent-lang-pill" role="group" aria-label="Language Selector">
-        <button id="lang-opt-ko" class="lang-opt-btn" title="Korean">
-          🇰🇷 Korean
-        </button>
-        <button id="lang-opt-en" class="lang-opt-btn active" title="English">
-          🇺🇸 English
-        </button>
-      </div>
     </div>
 
-    <div class="header-badges">
+    <!-- The same page navigation on every page (js/appnav.js) -->
+    <nav class="app-nav"></nav>
+
+    <div class="header-actions">
       <button id="btn-gpu-hud" class="badge badge-gpu" hidden style="cursor: pointer; color: var(--text-muted); font-weight: 700; align-items: center; gap: 0.4rem;" title="Hardware on the ClinLoop server, and what uses it">
         <span class="pulse-dot" id="gpu-hud-dot" style="background: var(--text-dim);"></span>
         <span id="gpu-hud-label">Compute</span>
       </button>
-      <span class="badge" id="badge-hospital" style="border-color: rgba(2, 132, 199, 0.25); color: var(--text-muted); display: inline-flex; align-items: center; gap: 0.4rem;">
-        <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--emerald-safe);"></span>
-        <span id="badge-hospital-text">research prototype · synthetic cases</span>
-      </span>
-    </div>
-
-    <div class="header-actions">
-            <div id="live-cockpit-clock" class="cockpit-clock-badge">
-        <span class="live-indicator"></span> <span>2026-09-17 19:00:00 KST</span>
-      </div>
-      
-      <a href="https://ais-pre-oilpcgso3vbz6ppricjn7v-690313390411.asia-east1.run.app/" target="_blank" class="btn-primary" id="btn-try-voice-agent" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, #10b981, #0ea5e9); color: #fff; font-weight: bold; border-radius: 999px; padding: 0.5rem 1rem; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);" title="A separate voice-assistant prototype hosted elsewhere; not part of ClinLoop and not connected to it">
-        🎙️ Voice assistant demo (separate prototype)
-      </a>
-            <!-- 🫀 Live Closed-Loop Counter (Noble Standard) -->
-      <div id="lives-counter-pill" style="display:flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(6,182,212,0.1));border:1px solid rgba(16,185,129,0.35);border-radius:20px;padding:0.25rem 0.75rem;cursor:default;" title="Synthetic example cases resolved in this browser">
-        <span>🫀</span>
-        <div style="line-height:1.1;">
-          <div style="font-size:0.6rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;" id="lives-counter-label">Research examples resolved</div>
-          <div style="display:flex;align-items:baseline;gap:0.3rem;">
-            <span id="lives-protected-count" style="font-family:var(--font-mono);font-size:0.95rem;font-weight:900;color:#10b981;">0</span>
-            <span style="font-size:0.6rem;color:var(--text-dim);">/ 5</span>
-          </div>
-        </div>
-        <div style="width:36px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;"><div id="lives-protected-bar" style="height:100%;background:linear-gradient(90deg,#10b981,#06b6d4);border-radius:2px;width:0%;transition:width 0.6s ease;"></div></div>
-      </div>
-      <button id="btn-nobility-charter" class="btn-secondary" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399; display: inline-flex; align-items: center; gap: 0.4rem;" title="Medical Nobility, Hippocratic Charter & Clinical Whitepaper">
-        <span id="txt-nobility-btn">🏛️ Medical Nobility & Ethics</span>
-      </button>
-      <button id="btn-patient-outreach" class="btn-secondary btn-outreach" title="Test Patient Plain-Language Empathy Notification Simulator">
-        <span id="txt-outreach-btn">📱 Patient Outreach</span>
+      <button id="btn-api-keys" class="btn-secondary btn-api-highlight" title="What ClinLoop is really connected to, checked live">
+        <span id="txt-api-btn">🔑 API Keys</span>
+        <span class="api-status-pill" id="api-status-pill" style="color: var(--text-dim); border-color: var(--border-card);">CHECKING…</span>
       </button>
       <button id="btn-biomcp" class="btn-secondary btn-biomcp-highlight" title="Inspect Model Context Protocol Biomedical Grounding">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -150,19 +105,41 @@
         <span id="txt-biomcp-btn">🧬 BioMCP Evidence</span>
         <span class="biomcp-status-pill" id="biomcp-status-pill" style="color: var(--text-dim); border-color: var(--border-card);">CHECKING…</span>
       </button>
-      <a href="worklist.html" class="btn-secondary" style="text-decoration:none;" title="Pilot worklist: ranked open loops with acknowledge, defer and close actions">🩺 Clinician Worklist</a>
-      <button id="btn-api-keys" class="btn-secondary btn-api-highlight" title="What ClinLoop is really connected to, checked live">
-        <span id="txt-api-btn">🔑 API Keys</span>
-        <span class="api-status-pill" id="api-status-pill" style="color: var(--text-dim); border-color: var(--border-card);">CHECKING…</span>
+      <button id="btn-patient-outreach" class="btn-secondary btn-outreach" title="Test Patient Plain-Language Empathy Notification Simulator">
+        <span id="txt-outreach-btn">📱 Patient Outreach</span>
       </button>
-      <button id="sound-toggle" class="btn-secondary" title="Toggle audio telemetry">🔊 Audio: On</button>
-      <button id="btn-emr-comparison" class="btn-secondary">
+      <details class="more-menu">
+        <summary class="btn-secondary" aria-label="More">⋯ <span id="txt-more-btn">More</span></summary>
+        <div class="more-menu-list" role="menu">
+          <button id="btn-nobility-charter" class="btn-secondary" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #34d399; display: inline-flex; align-items: center; gap: 0.4rem;" title="Medical Nobility, Hippocratic Charter & Clinical Whitepaper">
+        <span id="txt-nobility-btn">🏛️ Medical Nobility & Ethics</span>
+      </button>
+          <button id="btn-emr-comparison" class="btn-secondary">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="18" height="18" rx="2"/>
           <path d="M9 3v18"/>
         </svg>
         <span id="txt-emr-btn">Compare vs EMR</span>
       </button>
+          <button id="sound-toggle" class="btn-secondary" title="Toggle audio telemetry">🔇 Audio: Off</button>
+        </div>
+      </details>
+      <div class="theme-segmented-control prominent-theme-pill" role="group" aria-label="Theme Switcher">
+        <button id="theme-opt-light" class="theme-opt-btn active" title="Light Mode">
+          ☀️ Light
+        </button>
+        <button id="theme-opt-dark" class="theme-opt-btn" title="Dark Mode">
+          🌙 Dark
+        </button>
+      </div>
+      <div class="prominent-lang-pill" role="group" aria-label="Language Selector">
+        <button id="lang-opt-ko" class="lang-opt-btn" title="Korean">
+          🇰🇷 Korean
+        </button>
+        <button id="lang-opt-en" class="lang-opt-btn active" title="English">
+          🇺🇸 English
+        </button>
+      </div>
     </div>
   </header>
 
@@ -1779,6 +1756,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
   <script src="config.js"></script>
 <script src="js/demo.js"></script>
 <script src="js/top-chrome.js"></script>
+<script src="js/appnav.js"></script>
   <script src="js/safety_clock.js?v=20260930_final"></script>
   <script src="js/hypergraph.js?v=20260930_final"></script>
   <script src="js/app.js?v=20260930_final"></script>
