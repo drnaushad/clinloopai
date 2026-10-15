@@ -63,6 +63,9 @@ class EventType(Enum):
     DIAGNOSTIC_PATTERN = "diagnostic_pattern"     # a dangerous combination across events (motifs.py)
     SECOND_READER_FLAG = "second_reader_flag"     # an actionable report item no rule tracked (second_reader.py)
     ECG = "ecg"                                   # an electrocardiogram and its interpretation (fhir_ingest, ecg)
+    HIV_SUPPLEMENTAL_TEST = "hiv_supplemental_test"  # HIV-1 RNA or HIV-1/2 differentiation assay (guideline_reports)
+    HBV_DNA_TEST = "hbv_dna_test"                 # hepatitis B virus DNA (viral load)
+    COLONOSCOPY_FINDING = "colonoscopy_finding"   # a colonoscopy/polyp pathology finding that sets a surveillance interval
 
 
 # ── Severity Classification ─────────────────────────────────────────────────
@@ -1055,6 +1058,122 @@ OBLIGATION_RULES: List[ObligationRule] = [
                        "and magnesium."),
         patient_outreach=False,
     ),
+    ObligationRule(
+        rule_id="R060",
+        name="Reactive HIV Screening Test → Supplemental Test or HIV Care ≤30 Days",
+        description=("A reactive HIV-1/2 antigen/antibody (or rapid antibody) screening test needs a supplemental test "
+                     "(HIV-1/HIV-2 differentiation assay or HIV-1 RNA) and linkage to HIV care"),
+        trigger_event=EventType.LAB_RESULT,
+        trigger_condition="hiv_screen_reactive",
+        required_followups=[EventType.HIV_SUPPLEMENTAL_TEST, EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT],
+        followup_logic="any",
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="infectious_disease",
+        ltl_formula="□(LAB_RESULT[HIV screen reactive] → ◇_{≤30d} (SUPPLEMENTAL_TEST ∨ ID/HIV REFERRAL))",
+        references=["CDC and APHL. Laboratory Testing for the Diagnosis of HIV Infection: Updated Recommendations. 2014; "
+                    "Technical update 2018",
+                    "CDC. Understanding the HIV Care Continuum: linkage to care within 30 days of diagnosis"],
+        evidence_note=("Supplemental testing is normally reflexed on the same specimen. A known HIV diagnosis on the "
+                       "problem list does not trigger it; an indeterminate screen is shown for review, not tracked."),
+        patient_outreach=False,
+    ),
+    ObligationRule(
+        rule_id="R061",
+        name="HBsAg Positive → HBV DNA or Specialist Evaluation ≤30 Days",
+        description=("A positive hepatitis B surface antigen means hepatitis B infection: evaluate with HBV DNA "
+                     "(and HBeAg, ALT) or refer to hepatology, gastroenterology or infectious disease"),
+        trigger_event=EventType.LAB_RESULT,
+        trigger_condition="hbsag_positive",
+        required_followups=[EventType.HBV_DNA_TEST, EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT],
+        followup_logic="any",
+        deadline_days=30.0,
+        severity=Severity.MODERATE,
+        clinical_domain="hepatology",
+        ltl_formula="□(LAB_RESULT[HBsAg+] → ◇_{≤30d} (HBV_DNA ∨ HEPATOLOGY/GI/ID REFERRAL))",
+        references=["Terrault NA et al. Update on prevention, diagnosis, and treatment of chronic hepatitis B: "
+                    "AASLD 2018 hepatitis B guidance. Hepatology 2018;67:1560-99"],
+        evidence_note=("Anti-HBs (surface antibody) is immunity and anti-HBc alone is not this rule. A known chronic "
+                       "hepatitis B diagnosis does not trigger it (liver-cancer surveillance is R027). 30 days is a "
+                       "proposed limit."),
+    ),
+    ObligationRule(
+        rule_id="R062",
+        name="Positive TB Infection Test (IGRA / TST ≥10 mm) → Chest Radiograph ≤30 Days",
+        description=("A positive interferon-gamma release assay or a tuberculin skin test of 10 mm or more: a chest "
+                     "radiograph to exclude active tuberculosis before latent TB treatment"),
+        trigger_event=EventType.LAB_RESULT,
+        trigger_condition="tb_infection_test_positive",
+        required_followups=[EventType.IMAGING_XRAY, EventType.IMAGING_CT, EventType.FOLLOWUP_CT],
+        followup_logic="any",
+        deadline_days=30.0,
+        severity=Severity.MODERATE,
+        clinical_domain="infectious_disease",
+        ltl_formula="□(LAB_RESULT[IGRA+ ∨ TST ≥ 10mm] → ◇_{≤30d} IMAGING[chest])",
+        references=["Lewinsohn DM et al. Official ATS/IDSA/CDC Clinical Practice Guidelines: Diagnosis of Tuberculosis "
+                    "in Adults and Children. Clin Infect Dis 2017;64:e1-e33",
+                    "Sterling TR et al. Guidelines for the Treatment of Latent TB Infection: NTCA and CDC, 2020. "
+                    "MMWR Recomm Rep 2020;69(RR-1)"],
+        evidence_note=("The TST cut-off is 5, 10 or 15 mm by risk group; 10 mm is used here. Indeterminate or "
+                       "borderline IGRA results are shown for review, not tracked. Closed by chest imaging only."),
+    ),
+    ObligationRule(
+        rule_id="R063",
+        name="Colonoscopy Findings → Surveillance Colonoscopy at the USMSTF Interval",
+        description=("Inadequate bowel preparation (repeat within 1 year), piecemeal resection of a polyp ≥ 20 mm "
+                     "(6 months), or advanced findings (adenoma ≥ 10 mm, villous histology, high-grade dysplasia, "
+                     "≥ 5 adenomas, serrated lesion ≥ 10 mm or with dysplasia, traditional serrated adenoma: 3 years)"),
+        trigger_event=EventType.COLONOSCOPY_FINDING,
+        trigger_condition="colonoscopy_surveillance",
+        required_followups=[EventType.COLONOSCOPY],
+        deadline_days=1096.0,
+        severity=Severity.HIGH,
+        clinical_domain="gastroenterology",
+        ltl_formula="□(COLONOSCOPY[finding] → ◇_{≤interval} COLONOSCOPY)",
+        references=["Gupta S et al. Recommendations for Follow-Up After Colonoscopy and Polypectomy: US Multi-Society "
+                    "Task Force on Colorectal Cancer. Gastroenterology 2020;158:1131-53",
+                    "Kaminski MF et al. Post-polypectomy surveillance: ESGE Guideline Update 2020. Endoscopy 2020;52:687-700"],
+        evidence_note=("The interval comes from the endoscopy and pathology reports of one colonoscopy, read together "
+                       "(the shortest applies). Intervals over 3 years (1–4 small adenomas: 3–10 years) are not "
+                       "tracked. Cancer follows the pathology pathway (R009). A colonoscopy within 30 days (completion "
+                       "or re-resection) is not surveillance."),
+    ),
+    ObligationRule(
+        rule_id="R064",
+        name="Severe Aortic Stenosis on Echocardiogram → Cardiology / Heart Valve Team ≤30 Days",
+        description=("Severe aortic stenosis (AVA < 1.0 cm², mean gradient ≥ 40 mmHg, peak velocity ≥ 4.0 m/s, or "
+                     "stated as severe): cardiology or heart valve team evaluation"),
+        trigger_event=EventType.ECHOCARDIOGRAM,
+        trigger_condition="severe_aortic_stenosis",
+        required_followups=[EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT],
+        followup_logic="any",
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="cardiology",
+        ltl_formula="□(ECHO[severe AS] → ◇_{≤30d} CARDIOLOGY/VALVE TEAM)",
+        references=["Otto CM et al. 2020 ACC/AHA Guideline for the Management of Patients With Valvular Heart "
+                    "Disease. Circulation 2021;143:e72-e227"],
+        evidence_note=("Symptomatic severe AS carries a high short-term mortality without valve replacement. A "
+                       "prosthetic aortic valve is excluded (native-valve criteria). 30 days is a proposed limit."),
+    ),
+    ObligationRule(
+        rule_id="R065",
+        name="New LVEF ≤40% on Echocardiogram → Cardiology / Heart-Failure Care ≤30 Days",
+        description=("An ejection fraction of 40% or less (or severely reduced LV function) in a patient without "
+                     "known heart failure: cardiology evaluation to start guideline-directed therapy"),
+        trigger_event=EventType.ECHOCARDIOGRAM,
+        trigger_condition="reduced_ejection_fraction",
+        required_followups=[EventType.SPECIALIST_REFERRAL, EventType.REFERRAL_VISIT],
+        followup_logic="any",
+        deadline_days=30.0,
+        severity=Severity.HIGH,
+        clinical_domain="cardiology",
+        ltl_formula="□(ECHO[LVEF ≤ 40%] ∧ ¬known HF → ◇_{≤30d} CARDIOLOGY)",
+        references=["Heidenreich PA et al. 2022 AHA/ACC/HFSA Guideline for the Management of Heart Failure. "
+                    "Circulation 2022;145:e895-e1032"],
+        evidence_note=("A range is judged by its upper value (35–40% counts, 40–45% does not). A patient with heart "
+                       "failure or cardiomyopathy already on the problem list is not alerted again."),
+    ),
 ]
 
 
@@ -1120,6 +1239,12 @@ RULE_NAMES_KO: Dict[str, str] = {
     "R057": "판독 전 검사의 영상 AI 위급 소견 → 즉시 판독",
     "R058": "규칙이 놓친 판독문 조치 사항(2차 판독 모델) → 의료진 검토",
     "R059": "QTc 500ms 이상 연장 → 24시간 내 약물 검토·심전도 재검",
+    "R060": "HIV 선별검사 반응성 → 30일 내 확인검사·HIV 진료 연계",
+    "R061": "B형간염 표면항원 양성 → 30일 내 HBV DNA·전문의 평가",
+    "R062": "결핵 감염검사 양성(IGRA/TST ≥10mm) → 30일 내 흉부 X선",
+    "R063": "대장내시경 소견 → 지침 간격의 감시 대장내시경",
+    "R064": "심초음파 중증 대동맥판 협착 → 30일 내 순환기내과·판막팀",
+    "R065": "심초음파 LVEF ≤40% (신규) → 30일 내 순환기내과",
 }
 assert set(RULE_NAMES_KO) == {r.rule_id for r in OBLIGATION_RULES}, "every rule needs a Korean name"
 

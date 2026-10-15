@@ -304,6 +304,36 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
         details["issued"] = r["issued"]
     mapping = ["Observation→lab_result"]
 
+    # HIV, hepatitis B and TB infection tests, read against their guidelines (guideline_reports, R060–R062)
+    from .guideline_reports import classify_lab
+    interp_codes = {c for i in r.get("interpretation", []) for c in _codes(i)}
+    guideline = classify_lab(codes, code_text, value_text, flag, value, details.get("unit"), interp_codes)
+    if guideline is not None:
+        details.pop("flag", None)        # the guideline rule is the obligation; no generic "abnormal" duplicates
+        mapping += guideline["mapping"]
+        condition = guideline.get("condition")
+        if condition:
+            details["condition"] = condition
+            details["evidence_span"] = value_text or (f"{value} {details.get('unit') or ''}".strip() if value is not None else None)
+        if condition == "hiv_screen_reactive":
+            details["followup_match"] = {"R060": {"specialty": ["infectious_disease"],
+                                                  "_only_for": [EventType.SPECIALIST_REFERRAL.value,
+                                                                EventType.REFERRAL_VISIT.value]}}
+        elif condition == "hbsag_positive":
+            details["followup_match"] = {"R061": {"specialty": ["hepatology", "gastroenterology", "infectious_disease"],
+                                                  "_only_for": [EventType.SPECIALIST_REFERRAL.value,
+                                                                EventType.REFERRAL_VISIT.value]}}
+        elif condition == "tb_infection_test_positive":
+            details["followup_regions"] = {"R062": ["chest", "lung"]}
+        if guideline.get("review_note"):
+            details["review_note_all"] = guideline["review_note"]
+        details["mapping"] = mapping
+        events = [(EventType.LAB_RESULT.value, ts, details)]
+        if guideline.get("followup_event"):
+            events.append((guideline["followup_event"], ts, {"test": details.get("test"),
+                                                             "mapping": guideline["mapping"]}))
+        return events
+
     is_culture = "culture" in code_text or "배양" in code_text or "microbiology" in _all_category_text(r)
     if is_culture:
         positive = flag in ("ABNORMAL", "CRITICAL") or bool(
@@ -413,6 +443,16 @@ def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
             + "): check the text and the date against the original document."
             + (" The report date was not found; the upload date was used." if "date-unknown" in tags else ""))
 
+    from .guideline_reports import (colonoscopy_interval, echo_findings, is_colon_pathology,
+                                    is_colonoscopy_report, is_echo_report)
+    if is_echo_report(code_text, category):
+        return _map_echo_report(ts, conclusion, details)
+    is_pathology = "pat" in category or "pathology" in category or "sp" in category.split()
+    if not is_pathology and is_colonoscopy_report(code_text, category, conclusion):
+        events = [(EventType.COLONOSCOPY.value, ts, {**details, "mapping": ["DiagnosticReport(colonoscopy)→colonoscopy"]})]
+        finding = _colonoscopy_finding(ts, colonoscopy_interval(conclusion), details, "colonoscopy report")
+        return events + finding
+
     if "rad" in category or "imaging" in category or "radiology" in category:
         return map_radiology_report(ts, code_text, conclusion, details)
 
@@ -426,9 +466,60 @@ def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
             details.update(condition="abnormal", evidence_span=_span(conclusion, m))
             mapping.append(f"'{m.group(1)}'→abnormal")
         details["mapping"] = mapping
-        return [(EventType.PATHOLOGY_RESULT.value, ts, details)]
+        events = [(EventType.PATHOLOGY_RESULT.value, ts, details)]
+        from .guideline_reports import _CANCER, _affirmed
+        sites = biopsy_regions(conclusion)
+        # Cancer itself (adenocarcinoma, carcinoma), not high-grade dysplasia, which stays on surveillance
+        if _affirmed(_CANCER, conclusion) and (not sites or "colon" in sites):
+            details["colon_cancer"] = True      # a colonoscopy with cancer follows the cancer pathway (R063 not opened)
+        if is_colon_pathology(conclusion):     # polyp histology sets the surveillance interval (R063)
+            base = {k: v for k, v in details.items() if k not in ("condition", "evidence_span", "mapping")}
+            interval = colonoscopy_interval(conclusion)
+            if interval.get("cancer"):
+                details["colon_cancer"] = True      # this colonoscopy follows the cancer pathway, not surveillance
+            events += _colonoscopy_finding(ts, interval, base, "polyp pathology")
+        return events
 
     return []  # lab DiagnosticReports: the referenced Observations carry the data
+
+
+def _colonoscopy_finding(ts, interval: Dict[str, Any], details: Dict[str, Any], source: str) -> List[Tuple[str, str, Dict]]:
+    """A colonoscopy finding that sets a surveillance interval of 3 years or less (R063), or nothing."""
+    if not interval.get("days"):
+        return []
+    out = {**details, "condition": "colonoscopy_surveillance", "source": source,
+           "rule_deadline_days": {"R063": interval["days"]},
+           # A colonoscopy within 30 days (completion, re-resection) is not the surveillance examination
+           "followup_not_before_days": {"R063": 30},
+           "evidence_span": "; ".join(interval["reasons"]),
+           "mapping": [f"DiagnosticReport({source})→colonoscopy_finding"] + interval["reasons"]}
+    if interval.get("review_note"):
+        out["review_note_all"] = interval["review_note"]
+    return [(EventType.COLONOSCOPY_FINDING.value, ts, out)]
+
+
+def _map_echo_report(ts, text: str, details: Dict[str, Any]) -> List[Tuple[str, str, Dict]]:
+    """An echocardiogram: the study itself (closes R016), severe aortic stenosis (R064), reduced EF (R065)."""
+    from .guideline_reports import echo_findings
+    f = echo_findings(text or "")
+    mapping = ["DiagnosticReport(echo)→echocardiogram"]
+    extra: List[str] = []
+    out = {**details, "lvef": f["lvef"]}
+    if f["severe_as"]:
+        extra.append("severe_aortic_stenosis")
+        mapping.append("severe aortic stenosis: " + "; ".join(f["as_evidence"]))
+        out["followup_match"] = {"R064": {"specialty": ["cardiology", "cardiac_surgery"]}}
+    elif f["as_evidence"]:
+        mapping += f["as_evidence"]
+    if f["reduced_ef"]:
+        extra.append("reduced_ejection_fraction")
+        mapping.append(f["ef_evidence"])
+        out.setdefault("followup_match", {})["R065"] = {"specialty": ["cardiology"]}
+    if extra:
+        out["extra_conditions"] = extra
+        out["evidence_span"] = "; ".join(filter(None, f["as_evidence"] + [f["ef_evidence"] or ""]))
+    out["mapping"] = mapping
+    return [(EventType.ECHOCARDIOGRAM.value, ts, out)]
 
 
 def _is_ai_observation(r: Dict) -> bool:
@@ -806,6 +897,16 @@ def _map_procedure(r: Dict) -> List[Tuple[str, str, Dict]]:
         etype = EventType.COLPOSCOPY_VISIT.value
     elif "biopsy" in text or "aspiration" in text or re.search(r"\bfna\b", text) or "조직검사" in text or "세침" in text:
         etype = EventType.BIOPSY_RESULT.value
+    elif re.search(r"x-?ray|radiograph|\bcxr\b|chest film|흉부\s*(?:x|엑스|촬영)|\bct\b|computed tomograph|단층\s*촬영", text):
+        from .radiology import expand_regions, regions_in
+        regions = sorted(expand_regions(set(regions_in(text)) | ({"chest", "lung"} if re.search(r"\bcxr\b|chest|흉부|폐", text) else set())))
+        is_ct = bool(re.search(r"\bct\b|computed tomograph|단층", text))
+        etype = (EventType.IMAGING_CT if is_ct else EventType.IMAGING_XRAY).value
+        out = [(etype, ts, {"procedure": _concept_text(r.get("code")), "body_regions": regions,
+                            "mapping": [f"Procedure({'CT' if is_ct else 'radiograph'})→{etype}"]})]
+        if is_ct and "chest" in regions:
+            out.append((EventType.FOLLOWUP_CT.value, ts, {"body_regions": regions, "mapping": ["Procedure(chest CT)→followup_ct"]}))
+        return out
     elif re.search(r"\breferral (?:to|for)\b|\breferred to\b|의뢰", text):
         # Some EHRs record a referral as a procedure ("Referral to cardiology service", SNOMED 3457005).
         # Only a referral to a recognised medical specialty counts: a dental or home-care referral
@@ -1053,6 +1154,7 @@ def _derive_context(events: List[Dict]) -> None:
     _group_abnormal_results(events, ts, stays)
     _mark_renewals(events, ts)
     _mark_known_heart_failure(events, ts)
+    _mark_guideline_context(events, ts)
     _mark_hdp_deliveries(events, ts)
     med_changes = [e for e in events if e["event_type"] == EventType.MEDICATION_CHANGE.value
                    and e["details"].get("condition") == "requires_monitoring"]
@@ -1278,6 +1380,78 @@ def _mark_known_heart_failure(events: List[Dict], ts) -> None:
                     and _HEART_FAILURE.search(str(x["details"].get("primary_diagnosis", ""))) for x in events):
             e["details"]["known_heart_failure"] = True
             e["details"].setdefault("mapping", []).append("heart failure known before this stay: not a new diagnosis")
+
+
+# Exposure, prophylaxis or a test being ruled out is not a diagnosis
+_NOT_A_DIAGNOSIS = re.compile(r"exposure|exposed|contact|prophyla|\bPrEP\b|\bPEP\b|screening|at risk|risk of|rule out|\br/o\b|"
+                              r"suspected|vaccinat|immuni[sz]|노출|예방|선별|의심", re.I)
+_KNOWN_HIV = re.compile(r"\bhiv\b|human immunodeficiency|\baids\b|에이즈|인체\s*면역\s*결핍", re.I)
+_KNOWN_HBV = re.compile(r"hepatitis b|\bhbv\b|chronic hepatitis b|b형\s*간염", re.I)
+_KNOWN_LV_DYSFUNCTION = re.compile(r"heart failure|\bhfr?ef\b|\bchf\b|cardiomyopath|ventricular (?:systolic )?dysfunction|"
+                                   r"심부전|심근\s*병증|좌심실\s*기능\s*(?:저하|부전)", re.I)
+
+
+def _mark_guideline_context(events: List[Dict], ts) -> None:
+    """
+    Context for R060, R061, R063 and R065, which needs more than one resource:
+      * a reactive HIV screen or a positive HBsAg in a patient already diagnosed is not new (R060, R061);
+      * an LVEF ≤ 40 % in a patient with known heart failure, cardiomyopathy or an earlier low EF is not new (R065);
+      * one colonoscopy: its endoscopy and pathology reports open one surveillance obligation, dated at the
+        colonoscopy, with the shortest interval (R063).
+    """
+    diagnoses = [(ts(e), str(e["details"].get("diagnosis", ""))) for e in events
+                 if e["event_type"] == EventType.DIAGNOSIS.value and e["timestamp"]]
+    hf_discharges = [ts(e) for e in events if e["event_type"] == EventType.DISCHARGE.value
+                     and _HEART_FAILURE.search(str(e["details"].get("primary_diagnosis", "")))]
+    for e in events:
+        d = e["details"]
+        cond = d.get("condition")
+        if e["event_type"] == EventType.LAB_RESULT.value and cond in ("hiv_screen_reactive", "hbsag_positive"):
+            known = _KNOWN_HIV if cond == "hiv_screen_reactive" else _KNOWN_HBV
+            if any(t <= ts(e) and known.search(text) and not _NOT_A_DIAGNOSIS.search(text) for t, text in diagnoses):
+                d.pop("condition", None)
+                d.setdefault("mapping", []).append("already diagnosed (problem list): not a new result to act on")
+        if e["event_type"] == EventType.ECHOCARDIOGRAM.value and "reduced_ejection_fraction" in (d.get("extra_conditions") or []):
+            t = ts(e)
+            earlier_low_ef = any(x is not e and x["event_type"] == EventType.ECHOCARDIOGRAM.value and ts(x) < t
+                                 and isinstance(x["details"].get("lvef"), (int, float)) and x["details"]["lvef"] <= 40
+                                 for x in events)
+            if earlier_low_ef or any(k <= t for k in hf_discharges) or \
+                    any(k <= t and _KNOWN_LV_DYSFUNCTION.search(text) for k, text in diagnoses):
+                d["extra_conditions"] = [c for c in d["extra_conditions"] if c != "reduced_ejection_fraction"]
+                d.setdefault("mapping", []).append("reduced EF already known (heart failure / cardiomyopathy / earlier echo): R065 not opened")
+
+    # One colonoscopy, one surveillance obligation
+    findings = sorted((e for e in events if e["event_type"] == EventType.COLONOSCOPY_FINDING.value
+                       and e["details"].get("condition") == "colonoscopy_surveillance"), key=ts)
+    scopes = sorted(ts(e) for e in events if e["event_type"] == EventType.COLONOSCOPY.value and e["timestamp"])
+    groups: List[List[Dict]] = []
+    for f in findings:
+        if groups and ts(f) - ts(groups[-1][0]) <= timedelta(days=30):
+            groups[-1].append(f)
+        else:
+            groups.append([f])
+    for group in groups:
+        first = ts(group[0])
+        index = [t for t in scopes if first - timedelta(days=30) <= t <= first]
+        keep = min(group, key=lambda f: f["details"]["rule_deadline_days"]["R063"])
+        # Cancer found on any report of this colonoscopy: the cancer pathway applies, not surveillance
+        if any(x["event_type"] == EventType.PATHOLOGY_RESULT.value and x["details"].get("colon_cancer")
+               and first - timedelta(days=1) <= ts(x) <= first + timedelta(days=30) for x in events):
+            for f in group:
+                f["details"].pop("condition", None)
+                f["details"].setdefault("mapping", []).append("cancer on the pathology of this colonoscopy: cancer pathway (R009)")
+            continue
+        for f in group:
+            if f is not keep:
+                f["details"].pop("condition", None)
+                f["details"].setdefault("mapping", []).append("same colonoscopy as another report: one obligation")
+        reasons = [str(f["details"].get("evidence_span")) for f in group if f["details"].get("evidence_span")]
+        keep["details"]["evidence_span"] = "; ".join(dict.fromkeys(reasons))
+        anchor = index[0] if index else first
+        if anchor != ts(keep):
+            keep["timestamp"] = anchor.isoformat()
+            keep["details"].setdefault("mapping", []).append(f"interval counted from the colonoscopy on {anchor.date()}")
 
 
 def patient_names(resources: List[Dict], patient_id: str) -> List[str]:

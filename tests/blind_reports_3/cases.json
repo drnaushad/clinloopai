@@ -1,0 +1,8068 @@
+[
+ {
+  "id": "C001",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1107",
+    "gender": "male",
+    "birthDate": "1991-04-12"
+   },
+   {
+    "resourceType": "Condition",
+    "id": "cond-bx3-1107-1",
+    "clinicalStatus": {
+     "coding": [
+      {
+       "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "text": "High risk sexual behavior - MSM, PrEP counselling requested"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1107"
+    },
+    "onsetDateTime": "2026-05-20T00:00:00+09:00"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1107-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV Ag/Ab Combo (CMIA, 4th gen)",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "56888-1",
+       "display": "HIV Ag/Ab Combo (CMIA, 4th gen)"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1107"
+    },
+    "effectiveDateTime": "2026-08-03T10:15:00+09:00",
+    "valueString": "Reactive    45.21 S/CO    [<1.00]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "Repeatedly reactive (duplicate). Supplemental testing recommended per CDC algorithm."
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-08-10T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R060",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Reactive 4th-gen Ag/Ab screen; 'high risk behavior' is not an HIV diagnosis; no RNA/differentiation/ID follow-up."
+ },
+ {
+  "id": "C002",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1114",
+    "gender": "female",
+    "birthDate": "1984-09-30"
+   },
+   {
+    "resourceType": "Condition",
+    "id": "cond-bx3-1114-1",
+    "clinicalStatus": {
+     "coding": [
+      {
+       "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "text": "Pre-exposure prophylaxis (PrEP) for HIV - TDF/FTC 복용중"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1114"
+    },
+    "onsetDateTime": "2025-11-03T00:00:00+09:00"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1114-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV 신속항체검사 (Rapid HIV-1/2 Ab, OraQuick)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1114"
+    },
+    "effectiveDateTime": "2026-07-14T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "양성 (Reactive) - 확진검사 의뢰 필요"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "PrEP 3개월 f/u 방문 중 시행. 환자에게 결과 설명함, 혈액 4세대 검사 및 확진 예정"
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-07-21T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R060",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Reactive rapid HIV antibody test; PrEP is not an HIV diagnosis; no supplemental test or ID visit recorded."
+ },
+ {
+  "id": "C003",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1121",
+    "gender": "male",
+    "birthDate": "1978-01-22"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1121-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV Ag/Ab (5th gen, BioPlex 2200)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1121"
+    },
+    "effectiveDateTime": "2026-06-02T10:15:00+09:00",
+    "valueString": "REACTIVE  (S/CO 212.7)  ref: Non-reactive",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1121-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV-1 RNA, quantitative (real-time PCR)",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "20447-9",
+       "display": "HIV-1 RNA, quantitative (real-time PCR)"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1121"
+    },
+    "effectiveDateTime": "2026-06-10T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 85400,
+     "unit": "copies/mL"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "A"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "log10 = 4.93. Lower limit of quantitation 20 copies/mL"
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-06-17T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R060",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "Reactive screen followed 8 days later by HIV-1 RNA quantitation -> closed."
+ },
+ {
+  "id": "C004",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1128",
+    "gender": "male",
+    "birthDate": "1969-12-05"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1128-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV Ag/Ab (ECLIA)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1128"
+    },
+    "effectiveDateTime": "2026-03-09T10:15:00+09:00",
+    "valueString": "Reactive / 양성   COI 38.6   (참고치 <1.0)",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "수술전 검사. 재검 반복 양성"
+     }
+    ]
+   },
+   {
+    "resourceType": "ServiceRequest",
+    "id": "sr-bx3-1128-2",
+    "status": "active",
+    "intent": "order",
+    "code": {
+     "text": "감염내과 의뢰 (Referral to Infectious Disease) - HIV screening reactive, 확진 및 치료 상담"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1128"
+    },
+    "authoredOn": "2026-03-11T14:20:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-03-18T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R060",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "Pre-op reactive HIV screen; ID referral two days later -> closed."
+ },
+ {
+  "id": "C005",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1135",
+    "gender": "female",
+    "birthDate": "1995-03-17"
+   },
+   {
+    "resourceType": "Condition",
+    "id": "cond-bx3-1135-1",
+    "clinicalStatus": {
+     "coding": [
+      {
+       "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "text": "Occupational exposure - needlestick injury (source pt unknown)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1135"
+    },
+    "onsetDateTime": "2025-11-28T00:00:00+09:00"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1135-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV-1 RNA, qualitative (NAT)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1135"
+    },
+    "effectiveDateTime": "2025-12-01T10:15:00+09:00",
+    "valueString": "Not detected  (<20 copies/mL)",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "N"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "Baseline for PEP"
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1135-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV Ag/Ab Combo (4th gen)",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "56888-1",
+       "display": "HIV Ag/Ab Combo (4th gen)"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1135"
+    },
+    "effectiveDateTime": "2026-07-20T10:15:00+09:00",
+    "valueString": "Reactive  6.84 S/CO  [<1.00]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-07-27T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R060",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Reactive screen in July 2026; the only HIV RNA is from Dec 2025 (before the screen) so does not close; exposure is not an HIV diagnosis."
+ },
+ {
+  "id": "C006",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1142",
+    "gender": "male",
+    "birthDate": "1988-06-29"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1142-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV 항원/항체 (Ag/Ab combo)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1142"
+    },
+    "effectiveDateTime": "2026-08-25T10:15:00+09:00",
+    "valueString": "반응성(Reactive)   19.3 S/CO   [<1.00]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "ServiceRequest",
+    "id": "sr-bx3-1142-2",
+    "status": "active",
+    "intent": "order",
+    "code": {
+     "text": "Referral to Dermatology - 피부과 의뢰: 음경 궤양성 병변 r/o syphilis/HSV"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1142"
+    },
+    "authoredOn": "2026-08-26T14:20:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-09-02T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R060",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Reactive HIV screen; only follow-up is a dermatology referral (wrong service) -> still open."
+ },
+ {
+  "id": "C007",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1149",
+    "gender": "female",
+    "birthDate": "1972-10-08"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1149-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV Ag/Ab Combo (4th gen)",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "56888-1",
+       "display": "HIV Ag/Ab Combo (4th gen)"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1149"
+    },
+    "effectiveDateTime": "2026-05-11T10:15:00+09:00",
+    "valueString": "Non-reactive   0.11 S/CO   [<1.00]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-05-18T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Non-reactive screen."
+ },
+ {
+  "id": "C008",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1156",
+    "gender": "male",
+    "birthDate": "1965-02-14"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1156-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV Ag/Ab Combo (4th gen)",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "56888-1",
+       "display": "HIV Ag/Ab Combo (4th gen)"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1156"
+    },
+    "effectiveDateTime": "2026-04-17T10:15:00+09:00",
+    "valueString": "Indeterminate (grey zone)  S/CO 0.96 -- recommend repeat in 2-4 wks",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "IND"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-04-24T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Indeterminate screen - excluded by definition."
+ },
+ {
+  "id": "C009",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1163",
+    "gender": "male",
+    "birthDate": "1980-07-01"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1163-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV-1/HIV-2 Antibody Differentiation Immunoassay (Geenius)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1163"
+    },
+    "effectiveDateTime": "2026-06-23T10:15:00+09:00",
+    "valueString": "HIV-1 Ab: POSITIVE | HIV-2 Ab: Negative | Interpretation: HIV-1 positive",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-06-30T09:00:00+09:00",
+  "expected": [],
+  "rationale": "This is the supplemental differentiation assay itself, not a screening test -> R060 not triggered."
+ },
+ {
+  "id": "C010",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1170",
+    "gender": "male",
+    "birthDate": "1975-11-19"
+   },
+   {
+    "resourceType": "Condition",
+    "id": "cond-bx3-1170-1",
+    "clinicalStatus": {
+     "coding": [
+      {
+       "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "text": "HIV-1 infection (B20) - on ART (BIC/FTC/TAF), VL undetectable"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1170"
+    },
+    "onsetDateTime": "2019-03-04T00:00:00+09:00"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1170-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV Ag/Ab (CMIA)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1170"
+    },
+    "effectiveDateTime": "2026-02-14T10:15:00+09:00",
+    "valueString": "Reactive  >500 S/CO",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "정형외과 수술전 routine screening - 기존 HIV 감염 환자"
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-02-21T09:00:00+09:00",
+  "expected": [],
+  "rationale": "HIV infection already on the problem list -> excluded."
+ },
+ {
+  "id": "C011",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1177",
+    "gender": "female",
+    "birthDate": "1990-05-25"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1177-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV 항원/항체 (CMIA) [건강검진]"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1177"
+    },
+    "effectiveDateTime": "2026-09-02T10:15:00+09:00",
+    "valueString": "0.08 S/CO   음성 (Non-reactive)   [<1.00]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-09-09T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Non-reactive (Korean health check)."
+ },
+ {
+  "id": "C012",
+  "rule_focus": "R060",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1184",
+    "gender": "male",
+    "birthDate": "1983-08-13"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1184-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV Ag/Ab Combo (4th gen)",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "56888-1",
+       "display": "HIV Ag/Ab Combo (4th gen)"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1184"
+    },
+    "effectiveDateTime": "2024-10-05T10:15:00+09:00",
+    "valueString": "Non-reactive 0.15 S/CO",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1184-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HIV Ag/Ab Combo (4th gen)",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "56888-1",
+       "display": "HIV Ag/Ab Combo (4th gen)"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1184"
+    },
+    "effectiveDateTime": "2026-07-02T10:15:00+09:00",
+    "valueString": "Reactive 88.0 S/CO  [<1.00]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Encounter",
+    "id": "enc-bx3-1184-3",
+    "status": "finished",
+    "class": {
+     "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+     "code": "AMB"
+    },
+    "serviceType": {
+     "text": "Infectious Disease (HIV clinic)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1184"
+    },
+    "period": {
+     "start": "2026-07-16T09:00:00+09:00",
+     "end": "2026-07-16T09:25:00+09:00"
+    }
+   }
+  ],
+  "evaluation_time": "2026-07-23T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R060",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "2024 non-reactive (no obligation); 2026 reactive closed by ID/HIV clinic visit 14 days later."
+ },
+ {
+  "id": "C013",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1191",
+    "gender": "male",
+    "birthDate": "1971-03-03"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1191-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBsAg (CMIA)",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "5196-1",
+       "display": "HBsAg (CMIA)"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1191"
+    },
+    "effectiveDateTime": "2026-08-11T10:15:00+09:00",
+    "valueString": "2,341.5 S/CO  Reactive  [<1.00]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1191-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Anti-HBs (CMIA)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1191"
+    },
+    "effectiveDateTime": "2026-08-11T10:15:00+09:00",
+    "valueString": "<2.0 mIU/mL  Negative  [<10.0]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-08-18T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R061",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "HBsAg reactive, no HBV DNA or hepatology/GI/ID follow-up."
+ },
+ {
+  "id": "C014",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1198",
+    "gender": "female",
+    "birthDate": "1986-12-20"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1198-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBsAg",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "5196-1",
+       "display": "HBsAg"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1198"
+    },
+    "effectiveDateTime": "2026-05-06T10:15:00+09:00",
+    "valueString": "Reactive  1,876.2 S/CO",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1198-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBV DNA quantitative (real-time PCR, Cobas)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1198"
+    },
+    "effectiveDateTime": "2026-05-19T10:15:00+09:00",
+    "valueString": "3.2 x 10^4 IU/mL  (log 4.51)",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "A"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-05-26T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R061",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "HBsAg positive closed by HBV DNA 13 days later."
+ },
+ {
+  "id": "C015",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1205",
+    "gender": "male",
+    "birthDate": "1958-04-09"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1205-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBs Ag (정량)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1205"
+    },
+    "effectiveDateTime": "2026-04-03T10:15:00+09:00",
+    "valueString": "양성 (Positive)   3,450 IU/mL",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "ServiceRequest",
+    "id": "sr-bx3-1205-2",
+    "status": "active",
+    "intent": "order",
+    "code": {
+     "text": "소화기내과 의뢰 (Referral to Gastroenterology) - HBsAg 양성, 만성 B형간염 평가"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1205"
+    },
+    "authoredOn": "2026-04-04T14:20:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-04-11T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R061",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "HBsAg positive closed by GI referral next day."
+ },
+ {
+  "id": "C016",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1212",
+    "gender": "female",
+    "birthDate": "1963-01-27"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1212-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBsAg (ECLIA)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1212"
+    },
+    "effectiveDateTime": "2026-06-15T10:15:00+09:00",
+    "valueString": "Reactive  COI 4021  [<1.0]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Encounter",
+    "id": "enc-bx3-1212-2",
+    "status": "finished",
+    "class": {
+     "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+     "code": "AMB"
+    },
+    "serviceType": {
+     "text": "Hepatology"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1212"
+    },
+    "period": {
+     "start": "2026-07-02T09:00:00+09:00",
+     "end": "2026-07-02T09:25:00+09:00"
+    }
+   }
+  ],
+  "evaluation_time": "2026-07-09T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R061",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "HBsAg positive closed by hepatology visit 17 days later."
+ },
+ {
+  "id": "C017",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1219",
+    "gender": "male",
+    "birthDate": "1977-09-11"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1219-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBV DNA PCR"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1219"
+    },
+    "effectiveDateTime": "2025-09-10T10:15:00+09:00",
+    "valueString": "Target not detected (<10 IU/mL)",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "N"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "Occult HBV r/o (anti-HBc +) - 2025"
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1219-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBsAg (CMIA)",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "5196-1",
+       "display": "HBsAg (CMIA)"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1219"
+    },
+    "effectiveDateTime": "2026-06-20T10:15:00+09:00",
+    "valueString": "Reactive  14.7 S/CO  [<1.00]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-06-27T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R061",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "HBsAg became positive in 2026; the only HBV DNA predates it -> does not close."
+ },
+ {
+  "id": "C018",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1226",
+    "gender": "female",
+    "birthDate": "1949-06-02"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1226-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "B형간염 표면항원 (HBsAg)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1226"
+    },
+    "effectiveDateTime": "2026-07-08T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "양성 (Reactive) 1,120 S/CO"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "ServiceRequest",
+    "id": "sr-bx3-1226-2",
+    "status": "active",
+    "intent": "order",
+    "code": {
+     "text": "Referral to Cardiology - new AF, 항응고 상담"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1226"
+    },
+    "authoredOn": "2026-07-09T14:20:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-07-16T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R061",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "HBsAg positive; referral is to cardiology (wrong service) -> open."
+ },
+ {
+  "id": "C019",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1233",
+    "gender": "male",
+    "birthDate": "1992-10-14"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1233-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBsAg (CMIA)",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "5196-1",
+       "display": "HBsAg (CMIA)"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1233"
+    },
+    "effectiveDateTime": "2026-03-22T10:15:00+09:00",
+    "valueString": "0.32 S/CO  Non-reactive  [<1.00]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1233-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Anti-HBs (CMIA)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1233"
+    },
+    "effectiveDateTime": "2026-03-22T10:15:00+09:00",
+    "valueString": "245.3 mIU/mL  Positive (immune)  [>=10.0]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-03-29T09:00:00+09:00",
+  "expected": [],
+  "rationale": "HBsAg negative, anti-HBs positive (immunity)."
+ },
+ {
+  "id": "C020",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1240",
+    "gender": "female",
+    "birthDate": "1968-08-18"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1240-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBsAg",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "5196-1",
+       "display": "HBsAg"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1240"
+    },
+    "effectiveDateTime": "2026-02-11T10:15:00+09:00",
+    "valueString": "Non-reactive  0.21 S/CO",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1240-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Anti-HBc total"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1240"
+    },
+    "effectiveDateTime": "2026-02-11T10:15:00+09:00",
+    "valueString": "Reactive  7.85 S/CO  [<1.00]",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1240-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Anti-HBs"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1240"
+    },
+    "effectiveDateTime": "2026-02-11T10:15:00+09:00",
+    "valueString": "<2.0 mIU/mL  Negative",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-02-18T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Isolated anti-HBc with negative HBsAg - not triggered."
+ },
+ {
+  "id": "C021",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1247",
+    "gender": "male",
+    "birthDate": "1960-05-31"
+   },
+   {
+    "resourceType": "Condition",
+    "id": "cond-bx3-1247-1",
+    "clinicalStatus": {
+     "coding": [
+      {
+       "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "text": "Chronic hepatitis B (B18.1) - entecavir 0.5mg 복용중"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1247"
+    },
+    "onsetDateTime": "2012-04-01T00:00:00+09:00"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1247-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBsAg (CMIA)",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "5196-1",
+       "display": "HBsAg (CMIA)"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1247"
+    },
+    "effectiveDateTime": "2026-05-27T10:15:00+09:00",
+    "valueString": "Reactive  4,880 S/CO",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-06-03T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Known chronic hepatitis B on problem list -> excluded."
+ },
+ {
+  "id": "C022",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1254",
+    "gender": "female",
+    "birthDate": "2001-02-19"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1254-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBs Ag 정성"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1254"
+    },
+    "effectiveDateTime": "2026-09-10T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "음성 (Negative)"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-09-17T09:00:00+09:00",
+  "expected": [],
+  "rationale": "HBsAg negative."
+ },
+ {
+  "id": "C023",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1261",
+    "gender": "male",
+    "birthDate": "1966-11-07"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1261-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBsAg 정성 (ELISA)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1261"
+    },
+    "effectiveDateTime": "2021-06-14T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "음성 Negative"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1261-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBsAg (CMIA) - 간기능 이상 work-up"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1261"
+    },
+    "effectiveDateTime": "2026-08-19T10:15:00+09:00",
+    "valueString": "양성  15.6 S/CO  [<1.00]   ** 이전(2021) 음성 **",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-08-26T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R061",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Prior 2021 negative; new positive HBsAg 2026 with no follow-up."
+ },
+ {
+  "id": "C024",
+  "rule_focus": "R061",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1268",
+    "gender": "female",
+    "birthDate": "1997-07-23"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1268-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "HBsAg",
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "5196-1",
+       "display": "HBsAg"
+      }
+     ]
+    },
+    "subject": {
+     "reference": "Patient/bx3-1268"
+    },
+    "effectiveDateTime": "2026-01-30T10:15:00+09:00",
+    "valueString": "Non-reactive 0.18 S/CO",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1268-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Anti-HBs"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1268"
+    },
+    "effectiveDateTime": "2026-01-30T10:15:00+09:00",
+    "valueString": "<2.0 mIU/mL  Negative -- non-immune, vaccination recommended",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-02-06T09:00:00+09:00",
+  "expected": [],
+  "rationale": "HBsAg negative (non-immune) - no R061 obligation."
+ },
+ {
+  "id": "C025",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1275",
+    "gender": "female",
+    "birthDate": "1979-02-11"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1275-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1275"
+    },
+    "effectiveDateTime": "2026-07-21T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 0.05,
+     "unit": "IU/mL"
+    }
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1275-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB1-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1275"
+    },
+    "effectiveDateTime": "2026-07-21T10:15:00+09:00",
+    "valueString": "2.31 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1275-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB2-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1275"
+    },
+    "effectiveDateTime": "2026-07-21T10:15:00+09:00",
+    "valueString": "3.10 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1275-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Mitogen-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1275"
+    },
+    "effectiveDateTime": "2026-07-21T10:15:00+09:00",
+    "valueString": ">10.00 IU/mL  [>=0.50]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1275-5",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Result"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1275"
+    },
+    "effectiveDateTime": "2026-07-21T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "Positive"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "Pre-employment screening (nurse)"
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-07-28T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R062",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "QFT overall Positive, no chest imaging afterwards."
+ },
+ {
+  "id": "C026",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1282",
+    "gender": "male",
+    "birthDate": "1955-10-02"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1282-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1282"
+    },
+    "effectiveDateTime": "2026-05-12T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 0.11,
+     "unit": "IU/mL"
+    }
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1282-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB1-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1282"
+    },
+    "effectiveDateTime": "2026-05-12T10:15:00+09:00",
+    "valueString": "0.88 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1282-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB2-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1282"
+    },
+    "effectiveDateTime": "2026-05-12T10:15:00+09:00",
+    "valueString": "1.02 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1282-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Mitogen-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1282"
+    },
+    "effectiveDateTime": "2026-05-12T10:15:00+09:00",
+    "valueString": ">10.00 IU/mL  [>=0.50]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1282-5",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "결핵 IGRA (QFT-Plus) 결과"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1282"
+    },
+    "effectiveDateTime": "2026-05-12T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "양성 (Positive)"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "투석 전 결핵 선별검사"
+     }
+    ]
+   },
+   {
+    "resourceType": "ImagingStudy",
+    "id": "img-bx3-1282-6",
+    "status": "available",
+    "modality": [
+     {
+      "system": "http://dicom.nema.org/resources/ontology/DCM",
+      "code": "CR"
+     }
+    ],
+    "description": "Chest PA",
+    "subject": {
+     "reference": "Patient/bx3-1282"
+    },
+    "started": "2026-05-20T13:10:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-05-27T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R062",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "Positive QFT closed by chest PA (ImagingStudy CR) 8 days later."
+ },
+ {
+  "id": "C027",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1289",
+    "gender": "male",
+    "birthDate": "1983-06-26"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1289-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "T-SPOT.TB - Nil control"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1289"
+    },
+    "effectiveDateTime": "2026-04-02T10:15:00+09:00",
+    "valueString": "1 spots"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1289-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "T-SPOT.TB - Panel A (ESAT-6)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1289"
+    },
+    "effectiveDateTime": "2026-04-02T10:15:00+09:00",
+    "valueString": "18 spots"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1289-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "T-SPOT.TB - Panel B (CFP-10)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1289"
+    },
+    "effectiveDateTime": "2026-04-02T10:15:00+09:00",
+    "valueString": "24 spots"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1289-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "T-SPOT.TB - Interpretation"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1289"
+    },
+    "effectiveDateTime": "2026-04-02T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "POSITIVE"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1289-5",
+    "status": "completed",
+    "code": {
+     "text": "Chest CT (non-contrast, LDCT protocol)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1289"
+    },
+    "performedDateTime": "2026-04-15T10:00:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-04-22T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R062",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "Positive T-SPOT closed by chest CT 13 days later."
+ },
+ {
+  "id": "C028",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1296",
+    "gender": "female",
+    "birthDate": "1990-01-15"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1296-1",
+    "status": "completed",
+    "code": {
+     "text": "Chest X-ray PA"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1296"
+    },
+    "performedDateTime": "2026-06-01T10:00:00+09:00"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1296-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1296"
+    },
+    "effectiveDateTime": "2026-06-15T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 0.07,
+     "unit": "IU/mL"
+    }
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1296-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB1-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1296"
+    },
+    "effectiveDateTime": "2026-06-15T10:15:00+09:00",
+    "valueString": "0.52 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1296-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB2-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1296"
+    },
+    "effectiveDateTime": "2026-06-15T10:15:00+09:00",
+    "valueString": "0.61 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1296-5",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Mitogen-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1296"
+    },
+    "effectiveDateTime": "2026-06-15T10:15:00+09:00",
+    "valueString": "7.44 IU/mL  [>=0.50]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1296-6",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Result"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1296"
+    },
+    "effectiveDateTime": "2026-06-15T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "Positive"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-06-22T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R062",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Chest X-ray was done 2 weeks BEFORE the positive IGRA -> does not close."
+ },
+ {
+  "id": "C029",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1303",
+    "gender": "male",
+    "birthDate": "1971-12-30"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1303-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1303"
+    },
+    "effectiveDateTime": "2026-08-04T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 0.02,
+     "unit": "IU/mL"
+    }
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1303-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB1-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1303"
+    },
+    "effectiveDateTime": "2026-08-04T10:15:00+09:00",
+    "valueString": "1.45 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1303-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB2-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1303"
+    },
+    "effectiveDateTime": "2026-08-04T10:15:00+09:00",
+    "valueString": "1.80 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1303-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Mitogen-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1303"
+    },
+    "effectiveDateTime": "2026-08-04T10:15:00+09:00",
+    "valueString": ">10.00 IU/mL  [>=0.50]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1303-5",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Result"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1303"
+    },
+    "effectiveDateTime": "2026-08-04T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "Positive"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "Pre-biologic (psoriasis, adalimumab planned)"
+     }
+    ]
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1303-6",
+    "status": "completed",
+    "code": {
+     "text": "Knee X-ray AP/LAT, Rt"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1303"
+    },
+    "performedDateTime": "2026-08-12T10:00:00+09:00"
+   },
+   {
+    "resourceType": "ImagingStudy",
+    "id": "img-bx3-1303-7",
+    "status": "available",
+    "modality": [
+     {
+      "system": "http://dicom.nema.org/resources/ontology/DCM",
+      "code": "CR"
+     }
+    ],
+    "description": "Knee AP/Lat Rt (standing)",
+    "subject": {
+     "reference": "Patient/bx3-1303"
+    },
+    "started": "2026-08-12T13:10:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-08-19T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R062",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Positive QFT; only imaging afterwards is of the knee (wrong body part) -> open."
+ },
+ {
+  "id": "C030",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1310",
+    "gender": "male",
+    "birthDate": "1962-08-08"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1310-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "투베르쿨린 피부반응검사 (TST, PPD 2TU)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1310"
+    },
+    "effectiveDateTime": "2026-03-13T10:15:00+09:00",
+    "valueString": "판독(72hr): 경결 15 mm  -> 양성",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "결핵 환자 가족 접촉자 검진"
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-03-20T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R062",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "TST 15 mm (>=10) with no chest imaging."
+ },
+ {
+  "id": "C031",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1317",
+    "gender": "female",
+    "birthDate": "1988-04-04"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1317-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Tuberculin skin test (Mantoux) - induration"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1317"
+    },
+    "effectiveDateTime": "2026-02-20T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 12,
+     "unit": "mm"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ],
+    "note": [
+     {
+      "text": "read at 72h, HCW annual"
+     }
+    ]
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1317-2",
+    "status": "completed",
+    "code": {
+     "text": "Chest X-ray PA"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1317"
+    },
+    "performedDateTime": "2026-02-24T10:00:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-03-03T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R062",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "TST 12 mm closed by chest X-ray PA 4 days later."
+ },
+ {
+  "id": "C032",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1324",
+    "gender": "female",
+    "birthDate": "1994-09-09"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1324-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Tuberculin skin test (Mantoux) - induration"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1324"
+    },
+    "effectiveDateTime": "2026-05-08T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 6,
+     "unit": "mm"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-05-15T09:00:00+09:00",
+  "expected": [],
+  "rationale": "TST 6 mm (<10)."
+ },
+ {
+  "id": "C033",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1331",
+    "gender": "male",
+    "birthDate": "1947-03-21"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1331-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1331"
+    },
+    "effectiveDateTime": "2026-06-30T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 0.03,
+     "unit": "IU/mL"
+    }
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1331-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB1-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1331"
+    },
+    "effectiveDateTime": "2026-06-30T10:15:00+09:00",
+    "valueString": "0.01 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1331-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB2-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1331"
+    },
+    "effectiveDateTime": "2026-06-30T10:15:00+09:00",
+    "valueString": "0.02 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1331-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Mitogen-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1331"
+    },
+    "effectiveDateTime": "2026-06-30T10:15:00+09:00",
+    "valueString": "8.42 IU/mL  [>=0.50]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1331-5",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Result"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1331"
+    },
+    "effectiveDateTime": "2026-06-30T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "Negative"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-07-07T09:00:00+09:00",
+  "expected": [],
+  "rationale": "QFT negative."
+ },
+ {
+  "id": "C034",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1338",
+    "gender": "female",
+    "birthDate": "1938-11-11"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1338-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1338"
+    },
+    "effectiveDateTime": "2026-04-21T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 0.08,
+     "unit": "IU/mL"
+    }
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1338-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB1-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1338"
+    },
+    "effectiveDateTime": "2026-04-21T10:15:00+09:00",
+    "valueString": "0.00 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1338-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB2-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1338"
+    },
+    "effectiveDateTime": "2026-04-21T10:15:00+09:00",
+    "valueString": "0.01 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1338-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Mitogen-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1338"
+    },
+    "effectiveDateTime": "2026-04-21T10:15:00+09:00",
+    "valueString": "0.21 IU/mL  [>=0.50]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1338-5",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "결핵 IGRA (QFT-Plus) 결과"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1338"
+    },
+    "effectiveDateTime": "2026-04-21T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "미결정 (Indeterminate) - mitogen 반응 저하, 재검 권고"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "IND"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-04-28T09:00:00+09:00",
+  "expected": [],
+  "rationale": "QFT indeterminate (low mitogen) - excluded."
+ },
+ {
+  "id": "C035",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1345",
+    "gender": "male",
+    "birthDate": "1969-05-05"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1345-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "T-SPOT.TB - Nil control"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1345"
+    },
+    "effectiveDateTime": "2026-03-03T10:15:00+09:00",
+    "valueString": "0 spots"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1345-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "T-SPOT.TB - Panel A (ESAT-6)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1345"
+    },
+    "effectiveDateTime": "2026-03-03T10:15:00+09:00",
+    "valueString": "6 spots"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1345-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "T-SPOT.TB - Panel B (CFP-10)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1345"
+    },
+    "effectiveDateTime": "2026-03-03T10:15:00+09:00",
+    "valueString": "5 spots"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1345-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "T-SPOT.TB - Interpretation"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1345"
+    },
+    "effectiveDateTime": "2026-03-03T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "BORDERLINE (equivocal) - retest suggested"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "IND"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-03-10T09:00:00+09:00",
+  "expected": [],
+  "rationale": "T-SPOT borderline - excluded."
+ },
+ {
+  "id": "C036",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1352",
+    "gender": "female",
+    "birthDate": "1975-07-19"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1352-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1352"
+    },
+    "effectiveDateTime": "2026-08-27T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 0.35,
+     "unit": "IU/mL"
+    }
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1352-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB1-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1352"
+    },
+    "effectiveDateTime": "2026-08-27T10:15:00+09:00",
+    "valueString": "0.18 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1352-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB2-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1352"
+    },
+    "effectiveDateTime": "2026-08-27T10:15:00+09:00",
+    "valueString": "0.22 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1352-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Mitogen-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1352"
+    },
+    "effectiveDateTime": "2026-08-27T10:15:00+09:00",
+    "valueString": "9.85 IU/mL  [>=0.50]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1352-5",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Result"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1352"
+    },
+    "effectiveDateTime": "2026-08-27T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "Negative"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-09-03T09:00:00+09:00",
+  "expected": [],
+  "rationale": "QFT negative; numeric component tubes (high mitogen/nil) are not the result."
+ },
+ {
+  "id": "C037",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1359",
+    "gender": "female",
+    "birthDate": "1981-10-28"
+   },
+   {
+    "resourceType": "Condition",
+    "id": "cond-bx3-1359-1",
+    "clinicalStatus": {
+     "coding": [
+      {
+       "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "text": "류마티스 관절염 (Rheumatoid arthritis, seropositive) - TNF 억제제 시작 예정"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1359"
+    },
+    "onsetDateTime": "2023-02-15T00:00:00+09:00"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1359-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1359"
+    },
+    "effectiveDateTime": "2026-09-01T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 0.09,
+     "unit": "IU/mL"
+    }
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1359-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB1-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1359"
+    },
+    "effectiveDateTime": "2026-09-01T10:15:00+09:00",
+    "valueString": "0.74 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1359-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB2-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1359"
+    },
+    "effectiveDateTime": "2026-09-01T10:15:00+09:00",
+    "valueString": "0.95 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1359-5",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Mitogen-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1359"
+    },
+    "effectiveDateTime": "2026-09-01T10:15:00+09:00",
+    "valueString": ">10.00 IU/mL  [>=0.50]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1359-6",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "결핵 IGRA (QFT-Plus) 결과"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1359"
+    },
+    "effectiveDateTime": "2026-09-01T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "양성 (Positive)"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-09-08T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R062",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Positive IGRA before biologic, no chest imaging yet."
+ },
+ {
+  "id": "C038",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1366",
+    "gender": "male",
+    "birthDate": "1999-01-03"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1366-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Tuberculin skin test (PPD) reading"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1366"
+    },
+    "effectiveDateTime": "2026-07-07T10:15:00+09:00",
+    "valueString": "Induration 10 mm (transverse), no blistering",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-07-14T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R062",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "TST exactly 10 mm meets >=10 threshold."
+ },
+ {
+  "id": "C039",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1373",
+    "gender": "male",
+    "birthDate": "1958-12-12"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1373-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1373"
+    },
+    "effectiveDateTime": "2024-11-05T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 0.04,
+     "unit": "IU/mL"
+    }
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1373-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB1-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1373"
+    },
+    "effectiveDateTime": "2024-11-05T10:15:00+09:00",
+    "valueString": "0.02 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1373-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB2-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1373"
+    },
+    "effectiveDateTime": "2024-11-05T10:15:00+09:00",
+    "valueString": "0.05 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1373-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Mitogen-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1373"
+    },
+    "effectiveDateTime": "2024-11-05T10:15:00+09:00",
+    "valueString": ">10.00 IU/mL  [>=0.50]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1373-5",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "결핵 IGRA (QFT-Plus) 결과"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1373"
+    },
+    "effectiveDateTime": "2024-11-05T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "음성 (Negative)"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1373-6",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1373"
+    },
+    "effectiveDateTime": "2026-06-10T10:15:00+09:00",
+    "valueQuantity": {
+     "value": 0.06,
+     "unit": "IU/mL"
+    }
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1373-7",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB1-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1373"
+    },
+    "effectiveDateTime": "2026-06-10T10:15:00+09:00",
+    "valueString": "1.12 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1373-8",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - TB2-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1373"
+    },
+    "effectiveDateTime": "2026-06-10T10:15:00+09:00",
+    "valueString": "1.40 IU/mL  [<0.35]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1373-9",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "QuantiFERON-TB Gold Plus - Mitogen-Nil"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1373"
+    },
+    "effectiveDateTime": "2026-06-10T10:15:00+09:00",
+    "valueString": ">10.00 IU/mL  [>=0.50]"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1373-10",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "결핵 IGRA (QFT-Plus) 결과"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1373"
+    },
+    "effectiveDateTime": "2026-06-10T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "양성 (Positive) ** 2024년 음성 -> 양전 **"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1373-11",
+    "status": "completed",
+    "code": {
+     "text": "Chest CT"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1373"
+    },
+    "performedDateTime": "2026-06-24T10:00:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-07-01T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R062",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "2024 negative; 2026 conversion to positive closed by chest CT 14 days later."
+ },
+ {
+  "id": "C040",
+  "rule_focus": "R062",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1380",
+    "gender": "female",
+    "birthDate": "2003-06-06"
+   },
+   {
+    "resourceType": "Observation",
+    "id": "obs-bx3-1380-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "PPD 피부반응검사 판독"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1380"
+    },
+    "effectiveDateTime": "2026-03-30T10:15:00+09:00",
+    "valueCodeableConcept": {
+     "text": "0 mm, 음성"
+    },
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "NEG"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "evaluation_time": "2026-04-06T09:00:00+09:00",
+  "expected": [],
+  "rationale": "TST 0 mm negative."
+ },
+ {
+  "id": "C041",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1387",
+    "gender": "male",
+    "birthDate": "1962-04-18"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1387-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1387"
+    },
+    "effectiveDateTime": "2026-06-10T11:00:00+09:00",
+    "issued": "2026-06-10T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY REPORT\nIndication: screening, FOBT (-), age 64\nSedation: midazolam 3 mg / pethidine 25 mg\nBowel prep: 4L PEG split dose. Boston Bowel Preparation Scale: R 2 / T 1 / L 2 = 5\n  - semi-solid stool in transverse colon, washing attempted, mucosa partly obscured\nExtent: cecum reached (appendiceal orifice, ICV identified). Withdrawal time 9 min.\nFindings:\n 1. Sigmoid colon: 4 mm sessile polyp (Paris 0-Is) -> cold snare polypectomy, retrieved\n 2. Internal hemorrhoids\nImpression: suboptimal bowel preparation (BBPS 5). Small sigmoid polyp removed.\nRecommendation: repeat colonoscopy with better prep, f/u pathology"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1387-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1387"
+    },
+    "performedDateTime": "2026-06-10T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1387-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1387"
+    },
+    "effectiveDateTime": "2026-06-14T15:00:00+09:00",
+    "issued": "2026-06-14T17:40:00+09:00",
+    "conclusion": "Sigmoid colon, polypectomy: HYPERPLASTIC POLYP, 0.4 cm."
+   }
+  ],
+  "evaluation_time": "2026-06-21T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 365,
+    "status": "open"
+   }
+  ],
+  "rationale": "BBPS total 5 (<6, transverse=1) -> inadequate prep -> 1 year."
+ },
+ {
+  "id": "C042",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1394",
+    "gender": "female",
+    "birthDate": "1957-09-03"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1394-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "대장내시경"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1394"
+    },
+    "effectiveDateTime": "2026-05-19T11:00:00+09:00",
+    "issued": "2026-05-19T17:40:00+09:00",
+    "conclusion": "대장내시경 결과지\n검사적응증: 빈혈, 변비\n장정결 상태: 불량 (Poor) – 우측 대장에 고형변 다량, 세척 후에도 점막 관찰 불충분\n삽입 깊이: 맹장까지 삽관 (cecal intubation 확인)\n소견: 관찰 가능한 부위에서 용종이나 종괴 없음. S-colon diverticula 몇 개.\n결론: Poor bowel preparation. No polyp in visualized mucosa. Diverticulosis.\n권고: 장정결 보완 후 재검 필요"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1394-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1394"
+    },
+    "performedDateTime": "2026-05-19T10:00:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-05-26T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 365,
+    "status": "open"
+   }
+  ],
+  "rationale": "Poor prep -> repeat within 1 year."
+ },
+ {
+  "id": "C043",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1401",
+    "gender": "male",
+    "birthDate": "1968-02-26"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1401-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1401"
+    },
+    "effectiveDateTime": "2026-07-07T11:00:00+09:00",
+    "issued": "2026-07-07T17:40:00+09:00",
+    "conclusion": "Colonoscopy\nIndication / Technique / Findings / Conclusion\nIndication: post-polypectomy surveillance (2020 2 TAs)\nTechnique: CO2 insufflation, cecum reached, w/d time 8 min\nPrep: BBPS 7 (R1-T3-L3) — ascending colon & cecum with residual opaque fluid and stool, only portions of mucosa seen\nFindings: transverse colon 5mm 0-IIa polyp, CSP done.\nConclusion: 1. Right colon prep inadequate (BBPS right segment 1). 2. transverse colon polyp s/p CSP"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1401-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1401"
+    },
+    "performedDateTime": "2026-07-07T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1401-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1401"
+    },
+    "effectiveDateTime": "2026-07-10T15:00:00+09:00",
+    "issued": "2026-07-10T17:40:00+09:00",
+    "conclusion": "Transverse colon, cold snare polypectomy: Tubular adenoma, low grade dysplasia, 0.5 cm."
+   }
+  ],
+  "evaluation_time": "2026-07-17T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 365,
+    "status": "open"
+   }
+  ],
+  "rationale": "BBPS total 7 but right segment =1 (<2) -> inadequate -> 1 year (shortest; the single small TA is not tracked)."
+ },
+ {
+  "id": "C044",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1408",
+    "gender": "male",
+    "birthDate": "1955-05-14"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1408-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1408"
+    },
+    "effectiveDateTime": "2026-03-25T11:00:00+09:00",
+    "issued": "2026-03-25T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY\nIndication: positive FIT\nPrep: good, BBPS 8 (3/2/3). Cecum reached.\nFindings:\n - Ascending colon: 25 mm laterally spreading tumor, granular homogenous type (LST-G-H). Submucosal injection (saline + indigocarmine) followed by EMR in piecemeal fashion (4 pieces). No visible residual. Margin snare tip soft coagulation. 2 hemoclips applied.\n - Rectum: small internal hemorrhoid\nConclusion: 25 mm ascending colon LST, piecemeal EMR.\nPlan: site check colonoscopy in 6 months."
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1408-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1408"
+    },
+    "performedDateTime": "2026-03-25T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1408-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1408"
+    },
+    "effectiveDateTime": "2026-03-30T15:00:00+09:00",
+    "issued": "2026-03-30T17:40:00+09:00",
+    "conclusion": "A. Ascending colon, EMR (piecemeal, 4 fragments):\n   TUBULAR ADENOMA with low grade dysplasia, aggregate 2.4 x 1.9 cm\n   margins not evaluable (piecemeal)"
+   }
+  ],
+  "evaluation_time": "2026-04-06T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 183,
+    "status": "open"
+   }
+  ],
+  "rationale": "Piecemeal resection of a 25 mm polyp -> 6 months (shortest; also advanced adenoma, one obligation)."
+ },
+ {
+  "id": "C045",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1415",
+    "gender": "female",
+    "birthDate": "1960-08-21"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1415-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1415"
+    },
+    "effectiveDateTime": "2026-01-14T11:00:00+09:00",
+    "issued": "2026-01-14T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY REPORT\nIndication: hematochezia\nPrep: BBPS 9\nFindings: Rectum, 8 cm from AV: 30 mm sessile granular lesion. Lifted well. Piecemeal EMR (6 pieces). Argon plasma coagulation to margins.\nImpression: 3 cm rectal LST s/p piecemeal EMR"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1415-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1415"
+    },
+    "performedDateTime": "2026-01-14T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1415-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1415"
+    },
+    "effectiveDateTime": "2026-01-19T15:00:00+09:00",
+    "issued": "2026-01-19T17:40:00+09:00",
+    "conclusion": "Rectum, piecemeal EMR: TUBULOVILLOUS ADENOMA with low-grade dysplasia, 3.0 cm in aggregate. No invasive carcinoma."
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1415-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1415"
+    },
+    "effectiveDateTime": "2026-07-15T11:00:00+09:00",
+    "issued": "2026-07-15T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY (site check)\nPrep: BBPS 9 (3-3-3)\nFindings: Rectum: EMR scar, flat, white, no residual / recurrent adenoma on NBI. Scar biopsy taken.\nRest of colon normal to cecum.\nConclusion: No residual adenoma at EMR scar."
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1415-5",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1415"
+    },
+    "performedDateTime": "2026-07-15T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1415-6",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1415"
+    },
+    "effectiveDateTime": "2026-07-18T15:00:00+09:00",
+    "issued": "2026-07-18T17:40:00+09:00",
+    "conclusion": "Rectum, scar, biopsy: Colonic mucosa with mild fibrosis. NO ADENOMA."
+   }
+  ],
+  "evaluation_time": "2026-07-25T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 183,
+    "status": "closed"
+   }
+  ],
+  "rationale": "Piecemeal 30 mm TVA -> 183 days; closed by site-check colonoscopy at 6 months. Second exam is normal (no tracked obligation)."
+ },
+ {
+  "id": "C046",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1422",
+    "gender": "male",
+    "birthDate": "1964-11-30"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1422-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1422"
+    },
+    "effectiveDateTime": "2026-04-08T11:00:00+09:00",
+    "issued": "2026-04-08T17:40:00+09:00",
+    "conclusion": "Colonoscopy\nPrep: adequate (BBPS 8: 3-2-3); cecal intubation confirmed with photo\nFindings: Sigmoid colon 30 cm: 12 mm pedunculated polyp (Paris 0-Ip), hot snare polypectomy, retrieved. Endoloop.\nImpression: sigmoid polyp 1.2 cm removed"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1422-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1422"
+    },
+    "performedDateTime": "2026-04-08T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1422-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1422"
+    },
+    "effectiveDateTime": "2026-04-11T15:00:00+09:00",
+    "issued": "2026-04-11T17:40:00+09:00",
+    "conclusion": "Sigmoid colon, polypectomy: Tubular adenoma, low grade, 1.2 x 1.0 cm. Stalk margin clear."
+   }
+  ],
+  "evaluation_time": "2026-04-18T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 1096,
+    "status": "open"
+   }
+  ],
+  "rationale": "Adenoma >=10 mm -> 3 years."
+ },
+ {
+  "id": "C047",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1429",
+    "gender": "female",
+    "birthDate": "1970-03-12"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1429-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1429"
+    },
+    "effectiveDateTime": "2026-02-17T11:00:00+09:00",
+    "issued": "2026-02-17T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY\nIndication: screening, father CRC at 72\nPrep: Good (BBPS 9)\nFindings: descending colon 8mm sessile polyp, cold snare. No other lesion.\nImpression: 8 mm polyp s/p CSP"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1429-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1429"
+    },
+    "performedDateTime": "2026-02-17T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1429-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1429"
+    },
+    "effectiveDateTime": "2026-02-20T15:00:00+09:00",
+    "issued": "2026-02-20T17:40:00+09:00",
+    "conclusion": "Descending colon, polypectomy: TUBULOVILLOUS ADENOMA, low grade dysplasia (villous component ~30%), 0.8 cm."
+   }
+  ],
+  "evaluation_time": "2026-02-27T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 1096,
+    "status": "open"
+   }
+  ],
+  "rationale": "Tubulovillous histology (even <10 mm) -> advanced -> 3 years."
+ },
+ {
+  "id": "C048",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1436",
+    "gender": "male",
+    "birthDate": "1959-07-07"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1436-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "대장내시경"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1436"
+    },
+    "effectiveDateTime": "2026-06-23T11:00:00+09:00",
+    "issued": "2026-06-23T17:40:00+09:00",
+    "conclusion": "대장내시경 (Colonoscopy)\n장정결: 양호 BBPS 8 (3-2-3)\n소견: 상행결장 6 mm 무경성 용종 1개 -> cold snare polypectomy 시행\n결론: Ascending colon polyp, 6 mm, s/p CSP"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1436-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1436"
+    },
+    "performedDateTime": "2026-06-23T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1436-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1436"
+    },
+    "effectiveDateTime": "2026-06-27T15:00:00+09:00",
+    "issued": "2026-06-27T17:40:00+09:00",
+    "conclusion": "병리진단 (Pathologic diagnosis)\nColon, ascending, polypectomy:\n  관상선종, 고도이형성 (Tubular adenoma with HIGH-GRADE dysplasia), 0.6 cm\n  resection margin: free"
+   }
+  ],
+  "evaluation_time": "2026-07-04T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 1096,
+    "status": "open"
+   }
+  ],
+  "rationale": "Adenoma with high-grade dysplasia -> advanced -> 3 years."
+ },
+ {
+  "id": "C049",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1443",
+    "gender": "male",
+    "birthDate": "1953-01-09"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1443-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1443"
+    },
+    "effectiveDateTime": "2026-05-05T11:00:00+09:00",
+    "issued": "2026-05-05T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY REPORT\nPrep: BBPS 8 (R2 T3 L3)\nFindings: Five polyps, all removed by cold snare:\n  cecum 5mm, ascending 4mm, hepatic flexure 7mm, transverse 3mm, sigmoid 6mm\nImpression: multiple small colonic polyps (x5) removed"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1443-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1443"
+    },
+    "performedDateTime": "2026-05-05T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1443-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1443"
+    },
+    "effectiveDateTime": "2026-05-09T15:00:00+09:00",
+    "issued": "2026-05-09T17:40:00+09:00",
+    "conclusion": "A. Cecum, polypectomy: Tubular adenoma, low grade\nB. Ascending colon, polypectomy: Tubular adenoma, low grade\nC. Hepatic flexure, polypectomy: Tubular adenoma, low grade\nD. Transverse colon, polypectomy: Tubular adenoma, low grade\nE. Sigmoid colon, polypectomy: Tubular adenoma, low grade\n(all fragments < 1.0 cm)"
+   }
+  ],
+  "evaluation_time": "2026-05-16T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 1096,
+    "status": "open"
+   }
+  ],
+  "rationale": "5 adenomas (>=5) -> 3 years."
+ },
+ {
+  "id": "C050",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1450",
+    "gender": "female",
+    "birthDate": "1966-04-26"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1450-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1450"
+    },
+    "effectiveDateTime": "2026-03-03T11:00:00+09:00",
+    "issued": "2026-03-03T17:40:00+09:00",
+    "conclusion": "Colonoscopy\nIndication: surveillance\nPrep: BBPS 9\nFindings: ascending colon, 12 mm flat lesion with mucus cap, cloud-like surface (NBI: type 1 / SSL feature). Cold snare EMR en bloc.\nConclusion: 12mm ascending colon flat lesion, r/o SSL"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1450-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1450"
+    },
+    "performedDateTime": "2026-03-03T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1450-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1450"
+    },
+    "effectiveDateTime": "2026-03-07T15:00:00+09:00",
+    "issued": "2026-03-07T17:40:00+09:00",
+    "conclusion": "Ascending colon, EMR: SESSILE SERRATED LESION, 1.2 cm, without dysplasia."
+   }
+  ],
+  "evaluation_time": "2026-03-14T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 1096,
+    "status": "open"
+   }
+  ],
+  "rationale": "SSL >=10 mm -> 3 years."
+ },
+ {
+  "id": "C051",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1457",
+    "gender": "female",
+    "birthDate": "1958-10-13"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1457-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "대장내시경"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1457"
+    },
+    "effectiveDateTime": "2026-08-12T11:00:00+09:00",
+    "issued": "2026-08-12T17:40:00+09:00",
+    "conclusion": "대장내시경 판독\n장정결 상태: 양호 (BBPS 3-3-3)\n소견: 횡행결장 7 mm 편평융기 병변 (SSL 의심), 점액 부착 -> CSP\n결론: T-colon 7 mm 병변 절제"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1457-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1457"
+    },
+    "performedDateTime": "2026-08-12T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1457-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1457"
+    },
+    "effectiveDateTime": "2026-08-17T15:00:00+09:00",
+    "issued": "2026-08-17T17:40:00+09:00",
+    "conclusion": "Transverse colon, polypectomy: 무경성 톱니모양 병변, 이형성 동반 (Sessile serrated lesion WITH dysplasia), 0.7 cm"
+   }
+  ],
+  "evaluation_time": "2026-08-24T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 1096,
+    "status": "open"
+   }
+  ],
+  "rationale": "SSL with dysplasia (any size) -> 3 years."
+ },
+ {
+  "id": "C052",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1464",
+    "gender": "male",
+    "birthDate": "1972-06-17"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1464-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1464"
+    },
+    "effectiveDateTime": "2026-04-28T11:00:00+09:00",
+    "issued": "2026-04-28T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY\nPrep: BBPS 8\nFindings: Sigmoid colon: 9 mm protruded reddish polyp with pinecone-like surface, snare polypectomy.\nImpression: sigmoid polyp 9 mm"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1464-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1464"
+    },
+    "performedDateTime": "2026-04-28T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1464-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1464"
+    },
+    "effectiveDateTime": "2026-05-02T15:00:00+09:00",
+    "issued": "2026-05-02T17:40:00+09:00",
+    "conclusion": "Sigmoid colon, polypectomy: TRADITIONAL SERRATED ADENOMA, 0.9 cm, low grade."
+   }
+  ],
+  "evaluation_time": "2026-05-09T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 1096,
+    "status": "open"
+   }
+  ],
+  "rationale": "Traditional serrated adenoma -> 3 years."
+ },
+ {
+  "id": "C053",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1471",
+    "gender": "female",
+    "birthDate": "1963-12-01"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1471-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1471"
+    },
+    "effectiveDateTime": "2026-07-30T11:00:00+09:00",
+    "issued": "2026-07-30T17:40:00+09:00",
+    "conclusion": "Colonoscopy Report\nPrep: excellent (BBPS 9)\nFindings:\n  Sigmoid colon: 15 mm sessile pale polyp -> hot snare polypectomy.\n  Rectum: several 2-3 mm diminutive pale polyps, not removed (hyperplastic appearance)\nImpression: 1.5 cm sigmoid polyp"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1471-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1471"
+    },
+    "performedDateTime": "2026-07-30T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1471-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1471"
+    },
+    "effectiveDateTime": "2026-08-04T15:00:00+09:00",
+    "issued": "2026-08-04T17:40:00+09:00",
+    "conclusion": "Sigmoid colon, polypectomy: HYPERPLASTIC POLYP, 1.5 x 1.2 cm. No dysplasia."
+   }
+  ],
+  "evaluation_time": "2026-08-11T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 1096,
+    "status": "open"
+   }
+  ],
+  "rationale": "Hyperplastic polyp >=10 mm -> 3 years."
+ },
+ {
+  "id": "C054",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1478",
+    "gender": "male",
+    "birthDate": "1956-02-02"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1478-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "대장내시경"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1478"
+    },
+    "effectiveDateTime": "2023-03-15T11:00:00+09:00",
+    "issued": "2023-03-15T17:40:00+09:00",
+    "conclusion": "대장내시경\n장정결: 양호 (BBPS 8)\n소견: 하행결장 1.2 cm 유경성 용종 -> snare polypectomy\n결론: D-colon 1.2 cm 용종 절제"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1478-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1478"
+    },
+    "performedDateTime": "2023-03-15T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1478-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1478"
+    },
+    "effectiveDateTime": "2023-03-20T15:00:00+09:00",
+    "issued": "2023-03-20T17:40:00+09:00",
+    "conclusion": "Colon, descending, polypectomy: 관상선종 (Tubular adenoma), 저도이형성, 1.2 cm"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1478-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "대장내시경"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1478"
+    },
+    "effectiveDateTime": "2026-02-24T11:00:00+09:00",
+    "issued": "2026-02-24T17:40:00+09:00",
+    "conclusion": "대장내시경 (추적검사)\n장정결: 양호 (BBPS 9, 3-3-3)\n소견: 직장 3 mm 과형성 용종 의심 1개, 생검으로 제거. 이전 용종절제 부위 특이소견 없음.\n결론: Rectal diminutive polyp, removed by biopsy forceps"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1478-5",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1478"
+    },
+    "performedDateTime": "2026-02-24T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1478-6",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1478"
+    },
+    "effectiveDateTime": "2026-02-27T15:00:00+09:00",
+    "issued": "2026-02-27T17:40:00+09:00",
+    "conclusion": "Rectum, biopsy: Hyperplastic polyp, 0.3 cm."
+   }
+  ],
+  "evaluation_time": "2026-03-06T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 1096,
+    "status": "closed"
+   }
+  ],
+  "rationale": "2023 adenoma 12 mm -> 3 yr, closed by 2026 colonoscopy. 2026 exam (small HP) creates no tracked obligation."
+ },
+ {
+  "id": "C055",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1485",
+    "gender": "female",
+    "birthDate": "1961-05-09"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1485-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1485"
+    },
+    "effectiveDateTime": "2025-11-04T11:00:00+09:00",
+    "issued": "2025-11-04T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY\nPrep: BBPS 8 (3-2-3)\nFindings: transverse colon 15 mm semi-pedunculated polyp, EMR en bloc\nImpression: 15 mm transverse polyp removed"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1485-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1485"
+    },
+    "performedDateTime": "2025-11-04T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1485-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1485"
+    },
+    "effectiveDateTime": "2025-11-08T15:00:00+09:00",
+    "issued": "2025-11-08T17:40:00+09:00",
+    "conclusion": "Transverse colon, EMR: Tubular adenoma, low-grade dysplasia, 1.5 cm, margins negative"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1485-4",
+    "status": "completed",
+    "code": {
+     "text": "CT colonography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1485"
+    },
+    "performedDateTime": "2026-05-12T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1485-5",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT Colonography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1485"
+    },
+    "effectiveDateTime": "2026-05-12T11:00:00+09:00",
+    "issued": "2026-05-12T17:40:00+09:00",
+    "conclusion": "CT colonography (for abdominal bloating): No colonic mass or polyp >= 6 mm. Diverticulosis sigmoid."
+   }
+  ],
+  "evaluation_time": "2026-05-19T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 1096,
+    "status": "open"
+   }
+  ],
+  "rationale": "15 mm adenoma -> 3 yr; CT colonography does not count as closure."
+ },
+ {
+  "id": "C056",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1492",
+    "gender": "male",
+    "birthDate": "1950-09-25"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1492-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1492"
+    },
+    "effectiveDateTime": "2026-06-02T11:00:00+09:00",
+    "issued": "2026-06-02T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY REPORT\nPrep: inadequate. BBPS 1-2-2 = 5. Large amount of liquid/semisolid stool in right colon.\nFindings: Sigmoid colon: 15 mm pedunculated polyp, hot snare polypectomy.\nConclusion: 1. inadequate prep  2. 1.5 cm sigmoid polyp s/p polypectomy\nRecommend repeat colonoscopy in 1 year or sooner w/ better prep"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1492-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1492"
+    },
+    "performedDateTime": "2026-06-02T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1492-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1492"
+    },
+    "effectiveDateTime": "2026-06-05T15:00:00+09:00",
+    "issued": "2026-06-05T17:40:00+09:00",
+    "conclusion": "Sigmoid colon, polypectomy: Tubular adenoma, low grade, 1.5 cm"
+   }
+  ],
+  "evaluation_time": "2026-06-12T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 365,
+    "status": "open"
+   }
+  ],
+  "rationale": "Inadequate prep (365) and advanced adenoma (1096) -> one obligation, shortest 365."
+ },
+ {
+  "id": "C057",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1499",
+    "gender": "female",
+    "birthDate": "1959-03-30"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1499-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1499"
+    },
+    "effectiveDateTime": "2023-05-09T11:00:00+09:00",
+    "issued": "2023-05-09T17:40:00+09:00",
+    "conclusion": "Colonoscopy\nPrep: BBPS 8\nFindings: Ascending colon 10 mm sessile polyp, EMR.\nImpression: 1.0 cm A-colon polyp"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1499-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1499"
+    },
+    "performedDateTime": "2023-05-09T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1499-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1499"
+    },
+    "effectiveDateTime": "2023-05-12T15:00:00+09:00",
+    "issued": "2023-05-12T17:40:00+09:00",
+    "conclusion": "Ascending colon, EMR: Tubulovillous adenoma, low grade dysplasia, 1.0 cm"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1499-4",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1499"
+    },
+    "effectiveDateTime": "2026-04-22T11:00:00+09:00",
+    "issued": "2026-04-22T17:40:00+09:00",
+    "conclusion": "Colonoscopy - surveillance\nPrep: BBPS 9 (3-3-3). Cecum, TI intubated.\nFindings: Normal colonic mucosa. Previous EMR site, no residual. No polyps.\nConclusion: Normal surveillance colonoscopy."
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1499-5",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1499"
+    },
+    "performedDateTime": "2026-04-22T10:00:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-04-29T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R063",
+    "deadline_days": 1096,
+    "status": "closed"
+   }
+  ],
+  "rationale": "2023 TVA 10 mm -> 3 years, closed by 2026 colonoscopy; the 2026 exam is normal (no obligation)."
+ },
+ {
+  "id": "C058",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1506",
+    "gender": "male",
+    "birthDate": "1974-08-14"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1506-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1506"
+    },
+    "effectiveDateTime": "2026-05-26T11:00:00+09:00",
+    "issued": "2026-05-26T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY\nIndication: screening (age 52)\nPrep: BBPS 9 (3/3/3). cecum reached, w/d 10 min\nFindings: Normal mucosa throughout colon and TI. No polyp.\nConclusion: Normal colonoscopy."
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1506-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1506"
+    },
+    "performedDateTime": "2026-05-26T10:00:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-06-02T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Normal exam with adequate prep -> 10 yr, not tracked."
+ },
+ {
+  "id": "C059",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1513",
+    "gender": "female",
+    "birthDate": "1967-01-20"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1513-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1513"
+    },
+    "effectiveDateTime": "2026-04-14T11:00:00+09:00",
+    "issued": "2026-04-14T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY\nPrep: BBPS 8\nFindings: (1) cecum 4mm sessile polyp CSP (2) sigmoid 6mm sessile polyp CSP\nImpression: 2 small polyps removed"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1513-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1513"
+    },
+    "performedDateTime": "2026-04-14T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1513-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1513"
+    },
+    "effectiveDateTime": "2026-04-17T15:00:00+09:00",
+    "issued": "2026-04-17T17:40:00+09:00",
+    "conclusion": "A. Cecum, polypectomy: Tubular adenoma, low grade, 0.4 cm\nB. Sigmoid colon, polypectomy: Tubular adenoma, low grade, 0.6 cm"
+   }
+  ],
+  "evaluation_time": "2026-04-24T09:00:00+09:00",
+  "expected": [],
+  "rationale": "2 adenomas <10 mm, no advanced features -> 7-10 yr, not tracked."
+ },
+ {
+  "id": "C060",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1520",
+    "gender": "male",
+    "birthDate": "1965-10-03"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1520-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "대장내시경"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1520"
+    },
+    "effectiveDateTime": "2026-07-21T11:00:00+09:00",
+    "issued": "2026-07-21T17:40:00+09:00",
+    "conclusion": "대장내시경 결과\n장정결: 양호 (BBPS 8, 3-2-3)\n소견: 맹장 3mm, 상행결장 4mm, 횡행결장 5mm, 에스결장 8mm 용종 각 1개 (총 4개) -> 모두 CSP 시행\n결론: Multiple colon polyps (4), s/p CSP"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1520-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1520"
+    },
+    "performedDateTime": "2026-07-21T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1520-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1520"
+    },
+    "effectiveDateTime": "2026-07-24T15:00:00+09:00",
+    "issued": "2026-07-24T17:40:00+09:00",
+    "conclusion": "A. 맹장: Tubular adenoma, low grade (0.3 cm)\nB. 상행결장: Tubular adenoma, low grade (0.4 cm)\nC. 횡행결장: Tubular adenoma, low grade (0.5 cm)\nD. 에스결장: Tubular adenoma, low grade (0.8 cm)"
+   }
+  ],
+  "evaluation_time": "2026-07-31T09:00:00+09:00",
+  "expected": [],
+  "rationale": "4 adenomas all <10 mm without advanced features -> 3-5 yr, not tracked (>3 yr)."
+ },
+ {
+  "id": "C061",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1527",
+    "gender": "female",
+    "birthDate": "1976-06-11"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1527-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1527"
+    },
+    "effectiveDateTime": "2026-03-17T11:00:00+09:00",
+    "issued": "2026-03-17T17:40:00+09:00",
+    "conclusion": "Colonoscopy\nPrep: BBPS 9\nFindings: Rectum: three 2-3 mm pale sessile polyps, removed with cold forceps.\nConclusion: diminutive rectal polyps"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1527-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1527"
+    },
+    "performedDateTime": "2026-03-17T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1527-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1527"
+    },
+    "effectiveDateTime": "2026-03-20T15:00:00+09:00",
+    "issued": "2026-03-20T17:40:00+09:00",
+    "conclusion": "Rectum, biopsy (x3): Hyperplastic polyps, fragments up to 0.3 cm."
+   }
+  ],
+  "evaluation_time": "2026-03-27T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Small hyperplastic polyps -> not tracked."
+ },
+ {
+  "id": "C062",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1534",
+    "gender": "male",
+    "birthDate": "1969-02-28"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1534-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1534"
+    },
+    "effectiveDateTime": "2026-08-05T11:00:00+09:00",
+    "issued": "2026-08-05T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY REPORT\nPrep: BBPS 8 (3-2-3)\nFindings: ascending colon 8 mm flat polyp; hepatic flexure 6 mm flat polyp; both CSP\nImpression: two flat right-sided lesions removed"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1534-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1534"
+    },
+    "performedDateTime": "2026-08-05T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1534-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1534"
+    },
+    "effectiveDateTime": "2026-08-08T15:00:00+09:00",
+    "issued": "2026-08-08T17:40:00+09:00",
+    "conclusion": "A. Ascending colon: Sessile serrated lesion, no dysplasia, 0.8 cm\nB. Hepatic flexure: Sessile serrated lesion, no dysplasia, 0.6 cm"
+   }
+  ],
+  "evaluation_time": "2026-08-15T09:00:00+09:00",
+  "expected": [],
+  "rationale": "2 SSLs <10 mm without dysplasia -> 5-10 yr, not tracked."
+ },
+ {
+  "id": "C063",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1541",
+    "gender": "male",
+    "birthDate": "1952-12-19"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1541-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1541"
+    },
+    "effectiveDateTime": "2026-06-16T11:00:00+09:00",
+    "issued": "2026-06-16T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY\nIndication: IDA, weight loss\nPrep: BBPS 7 (2-2-3)\nFindings: sigmoid colon 25 cm: circumferential ulcerofungating mass, scope passable with difficulty. Biopsy x6. Tattoo injected distal.\nImpression: sigmoid colon cancer, suspected"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1541-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1541"
+    },
+    "performedDateTime": "2026-06-16T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1541-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1541"
+    },
+    "effectiveDateTime": "2026-06-19T15:00:00+09:00",
+    "issued": "2026-06-19T17:40:00+09:00",
+    "conclusion": "Sigmoid colon, biopsy: ADENOCARCINOMA, moderately differentiated."
+   }
+  ],
+  "evaluation_time": "2026-06-26T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Colon adenocarcinoma -> handled by cancer pathway, not R063 surveillance."
+ },
+ {
+  "id": "C064",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1548",
+    "gender": "female",
+    "birthDate": "1964-05-02"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1548-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "위내시경"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1548"
+    },
+    "effectiveDateTime": "2026-04-09T11:00:00+09:00",
+    "issued": "2026-04-09T17:40:00+09:00",
+    "conclusion": "위내시경 (Esophagogastroduodenoscopy)\n소견: 위 전정부 대만측 15 mm 0-IIa 병변, ESD 시행 (en bloc)\n결론: Gastric adenoma 의심, ESD 시행"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1548-2",
+    "status": "completed",
+    "code": {
+     "text": "Esophagogastroduodenoscopy with ESD"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1548"
+    },
+    "performedDateTime": "2026-04-09T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1548-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1548"
+    },
+    "effectiveDateTime": "2026-04-14T15:00:00+09:00",
+    "issued": "2026-04-14T17:40:00+09:00",
+    "conclusion": "Stomach, antrum, ESD: Tubular adenoma, low grade dysplasia, 1.5 cm. Margins free."
+   }
+  ],
+  "evaluation_time": "2026-04-21T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Gastric adenoma on upper endoscopy - not a colonoscopy rule."
+ },
+ {
+  "id": "C065",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1555",
+    "gender": "male",
+    "birthDate": "1957-11-15"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1555-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Esophagogastroduodenoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1555"
+    },
+    "effectiveDateTime": "2026-02-24T11:00:00+09:00",
+    "issued": "2026-02-24T17:40:00+09:00",
+    "conclusion": "EGD\nIndication: dyspepsia\nFindings: Duodenal bulb: 12 mm sessile polyp, snare polypectomy. Stomach: chronic atrophic gastritis.\nImpression: duodenal polyp removed"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1555-2",
+    "status": "completed",
+    "code": {
+     "text": "Esophagogastroduodenoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1555"
+    },
+    "performedDateTime": "2026-02-24T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1555-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1555"
+    },
+    "effectiveDateTime": "2026-02-27T15:00:00+09:00",
+    "issued": "2026-02-27T17:40:00+09:00",
+    "conclusion": "Duodenum, bulb, polypectomy: Tubular adenoma, low grade, 1.2 cm."
+   }
+  ],
+  "evaluation_time": "2026-03-06T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Duodenal adenoma on EGD - not R063."
+ },
+ {
+  "id": "C066",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1562",
+    "gender": "female",
+    "birthDate": "1980-07-26"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1562-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "대장내시경"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1562"
+    },
+    "effectiveDateTime": "2026-09-08T11:00:00+09:00",
+    "issued": "2026-09-08T17:40:00+09:00",
+    "conclusion": "대장내시경 검사 결과\n검사 목적: 건강검진\n장정결: 양호 (BBPS 8 = 3-2-3)\n삽입: 맹장까지 (충수돌기 입구 확인), 회수시간 8분\n소견: 정상 대장 점막. 용종 없음.\n결론: 정상 대장내시경 (Normal colonoscopy)"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1562-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1562"
+    },
+    "performedDateTime": "2026-09-08T10:00:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-09-15T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Normal colonoscopy, adequate prep."
+ },
+ {
+  "id": "C067",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1569",
+    "gender": "male",
+    "birthDate": "1971-09-04"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1569-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1569"
+    },
+    "effectiveDateTime": "2026-05-13T11:00:00+09:00",
+    "issued": "2026-05-13T17:40:00+09:00",
+    "conclusion": "Colonoscopy\nPrep: BBPS 9\nFindings: Sigmoid colon: 8 mm sessile pale polyp, cold snare.\nImpression: sigmoid polyp"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1569-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1569"
+    },
+    "performedDateTime": "2026-05-13T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1569-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1569"
+    },
+    "effectiveDateTime": "2026-05-16T15:00:00+09:00",
+    "issued": "2026-05-16T17:40:00+09:00",
+    "conclusion": "Sigmoid colon, polypectomy: Hyperplastic polyp, 0.8 cm."
+   }
+  ],
+  "evaluation_time": "2026-05-23T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Hyperplastic polyp <10 mm -> not tracked."
+ },
+ {
+  "id": "C068",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1576",
+    "gender": "female",
+    "birthDate": "1973-11-22"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1576-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1576"
+    },
+    "effectiveDateTime": "2026-06-30T11:00:00+09:00",
+    "issued": "2026-06-30T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY\nPrep: BBPS 6 (R2/T2/L2) - fair, adequate for detection of polyps >5 mm\nFindings: Descending colon 6 mm sessile polyp, CSP\nConclusion: 6 mm polyp removed"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1576-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1576"
+    },
+    "performedDateTime": "2026-06-30T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1576-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1576"
+    },
+    "effectiveDateTime": "2026-07-03T15:00:00+09:00",
+    "issued": "2026-07-03T17:40:00+09:00",
+    "conclusion": "Descending colon, polypectomy: Tubular adenoma, low grade dysplasia, 0.6 cm"
+   }
+  ],
+  "evaluation_time": "2026-07-10T09:00:00+09:00",
+  "expected": [],
+  "rationale": "BBPS 6 with every segment 2 = adequate; single small TA -> not tracked."
+ },
+ {
+  "id": "C069",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1583",
+    "gender": "male",
+    "birthDate": "1966-03-08"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1583-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1583"
+    },
+    "effectiveDateTime": "2026-08-18T11:00:00+09:00",
+    "issued": "2026-08-18T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY\nPrep: BBPS 8\nFindings: transverse colon 8-9 mm sessile polyp, CSP. Diverticulosis sigmoid.\nImpression: transverse colon polyp"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1583-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1583"
+    },
+    "performedDateTime": "2026-08-18T10:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1583-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "SP"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Surgical Pathology Report"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1583"
+    },
+    "effectiveDateTime": "2026-08-21T15:00:00+09:00",
+    "issued": "2026-08-21T17:40:00+09:00",
+    "conclusion": "Transverse colon, polypectomy: Tubular adenoma, low grade, 0.9 cm in greatest dimension."
+   }
+  ],
+  "evaluation_time": "2026-08-28T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Single TA 9 mm (<10 mm) -> not tracked."
+ },
+ {
+  "id": "C070",
+  "rule_focus": "R063",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1590",
+    "gender": "female",
+    "birthDate": "1954-02-16"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1590-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1590"
+    },
+    "effectiveDateTime": "2026-01-27T11:00:00+09:00",
+    "issued": "2026-01-27T17:40:00+09:00",
+    "conclusion": "COLONOSCOPY REPORT\nIndication: intermittent rectal bleeding\nPrep: BBPS 7 (2-3-2)\nFindings: Multiple diverticula, sigmoid colon. Grade II internal hemorrhoids. No polyp/mass.\nConclusion: sigmoid diverticulosis, internal hemorrhoids"
+   },
+   {
+    "resourceType": "Procedure",
+    "id": "proc-bx3-1590-2",
+    "status": "completed",
+    "code": {
+     "text": "Colonoscopy"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1590"
+    },
+    "performedDateTime": "2026-01-27T10:00:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-02-03T09:00:00+09:00",
+  "expected": [],
+  "rationale": "No polyps, adequate prep (all segments >=2)."
+ },
+ {
+  "id": "C071",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1597",
+    "gender": "male",
+    "birthDate": "1944-07-12"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1597-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1597"
+    },
+    "effectiveDateTime": "2026-08-20T11:00:00+09:00",
+    "issued": "2026-08-20T17:40:00+09:00",
+    "conclusion": "TRANSTHORACIC ECHOCARDIOGRAPHY\nIndication: SOB on exertion, systolic murmur\nFindings:\n LV: normal size, concentric LVH (IVSd 13 mm), LVEF 62% (biplane Simpson)\n AV: tricuspid, heavily calcified, severely restricted opening\n AV Vmax: 4.3 m/s | Peak PG: 74 mmHg | Mean PG: 46 mmHg | AVA (VTI): 0.78 cm2 | DVI 0.22\n MV: mild MAC, trivial MR\n TR Vmax 2.6 m/s, RVSP 32 mmHg\nConclusion:\n 1. Severe aortic stenosis (calcific)\n 2. Normal LV systolic function, LVEF 62%"
+   }
+  ],
+  "evaluation_time": "2026-08-27T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R064",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Stated severe AS with Vmax 4.3, MPG 46, AVA 0.78; no referral."
+ },
+ {
+  "id": "C072",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1604",
+    "gender": "female",
+    "birthDate": "1941-03-28"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1604-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1604"
+    },
+    "effectiveDateTime": "2026-06-03T11:00:00+09:00",
+    "issued": "2026-06-03T17:40:00+09:00",
+    "conclusion": "TTE\nIndication: dizziness\nLV: small cavity, LVEF 58%, SVi 30 mL/m2 (low flow)\nAV: calcified, reduced excursion\n  AV Vmax 3.6 m/s | Mean PG 32 mmHg | LVOT d 1.9 cm | AVA (continuity) 0.85 cm2 | AVAi 0.55 cm2/m2\nImpression: Moderate AS by gradient, but AVA suggests severe -> paradoxical low-flow low-gradient AS possible. Consider CT calcium score.\nLV systolic fx preserved."
+   }
+  ],
+  "evaluation_time": "2026-06-10T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R064",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "AVA 0.85 cm2 (<1.0) meets severe definition despite moderate gradient."
+ },
+ {
+  "id": "C073",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1611",
+    "gender": "male",
+    "birthDate": "1947-10-19"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1611-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1611"
+    },
+    "effectiveDateTime": "2026-07-15T11:00:00+09:00",
+    "issued": "2026-07-15T17:40:00+09:00",
+    "conclusion": "ECHOCARDIOGRAPHY REPORT\nIndication / Technique / Findings / Conclusion\nIndication: dyspnea, edema, new murmur\nTechnique: TTE, 2D/M-mode/Doppler, image quality fair\nFindings:\n  LV dilated (LVEDD 61 mm), global hypokinesis, LVEF 35% (Simpson biplane)\n  AV: trileaflet, calcified\n  AV Vmax: 4.1 m/s | Mean PG: 38 mmHg | AVA (VTI): 1.1 cm2\n  MR mild, TR mild, RVSP 45\nConclusion:\n  1. Aortic stenosis, Vmax 4.1 m/s\n  2. LV systolic dysfunction, LVEF 35%, newly noted"
+   }
+  ],
+  "evaluation_time": "2026-07-22T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R064",
+    "deadline_days": 30,
+    "status": "open"
+   },
+   {
+    "rule": "R065",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Vmax 4.1 m/s (>=4.0) -> severe AS by definition; also new LVEF 35% without known HF -> R065."
+ },
+ {
+  "id": "C074",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1618",
+    "gender": "female",
+    "birthDate": "1938-12-09"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1618-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1618"
+    },
+    "effectiveDateTime": "2026-04-07T11:00:00+09:00",
+    "issued": "2026-04-07T17:40:00+09:00",
+    "conclusion": "TTE\nLVEF 65%, normal LV size\nAV: severely calcified, AV Vmax 4.6 m/s, mean PG 52 mmHg, AVA 0.62 cm2\nConclusion: Severe AS. Normal LV function."
+   },
+   {
+    "resourceType": "ServiceRequest",
+    "id": "sr-bx3-1618-2",
+    "status": "active",
+    "intent": "order",
+    "code": {
+     "text": "Referral to Cardiothoracic Surgery (흉부외과) - AVR vs TAVI evaluation, severe AS"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1618"
+    },
+    "authoredOn": "2026-04-10T14:20:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-04-17T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R064",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "Severe AS closed by cardiac surgery referral 3 days later."
+ },
+ {
+  "id": "C075",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1625",
+    "gender": "male",
+    "birthDate": "1945-05-23"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1625-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "경흉부 심장초음파"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1625"
+    },
+    "effectiveDateTime": "2026-05-14T11:00:00+09:00",
+    "issued": "2026-05-14T17:40:00+09:00",
+    "conclusion": "경흉부 심장초음파 (TTE)\n좌심실: 크기 정상, 벽두께 증가, LVEF 60%\n대동맥판: 심한 석회화, 개방 제한\n  AV Vmax 4.4 m/s | Mean PG 49 mmHg | AVA 0.7 cm2\n결론: 중증 대동맥판 협착증 (Severe AS), 좌심실 수축기능 정상"
+   },
+   {
+    "resourceType": "Encounter",
+    "id": "enc-bx3-1625-2",
+    "status": "finished",
+    "class": {
+     "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+     "code": "AMB"
+    },
+    "serviceType": {
+     "text": "Cardiology (순환기내과)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1625"
+    },
+    "period": {
+     "start": "2026-05-28T09:00:00+09:00",
+     "end": "2026-05-28T09:25:00+09:00"
+    }
+   }
+  ],
+  "evaluation_time": "2026-06-04T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R064",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "Severe AS closed by cardiology visit 14 days later."
+ },
+ {
+  "id": "C076",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1632",
+    "gender": "female",
+    "birthDate": "1946-08-30"
+   },
+   {
+    "resourceType": "Encounter",
+    "id": "enc-bx3-1632-1",
+    "status": "finished",
+    "class": {
+     "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+     "code": "AMB"
+    },
+    "serviceType": {
+     "text": "Cardiology"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1632"
+    },
+    "period": {
+     "start": "2026-02-10T09:00:00+09:00",
+     "end": "2026-02-10T09:25:00+09:00"
+    }
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1632-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1632"
+    },
+    "effectiveDateTime": "2026-03-05T11:00:00+09:00",
+    "issued": "2026-03-05T17:40:00+09:00",
+    "conclusion": "TRANSTHORACIC ECHO\nIndication: murmur (referred from cardiology OPD 2/10)\nLVEF 60%\nAV Vmax: 4.2 m/s | Mean PG: 44 mmHg | AVA (VTI): 0.82 cm2\nConclusion: Severe calcific aortic stenosis."
+   }
+  ],
+  "evaluation_time": "2026-03-12T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R064",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Cardiology visit was BEFORE the echo; no follow-up after -> open."
+ },
+ {
+  "id": "C077",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1639",
+    "gender": "male",
+    "birthDate": "1940-01-17"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1639-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1639"
+    },
+    "effectiveDateTime": "2026-08-26T11:00:00+09:00",
+    "issued": "2026-08-26T17:40:00+09:00",
+    "conclusion": "TTE\nCKD 4, pre-op evaluation for AVF\nLVEF 57%\nAV Vmax 4.0 m/s | Mean PG 41 mmHg | AVA 0.9 cm2\nImpression: severe AS"
+   },
+   {
+    "resourceType": "ServiceRequest",
+    "id": "sr-bx3-1639-2",
+    "status": "active",
+    "intent": "order",
+    "code": {
+     "text": "Referral to Nephrology - CKD stage 4, dialysis access planning"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1639"
+    },
+    "authoredOn": "2026-08-28T14:20:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-09-04T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R064",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Severe AS; only referral is to nephrology (wrong service)."
+ },
+ {
+  "id": "C078",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1646",
+    "gender": "female",
+    "birthDate": "1943-06-06"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1646-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "경흉부 심장초음파"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1646"
+    },
+    "effectiveDateTime": "2026-09-03T11:00:00+09:00",
+    "issued": "2026-09-03T17:40:00+09:00",
+    "conclusion": "경흉부 심장초음파 검사 결과\n검사 사유: 운동시 흉통, 실신 1회\n소견:\n - 좌심실 크기 정상, 동심성 비대, 구혈률 (LVEF) 63%\n - 대동맥판막 석회화 심함, 최고속도 4.5 m/s, 평균압력차 50 mmHg, 판막면적 0.65 cm2\n - 승모판 경도 역류\n결론: 중증 대동맥판 협착증 (severe AS). 좌심실 수축기능 정상."
+   }
+  ],
+  "evaluation_time": "2026-09-10T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R064",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "Severe AS (Korean report), no referral."
+ },
+ {
+  "id": "C079",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1653",
+    "gender": "male",
+    "birthDate": "1950-04-11"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1653-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1653"
+    },
+    "effectiveDateTime": "2026-02-18T11:00:00+09:00",
+    "issued": "2026-02-18T17:40:00+09:00",
+    "conclusion": "ECHOCARDIOGRAPHY\nLVEF 61%\nAV: calcified\nAV Vmax: 3.4 m/s | Mean PG: 25 mmHg | AVA (VTI): 1.2 cm2\nConclusion: Moderate aortic stenosis. Recommend f/u echo 1-2 yrs."
+   }
+  ],
+  "evaluation_time": "2026-02-25T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Moderate AS - not severe."
+ },
+ {
+  "id": "C080",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1660",
+    "gender": "female",
+    "birthDate": "1952-11-26"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1660-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1660"
+    },
+    "effectiveDateTime": "2026-03-31T11:00:00+09:00",
+    "issued": "2026-03-31T17:40:00+09:00",
+    "conclusion": "TTE\nIndication: murmur\nLV normal, LVEF 64%\nAV: mild leaflet thickening/calcification without restriction, AV Vmax 1.9 m/s\nConclusion: Aortic valve sclerosis without stenosis."
+   }
+  ],
+  "evaluation_time": "2026-04-07T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Aortic sclerosis - not stenosis."
+ },
+ {
+  "id": "C081",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1667",
+    "gender": "male",
+    "birthDate": "1939-09-14"
+   },
+   {
+    "resourceType": "Condition",
+    "id": "cond-bx3-1667-1",
+    "clinicalStatus": {
+     "coding": [
+      {
+       "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "text": "Severe aortic stenosis s/p TAVR (26 mm Sapien 3)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1667"
+    },
+    "onsetDateTime": "2024-06-20T00:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1667-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1667"
+    },
+    "effectiveDateTime": "2026-06-24T11:00:00+09:00",
+    "issued": "2026-06-24T17:40:00+09:00",
+    "conclusion": "TTE - post TAVR annual f/u\nLVEF 58%\nProsthetic aortic valve (TAVR): well seated, normal leaflet motion\n  Vmax 2.1 m/s | Mean PG 9 mmHg | EOA 1.8 cm2 | trivial paravalvular leak\nConclusion: Normally functioning TAVR prosthesis."
+   }
+  ],
+  "evaluation_time": "2026-07-01T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Normally functioning TAVR - excluded."
+ },
+ {
+  "id": "C082",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1674",
+    "gender": "female",
+    "birthDate": "1958-07-02"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1674-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1674"
+    },
+    "effectiveDateTime": "2026-05-06T11:00:00+09:00",
+    "issued": "2026-05-06T17:40:00+09:00",
+    "conclusion": "ECHOCARDIOGRAPHY\nIndication: rheumatic heart disease f/u\nLVEF 60%\nMV: thickened, commissural fusion, MVA (PHT) 1.1 cm2, MV mean PG 11 mmHg\nTR Vmax 4.2 m/s, RVSP 76 mmHg\nAV: normal, AV Vmax 1.4 m/s\nConclusion: Severe rheumatic mitral stenosis; severe pulmonary HTN. Aortic valve normal."
+   }
+  ],
+  "evaluation_time": "2026-05-13T09:00:00+09:00",
+  "expected": [],
+  "rationale": "High gradients belong to mitral/tricuspid valves; aortic valve normal."
+ },
+ {
+  "id": "C083",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1681",
+    "gender": "male",
+    "birthDate": "1975-02-27"
+   },
+   {
+    "resourceType": "Condition",
+    "id": "cond-bx3-1681-1",
+    "clinicalStatus": {
+     "coding": [
+      {
+       "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "text": "Hypertrophic cardiomyopathy (obstructive)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1681"
+    },
+    "onsetDateTime": "2018-09-01T00:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1681-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1681"
+    },
+    "effectiveDateTime": "2026-07-28T11:00:00+09:00",
+    "issued": "2026-07-28T17:40:00+09:00",
+    "conclusion": "TTE\nIVS 22 mm, SAM (+)\nLVOT peak velocity 4.5 m/s, LVOT peak PG 81 mmHg (resting)\nAV: trileaflet, no stenosis, AV not calcified\nLVEF 72%\nConclusion: HOCM with significant resting LVOT obstruction."
+   }
+  ],
+  "evaluation_time": "2026-08-04T09:00:00+09:00",
+  "expected": [],
+  "rationale": "LVOT velocity, not aortic valve stenosis; EF normal; known HCM."
+ },
+ {
+  "id": "C084",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1688",
+    "gender": "female",
+    "birthDate": "1949-10-05"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1688-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "경흉부 심장초음파"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1688"
+    },
+    "effectiveDateTime": "2026-04-22T11:00:00+09:00",
+    "issued": "2026-04-22T17:40:00+09:00",
+    "conclusion": "경흉부 심장초음파\nLVEF 66%\n대동맥판: 경도 석회화, AV Vmax 2.7 m/s, Mean PG 16 mmHg, AVA 1.6 cm2\n결론: 경도 대동맥판 협착 (Mild AS)"
+   }
+  ],
+  "evaluation_time": "2026-04-29T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Mild AS."
+ },
+ {
+  "id": "C085",
+  "rule_focus": "R064",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1695",
+    "gender": "male",
+    "birthDate": "1942-02-08"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1695-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1695"
+    },
+    "effectiveDateTime": "2024-09-10T11:00:00+09:00",
+    "issued": "2024-09-10T17:40:00+09:00",
+    "conclusion": "ECHOCARDIOGRAPHY\nLVEF 63%\nAV Vmax 3.5 m/s | Mean PG 27 mmHg | AVA 1.15 cm2\nConclusion: moderate AS"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1695-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1695"
+    },
+    "effectiveDateTime": "2026-07-09T11:00:00+09:00",
+    "issued": "2026-07-09T17:40:00+09:00",
+    "conclusion": "ECHOCARDIOGRAPHY (f/u)\nLVEF 60%\nAV Vmax: 4.4 m/s | Mean PG: 48 mmHg | AVA (VTI): 0.74 cm2\nConclusion: Progression to SEVERE aortic stenosis (prior 2024 moderate).\nAddendum: findings discussed with ordering physician by phone 7/9."
+   }
+  ],
+  "evaluation_time": "2026-07-16T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R064",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "2024 moderate (none); 2026 severe AS, no referral -> one open obligation."
+ },
+ {
+  "id": "C086",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1702",
+    "gender": "male",
+    "birthDate": "1961-06-15"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1702-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1702"
+    },
+    "effectiveDateTime": "2026-08-06T11:00:00+09:00",
+    "issued": "2026-08-06T17:40:00+09:00",
+    "conclusion": "TRANSTHORACIC ECHOCARDIOGRAPHY\nIndication: dyspnea, BNP 1,240\nLV: dilated (LVEDD 63 mm), global hypokinesis\nLVEF 30% (biplane Simpson) | GLS -8%\nAV: normal | MR: moderate functional | TR Vmax 2.9 m/s\nConclusion: LV systolic dysfunction, LVEF 30%. Moderate functional MR."
+   }
+  ],
+  "evaluation_time": "2026-08-13T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R065",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "New LVEF 30% without known HF; no cardiology follow-up."
+ },
+ {
+  "id": "C087",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1709",
+    "gender": "female",
+    "birthDate": "1959-02-22"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1709-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1709"
+    },
+    "effectiveDateTime": "2026-05-20T11:00:00+09:00",
+    "issued": "2026-05-20T17:40:00+09:00",
+    "conclusion": "TTE\nLV mildly dilated, LVEF 35-40% (visual estimate)\nAV: no AS. MV: mild MR.\nConclusion: Moderately reduced LV systolic function, EF 35-40%"
+   }
+  ],
+  "evaluation_time": "2026-05-27T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R065",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "EF range 35-40% -> upper value 40 -> <=40 -> triggers."
+ },
+ {
+  "id": "C088",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1716",
+    "gender": "male",
+    "birthDate": "1954-11-03"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1716-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "경흉부 심장초음파"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1716"
+    },
+    "effectiveDateTime": "2026-07-01T11:00:00+09:00",
+    "issued": "2026-07-01T17:40:00+09:00",
+    "conclusion": "경흉부 심장초음파\n검사 사유: 호흡곤란, 하지 부종\n소견: 좌심실 확장, 전반적 운동저하. 영상 질 불량 (poor echo window) 으로 정량 측정 어려움.\n결론: 좌심실 수축기능 심하게 감소 (severely reduced LV systolic function). 대동맥판 정상."
+   }
+  ],
+  "evaluation_time": "2026-07-08T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R065",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "'Severely reduced LV systolic function' without a number counts; no known HF."
+ },
+ {
+  "id": "C089",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1723",
+    "gender": "female",
+    "birthDate": "1966-08-17"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1723-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1723"
+    },
+    "effectiveDateTime": "2026-03-11T11:00:00+09:00",
+    "issued": "2026-03-11T17:40:00+09:00",
+    "conclusion": "ECHOCARDIOGRAPHY\nLVEF 25%, LV dilated, diffuse hypokinesis\nAV normal\nConclusion: Severe LV systolic dysfunction (EF 25%)"
+   },
+   {
+    "resourceType": "ServiceRequest",
+    "id": "sr-bx3-1723-2",
+    "status": "active",
+    "intent": "order",
+    "code": {
+     "text": "Referral to Heart Failure Clinic - new LVEF 25%"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1723"
+    },
+    "authoredOn": "2026-03-12T14:20:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-03-19T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R065",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "New EF 25% closed by HF clinic referral next day."
+ },
+ {
+  "id": "C090",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1730",
+    "gender": "male",
+    "birthDate": "1970-01-09"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1730-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1730"
+    },
+    "effectiveDateTime": "2026-06-17T11:00:00+09:00",
+    "issued": "2026-06-17T17:40:00+09:00",
+    "conclusion": "TTE\nLVEF 38% (Simpson), inferior/inferolateral hypokinesis\nAV normal, no AS\nConclusion: Mildly-moderately reduced LVEF 38%, RWMA in RCA territory"
+   },
+   {
+    "resourceType": "Encounter",
+    "id": "enc-bx3-1730-2",
+    "status": "finished",
+    "class": {
+     "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+     "code": "AMB"
+    },
+    "serviceType": {
+     "text": "Cardiology"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1730"
+    },
+    "period": {
+     "start": "2026-07-01T09:00:00+09:00",
+     "end": "2026-07-01T09:25:00+09:00"
+    }
+   }
+  ],
+  "evaluation_time": "2026-07-08T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R065",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "EF 38% closed by cardiology visit 14 days later."
+ },
+ {
+  "id": "C091",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1737",
+    "gender": "female",
+    "birthDate": "1951-04-30"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1737-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1737"
+    },
+    "effectiveDateTime": "2026-08-13T11:00:00+09:00",
+    "issued": "2026-08-13T17:40:00+09:00",
+    "conclusion": "ECHOCARDIOGRAPHY REPORT\nLVEF 33% (biplane)\nRV normal\nConclusion: reduced LVEF 33%"
+   },
+   {
+    "resourceType": "ServiceRequest",
+    "id": "sr-bx3-1737-2",
+    "status": "active",
+    "intent": "order",
+    "code": {
+     "text": "Referral to Pulmonology - chronic cough, r/o ILD"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1737"
+    },
+    "authoredOn": "2026-08-14T14:20:00+09:00"
+   }
+  ],
+  "evaluation_time": "2026-08-21T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R065",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "EF 33%; pulmonology referral is the wrong service."
+ },
+ {
+  "id": "C092",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1744",
+    "gender": "male",
+    "birthDate": "1963-09-18"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1744-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "경흉부 심장초음파"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1744"
+    },
+    "effectiveDateTime": "2026-09-15T11:00:00+09:00",
+    "issued": "2026-09-15T17:40:00+09:00",
+    "conclusion": "경흉부 심장초음파 결과\n좌심실 크기 경도 확장, 구혈률 40% (Simpson 법)\n판막: 특이소견 없음\n결론: 좌심실 수축기능 감소 (LVEF 40%)"
+   }
+  ],
+  "evaluation_time": "2026-09-22T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R065",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "LVEF exactly 40% -> <=40 -> triggers."
+ },
+ {
+  "id": "C093",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1751",
+    "gender": "female",
+    "birthDate": "1957-12-25"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1751-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1751"
+    },
+    "effectiveDateTime": "2026-04-02T11:00:00+09:00",
+    "issued": "2026-04-02T17:40:00+09:00",
+    "conclusion": "TTE\nLVEF 40-45%, mild global hypokinesis\nConclusion: mildly reduced LVEF (40-45%)"
+   }
+  ],
+  "evaluation_time": "2026-04-09T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Range 40-45% -> upper value 45 -> >40 -> not triggered."
+ },
+ {
+  "id": "C094",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1758",
+    "gender": "male",
+    "birthDate": "1960-07-21"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1758-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1758"
+    },
+    "effectiveDateTime": "2026-06-09T11:00:00+09:00",
+    "issued": "2026-06-09T17:40:00+09:00",
+    "conclusion": "ECHOCARDIOGRAPHY\nLV: normal size and function, LVEF 55%\nRV: dilated, TAPSE 12 mm, RV S' 7 cm/s -> RV systolic dysfunction\nTR Vmax 3.8 m/s, RVSP 63 mmHg\nConclusion: RV dysfunction, moderate pulmonary HTN, normal LV EF"
+   }
+  ],
+  "evaluation_time": "2026-06-16T09:00:00+09:00",
+  "expected": [],
+  "rationale": "RV dysfunction only; LVEF 55%."
+ },
+ {
+  "id": "C095",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1765",
+    "gender": "female",
+    "birthDate": "1948-05-14"
+   },
+   {
+    "resourceType": "Condition",
+    "id": "cond-bx3-1765-1",
+    "clinicalStatus": {
+     "coding": [
+      {
+       "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "text": "Heart failure with reduced ejection fraction (HFrEF), NYHA II - on sacubitril/valsartan"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1765"
+    },
+    "onsetDateTime": "2021-10-01T00:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1765-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1765"
+    },
+    "effectiveDateTime": "2026-05-27T11:00:00+09:00",
+    "issued": "2026-05-27T17:40:00+09:00",
+    "conclusion": "TTE (HF f/u)\nLVEF 25%, LV dilated\nConclusion: Severe LV dysfunction, unchanged"
+   }
+  ],
+  "evaluation_time": "2026-06-03T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Known HFrEF -> excluded."
+ },
+ {
+  "id": "C096",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1772",
+    "gender": "male",
+    "birthDate": "1972-03-02"
+   },
+   {
+    "resourceType": "Condition",
+    "id": "cond-bx3-1772-1",
+    "clinicalStatus": {
+     "coding": [
+      {
+       "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "text": "Dilated cardiomyopathy (I42.0)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1772"
+    },
+    "onsetDateTime": "2020-06-15T00:00:00+09:00"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1772-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1772"
+    },
+    "effectiveDateTime": "2026-07-22T11:00:00+09:00",
+    "issued": "2026-07-22T17:40:00+09:00",
+    "conclusion": "ECHOCARDIOGRAPHY\nLVEDD 68 mm, LVEF 30%\nConclusion: DCM, LVEF 30%"
+   }
+  ],
+  "evaluation_time": "2026-07-29T09:00:00+09:00",
+  "expected": [],
+  "rationale": "Known dilated cardiomyopathy -> excluded."
+ },
+ {
+  "id": "C097",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1779",
+    "gender": "female",
+    "birthDate": "1955-10-10"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1779-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1779"
+    },
+    "effectiveDateTime": "2025-03-04T11:00:00+09:00",
+    "issued": "2025-03-04T17:40:00+09:00",
+    "conclusion": "TTE\nLVEF 35% (Simpson), global hypokinesis\nConclusion: newly reduced LVEF 35%"
+   },
+   {
+    "resourceType": "Encounter",
+    "id": "enc-bx3-1779-2",
+    "status": "finished",
+    "class": {
+     "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+     "code": "AMB"
+    },
+    "serviceType": {
+     "text": "Cardiology - Heart Failure clinic"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1779"
+    },
+    "period": {
+     "start": "2025-03-20T09:00:00+09:00",
+     "end": "2025-03-20T09:25:00+09:00"
+    }
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1779-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1779"
+    },
+    "effectiveDateTime": "2026-08-11T11:00:00+09:00",
+    "issued": "2026-08-11T17:40:00+09:00",
+    "conclusion": "TTE (f/u)\nLVEF 30%\nConclusion: LVEF 30%, slightly worse than 2025 (35%)"
+   }
+  ],
+  "evaluation_time": "2026-08-18T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R065",
+    "deadline_days": 30,
+    "status": "closed"
+   }
+  ],
+  "rationale": "2025 echo EF 35% triggered and was closed by HF clinic visit; 2026 echo not triggered because an earlier echo already showed EF<=40%."
+ },
+ {
+  "id": "C098",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1786",
+    "gender": "male",
+    "birthDate": "1967-06-28"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1786-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "Echocardiography"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1786"
+    },
+    "effectiveDateTime": "2026-02-25T11:00:00+09:00",
+    "issued": "2026-02-25T17:40:00+09:00",
+    "conclusion": "ECHOCARDIOGRAPHY\nLVEF 45% (Simpson). Mild global hypokinesis.\nConclusion: mildly reduced LV systolic function, EF 45%"
+   }
+  ],
+  "evaluation_time": "2026-03-04T09:00:00+09:00",
+  "expected": [],
+  "rationale": "EF 45% (>40)."
+ },
+ {
+  "id": "C099",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1793",
+    "gender": "male",
+    "birthDate": "1958-08-08"
+   },
+   {
+    "resourceType": "Condition",
+    "id": "cond-bx3-1793-1",
+    "clinicalStatus": {
+     "coding": [
+      {
+       "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+       "code": "active"
+      }
+     ]
+    },
+    "code": {
+     "text": "Coronary artery disease s/p PCI to LAD (2019)"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1793"
+    },
+    "onsetDateTime": "2019-05-10T00:00:00+09:00"
+   },
+   {
+    "resourceType": "Encounter",
+    "id": "enc-bx3-1793-2",
+    "status": "finished",
+    "class": {
+     "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+     "code": "AMB"
+    },
+    "serviceType": {
+     "text": "Cardiology"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1793"
+    },
+    "period": {
+     "start": "2026-04-02T09:00:00+09:00",
+     "end": "2026-04-02T09:25:00+09:00"
+    }
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1793-3",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "TTE"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1793"
+    },
+    "effectiveDateTime": "2026-05-06T11:00:00+09:00",
+    "issued": "2026-05-06T17:40:00+09:00",
+    "conclusion": "TTE\nAnterior and apical akinesis\nLVEF 35% (biplane Simpson)\nConclusion: LV systolic dysfunction, EF 35% (prior echo 2019 EF 55%)"
+   }
+  ],
+  "evaluation_time": "2026-05-13T09:00:00+09:00",
+  "expected": [
+   {
+    "rule": "R065",
+    "deadline_days": 30,
+    "status": "open"
+   }
+  ],
+  "rationale": "New EF 35% (CAD alone is not HF/cardiomyopathy); the cardiology visit was BEFORE the echo -> open."
+ },
+ {
+  "id": "C100",
+  "rule_focus": "R065",
+  "resources": [
+   {
+    "resourceType": "Patient",
+    "id": "bx3-1800",
+    "gender": "female",
+    "birthDate": "1964-01-31"
+   },
+   {
+    "resourceType": "DiagnosticReport",
+    "id": "dr-bx3-1800-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "CUS"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "경흉부 심장초음파"
+    },
+    "subject": {
+     "reference": "Patient/bx3-1800"
+    },
+    "effectiveDateTime": "2026-09-22T11:00:00+09:00",
+    "issued": "2026-09-22T17:40:00+09:00",
+    "conclusion": "경흉부 심장초음파\nM-mode (Teichholz): LVEF 42%, FS 21%\n국소벽운동이상 없음\n결론: 경도 좌심실 수축기능 저하 (LVEF 42%)"
+   }
+  ],
+  "evaluation_time": "2026-09-29T09:00:00+09:00",
+  "expected": [],
+  "rationale": "EF 42% (>40)."
+ }
+]
