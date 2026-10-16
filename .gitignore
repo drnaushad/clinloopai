@@ -19,3 +19,18 @@ data/*.db-shm
 
 # Patient outreach outbox (patient ids and message texts)
 data/outbox.jsonl
+
+# Local databases, imaging and review outputs (may hold patient data)
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.dcm
+*.nii
+*.nii.gz
+review/
+sheet.csv
+result.json
+export_bundle.json
+out.json

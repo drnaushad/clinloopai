@@ -8,6 +8,7 @@ This is the 'Symbolic' half of our Neuro-Symbolic architecture.
 
 from enum import Enum
 from dataclasses import dataclass, field
+import re
 from typing import Dict, List, Optional, Tuple
 
 
@@ -204,11 +205,13 @@ OBLIGATION_RULES: List[ObligationRule] = [
         description="Abnormal Pap smear requires colposcopy within 30 days",
         trigger_event=EventType.LAB_RESULT,
         trigger_condition="abnormal_cervical_cytology",
-        required_followups=[EventType.COLPOSCOPY_REFERRAL],
+        # The referral, or the colposcopy itself (a patient seen directly needs no separate referral)
+        required_followups=[EventType.COLPOSCOPY_REFERRAL, EventType.COLPOSCOPY_VISIT],
+        followup_logic="any",
         deadline_days=30.0,
         severity=Severity.HIGH,
         clinical_domain="laboratory",
-        ltl_formula="□(LAB_RESULT[abnormal_pap] → ◇_{≤30d} COLPOSCOPY_REFERRAL)",
+        ltl_formula="□(LAB_RESULT[abnormal_pap] → ◇_{≤30d} (COLPOSCOPY_REFERRAL ∨ COLPOSCOPY_VISIT))",
         references=["ASCCP 2019 Risk-Based Management Guidelines"],
     ),
     ObligationRule(
@@ -253,14 +256,15 @@ OBLIGATION_RULES: List[ObligationRule] = [
     ObligationRule(
         rule_id="R009",
         name="Abnormal Pathology → Notification + Referral",
-        description="Abnormal pathology results require patient notification and specialist referral",
+        description="Abnormal pathology results require patient notification and specialist referral, both within 5 days",
         trigger_event=EventType.PATHOLOGY_RESULT,
         trigger_condition="abnormal",
         required_followups=[EventType.PATIENT_NOTIFICATION, EventType.SPECIALIST_REFERRAL],
         deadline_days=5.0,
         severity=Severity.HIGH,
         clinical_domain="pathology",
-        ltl_formula="□(PATHOLOGY_RESULT[abnormal] → ◇_{≤5d} (NOTIFICATION ∧ ◇_{≤14d} REFERRAL))",
+        # One deadline per rule: the stricter 5 days applies to both steps (the referral is not given 14 days)
+        ltl_formula="□(PATHOLOGY_RESULT[abnormal] → ◇_{≤5d} (NOTIFICATION ∧ REFERRAL))",
         references=["Singh H et al. BMJ Qual Saf 2014"],
     ),
     ObligationRule(
@@ -335,7 +339,8 @@ OBLIGATION_RULES: List[ObligationRule] = [
         description="Any positive blood culture for bacteremia requires repeat culture within 48 hours to confirm clearance",
         trigger_event=EventType.CULTURE_RESULT,
         trigger_condition="bacteremia_confirmed",
-        required_followups=[EventType.CULTURE_RESULT, EventType.CALLBACK],
+        # The repeat culture only: the callback to the patient is R006's obligation
+        required_followups=[EventType.CULTURE_RESULT],
         deadline_days=2.0,
         severity=Severity.CRITICAL,
         clinical_domain="laboratory",
@@ -1323,12 +1328,17 @@ NON_FULFILLING_STATUSES = frozenset({
     "revoked", "declined", "refused", "failed", "rejected",
     "scheduled", "booked", "planned", "proposed", "pending", "draft",
     "stopped", "on-hold", "on_hold", "suspended", "superseded",
+    # not happened yet, or not known to have happened (FHIR and source-system variants)
+    "requested", "ordered", "waitlist", "wait-list", "registered", "preliminary", "partial",
+    "in-progress", "in_progress", "unknown", "accepted-pending",
 })
 
 
 def is_fulfilling_status(status: Optional[str]) -> bool:
-    """True if an event with this status counts as a completed follow-up."""
-    return str(status or "completed").strip().lower() not in NON_FULFILLING_STATUSES
+    """True if an event with this status counts as a completed follow-up. Spaces and case are
+    ignored ("Entered in error", "IN PROGRESS")."""
+    norm = re.sub(r"[\s_]+", "-", str(status or "completed").strip().lower())
+    return norm not in NON_FULFILLING_STATUSES and norm.replace("-", "_") not in NON_FULFILLING_STATUSES
 
 
 def format_window(days: float) -> str:

@@ -128,6 +128,7 @@ def pattern_ida(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dic
             if age is None or sex not in ("male", "female") or (sex == "male" and age < 18) or (sex == "female" and age < 50):
                 continue      # premenopausal women: menstrual loss is the usual cause; men ≥ 18 and women ≥ 50 per BSG
             done = [e for e in events if when - timedelta(days=365) <= _t(e) <= when
+                    and is_fulfilling_status(e.get("status"))      # a cancelled colonoscopy is no work-up
                     and (e["event_type"] == EventType.COLONOSCOPY.value
                          or ((e["details"] or {}).get("specialty") == "gastroenterology"
                              and e["event_type"] in (EventType.SPECIALIST_REFERRAL.value, EventType.REFERRAL_VISIT.value)))]
@@ -266,7 +267,7 @@ def pattern_af(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict
     if not af:
         return
     first = af[0]
-    now = utc_now()
+    now = normalize_timestamp(ctx["evaluation_time"]) if ctx.get("evaluation_time") else utc_now()
     candidates = {_t(first)} | {_t(e) for e in events if e["event_type"] == EventType.DIAGNOSIS.value and _t(e) > _t(first)}
     b = ctx.get("birth_date")
     if b:
@@ -326,6 +327,7 @@ def pattern_haematuria(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: L
         if age is None or age < 35:
             continue
         done = [x for x in events if when - timedelta(days=365) <= _t(x) <= when
+                and is_fulfilling_status(x.get("status"))
                 and (x["details"] or {}).get("specialty") == "urology"]
         if done:
             continue

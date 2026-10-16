@@ -77,7 +77,7 @@ _ANATOMY = [
 _ANATOMY_RE = [(k, re.compile(p, re.I)) for k, p in _ANATOMY]
 _SPINE_LEVEL = re.compile(r"\b(cervical|thoracic|lumbar)\s+spine\b", re.I)
 _AORTA = re.compile(r"\baort\w*|\baaa\b|대동맥", re.I)
-_THORACIC_AORTA = re.compile(r"thoracic|ascending|arch|chest|흉부", re.I)
+_THORACIC_AORTA = re.compile(r"\b(?:thoracic\s+aort\w*|ascending|(?:aortic\s+)?arch|chest)\b|흉부", re.I)
 _WHOLE_BODY = re.compile(r"whole[- ]body|skull base to (?:mid[- ]?)?thigh|\bpet\b", re.I)
 _CAP = re.compile(r"\bcap\b|chest[,/ ]+abdomen[,/ ]+(?:and )?pelvis", re.I)
 
@@ -130,8 +130,8 @@ def regions_compatible(required, covered) -> bool:
 # ── Shared patterns ─────────────────────────────────────────────────────────
 
 # "14 mm", "1.4 cm", "14 x 11 mm" (Fleischner 2017: average of long and short axis)
-_SIZE = (r"(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?(?:\s*[x×]\s*\d+(?:\.\d+)?)?\s*"
-         r"(mm|cm|밀리미터|밀리|센티미터|센티)(?![a-zA-Z])")
+_SIZE = (r"(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?(?:\s*[x×]\s*\d+(?:\.\d+)?)?\s*-?\s*"
+         r"(mm|cm|밀리미터|밀리|센티미터|센티)(?![a-zA-Z])")       # "9 mm", "9mm", "9-mm"
 _SIZE_RE = re.compile(_SIZE, re.I)
 # Gap inside a sentence: any character except a sentence break ("2.5" is not one)
 _GAP = r"(?:[^.;]|(?<=\d)\.(?=\d))"
@@ -145,7 +145,8 @@ def _size_mm(a: str, b: Optional[str], unit: str, longest: bool = False) -> floa
     return round(value * factor, 1)
 
 
-_SIZE_ALL_AXES = re.compile(r"(\d+(?:\.\d+)?)((?:\s*[x×]\s*\d+(?:\.\d+)?)*)\s*(mm|cm|밀리미터|밀리|센티미터|센티)(?![a-zA-Z])", re.I)
+# At most two further axes: an unbounded repeat was quadratic on long runs of "1 x 2 x 3 …"
+_SIZE_ALL_AXES = re.compile(r"(\d+(?:\.\d+)?)((?:\s*[x×]\s*\d+(?:\.\d+)?){0,2})\s*-?\s*(mm|cm|밀리미터|밀리|센티미터|센티)(?![a-zA-Z])", re.I)
 
 
 _THRESHOLD_BEFORE = re.compile(r"(?:<|≤|=<|less than|smaller than|under|below|threshold|cut-?off|미만|이하|기준)"
@@ -187,8 +188,11 @@ def _next_sentence(text: str, end: int) -> str:
 
 
 _CAT = r"(?:category|cat\.?|범주|카테고리)"
-_LUNG_RADS = re.compile(rf"lung-?rads\s*(?:{_CAT}\s*)?:?\s*(\d[ABXS]?)", re.I)
-_BIRADS = re.compile(rf"bi-?rads\s*(?:{_CAT}\s*)?:?\s*(\d[ABC]?)", re.I)
+# An edition before the category ("Lung-RADS 2022 category 4B", "Lung-RADS v1.1 4X", "BI-RADS 2013 category 4")
+# is not the category; the category digit must not run on into another number
+_RADS_VERSION = r"(?:v?(?:(?:19|20)\d\d|\d\.\d)\s*)?"
+_LUNG_RADS = re.compile(rf"lung-?rads\s*{_RADS_VERSION}(?:{_CAT}\s*)?:?\s*(\d[ABXS]?)(?!\d|\.\d)", re.I)
+_BIRADS = re.compile(rf"bi-?rads\s*{_RADS_VERSION}(?:{_CAT}\s*)?:?\s*(\d[ABC]?)(?!\d|\.\d)", re.I)
 _TIRADS = re.compile(rf"\bTR\s*([1-5])\b|(?<!K-)(?<!K)ti-?rads\s*(?:{_CAT}\s*)?:?\s*([1-5])\b(?!\s*points?)", re.I)
 
 # Services that can carry out each work-up (a referral naming none of them does not close it)
@@ -202,8 +206,11 @@ WORKUP_SPECIALTIES: Dict[str, List[str]] = {
     "R045": ["surgery"],                                                    # vascular surgery
 }
 _KTIRADS = re.compile(r"K-?TI-?RADS\s*(?:category\s*)?:?\s*([2-5])\b", re.I)
+# PET-CT counts as chest imaging only when it covers the chest (whole body / skull base to thigh), not "PET-CT brain"
 _CHEST_CT = re.compile(r"\b(ct|ldct|computed tomography)\b.*\b(chest|thorax|lung)\b|\b(chest|thorax|lung)\b.*\b(ct|ldct)\b"
-                       r"|(?:흉부|폐)\s*(?:저선량\s*)?ct|\bpet[/-]?ct\b", re.I)
+                       r"|(?:흉부|폐)\s*(?:저선량\s*)?ct"
+                       r"|\bpet[/-]?ct\b(?!.*\b(?:brain|head|neuro|cardiac|heart|bone)\b)(?=.*\b(?:whole[- ]?body|skull base|torso|chest|thorax|lung|oncolog\w*)\b|\s*$)"
+                       r"|\b(?:whole[- ]?body|torso)\b.*\bpet[/-]?ct\b", re.I)
 
 _PRIOR_CATEGORY = re.compile(r"\b(previous\w*|prior|formerly|was|from)\b|이전|과거|기존", re.I)
 
@@ -224,7 +231,7 @@ def _current_category(pattern: re.Pattern, text: str) -> Optional[re.Match]:
 
 _NODULE_ANY = re.compile(r"nodules?|\bnods?\b|결절", re.I)    # a sentence about another nodule is not this one's comparison
 _NODULE_SIZE_FIRST = re.compile(rf"{_SIZE}[^.;]{{0,40}}?(nodules?|\bnods?\b|결절)", re.I)
-_NODULE_WORD_FIRST = re.compile(rf"(nodules?|\bnods?\b|결절)[^.;]{{0,40}}?{_SIZE}", re.I)
+_NODULE_WORD_FIRST = re.compile(rf"(nodules?|\bnods?\b|결절){_GAP}{{0,60}}?{_SIZE}", re.I)
 _LUNG_SITE = re.compile(r"\b(lungs?|pulmonary|(?:upper|middle|lower)\s+lobes?|lingula\w*|perifissural|subpleural)\b"
                         r"|(?:(?<![가-힣])|(?<=[좌우양]))폐(?!경)|[우좌][상중하]엽|설상엽", re.I)
 _OTHER_SITE = re.compile(r"\b(adrenal|thyroid|renal|kidneys?|liver|hepatic|pancrea\w*|splen\w*|breast|ovar\w*|"
@@ -693,6 +700,9 @@ _NOT_NEW_AFTER = re.compile(r"^\s*(?:protocol|study|evaluation|work-?up|w/u)\b"
                             r"chronic|smaller|less)\b|^\s*:\s*(?:none|negative|no|absent)\b"
                             r"|^[^.;,]{0,20}?(?:흡수|호전|감소|소실|변화\s*없|안정|만성)", re.I)
 _EXPLICITLY_NEW = re.compile(r"\b(new|acute|interval development of|newly)\b[^,;.]{0,25}$|(?:새로|새롭게|신규|급성)[^,;.]{0,15}$", re.I)
+# A known finding that is getting worse is critical again: "known pneumothorax, now larger"
+_WORSENING_AFTER = re.compile(r"^[^.;\n]{0,40}?\b(?:now\s+)?(?:larger|bigger|increas\w*|enlarg\w*|worse\w*|progress\w*|"
+                              r"expand\w*|extend\w*|new\b)|^[^.;\n]{0,20}?(?:증가|악화|커짐|진행)", re.I)
 _COMMUNICATED = re.compile(
     r"(?<!will be )(?<!to be )(?<!should be )(?:discussed (?:(?:by|over the|via) (?:tele)?phone |in person |verbally )?with|"
     r"communicated (?:(?:by|over the|via) (?:tele)?phone |verbally )?(?:to|with)|called to|telephoned|"
@@ -703,6 +713,23 @@ _COMMUNICATED = re.compile(
     r"(?:통보|보고|전달)\s*(?:함|하였|했|됨|완료)"
     # "응급의학과 이OO 선생님께 2026-01-22 03:15 구두 보고함"
     r"|(?:선생님|교수님|담당의|주치의|당직의)\s*(?:께|에게)[^.\n]{0,30}?(?:통보|보고|전달)\s*(?:함|하였|했|됨|드림|완료)", re.I)
+# "must be discussed with", "recommend that this be discussed", "please ensure … conveyed to": a request
+_COMM_REQUESTED = re.compile(r"\b(?:be|please|ensure|recommend\w*|suggest\w*|advis\w*|should|must|need\w*|"
+                             r"kindly|will|would|to)\s+(?:\w+\s+){0,3}$|(?:바랍니다|요망|필요)\s*$", re.I)
+
+
+def _communication_done(text: str):
+    """The first report of a communication that was made ("discussed with Dr X at 14:05", "has been
+    notified"), skipping ones that only ask for it to be made."""
+    for m in _COMMUNICATED.finditer(text):
+        sentence = re.split(r"\n|[.;!?](?:\s|$)", text[max(0, m.start() - 120):m.start()])[-1]
+        if _COMM_REQUESTED.search(sentence) and not re.search(r"\b(?:has|have|was|were|been)\s+(?:\w+\s+){0,2}$", sentence, re.I):
+            continue
+        if affirmed(text, m):
+            return m
+    return None
+
+
 _critical_cache: Dict[str, Any] = {}
 
 
@@ -734,8 +761,11 @@ def _critical_findings(text: str) -> List[Dict[str, Any]]:
     for item, rx in load_critical_findings()["compiled"]:
         for m in rx.finditer(text):
             before = text[max(0, m.start() - 60):m.start()]
+            # Context comes from the finding's own line and sentence: "Indication: rule out PE" on the
+            # line above does not make "Pulmonary embolism …" below it an old finding
+            before = re.split(r"\n|[.;!?](?:\s|$)", before)[-1]
             not_new = (_NOT_NEW.search(before) or _NOT_NEW_AFTER.search(text[m.end():])) \
-                and not _EXPLICITLY_NEW.search(before)
+                and not _EXPLICITLY_NEW.search(before) and not _WORSENING_AFTER.search(text[m.end():])
             if affirmed(text, m) and not not_new:
                 found.append({"id": item["id"], "label": item.get("label", {}).get("en", item["id"]),
                               "category": item.get("category", 1), "window_minutes": float(item.get("window_minutes", 60)),
@@ -787,6 +817,8 @@ def clean_report_text(text: str) -> str:
 # The heading only ("ADDENDUM (2026-05-08):"): text on the same line belongs to the addendum
 _ADDENDUM = re.compile(r"\n\s*[\[(*]*\s*(?:ADDENDUM|Addendum|추가\s*판독|수정\s*판독)\b(?:[^\]\n:：]*\])?"
                        r"(?:\s*\([^)\n]*\))?\s*[:：]?", re.I)
+_REC_WORDS = re.compile(r"recommend\w*|follow-?up|imaging|work-?up|\b(?:ct|mri|us|ultrasound|pet|biopsy|"
+                        r"scan|surveillance)\b|권고|추적|검사", re.I)
 _WITHDRAWN = re.compile(r"withdrawn|retract\w*|disregard|no (?:further )?(?:follow-?up|imaging|work-?up)(?: is)? "
                         r"(?:needed|required|necessary|recommended)|철회|취소|추적\s*(?:검사\s*)?(?:는\s*)?불필요", re.I)
 
@@ -812,8 +844,12 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
             value = next(g for g in m.groups() if g).upper()
             details[key] = value
             mapping.append(f"{label} {value}")
-    nodules = (_lung_nodules(addendum, code_text) if addendum else []) or \
-        _lung_nodules(main if addendum else conclusion, code_text)
+    nodules = _lung_nodules(main if addendum else conclusion, code_text)
+    if addendum:
+        # An addendum revises the nodules it describes (matched by size), not every nodule in the report:
+        # "ADDENDUM: the 4 mm LLL nodule is calcified" leaves the 12 mm nodule standing
+        for revised_nodule in _lung_nodules(addendum, code_text):
+            nodules = [n for n in nodules if abs(n["size_mm"] - revised_nodule["size_mm"]) > 1.0] + [revised_nodule]
     if nodules:
         dominant = max(nodules, key=lambda n: (n["size_mm"], n["type"] != "ggn"))
         dominant["multiple"] = dominant["multiple"] or len(nodules) > 1
@@ -827,7 +863,15 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
     if addendum:
         revised = _incidental_findings(addendum, code_text, modality)
         kinds = {f["kind"] for f in revised}
-        rad["incidental"] = [f for f in _incidental_findings(main, code_text, modality) if f["kind"] not in kinds] + revised
+
+        def _revises(new, old):
+            """The addendum finding is about the same lesion: same kind, and the same size (or none given)."""
+            if new["kind"] != old["kind"]:
+                return False
+            a, b = new.get("size_mm") or new.get("diameter_mm"), old.get("size_mm") or old.get("diameter_mm")
+            return a is None or b is None or abs(a - b) <= 2.0
+        rad["incidental"] = [f for f in _incidental_findings(main, code_text, modality)
+                             if not any(_revises(r, f) for r in revised)] + revised
         b = _BOSNIAK.search(addendum)
         if b and "renal" not in kinds:
             # "… Bosniak II, benign" with no organ named: it re-classifies the report's kidney lesion
@@ -845,7 +889,11 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
     for f in rad["incidental"]:
         size = f.get("size_mm") or f.get("diameter_mm")
         mapping.append(f"{f['kind'].replace('_', ' ')}" + (f" {size:g} mm" if size else ""))
-    withdrawn = bool(addendum) and bool(_WITHDRAWN.search(addendum))
+    # Withdrawn only when the withdrawal is about the recommendation: "please disregard the comparison
+    # date" does not cancel "recommend MRI liver in 3 months"
+    withdrawn = bool(addendum) and any(
+        _WITHDRAWN.search(sent) and _REC_WORDS.search(sent)
+        for sent in re.split(r"(?<=[.;!?])\s+|\n", addendum))
     rec_add = _extract_recommendation(addendum, code_text) if addendum else None
     if rec_add and _WITHDRAWN.search(rec_add["evidence_span"]):
         rec_add = None              # "the previous recommendation for MRI is withdrawn" is not a recommendation
@@ -866,7 +914,7 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
     critical = _critical_findings(conclusion)
     if critical:
         rad["critical"] = critical
-    m = first_affirmed(_COMMUNICATED, conclusion)
+    m = _communication_done(conclusion)
     if m:
         # Follow-ups must come after their trigger, so the documented call is placed one
         # minute after the report time (the report text rarely gives a parseable time)
@@ -1244,8 +1292,8 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
                 if rec_ct and rec["recommended_interval_stated"] and rec_deadline < decision["days"]:
                     mapping.append("radiologist interval is tighter than Fleischner: tracked as R030")
                 else:
-                    add("R003", "incidental_nodule_ge_6mm", decision["days"], review=decision["review"],
-                        evidence=n["evidence_span"])
+                    add("R003", "incidental_nodule_ge_6mm", decision["days"], regs=["lung", "chest"],
+                        review=decision["review"], evidence=n["evidence_span"])
                     covered_organs.append(("R003", ["lung"]))
                     if rec_ct:
                         rec_tracked = False

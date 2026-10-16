@@ -94,8 +94,11 @@ def classify_lab(codes: Iterable[str], code_text: str, value_text: str, flag: Op
     codes = set(codes)
     text = code_text or ""
 
-    # Supplemental HIV tests and HBV DNA are follow-ups, never screening triggers
-    if codes & LOINC_HIV_SUPPLEMENTAL or (_HIV.search(text) and _HIV_SUPPLEMENTAL.search(text)):
+    # Supplemental HIV tests and HBV DNA are follow-ups, never screening triggers. A screening code wins
+    # over the name: "HIV-1/2 Ag/Ab screen with reflex to differentiation" is the screen itself
+    screen_named = re.search(r"reflex|screen|선별|반정량|semi-?quant", text, re.I)
+    if codes & LOINC_HIV_SUPPLEMENTAL or (not codes & LOINC_HIV_SCREEN and not screen_named
+                                          and _HIV.search(text) and _HIV_SUPPLEMENTAL.search(text)):
         return {"condition": None, "followup_event": "hiv_supplemental_test",
                 "mapping": ["HIV supplemental test (RNA / differentiation)→hiv_supplemental_test"]}
     if codes & LOINC_HBV_DNA or _HBV_DNA.search(text):
@@ -253,7 +256,8 @@ def colonoscopy_interval(text: str) -> Dict[str, Any]:
         total = int(b.group(1))
         segments = [int(x) for x in b.group(2, 3, 4) if x is not None]
         # "BBPS 3-3-3" or "BBPS 2/1/2": three segment scores, no total
-        seg_only = re.match(r"\s*([0-3])\s*[-/,]\s*([0-3])\s*[-/,]\s*([0-3])(?!\d)", text[b.start(1):])
+        # ("BBPS 3 3 3" with spaces too: a total is one number, not three)
+        seg_only = re.match(r"\s*([0-3])(?:\s*[-/,]\s*|\s+)([0-3])(?:\s*[-/,]\s*|\s+)([0-3])(?!\d)", text[b.start(1):])
         if seg_only and not segments:
             segments = [int(x) for x in seg_only.groups()]
             total = sum(segments)

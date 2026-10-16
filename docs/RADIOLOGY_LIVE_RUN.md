@@ -139,7 +139,7 @@ Still open from the review:
 
 ## What still needs people, not code
 
-1. **Specialist sign-off of all 46 rules** in `governance.html`, by radiologists and the relevant
+1. **Specialist sign-off of all 65 rules** in `governance.html`, by radiologists and the relevant
    specialists (pulmonology, endocrinology, urology, GI, vascular surgery). Every "proposed" interval
    in the rule notes needs a local decision.
 2. **The hospital's critical-finding list**: edit the example list, then approve it.

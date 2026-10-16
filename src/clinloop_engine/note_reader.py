@@ -270,11 +270,12 @@ _FUTURE = re.compile(
 # English cues may stand anywhere in the clause; Korean verb-final cues (취소, 보류, 시행함) only after the plan.
 _NEGATED = re.compile(
     r"\bno\s+(?:need|indication|further|plans?|follow[- ]?up|repeat|referral)\b|\bnot\s+(?:needed|necessary|required|indicated)\b|"
-    r"\bwill\s+not\b|\bwon't\b|\bdo(?:es)?\s+not\s+need\b|\bdon't\s+need\b|\bdeclin\w*|\bdecided\s+against\b|\bcancel\w*|"
+    r"\bwill\s+not\b|\bwon't\b|\bdo(?:es)?\s+not\s+need\b|\bdon't\s+need\b|\bdeclines?\b|\bdeclined\b|\bdecided\s+against\b|\bcancel\w*|"
     r"\bdefer(?:red)?\s+indefinitely\b|\bdiscontinu\w*\s+(?:follow|surveillance)|\bno\s+longer\b|불필요|필요\s*없|하지\s*않|안\s*하기로", re.I)
 _NEGATED_AFTER_KO = re.compile(r"취소|보류|중단")
 _CONDITIONAL = re.compile(
-    r"\bif\b|\bunless\b|\bshould\s+(?:symptoms?|it|pain|fever|he|she|they)\b|\bprn\b|\bas needed\b|\bwhen\s+(?:needed|necessary)\b|"
+    # "to see if the nodule is growing", "evaluate if ablation is indicated": a purpose, not a condition
+    r"(?<!see\s)(?<!evaluate\s)(?<!assess\s)(?<!determine\s)(?<!check\s)(?<!know\s)(?<!whether\s)\bif\b|\bunless\b|\bshould\s+(?:symptoms?|it|pain|fever|he|she|they)\b|\bprn\b|\bas needed\b|\bwhen\s+(?:needed|necessary)\b|"
     r"\bin case\b|필요\s*시|필요하면|악화\s*시|지속\s*시|경우|고려|하면|되면|있으면", re.I)
 _CONDITIONAL_BEFORE = re.compile(r"\bconsider\w*\b|\bmay\b|\bmight\b|\bpossibly\b|\bperhaps\b", re.I)
 _SOONER = re.compile(r"(?:,?\s*(?:or\s+)?(?:sooner|earlier)(?:\s+(?:if|as)\b[^,;]*)?)", re.I)
@@ -373,13 +374,20 @@ def find_plans(note: str) -> Dict[str, Any]:
         if visit_with and not spec and specialty_of(visit_with.group(0)):   # "f/u with cardiology in 3 months"
             spec = specialty_of(visit_with.group(0))
             found.append(_plan("visit", spec, s, at=visit_with.start()))
-        modality = _first_key(MODALITIES, s)
-        if modality:
-            regions = sorted(regions_in(_expand_abbrev(s)))
-            mpos = re.search(dict(MODALITIES)[modality], s, re.I).start()
-            if modality == "mammogram" and not regions:
+        # Every study named ("CT chest and MRI brain in 3 months" is two plans), each with its own regions:
+        # the words from its name up to the next study's name
+        hits = sorted((m.start(), key) for key, rx in MODALITIES for m in [re.search(rx, s, re.I)] if m)
+        if len(hits) > 1:     # "nodule on CXR: CT chest in 3 months": the CXR is where it was seen, not a plan
+            hits = [h for h in hits if not re.search(r"\b(?:on|from|per|by|seen\s+on|noted\s+on)\s+(?:the\s+|a\s+|prior\s+|recent\s+)?$",
+                                                      s[max(0, h[0] - 25):h[0]], re.I)] or hits[:1]
+        modality = hits[0][1] if hits else None
+        for i, (mpos, key) in enumerate(hits):
+            end = hits[i + 1][0] if i + 1 < len(hits) else len(s)
+            regions = sorted(regions_in(_expand_abbrev(s[mpos:end]))) or \
+                (sorted(regions_in(_expand_abbrev(s))) if len(hits) == 1 else [])
+            if key == "mammogram" and not regions:
                 regions = ["breast"]
-            found.append(_plan("imaging", modality, s, {"regions": regions}, at=mpos))
+            found.append(_plan("imaging", key, s, {"regions": regions}, at=mpos))
         analytes = [(k, m.start()) for k, rx in ANALYTES for m in [re.search(rx, s, re.I)] if m]
         if modality:          # "CT" sentences mention contrast/creatinine incidentally: only explicit lab verbs count
             analytes = [a for a in analytes if re.search(r"\b(?:repeat|recheck|check|labs?)\b|재검|혈액", s, re.I)]

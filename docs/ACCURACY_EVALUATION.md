@@ -45,7 +45,8 @@ software verification, not clinical validation (see "Limits" below).
      by design: when the guideline rule and the radiologist's own recommendation ask for the same study,
      one follow-up closes both. Strict scoring counts that as a miss; the equivalent score does not.
 
-To reproduce:
+To reproduce (the command scores the current code, so it can differ from the table below after
+later fixes to the report readers):
 ```
 python tests/report_eval/run_eval.py tests/report_eval/cases.json confirm --show
 ```

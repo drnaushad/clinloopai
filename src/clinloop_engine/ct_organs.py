@@ -118,7 +118,10 @@ def _series_files(content: bytes) -> List[bytes]:
         raise ImagingError(f"Too many files in the zip (max {MAX_SERIES_FILES})")
     if sum(i.file_size for i in infos) > MAX_SERIES_BYTES:
         raise ImagingError("The zip is too large once unpacked")
-    return [zf.read(i) for i in infos]
+    try:
+        return [zf.read(i) for i in infos]
+    except (zipfile.BadZipFile, RuntimeError, OSError, EOFError, ValueError) as e:   # CRC error, encrypted member
+        raise ImagingError(f"The zip could not be read ({type(e).__name__})") from e
 
 
 def read_dicom_series(content: bytes):
@@ -135,7 +138,9 @@ def read_dicom_series(content: bytes):
             ds = pydicom.dcmread(io.BytesIO(raw), force=True)
         except Exception:
             continue
-        if "PixelData" in ds and "ImagePositionPatient" in ds and "ImageOrientationPatient" in ds:
+        # Every tag the volume needs: a slice without them cannot be placed or measured
+        if all(t in ds for t in ("PixelData", "ImagePositionPatient", "ImageOrientationPatient",
+                                 "PixelSpacing", "Rows", "Columns")):
             slices.append(ds)
     if not slices:
         raise ImagingError("No CT image slices found in the zip")
@@ -171,7 +176,10 @@ def read_dicom_series(content: bytes):
 
     vol = np.empty((cols, rows, len(slices)), dtype=np.float32)    # (i = column, j = row, k = slice)
     for k, s in enumerate(slices):
-        arr = s.pixel_array.astype(np.float32)
+        try:
+            arr = s.pixel_array.astype(np.float32)
+        except Exception as e:      # compressed with a codec that is not installed, truncated pixel data …
+            raise ImagingError(f"Slice {k + 1}: pixel data could not be decoded ({type(e).__name__})") from e
         arr = arr * float(getattr(s, "RescaleSlope", 1) or 1) + float(getattr(s, "RescaleIntercept", 0) or 0)
         vol[:, :, k] = arr.T
     dr, dc = (float(x) for x in slices[0].PixelSpacing)                 # row spacing, column spacing
@@ -188,7 +196,17 @@ def read_dicom_series(content: bytes):
 
 def read_nifti(content: bytes):
     import nibabel as nib
-    raw = gzip.decompress(content) if content[:2] == b"\x1f\x8b" else content
+    if content[:2] == b"\x1f\x8b":
+        # Read at most the series limit: a small gzip can expand to hundreds of GB ("decompression bomb")
+        try:
+            with gzip.GzipFile(fileobj=io.BytesIO(content)) as gz:
+                raw = gz.read(MAX_SERIES_BYTES + 1)
+        except (OSError, EOFError) as e:
+            raise ImagingError(f"Not a readable .nii.gz file ({type(e).__name__})") from e
+        if len(raw) > MAX_SERIES_BYTES:
+            raise ImagingError("The volume is too large once unpacked")
+    else:
+        raw = content
     try:
         img = nib.Nifti1Image.from_bytes(raw)
     except Exception as e:

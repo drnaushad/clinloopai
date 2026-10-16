@@ -183,9 +183,12 @@ class ClinLoopDetector:
 
         # Unresolved loops first, highest risk first. An overdue critical loop
         # must outrank a low-risk one that merely needs human review; ties go
-        # to the human-review case so low-confidence items stay visible.
+        # to the human-review case so low-confidence items stay visible. A loop
+        # completed late ("delayed") needs no action now: it ranks after every
+        # loop that is still open, however high its historical risk.
         detections.sort(key=lambda d: (
             d.loop_status == LoopStatus.CLOSED.value,
+            d.loop_status == LoopStatus.DELAYED.value,
             -d.risk_score,
             not d.should_abstain,
         ))

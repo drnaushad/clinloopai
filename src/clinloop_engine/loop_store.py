@@ -27,11 +27,12 @@ import json
 import re
 import sqlite3
 import threading
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from .clinical_ontology import LoopStatus
-from .safety_clock import utc_now
+from .safety_clock import normalize_timestamp, utc_now
 
 # Engine statuses that count as a missed loop for the quality measure
 ACTIVE_ENGINE_STATUSES = (LoopStatus.OPEN.value, LoopStatus.DELAYED.value, LoopStatus.ABSTAIN.value)
@@ -51,6 +52,7 @@ DEFER_REASONS = {
     "other": "Other (note required)",
 }
 REASONS_REQUIRING_NOTE = {"not_clinically_indicated", "other"}
+MAX_DEFER_DAYS = 366      # a deferral resurfaces within a year at most
 
 # Escalation chain. A loop past its deadline that nobody has acknowledged
 # climbs one level each time its grace period passes again.
@@ -239,8 +241,26 @@ class LoopStore:
             self._db.commit()
 
     # ── audit ────────────────────────────────────────────────────────────────
+    @contextmanager
+    def _writing(self):
+        """One write transaction that holds SQLite's write lock from its first read (BEGIN IMMEDIATE).
+        The in-process lock alone does not stop a second process (another worker, a CLI ingest)
+        from reading the same state and writing in between: two audit entries would chain from the
+        same hash, or a deferral could overwrite a closure made a moment earlier."""
+        with self._lock:
+            if not self._db.in_transaction:
+                self._db.execute("BEGIN IMMEDIATE")
+            try:
+                yield
+                self._db.commit()
+            except BaseException:
+                self._db.rollback()
+                raise
+
     def _audit(self, actor: str, role: str, action: str, key: Optional[str], detail: Dict,
                at: Optional[datetime] = None) -> None:
+        if not self._db.in_transaction:            # take the write lock before reading the chain head
+            self._db.execute("BEGIN IMMEDIATE")
         row = self._db.execute("SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1").fetchone()
         prev = row["hash"] if row else "GENESIS"
         ts = (at or utc_now()).isoformat()
@@ -255,9 +275,8 @@ class LoopStore:
 
     def record_audit(self, actor: str, role: str, action: str, key: Optional[str], detail: Dict) -> None:
         """Add one entry to the hash-chained audit log (for events outside the loop workflow)."""
-        with self._lock:
+        with self._writing():
             self._audit(actor, role, action, key, detail)
-            self._db.commit()
 
     def audit_trail(self, key: Optional[str] = None, limit: int = 200) -> List[Dict]:
         with self._lock:
@@ -491,9 +510,10 @@ class LoopStore:
     # ── clinician actions ────────────────────────────────────────────────────
     def _transition(self, key: str, actor: str, role: str, action: str,
                     allowed_from: Iterable[str], updates: Dict, detail: Dict,
-                    extra: Optional[Callable[[Dict], Dict]] = None) -> Dict:
-        """``extra(loop)`` adds updates that depend on the loop's current row, read under the same lock."""
-        with self._lock:
+                    extra: Optional[Callable[[Dict], Dict]] = None, also: Optional[Callable[[], None]] = None) -> Dict:
+        """``extra(loop)`` adds updates that depend on the loop's current row, read under the same lock;
+        ``also()`` runs further statements in the same transaction."""
+        with self._writing():
             loop = self.get(key)
             if loop["workflow_state"] not in allowed_from:
                 raise WorkflowError(f"Cannot {action} a loop in state '{loop['workflow_state']}'")
@@ -504,7 +524,8 @@ class LoopStore:
             self._db.execute(f"UPDATE loops SET {', '.join(f'{k}=?' for k in updates)} WHERE loop_key=?",
                              (*updates.values(), key))
             self._audit(actor, role, action, key, detail)
-            self._db.commit()
+            if also:
+                also()
             return self.get(key)
 
     def acknowledge(self, key: str, actor: str, role: str = "clinician") -> Dict:
@@ -523,17 +544,35 @@ class LoopStore:
             raise WorkflowError(f"Unknown reason '{reason_code}'. Use one of: {', '.join(DEFER_REASONS)}")
         if reason_code in REASONS_REQUIRING_NOTE and not note.strip():
             raise WorkflowError(f"A note is required for reason '{reason_code}'")
+        if until:
+            # Stored as ISO and compared as text: anything else ("zzzz") would hide the loop for ever
+            try:
+                when = normalize_timestamp(until)
+            except (ValueError, TypeError):
+                raise WorkflowError(f"Resurface date '{str(until)[:40]}' is not a date")
+            if when > utc_now() + timedelta(days=MAX_DEFER_DAYS):     # a past date simply resurfaces at once
+                raise WorkflowError(f"Resurface date must be within {MAX_DEFER_DAYS} days")
+            until = when.isoformat()
         return self._transition(key, actor, role, "defer", ACTIVE_WORKFLOW_STATES,
                                 {"workflow_state": "deferred", "defer_reason": reason_code,
                                  "defer_note": note, "defer_until": until},
-                                {"reason": reason_code, "note": note, "until": until})
+                                {"reason": reason_code, "note": note, "until": until},
+                                also=lambda: self._withdraw_drafts(key, actor, "loop deferred"))
 
     def close(self, key: str, actor: str, evidence: str, role: str = "clinician") -> Dict:
         if not evidence or len(evidence.strip()) < 5:
             raise WorkflowError("Closure requires evidence of the completed follow-up (e.g. order or visit reference)")
         return self._transition(key, actor, role, "close", ACTIVE_WORKFLOW_STATES + ("deferred",),
                                 {"workflow_state": "closed_by_clinician", "closure_evidence": evidence},
-                                {"evidence": evidence})
+                                {"evidence": evidence},
+                                also=lambda: self._withdraw_drafts(key, actor, "loop closed"))
+
+    def _withdraw_drafts(self, key: str, actor: str, why: str) -> None:
+        """Patient messages still awaiting approval are withdrawn when their loop stops being active."""
+        n = self._db.execute("UPDATE outreach_messages SET status='withdrawn', note=? WHERE loop_key=? AND status='draft'",
+                             (why, key)).rowcount
+        if n:
+            self._audit(actor, "system", "outreach_withdrawn", key, {"messages": n, "reason": why})
 
     # ── escalation ───────────────────────────────────────────────────────────
     def escalate_overdue(self, now: Optional[datetime] = None, actor: str = "watchdog",
@@ -585,7 +624,7 @@ class LoopStore:
 
     def add_outreach_draft(self, key: str, actor: str, role: str, text: str, language: str,
                            channel: str, safety_flags: List[str]) -> Dict:
-        with self._lock:
+        with self._writing():
             loop = self.get(key)
             if loop["workflow_state"] not in ACTIVE_WORKFLOW_STATES:
                 raise WorkflowError(f"Cannot message a patient about a loop in state '{loop['workflow_state']}'")
@@ -601,8 +640,10 @@ class LoopStore:
 
     def decide_outreach(self, msg_id: str, actor: str, role: str, approve: bool,
                         final_text: Optional[str] = None, provider=None, note: str = "") -> Dict:
-        """Approve (and send through `provider`) or reject a draft. Exactly one decision per draft."""
-        with self._lock:
+        """Approve (and send through `provider`) or reject a draft. Exactly one decision per draft.
+        The message is claimed ('sending') under the lock and sent outside it: a slow messaging
+        provider must not hold every other user's request."""
+        with self._writing():
             msg = self._outreach(msg_id)
             if msg["status"] != "draft":
                 raise WorkflowError(f"Message {msg_id} is already '{msg['status']}'")
@@ -611,19 +652,23 @@ class LoopStore:
                 self._db.execute("UPDATE outreach_messages SET status='rejected', decided_by=?, decided_at=?, note=? "
                                  "WHERE id=?", (actor, now, note, msg_id))
                 self._audit(actor, role, "outreach_rejected", msg["loop_key"], {"message_id": msg_id, "note": note})
-                self._db.commit()
                 return self._outreach(msg_id)
+            loop = self.get(msg["loop_key"])
+            if loop["workflow_state"] not in ACTIVE_WORKFLOW_STATES:
+                raise WorkflowError(f"The loop is now '{loop['workflow_state']}': this message is no longer needed")
             text = (final_text or msg["draft_text"]).strip()
-            payload = {"message_id": msg_id, "patient_id": msg["patient_id"], "channel": msg["channel"],
-                       "language": msg["language"], "text": text}
-            try:
-                ref, status, err = provider.send(payload), "sent", None
-            except Exception as e:  # delivery failure is recorded, never silent
-                ref, status, err = None, "failed", f"{type(e).__name__}: {e}"
+            self._db.execute("UPDATE outreach_messages SET status='sending', final_text=?, decided_by=?, decided_at=? "
+                             "WHERE id=?", (text, actor, now, msg_id))
+        payload = {"message_id": msg_id, "patient_id": msg["patient_id"], "channel": msg["channel"],
+                   "language": msg["language"], "text": text}
+        try:
+            ref, status, err = provider.send(payload), "sent", None
+        except Exception as e:  # delivery failure is recorded, never silent
+            ref, status, err = None, "failed", f"{type(e).__name__}: {e}"
+        with self._writing():
             self._db.execute(
-                "UPDATE outreach_messages SET status=?, final_text=?, decided_by=?, decided_at=?, provider=?, "
-                "provider_ref=?, note=? WHERE id=?",
-                (status, text, actor, now, getattr(provider, "name", "unknown"), ref, err or note, msg_id))
+                "UPDATE outreach_messages SET status=?, provider=?, provider_ref=?, note=? WHERE id=?",
+                (status, getattr(provider, "name", "unknown"), ref, err or note, msg_id))
             self._audit(actor, role, f"outreach_{status}", msg["loop_key"],
                         {"message_id": msg_id, "edited": text != msg["draft_text"].strip(),
                          "provider_ref": ref, "error": err})
@@ -631,8 +676,8 @@ class LoopStore:
             loop = self.get(msg["loop_key"])
             if status == "sent" and loop["workflow_state"] == "new":
                 self._db.execute("UPDATE loops SET workflow_state='acknowledged', updated_at=? WHERE loop_key=?",
-                                 (now, msg["loop_key"]))
-            self._db.commit()
+                                 (utc_now().isoformat(), msg["loop_key"]))
+                self._audit(actor, role, "acknowledge", msg["loop_key"], {"via": "patient message sent"})
             return self._outreach(msg_id)
 
     # ── data feed: ingest runs, sync cursor, silence alarm ───────────────────

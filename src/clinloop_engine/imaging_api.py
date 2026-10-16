@@ -74,6 +74,8 @@ class AIResults(BaseModel):
 
 
 def _decode(b64: str, limit: int = MAX_UPLOAD_BYTES) -> bytes:
+    if len(b64) > limit * 4 // 3 + 1024:       # refuse before decoding: base64 is 4/3 of the file's size
+        raise HTTPException(413, "File too large")
     try:
         data = base64.b64decode(b64.split(",", 1)[-1], validate=False)
     except (binascii.Error, ValueError):

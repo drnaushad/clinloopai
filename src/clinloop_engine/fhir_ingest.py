@@ -21,6 +21,7 @@ Appointment, Communication, Encounter, MedicationRequest, Procedure, Condition.
 """
 
 import os
+import contextvars
 import re
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -53,6 +54,7 @@ INTERPRETATION_FLAGS = {
     "H": "HIGH", "HU": "HIGH", "L": "LOW", "LU": "LOW",
     "A": "ABNORMAL", "POS": "ABNORMAL", "DET": "ABNORMAL",
     "N": "NORMAL", "NEG": "NORMAL", "ND": "NORMAL",
+    "HX": "CRITICAL", "LX": "CRITICAL",        # above / below the absolute (panic) limit
 }
 
 # LOINC codes used for condition inference. Verify against the local
@@ -157,6 +159,11 @@ def _codes_of_categories(resource: Dict) -> set:
     return set().union(*[_codes(c) for c in (cats if isinstance(cats, list) else [cats])]) if cats else set()
 
 
+# HL7 v2-0074 diagnostic service sections (FHIR DiagnosticReport.category) and plain words
+_IMAGING_CATEGORY = {"rad", "ct", "rx", "nmr", "nms", "rus", "vus", "ous", "cus", "xrc", "mri", "imaging", "radiology"}
+_PATHOLOGY_CATEGORY = {"pat", "sp", "cp", "cg", "pathology", "cytology", "histology"}
+
+
 def _all_category_text(resource: Dict) -> str:
     cats = resource.get("category", [])
     if isinstance(cats, dict):
@@ -164,12 +171,18 @@ def _all_category_text(resource: Dict) -> str:
     return " ".join(_concept_text(c) + " " + " ".join(_codes(c)) for c in cats).lower()
 
 
+# fullUrl → "Type/id" for the bundle being read (transaction bundles reference entries by urn:uuid)
+_FULL_URLS: contextvars.ContextVar = contextvars.ContextVar("clinloop_full_urls", default={})
+
+
 def _ref_id(reference: Optional[Dict], resource_type: str = "Patient") -> Optional[str]:
-    ref = (reference or {}).get("reference", "")
+    ref = str((reference or {}).get("reference", "") or "")
+    ref = _FULL_URLS.get().get(ref, ref)                     # "urn:uuid:…" → "Patient/123"
     prefix = f"{resource_type}/"
     if ref.startswith(prefix):
-        return ref[len(prefix):]
-    return None
+        return ref[len(prefix):].split("/_history/")[0]
+    m = re.search(rf"/{resource_type}/([A-Za-z0-9\-.]{{1,64}})(?:/_history/[^/]+)?$", ref)   # absolute URL
+    return m.group(1) if m else None
 
 
 def _patient_id(resource: Dict) -> Optional[str]:
@@ -447,16 +460,19 @@ def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
                                     is_colonoscopy_report, is_echo_report)
     if is_echo_report(code_text, category):
         return _map_echo_report(ts, conclusion, details)
-    is_pathology = "pat" in category or "pathology" in category or "sp" in category.split()
+    # Whole codes and words, not fragments: "Hepatology" and "Outpatient" contain "pat"
+    tokens = set(re.findall(r"[a-z]+", category))
+    is_imaging = bool(tokens & _IMAGING_CATEGORY) or "radiolog" in category or "imaging" in category
+    is_pathology = bool(tokens & _PATHOLOGY_CATEGORY) or "patholog" in category
     if not is_pathology and is_colonoscopy_report(code_text, category, conclusion):
         events = [(EventType.COLONOSCOPY.value, ts, {**details, "mapping": ["DiagnosticReport(colonoscopy)→colonoscopy"]})]
         finding = _colonoscopy_finding(ts, colonoscopy_interval(conclusion), details, "colonoscopy report")
         return events + finding
 
-    if "rad" in category or "imaging" in category or "radiology" in category:
+    if is_imaging:
         return map_radiology_report(ts, code_text, conclusion, details)
 
-    if "pat" in category or "pathology" in category or "sp" in category.split():
+    if is_pathology:
         mapping = ["DiagnosticReport(PAT)→pathology_result"]
         # Read the diagnosis, not the clinical history ("r/o melanoma vs SK" is the question, not the answer)
         dx = re.search(r"(?:^|\n)\s*(?:final\s+)?(?:pathologic(?:al)?\s+)?diagnos[ie]s\s*[:：]|(?:^|\n)\s*(?:병리\s*)?진단\s*[:：]",
@@ -942,12 +958,26 @@ def note_text(r: Dict) -> str:
     for c in r.get("content", []):
         a = c.get("attachment") or {}
         ctype = str(a.get("contentType") or "text/plain").lower()
-        if not a.get("data") or not (ctype.startswith("text/plain") or ctype.startswith("text/html")):
+        if not a.get("data") or not ctype.startswith(("text/plain", "text/html", "text/rtf", "application/rtf")):
             continue
         try:
-            raw = base64.b64decode(a["data"]).decode("utf-8", errors="replace")
+            data = base64.b64decode(a["data"])
         except (ValueError, TypeError):
             continue
+        # The declared charset, else UTF-8, else the Korean legacy encoding (EUC-KR / CP949)
+        declared = re.search(r"charset=([\w-]+)", ctype)
+        raw = None
+        for enc in ([declared.group(1)] if declared else []) + ["utf-8", "cp949"]:
+            try:
+                raw = data.decode(enc)
+                break
+            except (UnicodeDecodeError, LookupError):
+                continue
+        if raw is None:
+            raw = data.decode("utf-8", errors="replace")
+        if "rtf" in ctype:            # plain text out of RTF: drop control words and groups
+            raw = re.sub(r"\\par[d]?\b", "\n", raw)
+            raw = re.sub(r"\{\\\*[^{}]*\}|\\[a-zA-Z]+-?\d* ?|\\'[0-9a-f]{2}|[{}]", "", raw)
         if "html" in ctype:
             raw = _html.unescape(re.sub(r"<br\s*/?>|</p>|</li>|</div>", "\n", raw, flags=re.I))
             raw = re.sub(r"<[^>]+>", " ", raw)
@@ -1033,7 +1063,21 @@ def _resources(bundle_or_resources: Any) -> Iterable[Dict]:
         yield from bundle_or_resources
 
 
-def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], List[str]]:
+def bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> Tuple[Dict[str, List[Dict]], List[str]]:
+    full_urls = {}
+    if isinstance(bundle_or_resources, dict) and bundle_or_resources.get("resourceType") == "Bundle":
+        for entry in bundle_or_resources.get("entry", []):
+            r = entry.get("resource") or {}
+            if entry.get("fullUrl") and r.get("resourceType") and r.get("id"):
+                full_urls[entry["fullUrl"]] = f"{r['resourceType']}/{r['id']}"
+    token = _FULL_URLS.set(full_urls)
+    try:
+        return _bundle_to_events(bundle_or_resources, evaluation_time)
+    finally:
+        _FULL_URLS.reset(token)
+
+
+def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> Tuple[Dict[str, List[Dict]], List[str]]:
     """
     Convert FHIR resources into ClinLoop events grouped by patient.
 
@@ -1059,7 +1103,11 @@ def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], L
         status = _status(r)
         if status == "entered-in-error":
             continue
-        mapped = mapper(r) if mapper else []
+        try:
+            mapped = mapper(r) if mapper else []
+        except Exception as e:      # one malformed resource must not stop every other patient's monitoring
+            warnings.append(f"{rtype}/{rid}: could not be read ({type(e).__name__}); skipped")
+            continue
         if explicit:
             ts = mapped[0][1] if mapped else _first(
                 r.get("effectiveDateTime"), r.get("issued"), r.get("authoredOn"), r.get("sent"),
@@ -1070,6 +1118,12 @@ def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], L
             if not ts:
                 if f"{rtype}/{rid}: no timestamp; skipped" not in warnings:
                     warnings.append(f"{rtype}/{rid}: no timestamp; skipped")
+                continue
+            try:
+                normalize_timestamp(ts)
+            except (ValueError, TypeError):   # "10/01/2026": skipped with a warning, the rest of the feed goes on
+                if f"{rtype}/{rid}: unreadable date '{str(ts)[:30]}'; skipped" not in warnings:
+                    warnings.append(f"{rtype}/{rid}: unreadable date '{str(ts)[:30]}'; skipped")
                 continue
             # Deterministic id: the same resource yields the same loop key on
             # every ingest, whatever order the bundle lists resources in.
@@ -1098,7 +1152,8 @@ def bundle_to_events(bundle_or_resources: Any) -> Tuple[Dict[str, List[Dict]], L
     for pid, events in by_patient.items():
         _derive_context(events)
         decide_obligations(events, patients.get(pid, {}))
-        apply_patterns(events, patients.get(pid, {}))
+        # Patterns that depend on "now" (age reached by today) use the evaluation time, not the wall clock
+        apply_patterns(events, {**patients.get(pid, {}), "evaluation_time": evaluation_time})
         apply_ai_review(events)
     return dict(by_patient), warnings
 

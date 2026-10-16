@@ -19,7 +19,7 @@
 
   function current() {
     var file = window.location.pathname.split('/').pop() || 'index.html';
-    return file === '' ? 'index.html' : file;
+    return /\.html$/.test(file) ? file : file + '.html';     // "/worklist" is worklist.html
   }
 
   function render() {

@@ -240,6 +240,8 @@ body.dark-theme .comp-badge-success { color: #86efac !important; }
 
 /* Public static demo: no server to connect to, so the connection form is not shown */
 .static-demo #connect-form { display: none; }
+/* The read-only demo account owns no loops: "Only my loops" would always be empty */
+.static-demo #only-mine-label { display: none; }
 
 @media print {
   #clinloop-demo-banner, header nav, .floating-theme-switch-dock { display: none !important; }

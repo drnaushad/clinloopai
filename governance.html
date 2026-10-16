@@ -419,7 +419,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     state.ruleCheck = await api('/api/v1/governance/rule-check').catch(() => null);
     const domains = [...new Set(state.rules.map((r) => r.domain))].sort();
     const current = $('f-domain').value;
-    $('f-domain').innerHTML = `<option value="">${esc(t().all)}</option>` + domains.map((d) => `<option value="${esc(d)}">${esc(d.replace(/_/g, ' '))}</option>`).join('');
+    $('f-domain').innerHTML = `<option value="" data-i18n="all">${esc(t().all)}</option>` + domains.map((d) => `<option value="${esc(d)}">${esc(d.replace(/_/g, ' '))}</option>`).join('');
     $('f-domain').value = current;
     render();
   }

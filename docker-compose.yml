@@ -37,7 +37,8 @@ services:
       NCBI_API_KEY: ${NCBI_API_KEY:-}
       # Governance: shadow mode for rules a specialist has not signed off (set 1 for clinical use),
       # approvals needed per rule, and the hospital's own critical-finding list (on the data volume)
-      CLINLOOP_ENFORCE_SIGNOFF: ${CLINLOOP_ENFORCE_SIGNOFF:-0}
+      # Shadow mode on by default: rules no specialist has signed off stay off the worklist
+      CLINLOOP_ENFORCE_SIGNOFF: ${CLINLOOP_ENFORCE_SIGNOFF:-1}
       CLINLOOP_SIGNOFF_APPROVALS: ${CLINLOOP_SIGNOFF_APPROVALS:-1}
       CLINLOOP_CRITICAL_FINDINGS: ${CLINLOOP_CRITICAL_FINDINGS:-}
       # Imaging: PACS study labels (DICOMweb), imaging models, research-model findings opening loops (0/1)

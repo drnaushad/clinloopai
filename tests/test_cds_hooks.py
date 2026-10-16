@@ -31,7 +31,7 @@ except ImportError:  # optional dependencies (see requirements-api.txt)
     HAVE_API = False
 
 EHR = "https://ehr.hospital.example"
-URL = "http://testserver/cds-services/clinloop-open-loops"
+URL = "https://clinloop.hospital.example/cds-services/clinloop-open-loops"   # CLINLOOP_PUBLIC_URL + path
 
 
 def _key_pair(kid="ehr-1"):
@@ -107,8 +107,29 @@ class TestCDSHooks(unittest.TestCase):
         self.assertEqual(self.call(once).status_code, 401)      # a token is used once
 
     def test_api_token_works_and_unknown_patient_gets_no_cards(self):
-        r = self.call(TOKENS["viewer"], patient="nobody")
+        r = self.call(TOKENS["admin"], patient="nobody")
         self.assertEqual((r.status_code, r.json()), (200, {"cards": []}))
+        # A read-only token (such as the published demo one) cannot write to the audit trail here
+        self.assertEqual(self.call(TOKENS["viewer"], patient="nobody").status_code, 403)
+
+    def test_audience_comes_from_configuration_not_the_host_header(self):
+        token = self.token(aud="https://other-cds.vendor.com/cds-services/clinloop-open-loops")
+        r = self.client.post("/cds-services/clinloop-open-loops", headers={"Authorization": f"Bearer {token}",
+                             "Host": "other-cds.vendor.com"}, json={"hook": "patient-view", "context": {"patientId": "x"}})
+        self.assertEqual(r.status_code, 401)
+        with mock.patch.dict(os.environ, {"CLINLOOP_PUBLIC_URL": ""}):        # not configured: JWTs refused
+            self.assertEqual(self.call(self.token()).status_code, 401)
+
+    def test_malformed_bodies_and_unknown_cards_do_not_fail(self):
+        r = self.client.post("/cds-services/clinloop-open-loops", json={"hook": "patient-view", "context": ["a"]},
+                             headers={"Authorization": f"Bearer {TOKENS['admin']}"})
+        self.assertEqual(r.status_code, 400)
+        before = len(clinical_api.get_store().audit_trail(None, limit=10000))
+        fb = {"feedback": [{"card": "not-a-loop", "outcome": "accepted"}, {"card": "x", "overrideReason": "str"}]}
+        r = self.client.post("/cds-services/clinloop-open-loops/feedback", json=fb,
+                             headers={"Authorization": f"Bearer {TOKENS['admin']}"})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(clinical_api.get_store().audit_trail(None, limit=10000)), before)
 
     def test_shadow_mode_rules_stay_silent(self):
         with mock.patch("src.clinloop_engine.governance.live_rule_ids", return_value=set()):

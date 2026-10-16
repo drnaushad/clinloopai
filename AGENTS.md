@@ -13,7 +13,6 @@ ClinLoop_Project/
 ├── AGENTS.md                          # Persistent instructions and guidelines for AI agents
 ├── requirements.txt                   # Python project dependencies
 ├── .gitignore                         # Git ignore rules (data, checkpoints, caches)
-│   └── 04_research_plan.md       # Markdown version of research plan
 ├── src/                               # Core engine & API entrypoints
 │   ├── data_loader.py                 # Dataset loading & trajectory preprocessing interface
 │   ├── model.py                       # High-level ClinLoop AI model interface
@@ -51,6 +50,6 @@ ClinLoop_Project/
 ---
 
 ## 4. Agent Workflow Rules
-- **Do Not Duplicate**: Check existing files in `src/clinloop_engine/` and `ClinLoop_AI_Package/` before generating new code or documents.
+- **Do Not Duplicate**: Check existing files in `src/clinloop_engine/` and `docs/` before generating new code or documents.
 - **Data Protection**: Never output sensitive patient data or commit raw clinical datasets to source control.
 - **Explainability**: Prioritize transparent, rule-grounded, audit-ready reasoning over black-box predictions.

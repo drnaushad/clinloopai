@@ -18,7 +18,7 @@ dangerous, the patient is not lost on the way to treatment. This document sets o
 | Strength | Gap |
 | --- | --- |
 | Deterministic, guideline-cited rules with a full evidence chain for every alert | Runs on synthetic data only; no real-world accuracy has been measured |
-| Formal temporal semantics (`□(trigger → ◇≤T follow-up)`) | 47 rules; sign-off workflow built, none yet signed off by a specialist |
+| Formal temporal semantics (`□(trigger → ◇≤T follow-up)`) | 65 rules; sign-off workflow built, none yet signed off by a specialist |
 | FHIR R4 ingestion, loop registry, clinician worklist, escalation, audit | Not yet connected to a hospital system or SSO |
 | 131 tests, including patient-safety regression tests | The comparison baselines are simulations, not real systems |
 | Read-only design: never orders, never auto-closes | Counterfactual survival figures are hand-written illustrations |
@@ -319,7 +319,7 @@ everything else, and the only one we should ever put on a slide about saving liv
 ### 90 days
 - Clinical advisory board: radiology, pathology, oncology, primary care, psychiatry, nursing
   navigation, a patient representative, an ethicist and a medical lawyer
-- Specialist sign-off on all 47 rules (in `governance.html`) and approval of the hospital's critical-finding list; report-level validation on real de-identified reports; map the local LOINC and report vocabularies into the FHIR adapter
+- Specialist sign-off on all 65 rules (in `governance.html`) and approval of the hospital's critical-finding list; report-level validation on real de-identified reports; map the local LOINC and report vocabularies into the FHIR adapter
 - Hospital SSO integration for the worklist; EMR in-basket integration
 - COL specification v0.1; FHIR PlanDefinition export
 - IRB submission for Stage 1; NHIS data access application for delay–harm curves

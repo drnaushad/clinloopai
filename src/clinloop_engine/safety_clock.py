@@ -186,7 +186,7 @@ class SafetyClock:
         except Exception:
             time_risk = 1.0 if elapsed_days >= deadline_days else 0.0
 
-        if elapsed_days >= deadline_days:
+        if elapsed_days > deadline_days:           # at the deadline itself the loop is not yet overdue
             state = ClockState.BLACK
             label = "Deadline violated"
         elif elapsed_days >= deadline_days * 0.8:

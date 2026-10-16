@@ -177,7 +177,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     </section>
 
     <div class="toolbar">
-      <label class="check"><input type="checkbox" id="only-mine"> <span data-i18n="onlyMine"></span></label>
+      <label class="check" id="only-mine-label"><input type="checkbox" id="only-mine"> <span data-i18n="onlyMine"></span></label>
       <label class="check"><input type="checkbox" id="show-inactive"> <span data-i18n="showInactive"></span></label>
       <span class="spacer"></span>
       <button type="button" id="btn-refresh" data-i18n="refresh"></button>
@@ -247,13 +247,14 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       assignee: '담당자', assign: '배정', choose: '선택…',
       updated: (tm) => `${tm} 갱신 · 30초마다 자동 갱신`, conflict: (e) => `다른 사용자가 먼저 이 루프를 변경했습니다 (${e}). 최신 상태로 갱신했습니다.`,
       msgLang: '언어', msgChannel: '채널', draft: '초안 작성', msgHelp: '메시지에는 진단명이나 결과가 포함되지 않습니다. 의료진 승인 전에는 발송되지 않습니다.',
-      msgStatus: { draft: '승인 대기', sent: '발송됨', rejected: '반려', failed: '발송 실패' },
+      msgStatus: { draft: '승인 대기', sending: '발송 중', sent: '발송됨', rejected: '반려', failed: '발송 실패', withdrawn: '철회됨 (루프 종결·보류)' },
       approveSend: '승인 후 발송', reject: '반려', awaitingClinician: '의료진 승인 대기 중',
       clinicianOnly: '이 루프는 의료진이 직접 처리해야 하며 환자 메시지를 보낼 수 없습니다.',
       deferred: (r, n) => `보류: ${r}${n ? ' — ' + n : ''}`, closedWith: (e) => `종결 근거: ${e}`,
       ingested: (r) => `합성 환자 ${r.patients}명, 이벤트 ${r.events}건 수신: 신규 루프 ${r.loops.new}건.`,
       escalated: (n) => `${n}건 에스컬레이션.`, deferRecorded: '보류가 기록되었습니다.', loopClosed: '루프를 종결했습니다.',
       assigned: (o) => `${o}에게 배정했습니다.`, drafted: '초안을 작성했습니다. 의료진 승인 후 발송됩니다.', sent: '메시지를 발송했습니다.', rejected: '메시지를 반려했습니다.',
+      linkedMissing: '연결된 후속 조치가 진행 중 목록에 없습니다 (종결 또는 보류되었을 수 있습니다).',
       noLoops: '진행 중인 루프가 없습니다.', loadHint: ' 합성 FHIR 예제를 불러와 흐름을 확인하세요.', noRates: '아직 기한이 지난 루프가 없습니다.',
       rateCols: ['기한 경과', '미완결', '1,000건당'], loadFailed: (e) => `작업 목록을 불러오지 못했습니다: ${e}`,
     },
@@ -287,13 +288,14 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       assignee: 'Assignee', assign: 'Assign', choose: 'Choose…',
       updated: (tm) => `Updated ${tm} · refreshes every 30 s`, conflict: (e) => `Someone else changed this loop first (${e}). The list now shows its current state.`,
       msgLang: 'Language', msgChannel: 'Channel', draft: 'Create draft', msgHelp: 'Messages never name a diagnosis or result. Nothing is sent until a clinician approves.',
-      msgStatus: { draft: 'awaiting approval', sent: 'sent', rejected: 'rejected', failed: 'delivery failed' },
+      msgStatus: { draft: 'awaiting approval', sending: 'sending', sent: 'sent', rejected: 'rejected', failed: 'delivery failed', withdrawn: 'withdrawn (loop closed or deferred)' },
       approveSend: 'Approve & send', reject: 'Reject', awaitingClinician: 'Awaiting clinician approval',
       clinicianOnly: 'This loop must be handled by a clinician personally; patient messaging is disabled.',
       deferred: (r, n) => `Deferred: ${r}${n ? ' — ' + n : ''}`, closedWith: (e) => `Closed with evidence: ${e}`,
       ingested: (r) => `Ingested ${r.patients} synthetic patients, ${r.events} events: ${r.loops.new} new loops.`,
       escalated: (n) => `${n} loop(s) escalated.`, deferRecorded: 'Deferral recorded.', loopClosed: 'Loop closed.',
       assigned: (o) => `Assigned to ${o}.`, drafted: 'Draft created. It will be sent only after clinician approval.', sent: 'Message sent.', rejected: 'Message rejected.',
+      linkedMissing: 'The linked follow-up is not on the active worklist (it may be closed or deferred).',
       noLoops: 'No open loops.', loadHint: ' Load the synthetic FHIR example to see the workflow.', noRates: 'No loops past deadline yet.',
       rateCols: ['Past deadline', 'Missed', 'Rate / 1,000'], loadFailed: (e) => `Could not load worklist: ${e}`,
     },
@@ -484,7 +486,8 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   function focusLinkedLoop() {
     const m = location.hash.match(/^#loop=(.+)$/);
     if (!m) return;
-    const key = decodeURIComponent(m[1]);
+    let key;
+    try { key = decodeURIComponent(m[1]); } catch (e) { return; }      // a malformed link is ignored
     const card = [...document.querySelectorAll('article.loop')].find((a) => a.dataset.key === key);
     if (!card) { setStatus(t().linkedMissing || 'The linked follow-up is not on the active worklist (it may be closed or deferred).'); return; }
     card.scrollIntoView({ block: 'center' });
@@ -529,6 +532,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         ? wl.loops.map(loopCard).join('')
         : `<div class="card empty">${esc(t().noLoops)}${can('admin') ? esc(t().loadHint) : ''}</div>`;
       document.querySelectorAll('article.loop').forEach(renderMessages);
+      if ($('status').classList.contains('error')) setStatus('');   // the last problem is over
       $('updated').textContent = t().updated(new Date().toLocaleTimeString(lang === 'ko' ? 'ko-KR' : 'en-GB', { hour: '2-digit', minute: '2-digit' }));
       focusLinkedLoop();
       await renderRates();

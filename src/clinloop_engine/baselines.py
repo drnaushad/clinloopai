@@ -55,7 +55,8 @@ class EMRInboxBaseline:
         }
 
     def predict(self, scenarios: List[Dict]) -> List[Dict]:
-        """Generate predictions for all scenarios."""
+        """Generate predictions for all scenarios (re-seeded: the same input gives the same output)."""
+        random.seed(42)
         predictions = []
         for scenario in scenarios:
             pred = self._predict_one(scenario)
@@ -161,7 +162,8 @@ class LLMBaseline:
         }
 
     def predict(self, scenarios: List[Dict]) -> List[Dict]:
-        """Generate predictions for all scenarios."""
+        """Generate predictions for all scenarios (re-seeded: the same input gives the same output)."""
+        random.seed(42)
         predictions = []
         for scenario in scenarios:
             pred = self._predict_one(scenario)
