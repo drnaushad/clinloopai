@@ -49,29 +49,30 @@ router = APIRouter(prefix="/api/v1")
 
 class DeferRequest(BaseModel):
     reason_code: str = Field(..., description=f"One of: {', '.join(DEFER_REASONS)}")
-    note: str = ""
-    until: Optional[str] = Field(None, description="ISO date when the loop should resurface")
+    note: str = Field("", max_length=2000)
+    until: Optional[str] = Field(None, max_length=40, description="ISO date when the loop should resurface")
 
 
 class CloseRequest(BaseModel):
-    evidence: str = Field(..., description="What closed the loop, e.g. order or visit reference")
+    evidence: str = Field(..., max_length=2000, description="What closed the loop, e.g. order or visit reference")
 
 
 class AssignRequest(BaseModel):
-    owner: str
+    owner: str = Field(..., max_length=120)
 
 
 class OutreachDraftRequest(BaseModel):
-    language: str = Field("ko", description="ko | en")
-    channel: str = Field("kakao", description="kakao | sms")
-    scheduling_link: Optional[str] = None
+    language: str = Field("ko", max_length=8, description="ko | en")
+    channel: str = Field("kakao", max_length=16, description="kakao | sms")
+    # Only a plain https link can go into a patient message
+    scheduling_link: Optional[str] = Field(None, max_length=500, pattern=r"^https://[^\s<>\"']+$")
 
 
 class RuleReviewRequest(BaseModel):
     decision: str = Field(..., description="approve | reject | request_changes")
     specialty: str = Field(..., description="Reviewer's specialty, e.g. 'Radiology (thoracic)'")
-    fingerprint: str = Field(..., description="Fingerprint of the rule version reviewed (from /governance/rules)")
-    note: str = ""
+    fingerprint: str = Field(..., max_length=128, description="Fingerprint of the rule version reviewed (from /governance/rules)")
+    note: str = Field("", max_length=2000)
 
 
 class CriticalListApprovalRequest(BaseModel):
@@ -265,7 +266,7 @@ def ingest_fhir(bundle: Dict[str, Any] = Body(..., description="FHIR R4 Bundle")
         record, w = patient_record(pid, store, None, pacs)
         resources += record
         record_warnings += w
-    events_by_patient, warnings = bundle_to_events(resources)
+    events_by_patient, warnings = bundle_to_events(resources, evaluation_time=when)
     warnings += record_warnings
     strata = patient_strata(bundle)
     detector = hospital_detector(when)
@@ -444,11 +445,12 @@ async def escalation_loop(interval_seconds: int = 60):
     """Background escalation of unacknowledged overdue loops, and the feed-silence alarm."""
     while True:
         try:
+            # The store is blocking (SQLite, a lock): run it in a worker thread, not on the event loop
             store = get_store()
-            escalated = store.escalate_overdue(rule_ids=governance.live_rule_ids(store))
+            escalated = await asyncio.to_thread(store.escalate_overdue, rule_ids=governance.live_rule_ids(store))
             if escalated:
                 logger.warning("Escalated %d overdue loops", len(escalated))
-            alarm = get_store().check_feed(_max_silence_hours())
+            alarm = await asyncio.to_thread(get_store().check_feed, _max_silence_hours())
             if alarm:
                 logger.critical("CLINICAL DATA FEED %s: last success %s. The worklist may be incomplete.",
                                 alarm["status"], alarm["last_success"])

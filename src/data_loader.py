@@ -40,7 +40,9 @@ class ClinicalDataLoader:
         """Loads a single clinical scenario JSON file."""
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        
+        return self._scenario_from_dict(data)
+
+    def _scenario_from_dict(self, data: dict) -> PatientScenario:
         events = [
             ClinicalEvent(
                 event_id=e["event_id"],
@@ -79,7 +81,12 @@ class ClinicalDataLoader:
         for filename in sorted(os.listdir(target_dir)):
             if filename.endswith(".json") and filename != "summary.json":
                 path = os.path.join(target_dir, filename)
-                scenarios.append(self.load_scenario_file(path))
+                with open(path, encoding="utf-8") as f:
+                    content = json.load(f)
+                if isinstance(content, list):      # generate(save=True) writes every scenario into one list file
+                    scenarios.extend(self._scenario_from_dict(item) for item in content)
+                else:
+                    scenarios.append(self.load_scenario_file(path))
         
         if not scenarios:
             return self.generate(save=True)

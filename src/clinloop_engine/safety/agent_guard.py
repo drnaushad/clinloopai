@@ -34,11 +34,26 @@ def validate_agent_request(agent_name: str, payload: str):
     if detect_prompt_injection(payload):
         raise PromptInjectionError(f"[{agent_name}] Hostile prompt injection detected and blocked.")
 
+# Definitive diagnoses, guarantees and medication instructions a drafted patient message must never make.
+# A short phrase list, not a complete filter: a clinician still approves every message before it is sent.
+_CLAIM_PATTERNS = [
+    r"\byou (have|definitely have|certainly have) (cancer|a tumou?r|malignancy|leukemia|lymphoma)\b",
+    r"\b(100\s*%|guaranteed?) (cure|cured|safe|benign|normal)\b",
+    r"\b(definitely|certainly|absolutely) (benign|malignant|cancer|not cancer|nothing serious|normal)\b",
+    r"\bnothing to worry about\b",
+    r"\bno need (for|to have) (a )?follow[- ]?up\b",
+    r"\b(stop|discontinue|double|skip) (taking )?your (medication|medicine|dose|pills?)\b",
+    r"(암|악성\s*종양|종양)(입니다|이에요|예요|이 확실)",
+    r"(확실히|틀림없이|100\s*%)\s*(양성|정상|암|완치)",
+    r"걱정(하실|할)\s*(필요|것)(는|이)?\s*없",
+    r"(복용|약)(을|를)?\s*(중단|끊)(하세요|하십시오)",
+]
+_CLAIM_RE = re.compile("|".join(_CLAIM_PATTERNS), re.IGNORECASE)
+
+
 def detect_unsupported_clinical_claims(text: str) -> bool:
-    """Detects if the AI hallucinated definitive diagnostic claims."""
-    claims = ["you have cancer", "100% cure", "definitely benign", "stop taking your medication"]
-    text_lower = text.lower()
-    return any(c in text_lower for c in claims)
+    """Detects definitive diagnostic claims, guarantees or medication instructions (English and Korean)."""
+    return bool(text) and bool(_CLAIM_RE.search(text))
 
 def detect_prohibited_action(action_intent: str, agent_role: str) -> bool:
     """Prevents agents from executing unauthorized EHR writes."""

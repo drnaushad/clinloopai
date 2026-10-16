@@ -161,9 +161,17 @@ def load(mimic: str, subjects: Iterable[str], note: Optional[str] = None, cxr: O
             obs["interpretation"] = [{"coding": [{"code": "A"}]}]
         out[r["subject_id"]].append(obs)
 
+    seen_isolates = set()
     for r in _rows(mimic, "hosp", "microbiologyevents"):
-        if r["subject_id"] not in keep or not r.get("org_name") or r.get("ab_name"):
-            continue                                       # one row per organism, not per antibiotic tested
+        if r["subject_id"] not in keep or not r.get("org_name"):
+            continue
+        # One Observation per isolate. An isolate tested for susceptibility appears only as one row per
+        # antibiotic (there is no organism-only row), so rows with an antibiotic are kept, de-duplicated
+        isolate = (r.get("micro_specimen_id") or r["microevent_id"], r.get("org_itemid") or r["org_name"],
+                   r.get("isolate_num") or "")
+        if isolate in seen_isolates:
+            continue
+        seen_isolates.add(isolate)
         out[r["subject_id"]].append({
             "resourceType": "Observation", "id": f"micro-{r['microevent_id']}", "status": "final",
             "subject": ref(r["subject_id"]), "category": [{"coding": [{"code": "microbiology"}]}],

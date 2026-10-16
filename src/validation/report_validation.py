@@ -60,7 +60,10 @@ def _is_radiology(r: Dict) -> bool:
 def template_rows(bundle: Dict, deidentify: bool = True) -> List[Dict]:
     from src.clinloop_engine.phi_deidentifier import PHIDeidentifier
     scrub = PHIDeidentifier()._scrub_text
-    resources = [e.get("resource", e) for e in bundle.get("entry", [])] if bundle.get("resourceType") == "Bundle" else bundle
+    if isinstance(bundle, list):            # a plain list of resources
+        resources = bundle
+    else:
+        resources = [e.get("resource", e) for e in bundle.get("entry", [])] if bundle.get("resourceType") == "Bundle" else [bundle]
     patients = {r["id"]: r for r in resources if r.get("resourceType") == "Patient" and r.get("id")}
     rows = []
     for i, r in enumerate(x for x in resources if _is_radiology(x)):
@@ -200,8 +203,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"Wrote {len(rows)} reports to {args.out}. Fill expected_rules (e.g. R003;R035), blind to ClinLoop.")
         return 0
 
-    with open(args.sheet, encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
+    with open(args.sheet, encoding="utf-8-sig") as f:      # an Excel "CSV UTF-8" save starts with a BOM
+        rows = [{(k or "").strip(): v for k, v in r.items()} for r in csv.DictReader(f)]
     result = score(rows)
     _print_summary(result)
     if args.out:

@@ -130,7 +130,7 @@ class DICOMwebClient:
         found: Dict[str, Dict[str, Any]] = {}
         self.truncated: List[str] = []
         for modality in modalities or [""]:
-            offset, mine = 0, set()
+            offset, mine, seen = 0, set(), set()
             for _ in range(max_pages):
                 params = {"StudyDate": f"{date_from}-{date_to}", "includefield": fields,
                           "limit": page, "offset": offset}
@@ -140,12 +140,17 @@ class DICOMwebClient:
                 new = 0
                 for item in items:
                     study = self._study(item)
+                    if not study or study["study_uid"] in seen:
+                        continue
+                    # Every unseen study moves paging on, even one without a PatientID (a QC phantom):
+                    # a page made only of those must not end the scan for this modality
+                    seen.add(study["study_uid"])
+                    new += 1
                     pid = _value(item, TAG["patient_id"])
-                    if study and pid is not None and study["study_uid"] not in mine:
+                    if pid is not None:
                         study["pacs_patient_id"] = str(pid)
                         found.setdefault(study["study_uid"], study)
                         mine.add(study["study_uid"])
-                        new += 1
                 if not items or not new:
                     break
                 if len(mine) >= max_per_modality:
@@ -251,13 +256,14 @@ def _first_dicom_part(body: bytes, content_type: str) -> bytes:
 
 def dicom_patient_ids(patient: Dict[str, Any], strict: bool = False) -> List[str]:
     """
-    What an image's DICOM PatientID may be: the FHIR id and the MRN (or the configured identifier system).
+    What an image's DICOM PatientID may be: the MRN (or the configured identifier system); the FHIR id
+    only when the patient has no MRN, or with CLINLOOP_PACS_MATCH_FHIR_ID=1.
     strict (automatic scanning, no person looking): only the configured system's value, and the FHIR id
     only with CLINLOOP_PACS_MATCH_FHIR_ID=1. Another site's MRN with the same digits never matches.
     """
     system = os.environ.get("CLINLOOP_PACS_ID_SYSTEM")
     match_fhir = os.environ.get("CLINLOOP_PACS_MATCH_FHIR_ID", "").strip().lower() in ("1", "true", "yes", "on")
-    ids = [patient["id"]] if (not strict or match_fhir) else []
+    ids = [patient["id"]] if match_fhir else []
     for i in patient.get("identifier", []):
         is_mrn = any(c.get("code") == "MR" for c in (i.get("type") or {}).get("coding", []))
         if not i.get("value"):
@@ -267,6 +273,10 @@ def dicom_patient_ids(patient: Dict[str, Any], strict: bool = False) -> List[str
                 ids.append(i["value"])
         elif is_mrn or (system and i.get("system") == system):
             ids.append(i["value"])
+    # Manual upload (a person looking): the FHIR id counts only when the patient has no MRN to match.
+    # FHIR ids are often plain numbers, so "1234" could be another patient's MRN.
+    if not strict and not ids:
+        ids = [patient["id"]]
     return list(dict.fromkeys(ids))
 
 

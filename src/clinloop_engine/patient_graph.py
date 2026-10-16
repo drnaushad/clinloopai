@@ -129,7 +129,8 @@ def build_patient_graph(patient_id: str, events: List[Dict[str, Any]],
     nodes: List[Dict[str, Any]] = []
     for n in sorted(g.nodes.values(), key=lambda x: x.timestamp):
         d = n.details or {}
-        derived = ":discrepancy" in n.node_id or ":ai-review:" in n.node_id or n.node_id.startswith("pattern:")
+        derived = (":discrepancy" in n.node_id or ":ai-review:" in n.node_id or n.node_id.startswith("pattern:")
+                   or n.node_id.endswith(":unread") or ":read:" in n.node_id)       # AI-read events (ai_review.py)
         detail = d.get("conclusion") or d.get("evidence_span") or ""
         nodes.append({
             "id": n.node_id, "type": n.event_type, "lane": LANE_OF.get(n.event_type, "appointments"),
@@ -197,7 +198,14 @@ def build_patient_graph(patient_id: str, events: List[Dict[str, Any]],
                 edges.append({"source": origin, "target": n["id"], "kind": "derived_from"})
     for n in nodes:
         if n["derived"] and not n["id"].startswith("pattern:"):
-            origin = n["id"].split(":ai-review:")[-1] if ":ai-review:" in n["id"] else n["id"].rsplit(":discrepancy", 1)[0]
+            if ":ai-review:" in n["id"]:
+                origin = n["id"].split(":ai-review:")[-1]
+            elif ":read:" in n["id"]:                      # "<report>:read:<AI finding>": derived from the AI finding
+                origin = n["id"].split(":read:", 1)[1]
+            elif n["id"].endswith(":unread"):
+                origin = n["id"][:-len(":unread")]
+            else:
+                origin = n["id"].rsplit(":discrepancy", 1)[0]
             if origin in g.nodes and origin != n["id"]:
                 edges.append({"source": origin, "target": n["id"], "kind": "derived_from"})
 

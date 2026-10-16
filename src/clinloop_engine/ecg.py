@@ -37,8 +37,12 @@ _ECG_TEXT = re.compile(r"\b(?:ecg|ekg|electrocardiogra\w*|12[- ]lead)\b|심전�
 _QTC_TEXT = re.compile(r"\bqtc\b|corrected q-?t|q-?t interval corr", re.I)
 _AF = re.compile(r"atrial fibrillation|atrial flutter|\bafib\b|\ba-?fib\b|vorhofflimmern|vorhofflattern|"
                  r"심방\s*세동|심방\s*조동", re.I)
-_AF_NEGATED = re.compile(r"(?:\bno\b|\bnot\b|without|\bkein\w*|resolved|history of|\bhx\b|rule out|r/o|"
-                         r"\?|possible|probable|consider|없음|배제)[^.;\n]{0,40}$", re.I)
+# Negated or uncertain in the same clause. Known or paroxysmal AF ("history of AF") still needs the
+# anticoagulation decision, so a history is not a negation
+_AF_NEGATED = re.compile(r"(?:\bno\b|\bnot\b|without|\bkein\w*|rule out|r/o|possible|probable|consider|없음|배제)"
+                         r"[^.;\n?!]{0,40}$", re.I)
+# Machine printouts give "QT/QTc 400/512 ms": the QTc is the second number
+_QT_QTC_PAIR = re.compile(r"\bqt\s*/\s*qtc\w*\s*[:=]?\s*(\d{3})\s*/\s*(\d{3})", re.I)
 _QTC_VALUE = re.compile(r"\bqtc\w*\b[^0-9\n]{0,15}(\d{3}(?:\.\d)?|0\.\d{2,3})\s*(ms|msec|s\b)?", re.I)
 
 
@@ -65,6 +69,9 @@ def qtc_ms(resource: Dict, text: str) -> Optional[float]:
         if (_codes(comp.get("code")) & QTC_LOINC or _QTC_TEXT.search((comp.get("code") or {}).get("text") or "")) \
                 and isinstance(cq.get("value"), (int, float)):
             return float(cq["value"]) * (1000 if cq["value"] < 2 else 1)
+    pair = _QT_QTC_PAIR.search(text or "")
+    if pair:
+        return float(pair.group(2))
     m = _QTC_VALUE.search(text or "")
     if m:
         value = float(m.group(1))
@@ -86,7 +93,11 @@ def scp_statements(resource: Dict) -> List[str]:
 
 def af_in_text(text: str) -> bool:
     for m in _AF.finditer(text or ""):
-        if not _AF_NEGATED.search(text[max(0, m.start() - 60):m.start()]):
+        before = text[max(0, m.start() - 60):m.start()]
+        if before.endswith("?"):                          # "?AF" (no space): a question, not a finding
+            continue
+        clause = re.split(r"[.;\n?!]", before)[-1]       # "Paroxysmal AF? Atrial fibrillation present"
+        if not _AF_NEGATED.search(clause):
             return True
     return False
 

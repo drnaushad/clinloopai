@@ -30,6 +30,8 @@ from .clinical_ontology import (
 from .safety_clock import normalize_timestamp, utc_now
 
 
+VOID_STATUSES = {"cancelled", "canceled", "entered-in-error", "revoked"}
+
 # Imaging events whose body region is checked against what the obligation asks for
 REGION_CHECKED_TYPES = {
     EventType.IMAGING_CT.value, EventType.IMAGING_MRI.value, EventType.IMAGING_ULTRASOUND.value,
@@ -57,6 +59,10 @@ def _details_match(trigger: "ClinicalNode", rule: ObligationRule, node: "Clinica
     spec = trigger.details.get("followup_match")
     want = spec.get(rule.rule_id) if isinstance(spec, dict) else None
     if not want:
+        # R012 accepts a later lab result, which must then be a thyroid test (a normal CBC is not TSH follow-up)
+        if rule.rule_id == "R012" and node.event_type == EventType.LAB_RESULT.value:
+            test = " ".join(str(node.details.get(k) or "") for k in ("test", "analyte", "code_text", "name"))
+            return bool(re.search(r"\btsh\b|thyro|\bt[34]\b|free t|갑상선", test, re.I))
         return True
     only_for = want.get("_only_for")          # the match applies to these follow-up types only
     if only_for and node.event_type not in only_for:
@@ -206,13 +212,22 @@ class DynamicTemporalHypergraph:
         # Step 1: Create nodes
         nodes_list = []
         for evt in events:
+            node_id = evt["event_id"]
+            seen = self.nodes.get(node_id)
+            if seen is not None:
+                if seen.event_type == evt["event_type"] and seen.timestamp == self._parse_timestamp(evt["timestamp"]):
+                    continue                        # the same event sent twice: one event, one obligation
+                n = 2                               # a different event that reuses the id keeps its own node
+                while f"{node_id}#{n}" in self.nodes:
+                    n += 1
+                node_id = f"{node_id}#{n}"
             node = ClinicalNode(
-                node_id=evt["event_id"],
+                node_id=node_id,
                 patient_id=evt["patient_id"],
                 event_type=evt["event_type"],
                 timestamp=self._parse_timestamp(evt["timestamp"]),
-                details=evt.get("details", {}),
-                status=evt.get("status", "completed"),
+                details=evt.get("details") or {},
+                status=evt.get("status") or "completed",
             )
             self.nodes[node.node_id] = node
             nodes_list.append(node)
@@ -276,7 +291,7 @@ class DynamicTemporalHypergraph:
 
         # 4. Culture results — bacteremia (R015)
         organism = details.get("organism", "")
-        result = details.get("result", "")
+        result = str(details.get("result") or "")
         if organism or (result and result.lower() in ("positive", "growth")):
             # R006 positive_post_discharge is already covered by explicit condition;
             # handle bacteremia confirmed cases
@@ -284,7 +299,7 @@ class DynamicTemporalHypergraph:
                 return "bacteremia_confirmed"
 
         # 5. Standard flag fallback
-        flag = details.get("flag", "")
+        flag = str(details.get("flag") or "").strip().upper()
         if flag in ("ABNORMAL", "HIGH", "LOW", "CRITICAL", "PANIC"):
             return "abnormal"
         if flag == "NORMAL":
@@ -375,6 +390,10 @@ class DynamicTemporalHypergraph:
         for node in nodes_list:
             event_enum = node.event_enum
             if event_enum is None:
+                continue
+            # A result that was voided (cancelled, entered in error) never existed: it obliges nothing.
+            # A preliminary result does (a preliminary critical value is real).
+            if str(node.status or "").strip().lower().replace(" ", "-").replace("_", "-") in VOID_STATUSES:
                 continue
 
             # Infer every trigger condition and collect their rules (once each)
@@ -532,8 +551,8 @@ class DynamicTemporalHypergraph:
                     "trigger_type": he.trigger_node.event_type,
                     "followup_type": fn.event_type,
                     "gap_days": gap_days,
-                    "deadline_days": he.obligation_rule.deadline_days,
-                    "within_deadline": gap_days <= he.obligation_rule.deadline_days,
+                    "deadline_days": he.deadline_days,           # the deadline applied (may differ from the rule's default)
+                    "within_deadline": gap_days <= he.deadline_days,
                 })
         return gaps
 

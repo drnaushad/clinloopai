@@ -151,8 +151,8 @@ def load_cdm(folder: str, vocab_folders: Iterable[str] = (), persons: Optional[I
                "class": {"code": cls}, "subject": ref(pid),
                "period": {"start": _when(r, "visit_start"), "end": _when(r, "visit_end")},
                "type": [{"text": vocab.name(r.get("visit_concept_id", "")) or cls}]}
-        if vocab.name(r.get("care_site_id", "")):
-            enc["serviceType"] = {"text": vocab.name(r["care_site_id"])}
+        # care_site_id is a site-local key, not a concept id: looking it up in the vocabulary could name an
+        # unrelated concept (e.g. a specialty) and mislead specialty matching, so it is not mapped
         out[pid].append(enc)
 
     # Diagnoses of a stay become the stay's discharge diagnoses (reason), as hospital feeds send them

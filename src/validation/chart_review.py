@@ -31,7 +31,7 @@ import json
 import os
 import random
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Dict, List, Optional, Sequence, Tuple
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -158,6 +158,12 @@ def merge_reviews(packet_rows: Sequence[Dict], key_rows: Sequence[Dict]) -> Tupl
             "truth_positive": final == "no",
             "reviewer_1": r1, "reviewer_2": r2,
         })
+    # Excluded loops leave their stratum under-represented: rescale each stratum's weight so its retained
+    # loops stand for the whole stratum again (assumes exclusions are unrelated to the answer within a stratum)
+    sampled = Counter(k["stratum"] for k in key_rows)
+    retained = Counter(m["stratum"] for m in merged)
+    for m in merged:
+        m["weight"] *= sampled[m["stratum"]] / retained[m["stratum"]]
     return merged, excluded
 
 
@@ -228,8 +234,15 @@ def _group(rows: Sequence[Dict], field: str) -> Dict[str, List[Dict]]:
 
 
 def _read_csv(path: str) -> List[Dict]:
-    with open(path, newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+    """utf-8-sig: a packet re-saved by Excel ("CSV UTF-8") starts with a byte-order mark, which would
+    otherwise become part of the first column's name. A Korean Excel (CP949) save is read as a fallback."""
+    for enc in ("utf-8-sig", "cp949"):
+        try:
+            with open(path, newline="", encoding=enc) as f:
+                return [{(k or "").strip(): v for k, v in row.items()} for row in csv.DictReader(f)]
+        except UnicodeDecodeError:
+            continue
+    raise ValueError(f"{path}: not UTF-8 or CP949 text")
 
 
 def _rule_lookup() -> Dict[str, Dict]:

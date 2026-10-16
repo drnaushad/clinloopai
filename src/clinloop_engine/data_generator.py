@@ -694,6 +694,8 @@ class ScenarioFactory:
 
 def generate_all_scenarios(n_total: int = 300) -> List[PatientScenario]:
     """
+    Reproducible: the generators are re-seeded on every call (SEED), so two calls give the same data.
+
     Generate a balanced dataset of clinical scenarios.
     
     Distribution (designed for realistic clinical prevalence):
@@ -701,6 +703,8 @@ def generate_all_scenarios(n_total: int = 300) -> List[PatientScenario]:
       - ~45% OPEN  (missing follow-up — the dangerous gaps)
       - ~20% DELAYED (late follow-up)
     """
+    random.seed(SEED)
+    np.random.seed(SEED)
     factory = ScenarioFactory()
     scenarios = []
 

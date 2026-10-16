@@ -42,7 +42,10 @@ jobs:
           sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-kor
           pip install -r requirements-api.txt pytest reportlab
       - name: Run tests
-        run: python -m pytest tests/ src/tests/ -q
+        # Import the API first: an ImportError there would otherwise only skip its tests
+        run: |
+          python -c "import src.clinloop_engine.api"
+          python -m pytest tests/ src/tests/ -q
 
   image:
     needs: test

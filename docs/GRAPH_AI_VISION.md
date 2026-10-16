@@ -218,7 +218,7 @@ radiologist confirms the match.
 **Model-checking the rule set.** Idea 4 above, as a static check (`rule_check.py`, run in CI and shown
 on `governance.html`). For every rule it checks whether hospital data can produce the trigger, and
 whether hospital data can produce a follow-up that closes it. It also checks the references, the
-Korean name and the formal statement. It currently reports 57 rules with 0 errors. The 3 warnings
+Korean name and the formal statement. It reported 57 rules at the time of writing (65 now) with 0 errors. The 3 warnings
 are the guideline-edition flags described next.
 Tests prove it catches a rule that can never fire or never close.
 

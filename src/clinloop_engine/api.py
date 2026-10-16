@@ -21,6 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import json
+import logging
 import os
 import time
 
@@ -33,11 +34,14 @@ from contextlib import asynccontextmanager
 from src.clinloop_engine.biomcp_server import handle_call_tool as handle_guideline_library
 from src.clinloop_engine import biomcp_client
 from src.clinloop_engine.auth import User, require_role
+from src.clinloop_engine.safety.agent_guard import AgentGuardException
 from src.clinloop_engine.ehr_mcp_server import handle_call_tool as handle_ehr
 from src.clinloop_engine.pacs_mcp_server import handle_call_tool as handle_pacs
 from src.clinloop_engine.clinical_api import router as clinical_router, escalation_loop, get_store
 from src.clinloop_engine.imaging_api import router as imaging_router
 from src.clinloop_engine.patient_graph import router as graph_router
+
+logger = logging.getLogger("clinloop.api")
 from src.clinloop_engine.cds_hooks import router as cds_router
 from src.clinloop_engine.fhir_sync import sync_loop
 from src.clinloop_engine.imaging_scanner import scan_loop
@@ -132,7 +136,7 @@ def health_check():
     }
 
 @app.get("/api/v1/cases", tags=["Triage Worklist"])
-def list_cases(status_filter: Optional[str] = None):
+def list_cases(status_filter: Optional[str] = None, user: User = Depends(require_role("viewer"))):
     cases = load_cases()
     if status_filter and status_filter != "all":
         cases = [c for c in cases if c.get("ground_truth_status") == status_filter]
@@ -142,7 +146,7 @@ def list_cases(status_filter: Optional[str] = None):
     }
 
 @app.get("/api/v1/cases/{scenario_id}", tags=["Triage Worklist"])
-def get_case(scenario_id: str):
+def get_case(scenario_id: str, user: User = Depends(require_role("viewer"))):
     cases = load_cases()
     for c in cases:
         if c.get("scenario_id") == scenario_id:
@@ -150,7 +154,7 @@ def get_case(scenario_id: str):
     raise HTTPException(status_code=404, detail=f"Case {scenario_id} not found")
 
 @app.get("/api/v1/cases/{scenario_id}/counterfactual", tags=["Counterfactual Causal Engine"])
-def get_case_counterfactual(scenario_id: str):
+def get_case_counterfactual(scenario_id: str, user: User = Depends(require_role("viewer"))):
     cf = get_counterfactual_analysis(scenario_id)
     if not cf:
         raise HTTPException(status_code=404, detail=f"Counterfactual trajectory for {scenario_id} not found")
@@ -172,7 +176,7 @@ def get_case_counterfactual(scenario_id: str):
 
 
 @app.post("/api/v1/cases/{scenario_id}/close-loop", tags=["Clinical Action Hub"])
-def close_clinical_loop(scenario_id: str, req: CloseLoopRequest):
+def close_clinical_loop(scenario_id: str, req: CloseLoopRequest, user: User = Depends(require_role("navigator"))):
     cases = load_cases()
     target_case = None
     for c in cases:
@@ -223,7 +227,7 @@ class McpToolCallRequest(BaseModel):
     arguments: Dict[str, Any] = Field(default_factory=dict, description="Tool arguments")
 
 @app.post("/api/v1/biomcp/call", tags=["BioMCP (MCP server)"])
-def biomcp_call(req: McpToolCallRequest, user: User = Depends(require_role("viewer"))):
+def biomcp_call(req: McpToolCallRequest, user: User = Depends(require_role("clinician"))):
     """
     Call a read-only tool on the connected BioMCP server over MCP (PubMed/PubTator3,
     ClinicalTrials.gov, openFDA, MyGene/MyVariant …). Never put patient data in a query.
@@ -236,33 +240,36 @@ def biomcp_call(req: McpToolCallRequest, user: User = Depends(require_role("view
 @app.get("/api/v1/biomcp/status", tags=["BioMCP (MCP server)"])
 def biomcp_status(user: User = Depends(require_role("viewer"))):
     """Connection status of the BioMCP server, including the tools ClinLoop may call."""
-    return biomcp_client.status(force=True)
+    return biomcp_client.status()          # cached: a fresh probe starts a subprocess
 
 @app.post("/api/v1/guidelines/call", tags=["Guideline Library (static)"])
-def guideline_library_call(req: McpToolCallRequest):
+def guideline_library_call(req: McpToolCallRequest, user: User = Depends(require_role("viewer"))):
     """Curated, static guideline lookups built into ClinLoop (not a live connection)."""
     try:
         return {"status": "static", "tool": req.tool, "result": handle_guideline_library(req.tool, req.arguments)}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:     # the reason, not Python's exception text
+        logger.info("Tool call refused: %s", e)
+        raise HTTPException(status_code=400, detail="Unknown tool or invalid arguments")
 
 @app.post("/api/v1/ehr/call", tags=["EHR connector (mock)"])
-def ehr_mcp_call(req: McpToolCallRequest):
+def ehr_mcp_call(req: McpToolCallRequest, user: User = Depends(require_role("clinician"))):
     """MOCK: returns canned responses; no EHR is connected and nothing is written anywhere."""
     try:
         result = handle_ehr(req.tool, req.arguments)
         return {"status": "simulated", "simulated": True, "tool": req.tool, "result": result}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:     # the reason, not Python's exception text
+        logger.info("Tool call refused: %s", e)
+        raise HTTPException(status_code=400, detail="Unknown tool or invalid arguments")
 
 @app.post("/api/v1/pacs/call", tags=["PACS connector (mock)"])
-def pacs_mcp_call(req: McpToolCallRequest):
+def pacs_mcp_call(req: McpToolCallRequest, user: User = Depends(require_role("clinician"))):
     """MOCK: returns canned responses; no PACS is connected."""
     try:
         result = handle_pacs(req.tool, req.arguments)
         return {"status": "simulated", "simulated": True, "tool": req.tool, "result": result}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:     # the reason, not Python's exception text
+        logger.info("Tool call refused: %s", e)
+        raise HTTPException(status_code=400, detail="Unknown tool or invalid arguments")
 
 @app.get("/api/v1/mcp/tools", tags=["MCP Protocol Registry"])
 def list_all_mcp_tools():
@@ -281,7 +288,7 @@ def list_all_mcp_tools():
     }
 
 
-@app.get("/api/v1/ethics/hippocratic-charter", tags=["Medical Nobility & Ethics"])
+@app.get("/api/v1/ethics/hippocratic-charter", tags=["Ethics & safety"])
 def get_hippocratic_charter():
     """Returns the 5-pillar safety charter with the honest implementation status of each pillar."""
     return {
@@ -321,7 +328,7 @@ def get_hippocratic_charter():
         ],
     }
 
-@app.get("/api/v1/health-economics", tags=["Medical Nobility & Ethics"])
+@app.get("/api/v1/health-economics", tags=["Ethics & safety"])
 def get_health_economics():
     """Returns the planned health-economic evaluation framework. No outcomes have been measured yet."""
     return {
@@ -355,11 +362,15 @@ class LocalLLMRequest(BaseModel):
 
 @app.get("/api/v1/local-llm/status", tags=["Local LLM Engine (On-Premise Ollama)"])
 def get_local_llm_engine_status():
-    """Returns status of the on-premise Ollama LLM engine and available models."""
-    return get_local_llm_status()
+    """Whether the on-premise model is reachable and which models it has. Public (the cockpit shows
+    it), so the server's internal address is left out."""
+    status = dict(get_local_llm_status())
+    for key in ("base_url", "url", "host", "ollama_url"):
+        status.pop(key, None)
+    return status
 
 @app.post("/api/v1/local-llm/generate", tags=["Local LLM Engine (On-Premise Ollama)"])
-def generate_with_local_llm(req: LocalLLMRequest):
+def generate_with_local_llm(req: LocalLLMRequest, user: User = Depends(require_role("clinician"))):
     """
     Generate clinical text using the best available local LLM (DeepSeek-R1 70B priority).
     All inference runs 100% on-premise. PHI must be de-identified BEFORE this call.
@@ -423,12 +434,12 @@ _configured_keys = {
     'anthropic': bool(os.getenv('ANTHROPIC_API_KEY')),
     'openai': bool(os.getenv('OPENAI_API_KEY')),
     'ncbi': bool(os.getenv('NCBI_API_KEY')),
-    'fhir': bool(os.getenv('FHIR_TOKEN')),
+    'fhir': bool(os.getenv('CLINLOOP_FHIR_TOKEN') or os.getenv('FHIR_TOKEN')),
     'active_mode': 'on_premise'
 }
 
 @app.get('/api/v1/config/api-keys', tags=['API Key & Credential Management'])
-def get_api_key_status():
+def get_api_key_status(user: User = Depends(require_role("viewer"))):
     """Returns safe metadata status of configured API keys without exposing secret strings."""
     return {
         'status': 'success',
@@ -446,7 +457,7 @@ def get_api_key_status():
     }
 
 @app.post('/api/v1/config/api-keys', tags=['API Key & Credential Management'])
-def save_api_key_config(req: APIKeyConfigRequest):
+def save_api_key_config(req: APIKeyConfigRequest, user: User = Depends(require_role("admin"))):
     """Safely updates configured credentials and switches active execution mode."""
     if req.gemini_key:
         _configured_keys['gemini'] = True
@@ -468,7 +479,7 @@ def save_api_key_config(req: APIKeyConfigRequest):
     }
 
 @app.post('/api/v1/config/test-api-key', tags=['API Key & Credential Management'])
-def test_api_key(req: TestKeyRequest):
+def test_api_key(req: TestKeyRequest, user: User = Depends(require_role("admin"))):
     """Connectivity testing is not implemented; reports that honestly instead of simulating success."""
     provider = req.provider.lower()
     if provider not in ('gemini', 'anthropic', 'openai', 'astra', 'ncbi', 'fhir'):
@@ -480,7 +491,7 @@ def test_api_key(req: TestKeyRequest):
     }
 
 @app.post("/api/v1/agent/evidence-synthesis", tags=["Autonomous Evidence Synthesis Agent (RAG)"])
-def agent_evidence_synthesis(req: EvidenceSynthesisRequest):
+def agent_evidence_synthesis(req: EvidenceSynthesisRequest, user: User = Depends(require_role("clinician"))):
     """
     Autonomous Retrieval-Augmented Generation (RAG) pipeline.
     1. Analyzes the context and autonomously queries the correct BioMCP guideline.
@@ -490,18 +501,21 @@ def agent_evidence_synthesis(req: EvidenceSynthesisRequest):
     try:
         result = run_evidence_synthesis(req.clinical_context, req.task, req.lang)
         return result
+    except (AgentGuardException, ValueError) as e:     # refused input (the prompt-injection guard): the caller's fault
+        raise HTTPException(status_code=422, detail=str(e)[:300])
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Agent request failed")
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: the request could not be completed")
 
 @app.get("/api/v1/agent/safety-clock/status", tags=["Autonomous Safety Clock Agent"])
-def agent_safety_clock_status():
+def agent_safety_clock_status(user: User = Depends(require_role("viewer"))):
     """
     Returns live telemetry from the autonomous 24/7 background watchdog.
     """
     return get_clock_status()
 
 @app.post("/api/v1/agent/patient-outreach/generate", tags=["Patient Outreach Agent (Dynamic)"])
-def agent_generate_patient_outreach(req: DynamicOutreachRequest):
+def agent_generate_patient_outreach(req: DynamicOutreachRequest, user: User = Depends(require_role("clinician"))):
     """
     Autonomous dynamic generation of patient communication.
     Uses the Evidence Synthesis Agent (RAG) to ensure the message is medically grounded
@@ -522,8 +536,11 @@ def agent_generate_patient_outreach(req: DynamicOutreachRequest):
         )
         draft = generate_dynamic_outreach(request)
         return {"kakao_message_text": draft.message_text, "language": draft.language}
+    except (AgentGuardException, ValueError) as e:     # refused input (the prompt-injection guard): the caller's fault
+        raise HTTPException(status_code=422, detail=str(e)[:300])
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Agent request failed")
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: the request could not be completed")
 
 
 # ---------------------------------------------------------------------------

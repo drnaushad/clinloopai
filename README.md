@@ -117,7 +117,7 @@ clinloopai/
 │   ├── validation/chart_review.py# Stage 1 chart-review study toolkit (sampling, blinding, metrics)
 │   ├── validation/report_validation.py # Report-level validation (blind labels → sensitivity / PPV)
 │   └── clinloop_engine/
-│       ├── clinical_ontology.py      # Event types, severities, obligation rules R001–R046
+│       ├── clinical_ontology.py      # Event types, severities, obligation rules R001–R065
 │       ├── temporal_hypergraph.py    # Dynamic Temporal Hypergraph (obligation matching)
 │       ├── safety_clock.py           # SafetyClock (time risk) + background watchdog loop
 │       ├── risk_scorer.py            # Multi-factor risk + abstention
@@ -186,10 +186,7 @@ clinloopai/
 ├── config.js                     # Tells the pages where the API is (rewritten by the container)
 ├── .github/workflows/            # Test → build → smoke-test → publish image to GHCR
 ├── manifest.json, sw.js, icons/  # PWA manifest and service worker
-├── CNAME                         # Custom domain for static hosting
-│
-└── generate_monograph.py,        # Build the Word monograph (needs python-docx and an
-    build_full_monograph.py       #   existing ClinLoop_AI_Package/ output directory)
+└── CNAME                         # Custom domain for static hosting
 ```
 
 Generated at runtime (not committed): `data/synthetic/` (300 scenario JSON files), `results/`
@@ -260,7 +257,6 @@ pip install pytest                 # to run the test suite
 | DICOM, outside-report PDFs | Included in `requirements-api.txt` (`pydicom`, `pdfplumber`) |
 | OCR of scanned reports | `apt install tesseract-ocr tesseract-ocr-kor` (the Docker image includes it) |
 | Research chest-X-ray model | `pip install torch torchxrayvision`, then `CLINLOOP_IMAGING_MODELS=txrv`; or build the image with `--build-arg WITH_IMAGING_AI=1`. Research use only |
-| Word monograph scripts | `pip install python-docx` and `mkdir ClinLoop_AI_Package` |
 
 ---
 
@@ -271,10 +267,11 @@ Run every command from the **repository root**. The code imports modules as `src
 ### 1. Tests
 
 ```bash
-python -m pytest tests/ src/tests/ -v            # 153 tests
+python -m pytest tests/ src/tests/ -v
 ```
 
-The API tests are skipped automatically when `requirements-api.txt` is not installed.
+Install both `requirements.txt` and `requirements-api.txt` first: many tests import the API, PACS
+and imaging modules, and the suite does not run without them.
 
 `tests/test_clinloop.py` includes patient-safety regression tests. Each one pins a failure mode
 that would silently drop a patient: a partially completed follow-up counted as closed, a cancelled
@@ -369,7 +366,10 @@ curl -X POST http://127.0.0.1:8124/api/v1/fhir/ingest \
      --data @export_bundle.json
 ```
 
-Key endpoints (all except `/rules` and `/health` require a token):
+Key endpoints. Everything that reads patient data or changes anything needs a token. Public
+without one: `/health`, `/rules`, `/evidence/{rule}`, `/connections/status`, `/compute/status`,
+`/local-llm/status` (no addresses), `/mcp/tools`, the ethics and health-economics statements, and the
+CDS Hooks discovery document.
 
 | Endpoint | Role | Purpose |
 | --- | --- | --- |
@@ -408,7 +408,11 @@ Configuration:
 | `CLINLOOP_FHIR_BASE` / `CLINLOOP_FHIR_TOKEN` | Hospital FHIR server and read-only token; enables background sync | sync off |
 | `CLINLOOP_FHIR_SYNC_MINUTES` / `CLINLOOP_FHIR_INITIAL_DAYS` | Sync interval / first-sync look-back | 15 / 365 |
 | `CLINLOOP_CDS_CLIENTS` | EHRs trusted to call the CDS Hooks service: JSON list of `{"iss", "jwks_url"}` (or inline `"jwks"`) | none |
-| `CLINLOOP_PUBLIC_URL` | ClinLoop's address as clinicians reach it, for links on EHR cards | none |
+| `CLINLOOP_PUBLIC_URL` | ClinLoop's address as clinicians reach it, for links on EHR cards; also gives the CDS Hooks token audience when `CLINLOOP_CDS_AUDIENCE` is unset | none |
+| `CLINLOOP_CDS_AUDIENCE` | Exact `aud` an EHR's CDS Hooks token must carry. Without it or `CLINLOOP_PUBLIC_URL`, signed EHR calls are refused | from `CLINLOOP_PUBLIC_URL` |
+| `CLINLOOP_GUIDELINES` | Path to a hospital's own guideline/rule-parameter file | bundled file |
+| `CLINLOOP_VLM_URL` / `CLINLOOP_VLM_TOKEN` / `CLINLOOP_VLM_TIMEOUT` | On-premises imaging model address, bearer token and timeout (s) | off / none / 120 |
+| `CLINLOOP_PACS_MATCH_FHIR_ID` | Also match PACS PatientID against the FHIR id when the patient has no MRN. Only safe when the PACS uses FHIR ids | off |
 | `CLINLOOP_CDS_MAX_CARDS` | Cards per chart before a summary card | 5 |
 | `CLINLOOP_HISTORY_DAYS` | Obligations whose deadline passed more than this many days ago stay off the worklist (0 = keep all) | 365 |
 | `CLINLOOP_FEED_MAX_SILENCE_HOURS` | Feed alarm threshold | 24 |
@@ -455,7 +459,7 @@ EHRs such as Epic and Oracle Health use for decision-support cards. When a clini
 
 **Safety:**
 - **Read-only:** cards change nothing. Acting, deferring or closing with evidence happens in the worklist.
-- **Shadow mode:** rules not yet signed off stay silent.
+- **Shadow mode** (when on, see section 7): rules not yet signed off stay silent.
 - **Limited:** at most 5 cards per chart, then one summary card.
 - **Audited:** each display and each clinician response ("done elsewhere", "not indicated") goes into
   the audit log.
@@ -490,7 +494,8 @@ Single container, API and UI only:
 
 ```bash
 docker run -p 127.0.0.1:8124:8124 -v clinloop-data:/var/lib/clinloop \
-  -e CLINLOOP_API_TOKENS -e CLINLOOP_SIGNING_KEY ghcr.io/drnaushad/clinloopai:latest
+  -e CLINLOOP_API_TOKENS -e CLINLOOP_SIGNING_KEY -e CLINLOOP_ENFORCE_SIGNOFF=1 \
+  ghcr.io/drnaushad/clinloopai:latest
 ```
 
 Build locally instead of pulling: `docker build -t ghcr.io/drnaushad/clinloopai:latest .`
@@ -632,7 +637,8 @@ that review; it cannot replace it.
   (ACR communication categories, a window per finding). A hospital copies it and points
   `CLINLOOP_CRITICAL_FINDINGS` at its own version. A clinical leader then approves it on
   `governance.html`. The approval is bound to the file's content hash.
-- **Shadow mode** (`CLINLOOP_ENFORCE_SIGNOFF=1`, on by default for new installs): loops from unsigned
+- **Shadow mode** (`CLINLOOP_ENFORCE_SIGNOFF=1`; on by default with `install.sh` and `docker compose`,
+  off in a bare `docker run` unless you pass it, and off in the public demo): loops from unsigned
   rules are still detected and stored. They are kept off the worklist and never escalate. R035
   also needs the approved critical-finding list.
 - Every review and approval goes into the hash-chained audit log.
@@ -676,15 +682,16 @@ criteria, endpoints, sample sizes and ethics) is drafted for a partner hospital 
 ## Benchmark results (synthetic, n = 300)
 
 From `python src/run_benchmark.py`. The evaluation clock is fixed at 2027-01-01, after the last
-synthetic event, so results are identical on every run.
+synthetic event, and the data generator and the simulated baselines are re-seeded on every run, so
+results are identical on every run.
 
 | Metric | EMR inbox (simulated) | LLM zero-shot (simulated) | **ClinLoop AI** |
 | --- | :---: | :---: | :---: |
-| Sensitivity | 0.259 | 0.790 | 1.000 |
-| Specificity | 0.684 | 0.895 | 1.000 |
-| Precision | 0.639 | 0.942 | 1.000 |
-| F1 | 0.368 | 0.859 | 1.000 |
-| False alerts / 100 patients | 10.0 | 3.3 | 0.0 |
+| Sensitivity | 0.249 | 0.756 | 1.000 |
+| Specificity | 0.589 | 0.832 | 1.000 |
+| Precision | 0.567 | 0.906 | 1.000 |
+| F1 | 0.346 | 0.824 | 1.000 |
+| False alerts / 100 patients | 13.0 | 5.3 | 0.0 |
 
 **This is a rule-conformance test, not an accuracy result.**
 
@@ -734,7 +741,8 @@ synthetic event, so results are identical on every run.
 | Counterfactual engine | **Fixed lookup table** of hand-written, illustrative trajectories for specific case IDs; no Markov simulation runs. The API and cockpit label them as not clinically validated |
 | Compute status | **Measured**: the cockpit's Compute badge shows the server's real hardware (GPU name, or CPU only) and where each part runs. Hidden on the public site, which has no server. The earlier GPU demo (an untrained network) was removed |
 | Safety-clock watchdog | **Implemented**: runs the detection engine over the demo cases and escalates deadline violations |
-| Patient outreach agent | Drafts messages with the local LLM (Ollama, configurable address and model) from diagnosis-free facts. It strips model reasoning, blocks definitive clinical claims, and falls back to a fixed safe message |
+| Patient outreach agent | Drafts messages with the local LLM (Ollama, configurable address and model) from diagnosis-free facts. It strips model reasoning, blocks some definitive clinical claims (a short English and Korean
+phrase list, not a complete filter: a clinician approves every message), and falls back to a fixed safe message |
 | PHI de-identifier | Pseudonymises structured fields and scrubs embedded names, MRNs, resident numbers, phone numbers, dates and Korean addresses from free text. It **cannot** detect names of people absent from the structured record, so human review is still required before any external transmission |
 | API health-economics / ethics-charter endpoints | Report the planned evaluation and the honest status of each safety pillar. No outcomes have been measured |
 | API key test endpoint | Not implemented; reports `not_verified` |

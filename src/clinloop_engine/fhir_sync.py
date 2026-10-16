@@ -45,7 +45,8 @@ logger = logging.getLogger("clinloop.fhir_sync")
 
 # Resource types ClinLoop reads (all search parameters used are standard R4)
 CLINICAL_TYPES = ["Observation", "DiagnosticReport", "ServiceRequest", "Appointment", "Communication",
-                  "Encounter", "MedicationRequest", "Procedure", "Condition"]
+                  "Encounter", "MedicationRequest", "Procedure", "Condition",
+                  "DocumentReference"]      # clinical notes: plans in them become R048–R051 obligations
 # Read when the server supports them; a server without ImagingStudy does not fail the sync
 OPTIONAL_TYPES = ["ImagingStudy"]
 PAGE_SIZE = 100
@@ -197,8 +198,11 @@ async def sync_loop(get_store, interval_minutes: Optional[float] = None):
     while True:
         # Run the blocking HTTP calls off the event loop
         from .pacs_client import client_from_env as pacs_from_env
-        result = await asyncio.to_thread(sync_once, get_store(), client, "fhir-sync", None, initial, pacs_from_env())
-        logger.info("FHIR sync: %s", result)
+        try:
+            result = await asyncio.to_thread(sync_once, get_store(), client, "fhir-sync", None, initial, pacs_from_env())
+            logger.info("FHIR sync: %s", result)
+        except Exception:          # never let the sync loop die: the feed alarm reports the gap
+            logger.exception("FHIR sync crashed; retrying at the next interval")
         await asyncio.sleep(minutes * 60)
 
 

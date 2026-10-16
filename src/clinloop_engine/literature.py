@@ -15,13 +15,17 @@ Configuration (environment):
   CLINLOOP_LITERATURE       set to "off" to disable all outbound literature calls
 """
 
+import logging
 import os
+import re
 import threading
 import time
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 import requests
+
+logger = logging.getLogger("clinloop.literature")
 
 PUBMED_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 EUROPEPMC_BASE = "https://www.ebi.ac.uk/europepmc/webservices/rest"
@@ -139,6 +143,11 @@ def _europepmc_base() -> str:
     return os.environ.get("CLINLOOP_EUROPEPMC_BASE", EUROPEPMC_BASE).rstrip("/")
 
 
+def _redact(text: str) -> str:
+    """Mask secrets carried in URLs (api_key=…, email=…) before anything is logged or returned."""
+    return re.sub(r"((?:api_key|apikey|key|token|email)=)[^&\s'\"]+", r"\1***", text, flags=re.I)
+
+
 def _get(url: str, params: Dict, timeout: float = 10.0) -> Dict:
     if not _enabled():
         raise LiteratureError("Literature connections are disabled (CLINLOOP_LITERATURE=off)")
@@ -146,7 +155,10 @@ def _get(url: str, params: Dict, timeout: float = 10.0) -> Dict:
         resp = requests.get(url, params=params, timeout=timeout,
                             headers={"User-Agent": f"{TOOL_NAME}/1.0"})
     except requests.RequestException as e:
-        raise LiteratureError(f"{type(e).__name__}: {e}") from e
+        # The exception text holds the full URL, including api_key: callers (and HTTP responses)
+        # get the error type only; the detail goes to the server log with the key masked
+        logger.warning("Literature request failed: %s", _redact(f"{type(e).__name__}: {e}"))
+        raise LiteratureError(f"{type(e).__name__}: literature service unreachable") from e
     if resp.status_code != 200:
         raise LiteratureError(f"HTTP {resp.status_code}")
     try:

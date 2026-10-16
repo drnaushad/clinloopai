@@ -3,6 +3,13 @@
  */
 
 
+// Browser storage can be blocked ("block all site data", some private windows): reading it then throws,
+// which would stop the whole cockpit. Preferences are a convenience, so a failure just means defaults.
+const safeStorage = {
+  get(key) { try { return window.localStorage.getItem(key); } catch (e) { return null; } },
+  set(key, value) { try { window.localStorage.setItem(key, value); } catch (e) { /* not remembered */ } },
+};
+
 const CLINLOOP_I18N = {
 
   ko: {
@@ -18,10 +25,10 @@ const CLINLOOP_I18N = {
     triageTitle: '사례 목록',
     triageCount: '임상 사례 5건',
     searchPlaceholder: '환자번호, 진단명, 검사 항목 검색...',
-    filterAll: '전체 (5)',
-    filterOpen: '미완료 (3)',
-    filterDelayed: '지연 (1)',
-    filterClosed: '종결 (1)',
+    filterAll: '전체',
+    filterOpen: '미완료',
+    filterDelayed: '지연',
+    filterClosed: '종결',
     tabSummary: '임상 요약',
     tabSummaryPill: '',
     tabCounterfactual: '가상 시나리오 (예시)',
@@ -98,10 +105,10 @@ const CLINLOOP_I18N = {
     triageTitle: 'Case queue',
     triageCount: '5 example cases',
     searchPlaceholder: 'Search PT-ID, condition, rule, finding...',
-    filterAll: 'All (5)',
-    filterOpen: 'Open (3)',
-    filterDelayed: 'Delayed (1)',
-    filterClosed: 'Closed (1)',
+    filterAll: 'All',
+    filterOpen: 'Open',
+    filterDelayed: 'Delayed',
+    filterClosed: 'Closed',
     tabSummary: 'Clinical overview',
     tabSummaryPill: '',
     tabCounterfactual: 'Scenarios (illustration)',
@@ -269,9 +276,9 @@ class ClinLoopApp {
     this.searchQuery = '';
     this.currentScrubDays = 35;
     this.currentView = 'hypergraph';
-    this.currentLang = localStorage.getItem('clinloop_lang') === 'ko' ? 'ko' : 'en';
+    this.currentLang = safeStorage.get('clinloop_lang') === 'ko' ? 'ko' : 'en';
     this.outreachLang = this.currentLang;
-    this.activeEngine = localStorage.getItem('clinloop_active_engine') || 'local';
+    this.activeEngine = safeStorage.get('clinloop_active_engine') || 'local';
   }
 
   async init() {
@@ -315,6 +322,10 @@ class ClinLoopApp {
         this.updateOutreachModal();
         const m = document.getElementById('outreach-modal');
         if (m) m.classList.add('open');
+    } else if (window.location.hash === '#privacy') {
+        this.switchView('privacy');
+    } else {
+        this.switchView('summary');       // any other address (#top-chrome …) opens the clinical overview
     }
 
     window.addEventListener('hashchange', () => {
@@ -728,9 +739,10 @@ class ClinLoopApp {
     });
 
     // Triage Filter Buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    // Only the case-queue filters: other buttons share the .filter-btn look but are not filters
+    document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
         e.currentTarget.classList.add('active');
         this.currentFilter = e.currentTarget.dataset.filter;
         this.applyFilters();
@@ -801,7 +813,7 @@ class ClinLoopApp {
     // -----------------------------------------------------------------------
     // Patient-message drafts use only the on-premise LLM; cloud models are not used.
     this.activeEngine = 'local';
-    localStorage.setItem('clinloop_active_engine', 'local');
+    safeStorage.set('clinloop_active_engine', 'local');
 
     const apiModal = document.getElementById('api-keys-modal');
     const btnApiKeys = document.getElementById('btn-api-keys');
@@ -901,7 +913,7 @@ class ClinLoopApp {
         if (dockBtnLight) dockBtnLight.classList.add('active');
         if (dockBtnDark) dockBtnDark.classList.remove('active');
       }
-      localStorage.setItem('clinloop_theme', isDark ? 'dark' : 'light');
+      safeStorage.set('clinloop_theme', isDark ? 'dark' : 'light');
 
       // Redraw gauge and curves with proper contrast
       if (this.safetyGauge) {
@@ -915,7 +927,7 @@ class ClinLoopApp {
     };
 
     const urlParamsTheme = new URLSearchParams(window.location.search).get('theme');
-    const initialTheme = urlParamsTheme || localStorage.getItem('clinloop_theme') || 'light';
+    const initialTheme = urlParamsTheme || safeStorage.get('clinloop_theme') || 'light';
     setTheme(initialTheme);
 
     if (btnThemeLight) btnThemeLight.addEventListener('click', () => { setTheme('light'); this._playTelemetrySound(800, 'sine', 0.05); });
@@ -940,7 +952,7 @@ class ClinLoopApp {
       if (dockBtnKo) dockBtnKo.classList.toggle('active', isKo);
       if (dockBtnEn) dockBtnEn.classList.toggle('active', isEn);
 
-      localStorage.setItem('clinloop_lang', this.currentLang);
+      safeStorage.set('clinloop_lang', this.currentLang);
       document.documentElement.lang = this.currentLang;   // the shared page navigation follows it (appnav.js)
 
     
@@ -972,7 +984,7 @@ class ClinLoopApp {
       }
     };
 
-    const initialLang = (typeof urlParams !== 'undefined' ? urlParams.get('lang') : new URLSearchParams(window.location.search).get('lang')) || localStorage.getItem('clinloop_lang') || 'en';
+    const initialLang = (typeof urlParams !== 'undefined' ? urlParams.get('lang') : new URLSearchParams(window.location.search).get('lang')) || safeStorage.get('clinloop_lang') || 'en';
     // Only Korean and English are supported; anything else (e.g. an old 'hi') falls back to English
     const startLang = ['ko', 'en'].includes(initialLang) ? initialLang : 'en';
     this.setLanguage(startLang);
@@ -1035,10 +1047,7 @@ class ClinLoopApp {
     const searchInput = document.getElementById('patient-search');
     if (searchInput) searchInput.placeholder = t.searchPlaceholder;
 
-    setTxt('filter-btn-all', t.filterAll);
-    setTxt('filter-btn-open', t.filterOpen);
-    setTxt('filter-btn-delayed', t.filterDelayed);
-    setTxt('filter-btn-closed', t.filterClosed);
+    if (this.cases) this.updateFilterCounts();
 
     setTxt('tab-txt-summary', t.tabSummary);
     setTxt('tab-pill-summary', t.tabSummaryPill);
@@ -1114,6 +1123,18 @@ class ClinLoopApp {
   }
 
 
+  /** Filter labels with live counts (cases change state when one is marked closed in this browser). */
+  updateFilterCounts() {
+    const t = CLINLOOP_I18N[this.currentLang] || CLINLOOP_I18N.en;
+    const status = (c) => ((c.ground_truth_status === 'closed') || this.closedOverrides.has(c.scenario_id)) ? 'closed' : c.ground_truth_status;
+    const n = (s) => this.cases.filter(c => status(c) === s).length;
+    const set = (id, label, count) => { const el = document.getElementById(id); if (el) el.textContent = `${label} (${count})`; };
+    set('filter-btn-all', t.filterAll, this.cases.length);
+    set('filter-btn-open', t.filterOpen, n('open'));
+    set('filter-btn-delayed', t.filterDelayed, n('delayed'));
+    set('filter-btn-closed', t.filterClosed, n('closed'));
+  }
+
   applyFilters() {
     this.filteredCases = this.cases.filter(c => {
       const isClosed = (c.ground_truth_status === 'closed') || this.closedOverrides.has(c.scenario_id);
@@ -1139,6 +1160,7 @@ class ClinLoopApp {
     });
 
     this.renderCaseTabs();
+    this.updateFilterCounts();
     this.updateLivesCounter();
 
     if (this.filteredCases.length > 0) {
@@ -1848,7 +1870,8 @@ class ClinLoopApp {
     this.currentView = viewName;
     try {
       if (viewName === 'summary') {
-        if (window.location.hash && window.location.hash === '#summary') {
+        // Leave no other view's name in the address: a reload would open that view instead
+        if (window.location.hash) {
           history.replaceState(null, '', window.location.pathname + window.location.search);
         }
       } else {
@@ -2189,8 +2212,7 @@ class ClinLoopApp {
             </div>
             <div class="cf-step-desc">${step.desc}</div>
             <div class="cf-step-meta">
-              <span>Live model prediction</span>
-              <span>Survival and hazard estimates active</span>
+              <span>${this.currentLang === 'ko' ? '예시 · 모델 예측 아님' : 'Illustration only · not a model prediction'}</span>
             </div>
           </div>
         `;
@@ -2214,8 +2236,7 @@ class ClinLoopApp {
             </div>
             <div class="cf-step-desc">${step.desc}</div>
             <div class="cf-step-meta">
-              <span>Live model prediction</span>
-              <span>Survival and hazard estimates active</span>
+              <span>${this.currentLang === 'ko' ? '예시 · 모델 예측 아님' : 'Illustration only · not a model prediction'}</span>
             </div>
           </div>
         `;
@@ -2498,30 +2519,27 @@ class ClinLoopApp {
       let stripped = 0, pseudo = 0;
       let phiFound = [];
 
+      // Korean names first, before any "[… 삭제]" tag exists to be mistaken for one. Only where the text
+      // marks a name (after "환자:", "성명:", "이름:", "보호자:", or before 님 / 씨 / 환자): guessing from
+      // the letters alone also replaces words such as "경기도" or "위험". This is a demo, not a de-identifier.
+      const labelled = /((?:환자|성명|이름|보호자|patient|name)\s*[:：]?\s*)([가-힣]{2,4})(?![가-힣])/gi;
+      const honorific = /(?<![가-힣])([가-힣]{2,4})(\s*(?:님|씨|환자))/g;
+      const names = new Set();
+      result = result.replace(labelled, (m, lead, nm) => { names.add(nm); return lead + getPseudo(nm); });
+      result = result.replace(honorific, (m, nm, tail) => { names.add(nm); return getPseudo(nm) + tail; });
+      if (names.size) {
+        phiFound.push('한국 이름');
+        pseudo += names.size;
+      }
+
       PHI_RULES.forEach(rule => {
         const matches = result.match(rule.regex);
         if (matches) {
           phiFound.push(rule.name);
-          if (typeof rule.replace === 'function') {
-            result = result.replace(rule.regex, rule.replace);
-          } else {
-            result = result.replace(rule.regex, rule.replace);
-          }
+          result = result.replace(rule.regex, rule.replace);
           stripped += matches.length;
         }
       });
-
-      // Korean names (2-4 char Hangul) → pseudonym
-      const nameRegex = /(?<![가-힣])[가-힣]{2,4}(?!\s*씨|님|원장|교수|박사|선생|의사|간호사|병원|클리닉|약)/g;
-      const nameMatches = result.match(nameRegex);
-      if (nameMatches) {
-        nameMatches.forEach(nm => {
-          const p = getPseudo(nm);
-          result = result.split(nm).join(p);
-          phiFound.push('한국 이름');
-          pseudo++;
-        });
-      }
 
       return { result, stripped, pseudo, phiFound: [...new Set(phiFound)] };
     };

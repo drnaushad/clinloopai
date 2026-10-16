@@ -38,7 +38,7 @@ procedure and note over a lifetime), does ClinLoop:
 
 **Method:**
 1. Each patient's whole record goes through the app's own pipeline:
-   - FHIR → events → the 58 rules → loops;
+   - FHIR → events → the 65 rules → loops;
    - and the hospital import path (`POST /api/v1/fhir/ingest`).
 2. **An independent reviewer**, acting as an internist and clinical informatician, worked blind:
    - they received only the rule definitions and the raw records, never the code;

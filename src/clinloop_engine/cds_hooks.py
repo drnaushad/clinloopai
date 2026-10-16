@@ -38,7 +38,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Body, HTTPException, Request
 
 from . import governance
-from .auth import authenticate
+from .auth import ROLE_RANK, authenticate
 from .clinical_api import get_store
 from .safety_clock import normalize_timestamp, utc_now
 
@@ -66,6 +66,19 @@ def _clients() -> List[Dict[str, Any]]:
     return [c for c in clients if isinstance(c, dict) and c.get("iss") and (c.get("jwks_url") or c.get("jwks"))]
 
 
+_jwk_clients: Dict[str, Any] = {}
+
+
+def _expected_audience(request: Request) -> Optional[str]:
+    """This service's own address, from configuration only. The request's Host header is chosen by
+    the caller, so a token issued for another CDS service could otherwise be replayed here."""
+    explicit = os.environ.get("CLINLOOP_CDS_AUDIENCE", "").strip()
+    if explicit:
+        return explicit
+    base = os.environ.get("CLINLOOP_PUBLIC_URL", "").strip().rstrip("/")
+    return f"{base}{request.url.path}" if base else None
+
+
 def _signing_key(client: Dict[str, Any], token: str):
     import jwt
     if client.get("jwks"):
@@ -75,7 +88,10 @@ def _signing_key(client: Dict[str, Any], token: str):
             if kid is None or k.key_id == kid:
                 return k.key
         raise jwt.InvalidTokenError("no matching key in the configured key set")
-    return jwt.PyJWKClient(client["jwks_url"], cache_keys=True).get_signing_key_from_jwt(token).key
+    jwks = _jwk_clients.get(client["jwks_url"])
+    if jwks is None:                                   # one client per key set: its cache then works
+        jwks = _jwk_clients[client["jwks_url"]] = jwt.PyJWKClient(client["jwks_url"], cache_keys=True)
+    return jwks.get_signing_key_from_jwt(token).key
 
 
 def _check_jwt(token: str, audience: str) -> Optional[str]:
@@ -113,8 +129,15 @@ def _caller(request: Request) -> str:
         raise HTTPException(401, "CDS Hooks call without a bearer token", headers={"WWW-Authenticate": "Bearer"})
     user = authenticate(token)
     if user is not None:
+        # Staff tokens (for testing the integration) must be clinician or above: these calls write
+        # to the audit trail, and the published demo token is a viewer
+        if ROLE_RANK.get(user.role, -1) < ROLE_RANK["clinician"]:
+            raise HTTPException(403, "CDS Hooks calls need an EHR token or a clinician account")
         return f"api:{user.name}"
-    audience = os.environ.get("CLINLOOP_CDS_AUDIENCE") or str(request.url).split("?")[0]
+    audience = _expected_audience(request)
+    if audience is None:
+        logger.error("CDS Hooks JWT refused: set CLINLOOP_CDS_AUDIENCE or CLINLOOP_PUBLIC_URL")
+        raise HTTPException(401, "CDS Hooks is not configured on this server", headers={"WWW-Authenticate": "Bearer"})
     iss = _check_jwt(token, audience)
     if iss is None:
         raise HTTPException(401, "Untrusted or invalid CDS Hooks token", headers={"WWW-Authenticate": "Bearer"})
@@ -216,7 +239,8 @@ def patient_view(request: Request, body: Dict[str, Any] = Body(...)) -> Dict[str
     caller = _caller(request)
     if body.get("hook") != "patient-view":
         raise HTTPException(400, "This service answers the patient-view hook")
-    patient_id = str((body.get("context") or {}).get("patientId") or "").strip()
+    context = body.get("context") if isinstance(body.get("context"), dict) else {}
+    patient_id = str(context.get("patientId") or "").strip()
     if not patient_id:
         raise HTTPException(400, "context.patientId is required")
     store = get_store()
@@ -238,7 +262,7 @@ def patient_view(request: Request, body: Dict[str, Any] = Body(...)) -> Dict[str
         cards.append(more)
     store.record_audit(caller, "ehr", "cds_patient_view", None,
                        {"patient_id": patient_id, "hook_instance": body.get("hookInstance"),
-                        "user": (body.get("context") or {}).get("userId"), "cards": [c["uuid"] for c in cards]})
+                        "user": context.get("userId"), "cards": [c["uuid"] for c in cards]})
     return {"cards": cards}
 
 
@@ -251,9 +275,15 @@ def feedback(request: Request, body: Dict[str, Any] = Body(...)) -> Dict[str, An
     for item in items[:50]:
         if not isinstance(item, dict):
             continue
-        reason = ((item.get("overrideReason") or {}).get("reason") or {}).get("code")
-        store.record_audit(caller, "ehr", "cds_card_feedback", str(item.get("card") or "")[:200] or None,
-                           {"outcome": item.get("outcome"), "override_reason": reason,
-                            "comment": str((item.get("overrideReason") or {}).get("userComment") or "")[:500],
-                            "at": item.get("outcomeTimestamp")})
+        card = str(item.get("card") or "")[:200]
+        try:
+            store.get(card)                  # feedback only for cards this service issued (loop keys)
+        except KeyError:
+            continue
+        override = item.get("overrideReason") if isinstance(item.get("overrideReason"), dict) else {}
+        reason = override.get("reason") if isinstance(override.get("reason"), dict) else {}
+        store.record_audit(caller, "ehr", "cds_card_feedback", card,
+                           {"outcome": str(item.get("outcome") or "")[:40], "override_reason": reason.get("code"),
+                            "comment": str(override.get("userComment") or "")[:500],
+                            "at": str(item.get("outcomeTimestamp") or "")[:40]})
     return {}
