@@ -1063,7 +1063,8 @@ def _resources(bundle_or_resources: Any) -> Iterable[Dict]:
         yield from bundle_or_resources
 
 
-def bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> Tuple[Dict[str, List[Dict]], List[str]]:
+def _with_full_urls(bundle_or_resources: Any, fn):
+    """Run fn() with the bundle's fullUrl → Type/id map, so absolute references resolve."""
     full_urls = {}
     if isinstance(bundle_or_resources, dict) and bundle_or_resources.get("resourceType") == "Bundle":
         for entry in bundle_or_resources.get("entry", []):
@@ -1072,9 +1073,76 @@ def bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> T
                 full_urls[entry["fullUrl"]] = f"{r['resourceType']}/{r['id']}"
     token = _FULL_URLS.set(full_urls)
     try:
-        return _bundle_to_events(bundle_or_resources, evaluation_time)
+        return fn()
     finally:
         _FULL_URLS.reset(token)
+
+
+def bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> Tuple[Dict[str, List[Dict]], List[str]]:
+    return _with_full_urls(bundle_or_resources, lambda: _bundle_to_events(bundle_or_resources, evaluation_time))
+
+
+# ── report versions ──────────────────────────────────────────────────────────
+# A preliminary report and the final report of the same study can arrive as two DiagnosticReport
+# resources with different ids. Read separately, they open the same obligation twice. A draft
+# version (preliminary / partial / registered) is replaced by a released version of the same
+# report: same patient, same study (accession number, else the same orders) and same report code.
+# Released versions never replace each other: a separate addendum resource may hold only the
+# addendum text, and dropping the original would lose its findings.
+REPORT_DRAFT_STATUSES = {"preliminary", "partial", "registered"}
+_REPORT_RELEASED_STATUSES = {"final", "amended", "corrected", "appended"}
+
+
+def _report_identity(r: Dict) -> Optional[str]:
+    for i in r.get("identifier", []):
+        types = {c.get("code") for c in (i.get("type") or {}).get("coding", [])}
+        if i.get("value") and ("ACSN" in types or "accession" in str(i.get("system") or "").lower()):
+            return f"accession:{i.get('system') or ''}|{i['value']}"
+    orders = sorted(filter(None, (_ref_id(b, "ServiceRequest") for b in r.get("basedOn", []))))
+    return "orders:" + ",".join(orders) if orders else None
+
+
+def _report_code(r: Dict) -> str:
+    codes = sorted(_codes(r.get("code")))
+    return ",".join(codes) if codes else _concept_text(r.get("code")).strip().lower()
+
+
+def _superseded_reports() -> Dict[str, str]:
+    groups: Dict[Tuple, List[Dict]] = defaultdict(list)
+    for r in _CURRENT_RESOURCES.get():
+        if r.get("resourceType") != "DiagnosticReport" or not r.get("id"):
+            continue
+        ident, pid = _report_identity(r), _patient_id(r)
+        if ident and pid:
+            groups[(pid, ident, _report_code(r))].append(r)
+    out: Dict[str, str] = {}
+    for versions in groups.values():
+        released = [r for r in versions if str(r.get("status", "")).lower() in _REPORT_RELEASED_STATUSES]
+        if not released:
+            continue
+        newest = max(released, key=lambda r: str(_first(r.get("issued"), r.get("effectiveDateTime"),
+                                                         (r.get("meta") or {}).get("lastUpdated")) or ""))
+        for r in versions:
+            if str(r.get("status", "")).lower() in REPORT_DRAFT_STATUSES and r["id"] != newest["id"]:
+                out[f"DiagnosticReport/{r['id']}"] = f"DiagnosticReport/{newest['id']}"
+    return out
+
+
+_CURRENT_RESOURCES: "contextvars.ContextVar[List[Dict]]" = contextvars.ContextVar("clinloop_resources", default=[])
+
+
+def superseded_reports(bundle_or_resources: Any) -> Dict[str, str]:
+    """Draft report versions replaced by a released version of the same report: {old source: new source}.
+    The loop store uses this to retire loops an earlier version opened (LoopStore.supersede_sources)."""
+    resources = list(_resources(bundle_or_resources))
+
+    def run():
+        token = _CURRENT_RESOURCES.set(resources)
+        try:
+            return _superseded_reports()
+        finally:
+            _CURRENT_RESOURCES.reset(token)
+    return _with_full_urls(bundle_or_resources, run)
 
 
 def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> Tuple[Dict[str, List[Dict]], List[str]]:
@@ -1088,10 +1156,18 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
     by_patient: Dict[str, List[Dict]] = defaultdict(list)
     warnings: List[str] = []
     patients = _patient_context(bundle_or_resources)
+    resources = list(_resources(bundle_or_resources))
+    token = _CURRENT_RESOURCES.set(resources)
+    try:
+        superseded = _superseded_reports()
+    finally:
+        _CURRENT_RESOURCES.reset(token)
 
-    for r in _resources(bundle_or_resources):
+    for r in resources:
         rtype = r.get("resourceType", "?")
         rid = r.get("id", "?")
+        if f"{rtype}/{rid}" in superseded:    # the released version of this report is read instead
+            continue
         mapper = MAPPERS.get(rtype)
         explicit = _explicit_event_type(r)
         if mapper is None and not explicit:

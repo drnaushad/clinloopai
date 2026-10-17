@@ -179,6 +179,7 @@ clinloopai/
 ├── data/cases.json               # 5 curated synthetic demo cases used by the web cockpit
 ├── data/fhir_example_bundle.json # Synthetic FHIR R4 bundle: 7 patients, the main failure modes
 ├── requirements-api.txt          # API dependencies
+├── requirements.lock             # Exact tested versions (Python 3.12), used by CI and the image
 ├── Dockerfile                    # On-premise image: API + worklist + cockpit + BioMCP
 ├── docker-compose.yml            # Full stack (API, BioMCP, optional Ollama)
 ├── render.yaml                   # One-click public demo (CLINLOOP_DEMO=1, synthetic data only)
@@ -270,7 +271,8 @@ Run every command from the **repository root**. The code imports modules as `src
 python -m pytest tests/ src/tests/ -v
 ```
 
-Install both `requirements.txt` and `requirements-api.txt` first: many tests import the API, PACS
+For the exact versions CI tests and the image ships, add `-c requirements.lock` to `pip install`
+(Python 3.12). Install both `requirements.txt` and `requirements-api.txt` first: many tests import the API, PACS
 and imaging modules, and the suite does not run without them.
 
 `tests/test_clinloop.py` includes patient-safety regression tests. Each one pins a failure mode
@@ -353,10 +355,20 @@ Several people can work on it at once:
 - defer it with a coded reason;
 - close it with evidence;
 - draft a diagnosis-free message to the patient, which a clinician approves (optionally editing it)
-  before it is sent.
+  before it is sent;
+- record that a patient does not want messages: drafting and approval are then refused for that
+  patient, and drafts already waiting are withdrawn.
+
+When a preliminary report is followed by its final report (same accession number, or the same order,
+and the same report code), the final report's loop takes over: its owner, acknowledgement and
+deferral carry over, and the preliminary report's loop is marked "replaced by final report". If the
+final report no longer contains a finding the preliminary one did, that loop stays on the worklist
+for a clinician to confirm the change, because something may already have been done on the
+preliminary read.
 
 A banner at the top turns red when the data feed is silent or failing. Every action is written to
-the audit trail.
+the audit trail, and every view of patient data (worklist, loop, patient graph, documents, uploads)
+to the access log: who, when, from which address and which patients' data.
 
 Ingesting a real FHIR export instead (admin token):
 
@@ -389,6 +401,9 @@ CDS Hooks discovery document.
 | `GET /api/v1/biomcp/status` | viewer | BioMCP connection and the tools ClinLoop may call |
 | `POST /api/v1/biomcp/call` | viewer | Call a read-only BioMCP tool (articles, trials, openFDA, genes, variants) |
 | `GET /api/v1/audit/verify` | admin | Verify the audit hash chain |
+| `GET /api/v1/access-log?patient_id=&actor=&since=` | admin | Who saw or processed which patients' data (reading it is recorded too) |
+| `GET /api/v1/access-log/verify` | admin | Verify the access-log hash chain |
+| `GET` / `PUT /api/v1/patients/{id}/outreach-preference` | viewer / navigator | Whether the patient opted out of messages; record an opt-out (with how they asked) or opt-in |
 | `GET /api/v1/connections/status` | public | What is really connected, checked live (no hostnames, secrets or patient data) |
 | `GET /api/v1/evidence/{rule_id}?source=pubmed\|europepmc` | public | Live literature for a rule (rule-level search terms only) |
 
@@ -714,6 +729,10 @@ results are identical on every run.
 | Governance | **Implemented**: hash-bound specialist sign-off, critical-finding list approval, shadow mode. The sign-offs themselves must come from the hospital's specialists |
 | FHIR R4 ingestion | **Implemented** for 8 resource types; LOINC lists and text patterns need checking against each hospital's coding |
 | Loop registry, workflow, escalation, audit, open-loop rate | **Implemented** (SQLite) |
+| Access log | **Implemented**: hash-chained record of every view of patient data (who, when, client address, which patients). Kept until the hospital deletes it; no automatic expiry |
+| Report versions | **Implemented**: a final report replaces its preliminary version's loops; a finding dropped by the final report waits for a clinician |
+| Rule-set version | **Implemented**: each loop and its `loop_opened` audit entry carry the version of the rules, guideline registry, critical-finding list and decision code that raised it |
+| Pinned dependencies | **Implemented**: `requirements.lock` (Python 3.12), used by CI and the Docker image |
 | API authentication | **Implemented**: bearer tokens with roles. Not yet integrated with hospital SSO |
 | Clinician worklist | **Implemented** (`worklist.html`): Korean/English, assignment, my loops, outreach approval |
 | FHIR server sync | **Implemented** (bearer token). SMART Backend Services token exchange not yet built |
@@ -761,6 +780,12 @@ contributions, validation studies and deployment.
 - `data/cases.json` contains synthetic demo patients only.
 - Audit signatures use `CLINLOOP_SIGNING_KEY`; supply it from a managed secret store in any real
   deployment.
+- Access records (`GET /api/v1/access-log`) are kept in the database until the hospital removes them.
+  Korean rules on access records set minimum retention periods; back up the database accordingly.
+  Behind a reverse proxy, set `FORWARDED_ALLOW_IPS` to the proxy's address so the record shows the
+  user's address rather than the proxy's.
+- See [`docs/PRODUCTION_READINESS.md`](docs/PRODUCTION_READINESS.md) for what is in place for a
+  hospital pilot, the design decisions behind it, and what is still missing.
 
 ## Key references
 

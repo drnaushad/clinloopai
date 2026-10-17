@@ -53,3 +53,13 @@ ClinLoop_Project/
 - **Do Not Duplicate**: Check existing files in `src/clinloop_engine/` and `docs/` before generating new code or documents.
 - **Data Protection**: Never output sensitive patient data or commit raw clinical datasets to source control.
 - **Explainability**: Prioritize transparent, rule-grounded, audit-ready reasoning over black-box predictions.
+
+---
+
+## 5. Safety Rules for Code Changes
+- **No patient data in logs or errors**: log types and counts, never names, identifiers, report text or values. Error responses stay generic; details go to the server log.
+- **Record every read and write of patient data**: new endpoints that return or process identifiable data call the access recorder (`access_recorder` in `clinical_api.py`); state changes go through `LoopStore` so they reach the hash-chained audit log.
+- **Clinical logic needs a clinician reviewer**: changes to `clinical_ontology.py`, `radiology.py`, `fhir_ingest.py`, `motifs.py`, `guideline_reports.py`, `note_reader.py`, `ecg.py` or the outreach code are drafts until a clinician has reviewed them line by line. Add a test for each behaviour changed.
+- **Fail toward a human**: when the code cannot tell whether a follow-up happened, leave the loop open for review rather than closing it.
+- **Dependencies**: change the range in `requirements*.txt`, regenerate `requirements.lock`, run the full test suite.
+- See `docs/PRODUCTION_READINESS.md` for the design decisions these rules protect.
