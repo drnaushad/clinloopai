@@ -11,7 +11,7 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Request
 from pydantic import BaseModel, Field
 
 from . import governance
@@ -66,6 +66,11 @@ class OutreachDraftRequest(BaseModel):
     channel: str = Field("kakao", max_length=16, description="kakao | sms")
     # Only a plain https link can go into a patient message
     scheduling_link: Optional[str] = Field(None, max_length=500, pattern=r"^https://[^\s<>\"']+$")
+
+
+class OutreachPreferenceRequest(BaseModel):
+    opted_out: bool
+    reason: str = Field("", max_length=500, description="How the patient asked (required when opting out)")
 
 
 class RuleReviewRequest(BaseModel):
@@ -240,10 +245,41 @@ def rule_evidence(rule_id: str, source: str = Query("pubmed", pattern="^(pubmed|
 
 # ── Ingest ───────────────────────────────────────────────────────────────────
 
+# ── Access records ───────────────────────────────────────────────────────────
+
+def access_recorder(request: Request):
+    """FastAPI dependency: record(user, action, patient_ids, detail) adds an access record for this
+    request (who, when, from where, whose data). A read is not served if it cannot be recorded."""
+    client = request.client.host if request.client else None
+
+    def record(user: User, action: str, patients, detail: Optional[Dict[str, Any]] = None) -> None:
+        get_store().record_access(user.name, user.role, action, patients, client=client, detail=detail)
+    return record
+
+
+def _patient_of(loop_key: str) -> str:
+    return loop_key.split("|", 1)[0]
+
+
+@router.get("/access-log", tags=["Clinical Pilot"])
+def access_log(patient_id: Optional[str] = Query(None, max_length=64), actor: Optional[str] = Query(None, max_length=64),
+               since: Optional[str] = Query(None, max_length=40), limit: int = Query(500, ge=1, le=5000),
+               user: User = Depends(require_role("admin")), access=Depends(access_recorder)):
+    """Who saw or processed which patients' data (admin). Looking at the log is itself recorded."""
+    access(user, "view_access_log", [patient_id] if patient_id else [],
+           {"actor": actor, "since": since} if actor or since else None)
+    return {"records": get_store().access_log(patient_id=patient_id, actor=actor, since=since, limit=limit)}
+
+
+@router.get("/access-log/verify", tags=["Clinical Pilot"])
+def verify_access_log(user: User = Depends(require_role("admin"))):
+    return {"access_log_intact": get_store().verify_access_chain()}
+
+
 @router.post("/fhir/ingest", tags=["Clinical Pilot"])
 def ingest_fhir(bundle: Dict[str, Any] = Body(..., description="FHIR R4 Bundle"),
                 evaluation_time: Optional[str] = Query(None, description="ISO time to evaluate at (default: now)"),
-                user: User = Depends(require_role("admin"))):
+                user: User = Depends(require_role("admin")), access=Depends(access_recorder)):
     """Map a FHIR Bundle to events, run the engine, and record every loop."""
     if bundle.get("resourceType") != "Bundle":
         raise HTTPException(422, "Body must be a FHIR Bundle")
@@ -273,7 +309,10 @@ def ingest_fhir(bundle: Dict[str, Any] = Body(..., description="FHIR R4 Bundle")
     detections = []
     for pid, events in events_by_patient.items():
         detections.extend(lapse_after_death(detector.process_patient("fhir-ingest", pid, events), resources))
+    access(user, "ingest", list(events_by_patient))
     counts = store.upsert_detections(detections, strata=strata, actor=user.name)
+    from .fhir_ingest import superseded_reports
+    counts["superseded"] = store.supersede_sources(superseded_reports(resources), actor=user.name)
     store.record_ingest("manual-upload", user.name, ok=True, patients=len(events_by_patient),
                         events=sum(len(v) for v in events_by_patient.values()), warnings=len(warnings))
     return {
@@ -294,7 +333,7 @@ def whoami(user: User = Depends(require_role("viewer"))):
 
 @router.get("/worklist", tags=["Clinical Pilot"])
 def worklist(owner: Optional[str] = None, include_inactive: bool = False,
-             user: User = Depends(require_role("viewer"))):
+             user: User = Depends(require_role("viewer")), access=Depends(access_recorder)):
     store = get_store()
     loops = store.worklist(owner=owner, include_inactive=include_inactive)
     statuses = governance.all_rule_statuses(store)
@@ -305,12 +344,15 @@ def worklist(owner: Optional[str] = None, include_inactive: bool = False,
     if live is not None:
         shadow = sum(1 for loop in loops if loop["rule_id"] not in live)
         loops = [loop for loop in loops if loop["rule_id"] in live]
+    access(user, "view_worklist", [loop["patient_id"] for loop in loops],
+           {"owner": owner, "include_inactive": include_inactive} if owner or include_inactive else None)
     return {"count": len(loops), "loops": loops, "defer_reasons": DEFER_REASONS,
             "shadow_count": shadow, "governance": governance.summary(store, statuses)}
 
 
 @router.get("/loops/{loop_key:path}/audit", tags=["Clinical Pilot"])
-def loop_audit(loop_key: str, user: User = Depends(require_role("viewer"))):
+def loop_audit(loop_key: str, user: User = Depends(require_role("viewer")), access=Depends(access_recorder)):
+    access(user, "view_loop_audit", [_patient_of(loop_key)], {"loop_key": loop_key})
     return {"loop_key": loop_key, "audit": get_store().audit_trail(loop_key)}
 
 
@@ -354,7 +396,8 @@ def assign(loop_key: str, req: AssignRequest, user: User = Depends(require_role(
 # ── Patient outreach ─────────────────────────────────────────────────────────
 
 @router.get("/loops/{loop_key:path}/outreach", tags=["Patient Outreach"])
-def list_outreach(loop_key: str, user: User = Depends(require_role("viewer"))):
+def list_outreach(loop_key: str, user: User = Depends(require_role("viewer")), access=Depends(access_recorder)):
+    access(user, "view_messages", [_patient_of(loop_key)], {"loop_key": loop_key})
     return {"messages": get_store().outreach_messages(loop_key)}
 
 
@@ -371,6 +414,22 @@ def draft_outreach(loop_key: str, req: OutreachDraftRequest, user: User = Depend
         raise HTTPException(409, str(e))
     return _workflow(get_store().add_outreach_draft, loop_key, user.name, user.role,
                      draft["text"], draft["language"], req.channel, draft["safety_flags"])
+
+
+@router.get("/patients/{patient_id}/outreach-preference", tags=["Patient Outreach"])
+def get_outreach_preference(patient_id: str = Path(..., pattern=r"^[A-Za-z0-9\-.]{1,64}$"),
+                            user: User = Depends(require_role("viewer")), access=Depends(access_recorder)):
+    access(user, "view_outreach_preference", [patient_id])
+    return get_store().outreach_preference(patient_id)
+
+
+@router.put("/patients/{patient_id}/outreach-preference", tags=["Patient Outreach"])
+def set_outreach_preference(req: OutreachPreferenceRequest,
+                            patient_id: str = Path(..., pattern=r"^[A-Za-z0-9\-.]{1,64}$"),
+                            user: User = Depends(require_role("navigator"))):
+    """Record that a patient does not want ClinLoop messages (or wants them again). While opted out,
+    no message can be drafted or approved; drafts already waiting are withdrawn."""
+    return _workflow(get_store().set_outreach_preference, patient_id, req.opted_out, user.name, user.role, req.reason)
 
 
 @router.post("/outreach/{message_id}/decision", tags=["Patient Outreach"])
@@ -437,7 +496,8 @@ def verify_audit(user: User = Depends(require_role("admin"))):
 # Must be the last /loops/{key} GET route: the greedy path parameter would
 # otherwise swallow /loops/{key}/audit and /loops/{key}/outreach.
 @router.get("/loops/{loop_key:path}", tags=["Clinical Pilot"])
-def get_loop(loop_key: str, user: User = Depends(require_role("viewer"))):
+def get_loop(loop_key: str, user: User = Depends(require_role("viewer")), access=Depends(access_recorder)):
+    access(user, "view_loop", [_patient_of(loop_key)], {"loop_key": loop_key})
     return _workflow(get_store().get, loop_key)
 
 

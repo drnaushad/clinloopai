@@ -311,7 +311,7 @@ def _acquired(study: Dict[str, Any]) -> Optional[datetime]:
 
 def evaluate(store: LoopStore, patient_id: str, fhir, pacs, now: datetime) -> Dict[str, int]:
     """Re-check one patient with the new findings and record the loops."""
-    from .fhir_ingest import bundle_to_events, patient_strata
+    from .fhir_ingest import bundle_to_events, patient_strata, superseded_reports
     from .fhir_sync import patient_record
     from .loop_detector import hospital_detector, lapse_after_death
     resources, _ = patient_record(patient_id, store, fhir, pacs)
@@ -322,6 +322,7 @@ def evaluate(store: LoopStore, patient_id: str, fhir, pacs, now: datetime) -> Di
         for k, v in store.upsert_detections(lapse_after_death(detector.process_patient("image-scan", p, events), resources),
                                             strata=patient_strata(resources), actor="image-scan").items():
             counts[k] = counts.get(k, 0) + v
+    store.supersede_sources(superseded_reports(resources), actor="image-scan")
     return counts
 
 
