@@ -41,6 +41,10 @@ ACTIVE_ENGINE_STATUSES = (LoopStatus.OPEN.value, LoopStatus.DELAYED.value, LoopS
 ACTION_NEEDED_STATUSES = (LoopStatus.OPEN.value, LoopStatus.ABSTAIN.value)
 FOLLOWUP_FOUND_STATUSES = (LoopStatus.CLOSED.value, LoopStatus.DELAYED.value)
 ACTIVE_WORKFLOW_STATES = ("new", "acknowledged")
+# A preliminary report opened this loop and the final report no longer carries the finding
+REPORT_REVISED_STEP = "Final report differs from the preliminary: finding no longer reported"
+REPORT_REVISED_ACTION = ("Confirm the change with radiology and check whether anything was already done on the "
+                         "preliminary report (treatment, referral, patient told); then close with that evidence.")
 
 DEFER_REASONS = {
     "patient_declined": "Patient informed and declined (informed refusal documented)",
@@ -85,6 +89,7 @@ CREATE TABLE IF NOT EXISTS loops (
     defer_note TEXT,
     defer_until TEXT,
     closure_evidence TEXT,
+    ruleset_version TEXT,             -- governance.ruleset_version() of the logic that last evaluated the loop
     strata TEXT,
     first_seen TEXT,
     last_seen TEXT,
@@ -122,6 +127,31 @@ CREATE TABLE IF NOT EXISTS outreach_messages (
     note TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_outreach_loop ON outreach_messages(loop_key);
+-- A patient's choice not to receive ClinLoop messages. Drafting and approval are refused while it stands.
+CREATE TABLE IF NOT EXISTS outreach_preferences (
+    patient_id TEXT PRIMARY KEY,
+    opted_out INTEGER NOT NULL,
+    reason TEXT,                     -- how the patient said so (e.g. "phone call 2026-10-01, told navigator")
+    recorded_by TEXT NOT NULL,
+    recorded_at TEXT NOT NULL
+);
+-- Who saw or processed which patients' data, when and from where (PIPA access records).
+-- Hash-chained like audit_log. Repeated identical views (the worklist refreshes itself) are
+-- recorded once per ACCESS_REPEAT_SECONDS.
+CREATE TABLE IF NOT EXISTS access_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    role TEXT,
+    action TEXT NOT NULL,            -- view_worklist | view_loop | view_patient_graph | ingest | ...
+    patients TEXT NOT NULL,          -- JSON list of the patient ids whose data was shown or processed
+    client TEXT,                     -- client address as the server saw it
+    detail TEXT,
+    prev_hash TEXT NOT NULL,
+    hash TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_access_ts ON access_log(ts);
+CREATE INDEX IF NOT EXISTS idx_access_actor ON access_log(actor, action, ts);
 CREATE TABLE IF NOT EXISTS sync_state (
     source TEXT PRIMARY KEY,
     cursor TEXT,
@@ -238,6 +268,8 @@ class LoopStore:
             cols = {r["name"] for r in self._db.execute("PRAGMA table_info(image_scan_studies)")}
             if "instances" not in cols:
                 self._db.execute("ALTER TABLE image_scan_studies ADD COLUMN instances INTEGER")
+            if "ruleset_version" not in {r["name"] for r in self._db.execute("PRAGMA table_info(loops)")}:
+                self._db.execute("ALTER TABLE loops ADD COLUMN ruleset_version TEXT")
             self._db.commit()
 
     # ── audit ────────────────────────────────────────────────────────────────
@@ -277,6 +309,72 @@ class LoopStore:
         """Add one entry to the hash-chained audit log (for events outside the loop workflow)."""
         with self._writing():
             self._audit(actor, role, action, key, detail)
+
+    # ── access log: reads of patient data ────────────────────────────────────
+    ACCESS_REPEAT_SECONDS = 600
+
+    @staticmethod
+    def _access_body(r: Dict, prev: str) -> str:
+        return json.dumps({"ts": r["ts"], "actor": r["actor"], "role": r["role"], "action": r["action"],
+                           "patients": json.loads(r["patients"]), "client": r["client"],
+                           "detail": json.loads(r["detail"] or "{}"), "prev": prev},
+                          sort_keys=True, ensure_ascii=False, default=str)
+
+    def record_access(self, actor: str, role: str, action: str, patients: Iterable[str],
+                      client: Optional[str] = None, detail: Optional[Dict] = None,
+                      now: Optional[datetime] = None) -> bool:
+        """Record that `actor` saw or processed these patients' data. Returns False when the same
+        view by the same person from the same place was already recorded in the last
+        ACCESS_REPEAT_SECONDS (the worklist refreshes itself, and each loop's messages, every 30 seconds)."""
+        now = now or utc_now()
+        row = {"ts": now.isoformat(), "actor": actor, "role": role, "action": action,
+               "patients": json.dumps(sorted({str(p) for p in patients if p}), ensure_ascii=False),
+               "client": client, "detail": json.dumps(detail or {}, ensure_ascii=False, default=str)}
+        with self._writing():
+            since = (now - timedelta(seconds=self.ACCESS_REPEAT_SECONDS)).isoformat()
+            if self._db.execute(
+                    "SELECT 1 FROM access_log WHERE actor=? AND action=? AND patients=? AND client IS ? AND detail=? "
+                    "AND ts>? LIMIT 1", (actor, action, row["patients"], client, row["detail"], since)).fetchone():
+                return False
+            head = self._db.execute("SELECT hash FROM access_log ORDER BY id DESC LIMIT 1").fetchone()
+            prev = head["hash"] if head else "GENESIS"
+            digest = hashlib.sha256(self._access_body(row, prev).encode("utf-8")).hexdigest()
+            self._db.execute(
+                "INSERT INTO access_log (ts, actor, role, action, patients, client, detail, prev_hash, hash) "
+                "VALUES (?,?,?,?,?,?,?,?,?)",
+                (row["ts"], actor, role, action, row["patients"], client, row["detail"], prev, digest))
+        return True
+
+    def access_log(self, patient_id: Optional[str] = None, actor: Optional[str] = None,
+                   since: Optional[str] = None, limit: int = 500) -> List[Dict]:
+        """Access records, newest first: by patient (whose data was seen), by person, or since a time."""
+        sql, args = "SELECT * FROM access_log WHERE 1=1", []
+        if patient_id:
+            sql += " AND patients LIKE ? ESCAPE '\\'"
+            args.append('%"' + patient_id.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + '"%')
+        if actor:
+            sql += " AND actor=?"
+            args.append(actor)
+        if since:
+            sql += " AND ts>=?"
+            args.append(since)
+        sql += " ORDER BY id DESC LIMIT ?"
+        args.append(limit)
+        with self._lock:
+            rows = self._db.execute(sql, args).fetchall()
+        return [{**{k: r[k] for k in ("id", "ts", "actor", "role", "action", "client")},
+                 "patients": json.loads(r["patients"]), "detail": json.loads(r["detail"] or "{}")} for r in rows]
+
+    def verify_access_chain(self) -> bool:
+        """Recompute every access-record hash; False if any record was altered, removed or reordered."""
+        with self._lock:
+            prev = "GENESIS"
+            for r in self._db.execute("SELECT * FROM access_log ORDER BY id"):
+                if r["prev_hash"] != prev or \
+                        hashlib.sha256(self._access_body(dict(r), prev).encode("utf-8")).hexdigest() != r["hash"]:
+                    return False
+                prev = r["hash"]
+            return True
 
     def audit_trail(self, key: Optional[str] = None, limit: int = 200) -> List[Dict]:
         with self._lock:
@@ -413,6 +511,8 @@ class LoopStore:
         counts = {"new": 0, "updated": 0, "resolved_by_engine": 0}
         now = utc_now().isoformat()
         strata = strata or {}
+        from .governance import ruleset_version
+        ruleset = ruleset_version()
         with self._lock:
             for d in detections:
                 key = loop_key(d.patient_id, d.rule_id, d.trigger_event_id or d.trigger_time)
@@ -424,7 +524,7 @@ class LoopStore:
                     "recommended_action": d.recommended_action,
                     "explanation": json.dumps(d.explanation, ensure_ascii=False),
                     "evidence_chain": json.dumps(d.evidence_chain, ensure_ascii=False),
-                    "last_seen": now, "updated_at": now,
+                    "last_seen": now, "updated_at": now, "ruleset_version": ruleset,
                 }
                 if existing is None:
                     workflow = "new" if d.loop_status in ACTION_NEEDED_STATUSES else "resolved_by_engine"
@@ -436,7 +536,8 @@ class LoopStore:
                     if workflow == "new":
                         counts["new"] += 1
                         self._audit(actor, "system", "loop_opened", key,
-                                    {"rule_id": d.rule_id, "engine_status": d.loop_status, "deadline": d.deadline})
+                                    {"rule_id": d.rule_id, "engine_status": d.loop_status, "deadline": d.deadline,
+                                     "ruleset": ruleset})
                     continue
 
                 if (d.loop_status in FOLLOWUP_FOUND_STATUSES
@@ -445,12 +546,13 @@ class LoopStore:
                     counts["resolved_by_engine"] += 1
                     self._audit(actor, "system", "loop_resolved_by_record", key,
                                 {"evidence": "required follow-up found in the record",
-                                 "on_time": d.loop_status == LoopStatus.CLOSED.value})
+                                 "on_time": d.loop_status == LoopStatus.CLOSED.value, "ruleset": ruleset})
                 elif (d.loop_status in ACTION_NEEDED_STATUSES
                       and existing["workflow_state"] == "resolved_by_engine"):
                     # The record changed (e.g. a follow-up was cancelled): reopen
                     fields["workflow_state"] = "new"
-                    self._audit(actor, "system", "loop_reopened", key, {"engine_status": d.loop_status})
+                    self._audit(actor, "system", "loop_reopened", key,
+                                {"engine_status": d.loop_status, "ruleset": ruleset})
                 counts["updated"] += 1
                 self._db.execute(
                     f"UPDATE loops SET {', '.join(f'{k}=?' for k in fields)} WHERE loop_key=?",
@@ -567,6 +669,64 @@ class LoopStore:
                                 {"evidence": evidence},
                                 also=lambda: self._withdraw_drafts(key, actor, "loop closed"))
 
+    def supersede_sources(self, superseded: Dict[str, str], actor: str = "engine") -> int:
+        """
+        Retire loops opened by a draft report that a released version now replaces
+        (fhir_ingest.superseded_reports: {old source: new source}). The released version's loop for
+        the same rule takes over what clinicians already did: owner, acknowledgement, deferral,
+        escalation level. When the released version no longer carries the obligation, the old loop
+        stays on the worklist for a clinician to confirm the change (see REPORT_REVISED_STEP).
+        Returns the number of loops retired.
+        """
+        retired = 0
+        carried = ("owner", "workflow_state", "defer_reason", "defer_note", "defer_until",
+                   "escalation_level", "last_escalated_at")
+
+        def like(source: str) -> str:
+            return "%|" + source.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + ":%"
+        with self._writing():
+            for old_src, new_src in superseded.items():
+                old_rows = self._db.execute(
+                    "SELECT * FROM loops WHERE loop_key LIKE ? ESCAPE '\\' AND workflow_state IN (?,?,?)",
+                    (like(old_src), *ACTIVE_WORKFLOW_STATES, "deferred")).fetchall()
+                for old in old_rows:
+                    new = self._db.execute(
+                        "SELECT * FROM loops WHERE patient_id=? AND rule_id=? AND loop_key LIKE ? ESCAPE '\\'",
+                        (old["patient_id"], old["rule_id"], like(new_src))).fetchone()
+                    now = utc_now().isoformat()
+                    if new is None:
+                        # The released report no longer carries this obligation. A finding that changed between
+                        # the preliminary and the final read is itself a safety event (the patient may already
+                        # have been treated on the preliminary): a clinician confirms it before the loop closes.
+                        if old["missing_step"] == REPORT_REVISED_STEP:
+                            continue
+                        self._db.execute(
+                            "UPDATE loops SET engine_status=?, missing_step=?, recommended_action=?, updated_at=? "
+                            "WHERE loop_key=?",
+                            (LoopStatus.ABSTAIN.value, REPORT_REVISED_STEP, REPORT_REVISED_ACTION, now, old["loop_key"]))
+                        self._audit(actor, "system", "report_revised", old["loop_key"],
+                                    {"released_report": new_src,
+                                     "note": "the released report no longer carries this obligation"})
+                        continue
+                    if new["workflow_state"] == "new" and old["workflow_state"] != "new":
+                        take = {k: old[k] for k in carried}
+                        take["escalation_level"] = max(old["escalation_level"] or 0, new["escalation_level"] or 0)
+                        self._db.execute(f"UPDATE loops SET {', '.join(f'{k}=?' for k in take)}, updated_at=? "
+                                         "WHERE loop_key=?", (*take.values(), now, new["loop_key"]))
+                        self._audit(actor, "system", "loop_carried_over", new["loop_key"],
+                                    {"from": old["loop_key"], "workflow_state": old["workflow_state"],
+                                     "owner": old["owner"]})
+                    elif new["owner"] == "unassigned" and old["owner"] != "unassigned":
+                        self._db.execute("UPDATE loops SET owner=?, updated_at=? WHERE loop_key=?",
+                                         (old["owner"], now, new["loop_key"]))
+                    self._db.execute("UPDATE loops SET workflow_state='superseded', updated_at=? WHERE loop_key=?",
+                                     (now, old["loop_key"]))
+                    self._audit(actor, "system", "loop_superseded", old["loop_key"],
+                                {"replaced_by_report": new_src, "continued_as": new["loop_key"]})
+                    self._withdraw_drafts(old["loop_key"], actor, "report replaced by a released version")
+                    retired += 1
+        return retired
+
     def _withdraw_drafts(self, key: str, actor: str, why: str) -> None:
         """Patient messages still awaiting approval are withdrawn when their loop stops being active."""
         n = self._db.execute("UPDATE outreach_messages SET status='withdrawn', note=? WHERE loop_key=? AND status='draft'",
@@ -622,12 +782,41 @@ class LoopStore:
             raise KeyError(msg_id)
         return {**dict(r), "safety_flags": json.loads(r["safety_flags"] or "[]")}
 
+    # ── patient outreach preference ──────────────────────────────────────────
+    def outreach_preference(self, patient_id: str) -> Dict:
+        with self._lock:
+            r = self._db.execute("SELECT * FROM outreach_preferences WHERE patient_id=?", (patient_id,)).fetchone()
+        return {"patient_id": patient_id, "opted_out": False} if r is None else {**dict(r), "opted_out": bool(r["opted_out"])}
+
+    def set_outreach_preference(self, patient_id: str, opted_out: bool, actor: str, role: str, reason: str = "") -> Dict:
+        """Record that a patient opted out of (or back into) messages. Opting out withdraws unsent drafts."""
+        if opted_out and len(reason.strip()) < 3:
+            raise WorkflowError("Say how the patient asked not to be messaged (e.g. 'by phone to the navigator')")
+        with self._writing():
+            self._db.execute(
+                "INSERT INTO outreach_preferences (patient_id, opted_out, reason, recorded_by, recorded_at) "
+                "VALUES (?,?,?,?,?) ON CONFLICT(patient_id) DO UPDATE SET opted_out=excluded.opted_out, "
+                "reason=excluded.reason, recorded_by=excluded.recorded_by, recorded_at=excluded.recorded_at",
+                (patient_id, int(opted_out), reason.strip(), actor, utc_now().isoformat()))
+            self._audit(actor, role, "outreach_opt_out" if opted_out else "outreach_opt_in", None,
+                        {"patient_id": patient_id, "reason": reason.strip()})
+            if opted_out:
+                for (key,) in self._db.execute("SELECT loop_key FROM loops WHERE patient_id=?", (patient_id,)).fetchall():
+                    self._withdraw_drafts(key, actor, "patient opted out of messages")
+        return self.outreach_preference(patient_id)
+
+    def _refuse_if_opted_out(self, patient_id: str) -> None:
+        r = self._db.execute("SELECT opted_out FROM outreach_preferences WHERE patient_id=?", (patient_id,)).fetchone()
+        if r is not None and r["opted_out"]:
+            raise WorkflowError("This patient asked not to be messaged: contact them another way")
+
     def add_outreach_draft(self, key: str, actor: str, role: str, text: str, language: str,
                            channel: str, safety_flags: List[str]) -> Dict:
         with self._writing():
             loop = self.get(key)
             if loop["workflow_state"] not in ACTIVE_WORKFLOW_STATES:
                 raise WorkflowError(f"Cannot message a patient about a loop in state '{loop['workflow_state']}'")
+            self._refuse_if_opted_out(loop["patient_id"])
             msg_id = f"MSG-{hashlib.sha256(f'{key}|{utc_now().isoformat()}'.encode()).hexdigest()[:12]}"
             self._db.execute(
                 "INSERT INTO outreach_messages (id, loop_key, patient_id, language, channel, draft_text, status, "
@@ -656,6 +845,7 @@ class LoopStore:
             loop = self.get(msg["loop_key"])
             if loop["workflow_state"] not in ACTIVE_WORKFLOW_STATES:
                 raise WorkflowError(f"The loop is now '{loop['workflow_state']}': this message is no longer needed")
+            self._refuse_if_opted_out(loop["patient_id"])
             text = (final_text or msg["draft_text"]).strip()
             self._db.execute("UPDATE outreach_messages SET status='sending', final_text=?, decided_by=?, decided_at=? "
                              "WHERE id=?", (text, actor, now, msg_id))
@@ -869,7 +1059,8 @@ class LoopStore:
         now_iso = (now or utc_now()).isoformat()
         sev_w = {"critical": 4, "high": 3, "moderate": 2, "low": 1}
         with self._lock:
-            rows = [self._row(r) for r in self._db.execute("SELECT * FROM loops")]
+            # A loop retired because a released report replaced its draft is counted once, as its successor
+            rows = [self._row(r) for r in self._db.execute("SELECT * FROM loops WHERE workflow_state != 'superseded'")]
         rules: Dict[str, Dict] = {}
         owners: Dict[str, Dict] = {}
         strata: Dict[str, Dict[str, Dict[str, int]]] = {}
@@ -939,7 +1130,8 @@ class LoopStore:
         """
         now_iso = (now or utc_now()).isoformat()
         with self._lock:
-            rows = [self._row(r) for r in self._db.execute("SELECT * FROM loops")]
+            # A loop retired because a released report replaced its draft is counted once, as its successor
+            rows = [self._row(r) for r in self._db.execute("SELECT * FROM loops WHERE workflow_state != 'superseded'")]
         groups: Dict[str, Dict[str, int]] = {}
         for r in rows:
             if not r["deadline"] or r["deadline"] > now_iso or r["workflow_state"] == "deferred":

@@ -37,10 +37,12 @@ jobs:
           cache-dependency-path: |
             requirements.txt
             requirements-api.txt
+            requirements.lock
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-kor
-          pip install -r requirements-api.txt pytest reportlab
+          # Exact versions from requirements.lock, so CI tests what the image ships
+          pip install -r requirements-api.txt pytest reportlab -c requirements.lock
       - name: Run tests
         # Import the API first: an ImportError there would otherwise only skip its tests
         run: |

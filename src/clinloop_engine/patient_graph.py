@@ -28,6 +28,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from .auth import User, require_role
+from .clinical_api import access_recorder
 from .clinical_ontology import EventType
 from .temporal_hypergraph import DynamicTemporalHypergraph, _required_regions
 
@@ -229,7 +230,7 @@ router = APIRouter(prefix="/api/v1")
 @router.get("/patients/{patient_id}/graph", tags=["Imaging & Documents"])
 def patient_graph(patient_id: str,
                   evaluation_time: Optional[str] = Query(None, description="ISO time to evaluate at (default: now)"),
-                  user: User = Depends(require_role("viewer"))):
+                  user: User = Depends(require_role("viewer")), access=Depends(access_recorder)):
     """
     The patient's clinical knowledge graph: events by lane on a time axis, obligations as
     hyperedges (trigger → follow-up, or the missing follow-up and its deadline), study links,
@@ -250,6 +251,7 @@ def patient_graph(patient_id: str,
             when = normalize_timestamp(evaluation_time)
         except (TypeError, ValueError):
             raise HTTPException(422, "evaluation_time must be an ISO date-time")
+    access(user, "view_patient_graph", [patient_id])
     _patient_resource(patient_id)
     store = get_store()
     resources, warnings = patient_record(patient_id, store, client_from_env(), pacs_from_env())

@@ -36,7 +36,7 @@ from urllib.parse import urlencode
 
 import requests
 
-from .fhir_ingest import _patient_id, bundle_to_events, patient_strata
+from .fhir_ingest import _patient_id, bundle_to_events, patient_strata, superseded_reports
 from .loop_detector import ClinLoopDetector, hospital_detector, lapse_after_death
 from .loop_store import LoopStore
 from .safety_clock import utc_now
@@ -169,6 +169,8 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
                                                  strata=strata, actor=source)
                 for k, v in result.items():
                     counts[k] += v
+            # Loops a preliminary report opened move to its final version
+            store.supersede_sources(superseded_reports(history), actor=source)
         store.record_ingest(source, source, ok=True, patients=len(patients), events=n_events,
                             warnings=n_warnings, now=now)
         if newest:

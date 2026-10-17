@@ -80,6 +80,30 @@ def rule_fingerprint(rule: ObligationRule) -> str:
     return hashlib.sha256(json.dumps(definition, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
+# The code that turns records into obligations. A change to any of these can change which loops open.
+_DECISION_SOURCES = ("clinical_ontology.py", "fhir_ingest.py", "radiology.py", "temporal_hypergraph.py",
+                     "loop_detector.py", "safety_clock.py", "motifs.py", "guideline_reports.py", "note_reader.py",
+                     "ecg.py", "report_text.py", "imaging_fhir.py", "ai_review.py")
+
+
+def ruleset_version() -> str:
+    """
+    One short identifier for the logic that decides loops: every rule's signed-off definition, the
+    guideline registry, the hospital's critical-finding list and the decision code. Stamped on each
+    loop and in its "loop_opened" audit entry, so a loop can later be traced to the exact logic that
+    raised it (and re-checked after a rule change).
+    """
+    here = os.path.dirname(__file__)
+    parts = [rule_fingerprint(r) for r in OBLIGATION_RULES]
+    parts.append(json.dumps(_guidelines(), sort_keys=True, ensure_ascii=False, default=str))
+    parts.append(json.dumps(load_critical_findings(), sort_keys=True, ensure_ascii=False, default=str))
+    for name in _DECISION_SOURCES:
+        path = os.path.join(here, name)
+        if os.path.exists(path):
+            parts.append(name + ":" + _cached("sha256", path, _sha256_file))
+    return "rs-" + hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()[:12]
+
+
 def approvals_required() -> int:
     try:
         return max(1, int(os.environ.get("CLINLOOP_SIGNOFF_APPROVALS", "1")))
@@ -195,7 +219,7 @@ def summary(store, statuses: Optional[Dict[str, Dict]] = None) -> Dict:
     critical = critical_list_status(store)
     return {"rules_total": len(statuses), "rules_approved": counts.get("approved", 0), "by_status": counts,
             "approvals_required": approvals_required(), "enforce_signoff": enforcement_enabled(),
-            "critical_findings_list": critical["status"],
+            "critical_findings_list": critical["status"], "ruleset_version": ruleset_version(),
             "guideline_updates": sorted(r for r, st in statuses.items()
                                         if any(not a["accepted"] for a in st.get("guideline_alerts") or []))}
 

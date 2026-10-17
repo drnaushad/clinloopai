@@ -25,8 +25,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY requirements.txt requirements-api.txt ./
-RUN pip install --no-cache-dir -r requirements-api.txt
+COPY requirements.txt requirements-api.txt requirements.lock ./
+# Exact, tested versions (requirements.lock); the requirement files give the allowed ranges
+RUN pip install --no-cache-dir -r requirements-api.txt -c requirements.lock
 
 # Optional on-premise imaging model (research use only): docker build --build-arg WITH_IMAGING_AI=1
 # Installs PyTorch + TorchXRayVision and bakes the weights into the image, so no internet is needed.

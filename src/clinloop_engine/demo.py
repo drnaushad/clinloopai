@@ -58,7 +58,9 @@ def seed(store, bundles: Optional[List[str]] = None) -> Dict[str, int]:
             continue
         with open(path, encoding="utf-8") as fh:
             bundle = json.load(fh)
-        out = ingest_fhir(bundle, None, User("demo-seed", "admin"))
+        out = ingest_fhir(bundle, None, User("demo-seed", "admin"),
+                          access=lambda user, action, patients, detail=None: store.record_access(
+                              user.name, user.role, action, patients, client="demo-seed", detail=detail))
         totals["bundles"] += 1
         totals["patients"] += out["patients"]
         totals["active_loops"] += out["active_loops"]

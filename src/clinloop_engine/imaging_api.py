@@ -27,8 +27,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from .auth import User, require_role
-from .clinical_api import get_store
-from .fhir_ingest import bundle_to_events, patient_strata
+from .clinical_api import access_recorder, get_store
+from .fhir_ingest import bundle_to_events, patient_strata, superseded_reports
 from .loop_detector import ClinLoopDetector, hospital_detector, lapse_after_death
 
 router = APIRouter(prefix="/api/v1")
@@ -131,6 +131,7 @@ def evaluate_patient(patient_id: str, actor: str) -> Dict[str, Any]:
     for pid, events in events_by_patient.items():
         detections.extend(lapse_after_death(detector.process_patient("imaging", pid, events), resources))
     counts = store.upsert_detections(detections, strata=patient_strata(resources), actor=actor)
+    counts["superseded"] = store.supersede_sources(superseded_reports(resources), actor=actor)
     return {"loops": counts, "warnings": warnings + w2,
             "active": [{"rule_id": d.rule_id, "rule_name": d.rule_name, "status": d.loop_status, "deadline": d.deadline}
                        for d in detections if d.loop_status in ("open", "needs_human_review")]}
@@ -139,8 +140,9 @@ def evaluate_patient(patient_id: str, actor: str) -> Dict[str, Any]:
 # ── Outside reports ─────────────────────────────────────────────────────────
 
 @router.post("/documents/outside-report/extract", tags=["Imaging & Documents"])
-def extract_outside_report(req: FileUpload, user: User = Depends(require_role("navigator"))):
+def extract_outside_report(req: FileUpload, user: User = Depends(require_role("navigator")), access=Depends(access_recorder)):
     """Read a report from another hospital (PDF or image). Nothing is stored: check the result, then file it."""
+    access(user, "read_outside_report", [req.patient_id])
     from .document_reader import DocumentError, extract_text, parse_report, scrub_identifiers
     names = _patient_names(_patient_resource(req.patient_id))
     data = _decode(req.content_base64)
@@ -156,8 +158,9 @@ def extract_outside_report(req: FileUpload, user: User = Depends(require_role("n
 
 
 @router.post("/documents/outside-report", tags=["Imaging & Documents"])
-def file_outside_report(req: OutsideReportFiling, user: User = Depends(require_role("navigator"))):
+def file_outside_report(req: OutsideReportFiling, user: User = Depends(require_role("navigator")), access=Depends(access_recorder)):
     """File an outside report for a patient and re-evaluate their loops."""
+    access(user, "file_outside_report", [req.patient_id])
     from .document_reader import DocumentError, extract_text, outside_report_resource, parse_report
     names = _patient_names(_patient_resource(req.patient_id))
     data = _decode(req.content_base64)
@@ -202,8 +205,9 @@ def _note_text(req: ClinicalNote) -> Dict[str, Any]:
 
 
 @router.post("/documents/clinical-note/extract", tags=["Imaging & Documents"])
-def extract_clinical_note(req: ClinicalNote, user: User = Depends(require_role("navigator"))):
+def extract_clinical_note(req: ClinicalNote, user: User = Depends(require_role("navigator")), access=Depends(access_recorder)):
     """The follow-up plans in a note, with the sentence each came from. Nothing is stored."""
+    access(user, "read_clinical_note", [req.patient_id])
     from .note_reader import find_plans, llm_suggestions, plan_label
     _patient_resource(req.patient_id)
     got = _note_text(req)
@@ -217,8 +221,9 @@ def extract_clinical_note(req: ClinicalNote, user: User = Depends(require_role("
 
 
 @router.post("/documents/clinical-note", tags=["Imaging & Documents"])
-def file_clinical_note(req: ClinicalNote, user: User = Depends(require_role("navigator"))):
+def file_clinical_note(req: ClinicalNote, user: User = Depends(require_role("navigator")), access=Depends(access_recorder)):
     """File a note (identifiers removed) for a patient: its plans become tracked follow-ups, and the patient is re-evaluated."""
+    access(user, "file_clinical_note", [req.patient_id])
     import base64 as _b64
     from datetime import date as _date
     from .document_reader import scrub_identifiers
@@ -261,11 +266,12 @@ def file_clinical_note(req: ClinicalNote, user: User = Depends(require_role("nav
 # ── DICOM images ────────────────────────────────────────────────────────────
 
 @router.post("/imaging/analyze", tags=["Imaging & Documents"])
-def analyze_image(req: DicomUpload, user: User = Depends(require_role("navigator"))):
+def analyze_image(req: DicomUpload, user: User = Depends(require_role("navigator")), access=Depends(access_recorder)):
     """
     Read one DICOM image: safety checks, the study record, and the hospital's imaging models.
     A wrong-patient image is refused. AI findings are a second reader for radiologist review only.
     """
+    access(user, "upload_image", [req.patient_id])
     from .imaging_ai import ImagingError, analyze_dicom
     patient = _patient_resource(req.patient_id)
     data = _decode(req.content_base64)
@@ -290,12 +296,13 @@ def analyze_image(req: DicomUpload, user: User = Depends(require_role("navigator
 
 
 @router.post("/imaging/ct-organs", tags=["Imaging & Documents"])
-def measure_ct_series(req: FileUpload, user: User = Depends(require_role("navigator"))):
+def measure_ct_series(req: FileUpload, user: User = Depends(require_role("navigator")), access=Depends(access_recorder)):
     """
     One CT series (zip of its DICOM files, or NIfTI): organ segmentation (TotalSegmentator, research use),
     organ volumes, aortic diameter and spleen length. An abnormal measurement is a second-reader finding
     compared with the radiologist's report (R047). A NIfTI volume has no PatientID: shown, never filed.
     """
+    access(user, "upload_ct_series", [req.patient_id])
     from . import ct_organs as ct
     from .imaging_ai import ImagingError
     if not ct.enabled():
@@ -398,9 +405,10 @@ def imaging_models():
 
 
 @router.get("/patients/{patient_id}/documents", tags=["Imaging & Documents"])
-def patient_documents(patient_id: str, user: User = Depends(require_role("viewer"))):
+def patient_documents(patient_id: str, user: User = Depends(require_role("viewer")), access=Depends(access_recorder)):
     if not re.fullmatch(FHIR_ID, patient_id):
         raise HTTPException(422, "Invalid patient id")
+    access(user, "view_documents", [patient_id])
     return {"patient_id": patient_id, "documents": get_store().external_resource_list(patient_id)}
 
 
