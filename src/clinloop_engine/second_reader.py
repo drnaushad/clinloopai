@@ -76,7 +76,9 @@ REPORT:
 
 
 def enabled() -> bool:
-    return os.environ.get("CLINLOOP_SECOND_READER", "").strip().lower() in ("1", "true", "yes", "on")
+    from .profile import allows
+    return (os.environ.get("CLINLOOP_SECOND_READER", "").strip().lower() in ("1", "true", "yes", "on")
+            and allows("second_reader"))
 
 
 def _norm(text: str) -> str:

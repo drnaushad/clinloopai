@@ -50,6 +50,8 @@ if [ ! -f .env ]; then
       echo "CLINLOOP_OLLAMA_URL=http://host.docker.internal:11434"
     fi
     echo "# Hospital FHIR server (read-only):"
+    echo "# Intended-use profile: core locks off research features (image analysis, model readers); see docs/regulatory/"
+    echo "CLINLOOP_PROFILE=core"
     echo "# Governance: keep rules a specialist has not signed off in shadow mode (recommended for clinical use)"
     echo "CLINLOOP_ENFORCE_SIGNOFF=1"
     echo "CLINLOOP_SIGNOFF_APPROVALS=1"

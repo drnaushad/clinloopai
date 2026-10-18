@@ -452,6 +452,9 @@ def llm_suggestions(note: str, found: List[Dict[str, Any]], names: Optional[List
     import json as _json
     from .document_reader import scrub_identifiers
     from .local_llm_engine import generate_clinical_text
+    from .profile import allows
+    if not allows("note_llm_suggestions"):
+        return {"available": False, "reason": "off in the core profile (outside the intended use)", "suggestions": []}
     text = scrub_identifiers(plan_text(note)[0], names)[:4000]
     prompt = ("List every concrete follow-up the clinician plans in this note (tests to repeat, imaging, referrals, "
               "follow-up visits). Ignore plans that are conditional, cancelled or already done. Answer with JSON only: "

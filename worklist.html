@@ -263,7 +263,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       assigned: (o) => `${o}에게 배정했습니다.`, drafted: '초안을 작성했습니다. 의료진 승인 후 발송됩니다.', sent: '메시지를 발송했습니다.', rejected: '메시지를 반려했습니다.',
       linkedMissing: '연결된 후속 조치가 진행 중 목록에 없습니다 (종결 또는 보류되었을 수 있습니다).',
       silentRun: (n) => `무경보 시범 운영 중: ClinLoop은 기록을 계속 읽지만(루프 ${n}건) 일반 진료를 바꾸지 않도록 작업 목록에 표시하지 않습니다. 검토팀은 '시범 검토' 페이지를 사용합니다.`,
-      noLoops: '진행 중인 루프가 없습니다.', loadHint: ' 합성 FHIR 예제를 불러와 흐름을 확인하세요.', noRates: '아직 기한이 지난 루프가 없습니다.',
+      noLoops: 'ClinLoop이 볼 수 있는 기록에서는 진행 중인 루프가 없습니다. 후속 조치가 필요 없다는 확인은 아닙니다.', loadHint: ' 합성 FHIR 예제를 불러와 흐름을 확인하세요.', noRates: '아직 기한이 지난 루프가 없습니다.',
       rateCols: ['기한 경과', '미완결', '1,000건당'], loadFailed: (e) => `작업 목록을 불러오지 못했습니다: ${e}`,
     },
     en: {
@@ -310,7 +310,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       assigned: (o) => `Assigned to ${o}.`, drafted: 'Draft created. It will be sent only after clinician approval.', sent: 'Message sent.', rejected: 'Message rejected.',
       linkedMissing: 'The linked follow-up is not on the active worklist (it may be closed or deferred).',
       silentRun: (n) => `Silent run in progress: ClinLoop keeps reading the record (${n} loops) but shows nothing here, so usual care is unchanged. The review team works on the Pilot review page.`,
-      noLoops: 'No open loops.', loadHint: ' Load the synthetic FHIR example to see the workflow.', noRates: 'No loops past deadline yet.',
+      noLoops: 'No open loops in the records ClinLoop can see. This does not confirm that no follow-up is needed.', loadHint: ' Load the synthetic FHIR example to see the workflow.', noRates: 'No loops past deadline yet.',
       rateCols: ['Past deadline', 'Missed', 'Rate / 1,000'], loadFailed: (e) => `Could not load worklist: ${e}`,
     },
   };

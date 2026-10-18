@@ -127,6 +127,15 @@ class BioMcpToolCallRequest(BaseModel):
     tool: str = Field(..., description="BioMCP tool name (e.g. biomcp_query_guidelines, biomcp_query_fleischner)")
     arguments: Dict[str, Any] = Field(default_factory=dict, description="Tool arguments")
 
+def _require_profile(feature: str) -> None:
+    """409 when the core profile locks this feature off (profile.py)."""
+    from src.clinloop_engine.profile import OutsideIntendedUse, require
+    try:
+        require(feature)
+    except OutsideIntendedUse as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
 # Endpoints
 @app.get("/api/v1/health", tags=["System"])
 def health_check():
@@ -377,7 +386,9 @@ def generate_with_local_llm(req: LocalLLMRequest, user: User = Depends(require_r
     Generate clinical text using the best available local LLM (DeepSeek-R1 70B priority).
     All inference runs 100% on-premise. PHI must be de-identified BEFORE this call.
     Supports: KakaoTalk messages, differential diagnosis, ethics review, custom prompts.
+    Research feature: refused in the core profile.
     """
+    _require_profile("llm_assistant")
     ctx = req.clinical_context
 
     if req.task == "kakao_message_ko":
@@ -499,7 +510,9 @@ def agent_evidence_synthesis(req: EvidenceSynthesisRequest, user: User = Depends
     1. Analyzes the context and autonomously queries the correct BioMCP guideline.
     2. Injects the strict clinical mandate into a system prompt.
     3. Runs on-premise inference via DeepSeek-R1 70B for zero-hallucination grounded text.
+    Research feature: refused in the core profile.
     """
+    _require_profile("llm_assistant")
     try:
         result = run_evidence_synthesis(req.clinical_context, req.task, req.lang)
         return result
@@ -522,7 +535,9 @@ def agent_generate_patient_outreach(req: DynamicOutreachRequest, user: User = De
     Autonomous dynamic generation of patient communication.
     Uses the Evidence Synthesis Agent (RAG) to ensure the message is medically grounded
     before using the Local LLM (DeepSeek) to write the empathetic patient text.
+    Research feature: refused in the core profile (loop messages go through outreach.py instead).
     """
+    _require_profile("llm_assistant")
     try:
         request = OutreachRequest(
             patient_id=req.scenario_id,
