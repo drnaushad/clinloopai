@@ -48,6 +48,14 @@ class LoopDetection:
         return asdict(self)
 
 
+def _review_reason(reason: str) -> str:
+    """Why a person must look, in clinical words (the score itself stays in the technical detail)."""
+    if reason.startswith("Uncertainty"):
+        return ("Needs a person's review: the record ClinLoop can see holds too little to tell whether this "
+                "follow-up happened. Check the chart.")
+    return f"Needs a person's review: {reason}"
+
+
 class ClinLoopDetector:
     """
     The main ClinLoop AI detection engine.
@@ -178,7 +186,7 @@ class ClinLoopDetector:
                 evidence_chain=list(he.evidence_chain),
                 should_abstain=assessment.should_abstain,
                 trigger_event_id=he.trigger_node.node_id,
-                basis=list(he.basis) + ([f"Needs a person's review: {assessment.abstain_reason}"]
+                basis=list(he.basis) + ([_review_reason(assessment.abstain_reason)]
                                         if assessment.should_abstain and assessment.abstain_reason else []),
             )
             detections.append(detection)

@@ -69,6 +69,21 @@ class TestBasis(unittest.TestCase):
         for d in abstained:
             self.assertTrue(d.basis[-1].startswith("Needs a person's review:"), d.rule_id)
 
+    def test_quotes_are_whole_sentences_never_cut_words(self):
+        """Clinical review: a character window cut 'Negative for high-grade dysplasia' to 'grade dysplasia',
+        which reads as the opposite. The basis quotes whole sentences."""
+        r009 = next(b for b in self.d["R009"].basis if b.startswith("The record says"))
+        self.assertIn("Negative for high-grade dysplasia", r009)
+        self.assertIn("Still missing: specialist referral.", self.d["R009"].basis)   # 'and' rule, part done
+
+    def test_long_deadlines_show_a_date_and_review_reason_is_clinical(self):
+        r003 = next(b for b in self.d["R003"].basis if b.startswith("Rule R003"))
+        self.assertRegex(r003, r"by \d{4}-\d{2}-\d{2} \(")                    # no false clock time
+        r022 = next(b for b in self.d["R022"].basis if b.startswith("Rule R022"))
+        self.assertRegex(r022, r"by \d{4}-\d{2}-\d{2} \d{2}:\d{2} \(1 hour\)")   # a one-hour window keeps the time
+        for d in self.d.values():
+            self.assertNotIn("threshold", " ".join(d.basis), d.rule_id)
+
     def test_stored_and_served_with_the_loop(self):
         store = LoopStore()
         store.upsert_detections(list(self.d.values()))

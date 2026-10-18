@@ -52,12 +52,28 @@ def _when(ts: Optional[datetime]) -> str:
     return ts.strftime("%Y-%m-%d %H:%M") if ts else "unknown time"
 
 
+def _short(text: str) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= _MAX_QUOTE else text[:_MAX_QUOTE].rsplit(" ", 1)[0] + " …"
+
+
 def _quote(details: Dict[str, Any]) -> Optional[str]:
+    """The record's own words. The evidence span is a character window and can start or end inside a
+    word ('…grade dysplasia' for 'High-grade dysplasia', '…mm adrenal nodule' without its size), which
+    can change the meaning. When the span comes from the report text, the whole sentence(s) around it
+    are quoted instead."""
+    from .report_text import sentence
+    span = details.get("evidence_span")
+    for key in ("conclusion", "plan_text", "interpretation"):
+        text = details.get(key)
+        if isinstance(span, str) and span.strip() and isinstance(text, str):
+            at = text.find(span.strip())
+            if at >= 0:
+                return _short(sentence(text, at, at + len(span.strip())).strip(" ;."))
     for key in _QUOTE_KEYS:
         text = details.get(key)
         if isinstance(text, str) and text.strip():
-            text = " ".join(text.split())
-            return text if len(text) <= _MAX_QUOTE else text[:_MAX_QUOTE].rsplit(" ", 1)[0] + " …"
+            return _short(text)
     return None
 
 
@@ -73,7 +89,8 @@ def _value(details: Dict[str, Any]) -> Optional[str]:
 
 
 def _what(event_type: str, details: Dict[str, Any]) -> str:
-    for key in ("report", "test", "medication", "diagnosis", "primary_diagnosis", "order", "specialty"):
+    for key in ("report", "test", "medication", "drug", "diagnosis", "primary_diagnosis", "order", "specialty",
+                "organism", "specimen"):
         v = details.get(key)
         if isinstance(v, str) and v.strip():
             return f"{_name(event_type)}: {v.strip().replace('_', ' ')}"
@@ -108,7 +125,10 @@ def build(trigger, rule, deadline: Optional[datetime], window: str, followups, s
         lines.append(f"The record says: “{quote}”")
     joiner = " or " if logic == "any" else " and "
     wanted = joiner.join(_step(t) for t in expected) or "follow-up"
-    lines.append(f"Rule {rule.rule_id} ({rule.name}) expects: {wanted} by {_when(deadline)} ({window}).")
+    # A clock time on a deadline weeks away is false precision: the date is what matters
+    long_window = bool(deadline and trigger.timestamp and (deadline - trigger.timestamp).days >= 2)
+    by = deadline.strftime("%Y-%m-%d") if long_window else _when(deadline)
+    lines.append(f"Rule {rule.rule_id} ({rule.name}) expects: {wanted} by {by} ({window}).")
     for line in _reasoning(details):
         lines.append(f"How this was worked out: {line}.")
     if followups:
@@ -116,6 +136,11 @@ def build(trigger, rule, deadline: Optional[datetime], window: str, followups, s
         lines.append(f"Found in the record: {found}.")
     else:
         lines.append("Found in the record: no matching follow-up yet.")
+    if followups and logic != "any" and status != "closed":
+        done = {f.event_type for f in followups}
+        missing = [t for t in expected if t not in done]
+        if missing:                 # e.g. patient told, but no referral yet: say which part is outstanding
+            lines.append(f"Still missing: {', '.join(_step(t) for t in missing)}.")
     if status == "delayed":
         lines.append("The follow-up came after the deadline.")
     refs = [r for r in (rule.references or []) if isinstance(r, str) and r.strip()]
