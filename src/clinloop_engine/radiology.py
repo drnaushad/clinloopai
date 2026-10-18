@@ -1180,10 +1180,16 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,
 
     if kind == "aaa":
         d = f["diameter_mm"]
-        repair = 50 if ctx.get("sex") == "female" else 55
+        # SVS 2018: repair considered at 5.5 cm in men, 5.0 cm in women. When the record does not say,
+        # the lower threshold applies (fail toward a person: a referral that proves early costs less
+        # than a woman's 5.2 cm aneurysm left on 6-monthly surveillance)
+        sex = ctx.get("sex")
+        repair = 55 if sex == "male" else 50
         if d >= repair:
+            unknown = "" if sex in ("male", "female") else "; sex not recorded: the lower (women's) threshold used"
             return plan("R045", "aaa_repair_threshold", 14,
-                        f"abdominal aorta {d / 10:g} cm ≥{repair / 10:g} cm → vascular surgery referral (SVS 2018 / ACR 2013)")
+                        f"abdominal aorta {d / 10:g} cm ≥{repair / 10:g} cm → vascular surgery referral "
+                        f"(SVS 2018 / ACR 2013){unknown}")
         for upper, years, label in ((30, 5, "2.5–2.9 cm"), (35, 3, "3.0–3.4 cm"), (40, 2, "3.5–3.9 cm"),
                                     (45, 1, "4.0–4.4 cm"), (10_000, 0.5, "≥4.5 cm")):
             if d < upper:

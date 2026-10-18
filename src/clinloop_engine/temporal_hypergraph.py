@@ -129,6 +129,7 @@ class TemporalHyperedge:
     risk_score: float = 0.0
     evidence_chain: List[str] = field(default_factory=list)
     basis: List[str] = field(default_factory=list)       # plain-language reasons (basis.py)
+    basis_ko: List[str] = field(default_factory=list)    # the same in Korean
     evaluation_time: Optional[datetime] = None
 
     @property
@@ -491,12 +492,16 @@ class DynamicTemporalHypergraph:
                     or node.details.get("review_note_all")
                 if review:
                     hyperedge.evidence_chain.append(f"Human review: {review}")
-                from .basis import build as build_basis
+                from .basis import build as build_basis, build_ko as build_basis_ko
                 hyperedge.basis = build_basis(node, rule, deadline, format_window(deadline_days),
                                               followup_nodes, hyperedge.status,
                                               hyperedge.expected_followup_types, rule.followup_logic)
+                hyperedge.basis_ko = build_basis_ko(node, rule, deadline, deadline_days, followup_nodes,
+                                                    hyperedge.status, hyperedge.expected_followup_types,
+                                                    rule.followup_logic)
                 if review:
                     hyperedge.basis.append(f"Note for the reviewer: {review}")
+                    hyperedge.basis_ko.append(f"검토 참고: {review}")
 
                 self.hyperedges[edge_id] = hyperedge
 

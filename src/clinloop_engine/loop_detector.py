@@ -43,13 +43,17 @@ class LoopDetection:
     should_abstain: bool = False
     trigger_event_id: str = ""      # source event id: stable loop identity across runs
     basis: List[str] = field(default_factory=list)   # plain-language reasons a clinician can check (basis.py)
+    basis_ko: List[str] = field(default_factory=list)  # the same in Korean
 
     def to_dict(self):
         return asdict(self)
 
 
-def _review_reason(reason: str) -> str:
+def _review_reason(reason: str, ko: bool = False) -> str:
     """Why a person must look, in clinical words (the score itself stays in the technical detail)."""
+    if ko:
+        from .basis import REVIEW_SPARSE_KO
+        return REVIEW_SPARSE_KO if reason.startswith("Uncertainty") else f"사람의 검토 필요: {reason}"
     if reason.startswith("Uncertainty"):
         return ("Needs a person's review: the record ClinLoop can see holds too little to tell whether this "
                 "follow-up happened. Check the chart.")
@@ -188,6 +192,8 @@ class ClinLoopDetector:
                 trigger_event_id=he.trigger_node.node_id,
                 basis=list(he.basis) + ([_review_reason(assessment.abstain_reason)]
                                         if assessment.should_abstain and assessment.abstain_reason else []),
+                basis_ko=list(he.basis_ko) + ([_review_reason(assessment.abstain_reason, ko=True)]
+                                              if assessment.should_abstain and assessment.abstain_reason else []),
             )
             detections.append(detection)
 

@@ -432,7 +432,8 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       ${l.closure_evidence ? `<div class="action">${esc(t().closedWith(l.closure_evidence))}</div>` : ''}
       <details data-panel="why">
         <summary>${esc(t().why)}</summary>
-        ${(l.basis || []).length ? `<ul class="basis">${l.basis.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>` : ''}
+        ${(() => { const b = (lang === 'ko' && (l.basis_ko || []).length) ? l.basis_ko : (l.basis || []);
+          return b.length ? `<ul class="basis">${b.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''; })()}
         <details class="tech"><summary>${esc(t().technical)}</summary>
           <div class="evidence">${esc([...(l.explanation || []), '', ...(l.evidence_chain || [])].join('\n'))}</div>
         </details>
