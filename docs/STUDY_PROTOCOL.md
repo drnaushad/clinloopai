@@ -99,6 +99,9 @@ families are:
 
 ## 5. Stage 2: silent run (shadow mode)
 
+Tools: `CLINLOOP_SILENT_RUN=1` and the Pilot review page (`pilot.html`); step by step in
+[`PILOT_RUNBOOK.md`](PILOT_RUNBOOK.md).
+
 - **Duration:** ClinLoop runs live for 3 months.
 - **No alerts:** escalation is off and no cards are shown. Usual care is unchanged.
 - **Weekly sample review:** a review team checks a random sample of loops ClinLoop marked overdue, and

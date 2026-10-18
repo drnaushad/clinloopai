@@ -12,7 +12,7 @@
  */
 (function () {
   'use strict';
-  var CLINICAL_PAGE = /\/(worklist|patient|quality|governance|imaging)(\.html)?$/;   // GitHub Pages also serves /worklist
+  var CLINICAL_PAGE = /\/(worklist|patient|quality|governance|imaging|pilot)(\.html)?$/;   // GitHub Pages also serves /worklist
   var local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
   var STATIC_PATH = '/__static-demo__';
 

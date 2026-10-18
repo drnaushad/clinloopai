@@ -60,6 +60,10 @@ def thresholds() -> Dict[str, float]:
 
 
 def acting() -> bool:
+    """False in report-only mode, and always during the silent run (nothing reaches care to pause)."""
+    from .pilot import silent_run
+    if silent_run():
+        return False
     return os.environ.get("CLINLOOP_MONITOR", "1").strip().lower() not in ("0", "false", "no", "off")
 
 

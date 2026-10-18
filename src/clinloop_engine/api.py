@@ -94,6 +94,8 @@ app.include_router(clinical_router)
 app.include_router(imaging_router)
 app.include_router(graph_router)
 app.include_router(cds_router)
+from src.clinloop_engine.pilot import router as pilot_router  # noqa: E402
+app.include_router(pilot_router)
 
 # Load Cases Data
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "cases.json")

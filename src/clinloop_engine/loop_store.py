@@ -163,6 +163,35 @@ CREATE TABLE IF NOT EXISTS rule_monitor (
     changed_by TEXT NOT NULL,
     cooldown_until TEXT               -- after a resume, no automatic pause before this time
 );
+-- Silent run (pilot.py, docs/PILOT_RUNBOOK.md): patients monitored (denominator), weekly samples of
+-- overdue loops, and the review team's answers to the protocol's questions
+CREATE TABLE IF NOT EXISTS monitored_patients (
+    patient_id TEXT PRIMARY KEY,
+    first_seen TEXT NOT NULL,
+    last_seen TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS pilot_samples (
+    loop_key TEXT PRIMARY KEY,
+    week TEXT NOT NULL,               -- ISO week the sample was drawn for, e.g. 2026-W42
+    week_candidates INTEGER NOT NULL, -- overdue loops eligible that week (for weighting)
+    rule_id TEXT NOT NULL,
+    sampled_at TEXT NOT NULL,
+    sampled_by TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS pilot_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    loop_key TEXT NOT NULL,
+    reviewer TEXT NOT NULL,
+    truly_open TEXT NOT NULL,         -- yes | no | unclear  (protocol question a)
+    usual_care TEXT NOT NULL,         -- would usual care have caught it: yes | no | unknown  (b)
+    important TEXT NOT NULL,          -- clinically important: yes | no | unclear  (c)
+    urgent INTEGER NOT NULL DEFAULT 0,
+    safety_referral TEXT,             -- for an urgent, truly open loop: who was told, when, how
+    note TEXT,
+    ruleset_version TEXT,
+    reviewed_at TEXT NOT NULL,
+    UNIQUE (loop_key, reviewer)
+);
 -- Staff who signed in through the hospital's identity provider (oidc.py): offered when assigning loops
 CREATE TABLE IF NOT EXISTS sso_users (
     name TEXT PRIMARY KEY,
@@ -572,6 +601,66 @@ class LoopStore:
                 if len(parts) >= 3 and (parts[1] not in out or r["first"] < out[parts[1]]):
                     out[parts[1]] = r["first"]   # loop key: patient | rule | trigger (FHIR ids hold no "|")
         return out
+
+    # ── silent run (pilot) ───────────────────────────────────────────────────
+    def note_patients(self, patient_ids: Iterable[str]) -> None:
+        """Patients the engine evaluated: the denominator for rates per 1,000 patients."""
+        now = utc_now().isoformat()
+        ids = [p for p in set(patient_ids) if p]
+        if not ids:
+            return
+        with self._writing():
+            self._db.executemany("INSERT INTO monitored_patients (patient_id, first_seen, last_seen) VALUES (?,?,?) "
+                                 "ON CONFLICT(patient_id) DO UPDATE SET last_seen=excluded.last_seen",
+                                 [(p, now, now) for p in ids])
+
+    def monitored_patient_count(self) -> int:
+        with self._lock:
+            return self._db.execute("SELECT COUNT(*) FROM monitored_patients").fetchone()[0]
+
+    def pilot_samples(self) -> List[Dict]:
+        with self._lock:
+            return [dict(r) for r in self._db.execute("SELECT * FROM pilot_samples ORDER BY sampled_at, loop_key")]
+
+    def add_pilot_samples(self, rows: List[Dict], actor: str) -> int:
+        now = utc_now().isoformat()
+        with self._writing():
+            for r in rows:
+                self._db.execute("INSERT OR IGNORE INTO pilot_samples (loop_key, week, week_candidates, rule_id, "
+                                 "sampled_at, sampled_by) VALUES (?,?,?,?,?,?)",
+                                 (r["loop_key"], r["week"], r["week_candidates"], r["rule_id"], now, actor))
+            if rows:
+                self._audit(actor, "admin", "pilot_sampled", None,
+                            {"week": rows[0]["week"], "loops": len(rows), "candidates": rows[0]["week_candidates"]})
+        return len(rows)
+
+    def pilot_reviews(self, loop_key: Optional[str] = None) -> List[Dict]:
+        with self._lock:
+            if loop_key:
+                rows = self._db.execute("SELECT * FROM pilot_reviews WHERE loop_key=? ORDER BY id", (loop_key,))
+            else:
+                rows = self._db.execute("SELECT * FROM pilot_reviews ORDER BY id")
+            return [dict(r) for r in rows]
+
+    def add_pilot_review(self, row: Dict, actor: str, role: str) -> Dict:
+        with self._writing():
+            if not self._db.execute("SELECT 1 FROM pilot_samples WHERE loop_key=?", (row["loop_key"],)).fetchone():
+                raise WorkflowError("This loop is not in the pilot sample")
+            try:
+                self._db.execute(
+                    "INSERT INTO pilot_reviews (loop_key, reviewer, truly_open, usual_care, important, urgent, "
+                    "safety_referral, note, ruleset_version, reviewed_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    (row["loop_key"], actor, row["truly_open"], row["usual_care"], row["important"], int(row["urgent"]),
+                     row.get("safety_referral") or None, row.get("note") or None, row.get("ruleset_version"),
+                     utc_now().isoformat()))
+            except sqlite3.IntegrityError:
+                raise WorkflowError("You have already reviewed this loop") from None
+            self._audit(actor, role, "pilot_reviewed", row["loop_key"],
+                        {"truly_open": row["truly_open"], "usual_care": row["usual_care"],
+                         "important": row["important"], "urgent": bool(row["urgent"])})
+            if row.get("safety_referral"):
+                self._audit(actor, role, "safety_referral", row["loop_key"], {"referral": row["safety_referral"]})
+        return self.pilot_reviews(row["loop_key"])[-1]
 
     # ── single sign-on users ─────────────────────────────────────────────────
     def remember_sso_user(self, name: str, role: str) -> None:

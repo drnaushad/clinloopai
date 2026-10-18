@@ -1,5 +1,5 @@
 {
- "built_at": "2026-10-17T17:36:01+00:00",
+ "built_at": "2026-10-18T10:57:31+00:00",
  "patients": [
   "RP-01",
   "RP-02",
@@ -37,6 +37,6 @@
   "SYN-007"
  ],
  "loops": 39,
- "files": 166,
+ "files": 167,
  "note": "Read-only snapshot of the ClinLoop public demo: synthetic patients only."
 }

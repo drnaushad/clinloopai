@@ -285,6 +285,20 @@ def access_recorder(request: Request):
     return record
 
 
+def _not_in_silent_run(action: str) -> None:
+    """During the silent run (pilot.py) nobody acts on ClinLoop's loops: usual care must stay unchanged."""
+    from . import pilot
+    if pilot.silent_run():
+        raise HTTPException(409, f"Silent run in progress: ClinLoop does not {action} until the pilot ends")
+
+
+def _review_team_only(user: User) -> None:
+    """During the silent run only the review team sees loops."""
+    from . import pilot
+    if not pilot.may_see_loops(user):
+        raise HTTPException(403, "Silent run in progress: only the pilot review team sees ClinLoop's loops")
+
+
 def _patient_of(loop_key: str) -> str:
     return loop_key.split("|", 1)[0]
 
@@ -338,6 +352,7 @@ def ingest_fhir(bundle: Dict[str, Any] = Body(..., description="FHIR R4 Bundle")
     for pid, events in events_by_patient.items():
         detections.extend(lapse_after_death(detector.process_patient("fhir-ingest", pid, events), resources))
     access(user, "ingest", list(events_by_patient))
+    store.note_patients(events_by_patient)
     counts = store.upsert_detections(detections, strata=strata, actor=user.name)
     from .fhir_ingest import superseded_reports
     counts["superseded"] = store.supersede_sources(superseded_reports(resources), actor=user.name)
@@ -368,25 +383,31 @@ def worklist(owner: Optional[str] = None, include_inactive: bool = False,
     for loop in loops:
         loop["rule_signoff"] = statuses.get(loop["rule_id"], {}).get("status", "pending")
     loops, shadow = governance.visible_loops(store, loops, statuses)
+    from . import pilot
+    if pilot.silent_run():          # nothing reaches clinical care; the review team works from the pilot page
+        shadow, loops = shadow + len(loops), []
     access(user, "view_worklist", [loop["patient_id"] for loop in loops],
            {"owner": owner, "include_inactive": include_inactive} if owner or include_inactive else None)
     return {"count": len(loops), "loops": loops, "defer_reasons": DEFER_REASONS,
-            "shadow_count": shadow, "governance": governance.summary(store, statuses)}
+            "shadow_count": shadow, "governance": governance.summary(store, statuses), "silent_run": pilot.silent_run()}
 
 
 @router.get("/loops/{loop_key:path}/audit", tags=["Clinical Pilot"])
 def loop_audit(loop_key: str, user: User = Depends(require_role("viewer")), access=Depends(access_recorder)):
+    _review_team_only(user)
     access(user, "view_loop_audit", [_patient_of(loop_key)], {"loop_key": loop_key})
     return {"loop_key": loop_key, "audit": get_store().audit_trail(loop_key)}
 
 
 @router.post("/loops/{loop_key:path}/acknowledge", tags=["Clinical Pilot"])
 def acknowledge(loop_key: str, user: User = Depends(require_role("navigator"))):
+    _not_in_silent_run("acknowledge loops")
     return _workflow(get_store().acknowledge, loop_key, user.name, role=user.role)
 
 
 @router.post("/loops/{loop_key:path}/defer", tags=["Clinical Pilot"])
 def defer(loop_key: str, req: DeferRequest, user: User = Depends(require_role("navigator"))):
+    _not_in_silent_run("defer loops")
     if req.reason_code not in NAVIGATOR_DEFER_REASONS and ROLE_RANK[user.role] < ROLE_RANK["clinician"]:
         raise HTTPException(403, f"Reason '{req.reason_code}' is a clinical judgment and requires a clinician")
     return _workflow(get_store().defer, loop_key, user.name, req.reason_code, req.note, req.until, role=user.role)
@@ -394,6 +415,7 @@ def defer(loop_key: str, req: DeferRequest, user: User = Depends(require_role("n
 
 @router.post("/loops/{loop_key:path}/close", tags=["Clinical Pilot"])
 def close(loop_key: str, req: CloseRequest, user: User = Depends(require_role("navigator"))):
+    _not_in_silent_run("close loops")
     return _workflow(get_store().close, loop_key, user.name, req.evidence, role=user.role)
 
 
@@ -419,6 +441,7 @@ set_sso_listener(lambda user: get_store().remember_sso_user(user.name, user.role
 
 @router.post("/loops/{loop_key:path}/assign", tags=["Clinical Pilot"])
 def assign(loop_key: str, req: AssignRequest, user: User = Depends(require_role("clinician"))):
+    _not_in_silent_run("assign loops")
     owner = req.owner.strip()
     if owner not in _assignable():
         # A typo (or a view-only account) would hand the loop to nobody who can act on it
@@ -430,6 +453,7 @@ def assign(loop_key: str, req: AssignRequest, user: User = Depends(require_role(
 
 @router.get("/loops/{loop_key:path}/outreach", tags=["Patient Outreach"])
 def list_outreach(loop_key: str, user: User = Depends(require_role("viewer")), access=Depends(access_recorder)):
+    _review_team_only(user)
     access(user, "view_messages", [_patient_of(loop_key)], {"loop_key": loop_key})
     return {"messages": get_store().outreach_messages(loop_key)}
 
@@ -437,6 +461,7 @@ def list_outreach(loop_key: str, user: User = Depends(require_role("viewer")), a
 @router.post("/loops/{loop_key:path}/outreach", tags=["Patient Outreach"])
 def draft_outreach(loop_key: str, req: OutreachDraftRequest, user: User = Depends(require_role("navigator"))):
     """Draft a diagnosis-free message to the patient. Nothing is sent until a clinician approves it."""
+    _not_in_silent_run("message patients")
     from .outreach import OutreachNotAllowed, draft_message
     if req.channel not in ("kakao", "sms"):
         raise HTTPException(422, "channel must be 'kakao' or 'sms'")
@@ -469,6 +494,7 @@ def set_outreach_preference(req: OutreachPreferenceRequest,
 def decide_outreach(message_id: str, req: OutreachDecisionRequest,
                     user: User = Depends(require_role("clinician"))):
     """A clinician approves (optionally editing the text) and sends, or rejects, a draft."""
+    _not_in_silent_run("message patients")
     from .outreach import OutreachNotAllowed, check_text, provider_from_env
     if req.approve:
         msg = _workflow(get_store().get_outreach, message_id)
@@ -496,6 +522,7 @@ def breakdowns(user: User = Depends(require_role("viewer"))):
 
 @router.post("/watchdog/escalate", tags=["Clinical Pilot"])
 def escalate_now(user: User = Depends(require_role("admin"))):
+    _not_in_silent_run("escalate")
     store = get_store()
     return {"escalated": store.escalate_overdue(actor=user.name, rule_ids=governance.live_rule_ids(store))}
 
@@ -547,6 +574,7 @@ def verify_audit(user: User = Depends(require_role("admin"))):
 # otherwise swallow /loops/{key}/audit and /loops/{key}/outreach.
 @router.get("/loops/{loop_key:path}", tags=["Clinical Pilot"])
 def get_loop(loop_key: str, user: User = Depends(require_role("viewer")), access=Depends(access_recorder)):
+    _review_team_only(user)
     access(user, "view_loop", [_patient_of(loop_key)], {"loop_key": loop_key})
     return _workflow(get_store().get, loop_key)
 
@@ -566,7 +594,9 @@ async def escalation_loop(interval_seconds: int = 60):
                                    "; ".join(change["reasons"]))
             # The store is blocking (SQLite, a lock): run it in a worker thread, not on the event loop
             store = get_store()
-            escalated = await asyncio.to_thread(store.escalate_overdue, rule_ids=governance.live_rule_ids(store))
+            from . import pilot
+            escalated = [] if pilot.silent_run() else \
+                await asyncio.to_thread(store.escalate_overdue, rule_ids=governance.live_rule_ids(store))
             if escalated:
                 logger.warning("Escalated %d overdue loops", len(escalated))
             alarm = await asyncio.to_thread(get_store().check_feed, _max_silence_hours())

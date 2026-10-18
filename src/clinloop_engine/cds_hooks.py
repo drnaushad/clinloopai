@@ -246,6 +246,9 @@ def patient_view(request: Request, body: Dict[str, Any] = Body(...)) -> Dict[str
     store = get_store()
     loops = store.worklist(patient_id=patient_id)
     loops, _ = governance.visible_loops(store, loops)            # shadow-mode and paused rules stay silent
+    from . import pilot
+    if pilot.silent_run():                                       # the silent run shows clinicians nothing
+        loops = []
     now = utc_now()
     base = os.environ.get("CLINLOOP_PUBLIC_URL", "").rstrip("/")
     limit = max(1, int(os.environ.get("CLINLOOP_CDS_MAX_CARDS", "5") or 5))

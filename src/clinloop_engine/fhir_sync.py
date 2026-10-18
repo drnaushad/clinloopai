@@ -172,6 +172,7 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
         client.bind(store)
     try:
         patients, newest = client.changed_patients(since)
+        store.note_patients(patients)          # the denominator for rates per 1,000 patients
         detector = hospital_detector(now)
         n_events, n_warnings, counts = 0, 0, {"new": 0, "updated": 0, "resolved_by_engine": 0}
         from . import second_reader
