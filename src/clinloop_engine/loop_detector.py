@@ -42,9 +42,18 @@ class LoopDetection:
     evidence_chain: List[str] = field(default_factory=list)
     should_abstain: bool = False
     trigger_event_id: str = ""      # source event id: stable loop identity across runs
+    basis: List[str] = field(default_factory=list)   # plain-language reasons a clinician can check (basis.py)
 
     def to_dict(self):
         return asdict(self)
+
+
+def _review_reason(reason: str) -> str:
+    """Why a person must look, in clinical words (the score itself stays in the technical detail)."""
+    if reason.startswith("Uncertainty"):
+        return ("Needs a person's review: the record ClinLoop can see holds too little to tell whether this "
+                "follow-up happened. Check the chart.")
+    return f"Needs a person's review: {reason}"
 
 
 class ClinLoopDetector:
@@ -177,6 +186,8 @@ class ClinLoopDetector:
                 evidence_chain=list(he.evidence_chain),
                 should_abstain=assessment.should_abstain,
                 trigger_event_id=he.trigger_node.node_id,
+                basis=list(he.basis) + ([_review_reason(assessment.abstain_reason)]
+                                        if assessment.should_abstain and assessment.abstain_reason else []),
             )
             detections.append(detection)
 

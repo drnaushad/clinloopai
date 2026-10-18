@@ -128,6 +128,7 @@ class TemporalHyperedge:
     status: str = "open"                   # open | closed | delayed | abstain
     risk_score: float = 0.0
     evidence_chain: List[str] = field(default_factory=list)
+    basis: List[str] = field(default_factory=list)       # plain-language reasons (basis.py)
     evaluation_time: Optional[datetime] = None
 
     @property
@@ -490,6 +491,12 @@ class DynamicTemporalHypergraph:
                     or node.details.get("review_note_all")
                 if review:
                     hyperedge.evidence_chain.append(f"Human review: {review}")
+                from .basis import build as build_basis
+                hyperedge.basis = build_basis(node, rule, deadline, format_window(deadline_days),
+                                              followup_nodes, hyperedge.status,
+                                              hyperedge.expected_followup_types, rule.followup_logic)
+                if review:
+                    hyperedge.basis.append(f"Note for the reviewer: {review}")
 
                 self.hyperedges[edge_id] = hyperedge
 

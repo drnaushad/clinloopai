@@ -535,6 +535,14 @@ def breakdowns(user: User = Depends(require_role("viewer"))):
     return get_store().breakdowns()
 
 
+@router.get("/quality/outcomes", tags=["Clinical Pilot"])
+def quality_outcomes(user: User = Depends(require_role("viewer"))):
+    """What happened after each loop opened (outcomes.py): acted on, closed, late, dismissed, still open.
+    Counts and durations only, overall and per rule."""
+    from .outcomes import loop_outcomes
+    return loop_outcomes(get_store())
+
+
 @router.get("/quality/documentation-audit", tags=["Clinical Pilot"])
 def documentation_audit(user: User = Depends(require_role("navigator")), access=Depends(access_recorder)):
     """

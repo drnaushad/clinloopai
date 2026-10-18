@@ -167,15 +167,7 @@ def _days_overdue(deadline: Optional[str], now: datetime) -> Optional[int]:
 
 
 # Plain words for the engine's event names in "what is missing"
-_PLAIN = {
-    "critical_value_notification": "documented call to the treating clinician",
-    "followup_ct": "follow-up CT", "followup_lab": "monitoring lab", "followup_appointment": "clinic visit",
-    "referral_visit": "specialist visit", "specialist_referral": "specialist referral", "bp_check": "blood-pressure check",
-    "inr_recheck": "INR recheck", "hba1c_recheck": "HbA1c recheck", "hcv_rna_test": "HCV RNA test",
-    "imaging_ct": "CT", "imaging_mri": "MRI", "imaging_ultrasound": "ultrasound", "imaging_xray": "X-ray",
-    "imaging_pet": "PET-CT", "lab_result": "repeat test", "culture_result": "repeat culture",
-    "patient_notification": "patient notified", "provider_review": "clinician review",
-}
+from .basis import FOLLOWUP_NAMES as _PLAIN  # noqa: E402  (one list of plain names, shared with basis.py)
 
 
 def _plain(text: str) -> str:
@@ -207,10 +199,13 @@ def _card(loop: Dict[str, Any], base: str, now: datetime) -> Dict[str, Any]:
             f"due {str(loop.get('deadline'))[:10]}" if loop.get("deadline") else "")
     missing = _plain(loop.get("missing_step") or "Follow-up not yet recorded")
     summary = f"{loop.get('rule_name') or loop['rule_id']}: {missing}"
-    source = _source_line(loop)
+    # The basis a clinician can check (basis.py); older loops without one fall back to the source line
+    basis = [b for b in (loop.get("basis") or []) if isinstance(b, str)]
+    source = None if basis else _source_line(loop)
     # No stored risk wording here: it was computed at import and may be stale; the deadline is current
     detail = "\n".join(
         [f"**{missing}** ({when})." if when else f"**{missing}**.",
+         *(["", *[f"- {b}" for b in basis]] if basis else []),
          *(["", f"From: {source}"] if source else []),
          "", f"Rule {loop['rule_id']}: {loop.get('rule_name') or ''}. A reminder of a follow-up obligation, "
              "not a diagnosis. If it was done elsewhere or is not needed, record that in ClinLoop."])

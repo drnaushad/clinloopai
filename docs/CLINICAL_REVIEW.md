@@ -53,6 +53,24 @@ Tests: `tests/test_phase1_production.py` (report versions).
 
 Tests: `tests/test_phase1_production.py` (opt-out).
 
+## 3a. Plain-language basis of each alert (Phase 6, October 2026)
+
+Every loop's "Why this alert" text (`basis.py`) was read for 53 rule-and-status combinations from the
+synthetic and example records, as a clinician would read it on a ward round. Found and fixed before
+merge:
+
+| Finding | Risk | Fix |
+| --- | --- | --- |
+| Quotes were a character window and could start mid-word: "Negative for high-grade dysplasia" was shown as "…grade dysplasia in fragment A", which reads as the opposite; "18 mm adrenal nodule" lost its size | Misread finding | Whole sentences from the report are quoted |
+| A rule needing two steps (R009: patient told *and* referral) listed the step done but not the one outstanding | Loop looks finished | "Still missing: specialist referral" |
+| The reason a loop needs review read "Uncertainty (1.00) exceeds threshold (0.7)" | Not actionable | "The record ClinLoop can see holds too little to tell whether this follow-up happened. Check the chart." |
+| Deadlines months away showed a clock time ("2027-06-09 07:12") | False precision | Date only, except for windows under two days |
+| Some medication findings omitted the drug | Basis not checkable | Drug, organism or specimen named when the record has it |
+
+Each fix has a regression test (`tests/test_phase6.py`). Left as they are, for rule sign-off rather than
+wording: R001 for a critical value asks for patient notification within 3 days (the critical call
+itself is R022); mapping notes use the rules' own abbreviations ("aaa 46 mm").
+
 ## 4. Before clinical use
 
 1. A licensed clinician reviews this document and the code it names, and signs below.
