@@ -1107,24 +1107,56 @@ def _report_code(r: Dict) -> str:
     return ",".join(codes) if codes else _concept_text(r.get("code")).strip().lower()
 
 
+_RESULT_DRAFT_STATUSES = {"registered", "preliminary"}
+_RESULT_RELEASED_STATUSES = {"final", "amended", "corrected"}
+
+
+def _result_identity(r: Dict) -> Optional[str]:
+    """One lab result sent as several Observation resources (preliminary, then final): same code, same
+    collection time and, when given, the same specimen or order. Without a collection time two
+    resources cannot be matched safely, so both are kept."""
+    when = _first(r.get("effectiveDateTime"), (r.get("effectivePeriod") or {}).get("start"), r.get("effectiveInstant"))
+    code = _report_code(r)
+    if not when or not code:
+        return None
+    specimen = _ref_id(r.get("specimen") or {}, "Specimen") or ""
+    orders = ",".join(sorted(filter(None, (_ref_id(b, "ServiceRequest") for b in r.get("basedOn", [])))))
+    try:
+        when = normalize_timestamp(when).isoformat()
+    except (TypeError, ValueError):
+        return None
+    return f"{code}|{when}|{specimen}|{orders}"
+
+
 def _superseded_reports() -> Dict[str, str]:
+    """Draft versions replaced by a released version: reports (accession number or orders, and report
+    code) and, the same way, lab results (code, collection time, specimen or order). Released versions
+    never replace each other: an addendum or a correction may carry only part of the content."""
     groups: Dict[Tuple, List[Dict]] = defaultdict(list)
     for r in _CURRENT_RESOURCES.get():
-        if r.get("resourceType") != "DiagnosticReport" or not r.get("id"):
+        rtype, pid = r.get("resourceType"), _patient_id(r)
+        if not r.get("id") or not pid:
             continue
-        ident, pid = _report_identity(r), _patient_id(r)
-        if ident and pid:
-            groups[(pid, ident, _report_code(r))].append(r)
+        if rtype == "DiagnosticReport":
+            ident = _report_identity(r)
+            if ident:
+                groups[(rtype, pid, ident, _report_code(r))].append(r)
+        elif rtype == "Observation":
+            ident = _result_identity(r)
+            if ident:
+                groups[(rtype, pid, ident)].append(r)
     out: Dict[str, str] = {}
-    for versions in groups.values():
-        released = [r for r in versions if str(r.get("status", "")).lower() in _REPORT_RELEASED_STATUSES]
+    for (rtype, *_), versions in groups.items():
+        draft, released_set = ((REPORT_DRAFT_STATUSES, _REPORT_RELEASED_STATUSES) if rtype == "DiagnosticReport"
+                               else (_RESULT_DRAFT_STATUSES, _RESULT_RELEASED_STATUSES))
+        released = [r for r in versions if str(r.get("status", "")).lower() in released_set]
         if not released:
             continue
         newest = max(released, key=lambda r: str(_first(r.get("issued"), r.get("effectiveDateTime"),
                                                          (r.get("meta") or {}).get("lastUpdated")) or ""))
         for r in versions:
-            if str(r.get("status", "")).lower() in REPORT_DRAFT_STATUSES and r["id"] != newest["id"]:
-                out[f"DiagnosticReport/{r['id']}"] = f"DiagnosticReport/{newest['id']}"
+            if str(r.get("status", "")).lower() in draft and r["id"] != newest["id"]:
+                out[f"{rtype}/{r['id']}"] = f"{rtype}/{newest['id']}"
     return out
 
 

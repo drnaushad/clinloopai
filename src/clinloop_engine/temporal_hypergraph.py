@@ -456,6 +456,20 @@ class DynamicTemporalHypergraph:
                     hyperedge.evidence_chain.append(
                         f"Not counted as follow-up (did not take place): {not_done}"
                     )
+                # A follow-up stamped with exactly the trigger's time is not counted (it may be the
+                # triggering study itself; PRODUCTION_READINESS.md §4.1). Say so, so a reviewer can
+                # close the loop with evidence when it really was the follow-up.
+                same_time = [
+                    f"{n.event_type} at {n.timestamp.isoformat()}"
+                    for n in nodes_list
+                    if n is not node and n.event_type in required_values and n.timestamp == node.timestamp
+                    and is_fulfilling_status(n.status)
+                ]
+                if same_time and hyperedge.status != LoopStatus.CLOSED.value:
+                    hyperedge.evidence_chain.append(
+                        f"Not counted as follow-up (SAME_TIMESTAMP as the trigger; check whether it is the "
+                        f"follow-up or the triggering record itself): {same_time}"
+                    )
                 required_regions = _required_regions(node, rule)
                 if required_regions:
                     hyperedge.evidence_chain.append(

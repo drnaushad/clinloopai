@@ -313,6 +313,19 @@ def access_log(patient_id: Optional[str] = Query(None, max_length=64), actor: Op
     return {"records": get_store().access_log(patient_id=patient_id, actor=actor, since=since, limit=limit)}
 
 
+@router.get("/access-log/audit-events", tags=["Clinical Pilot"])
+def access_log_audit_events(patient_id: Optional[str] = Query(None, max_length=64),
+                            actor: Optional[str] = Query(None, max_length=64),
+                            since: Optional[str] = Query(None, max_length=40), limit: int = Query(500, ge=1, le=5000),
+                            user: User = Depends(require_role("admin")), access=Depends(access_recorder)):
+    """The access log as a FHIR R4 Bundle of AuditEvent resources (admin), with each entry's chain
+    hashes, for the hospital's security team. Looking at it is itself recorded."""
+    from .audit_events import bundle
+    access(user, "view_access_log", [patient_id] if patient_id else [],
+           {"format": "AuditEvent", **({"actor": actor, "since": since} if actor or since else {})})
+    return bundle(get_store().access_log(patient_id=patient_id, actor=actor, since=since, limit=limit, with_hash=True))
+
+
 @router.get("/access-log/verify", tags=["Clinical Pilot"])
 def verify_access_log(user: User = Depends(require_role("admin"))):
     return {"access_log_intact": get_store().verify_access_chain()}
