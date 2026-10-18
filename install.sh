@@ -52,6 +52,8 @@ if [ ! -f .env ]; then
     echo "# Hospital FHIR server (read-only):"
     echo "# Intended-use profile: core locks off research features (image analysis, model readers); see docs/regulatory/"
     echo "CLINLOOP_PROFILE=core"
+    echo "# BioMCP literature lookups for rule reviewers: off in the core profile; needs outbound internet"
+    echo "# CLINLOOP_BIOMCP=1"
     echo "# Governance: keep rules a specialist has not signed off in shadow mode (recommended for clinical use)"
     echo "CLINLOOP_ENFORCE_SIGNOFF=1"
     echo "CLINLOOP_SIGNOFF_APPROVALS=1"

@@ -245,6 +245,8 @@ def biomcp_call(req: McpToolCallRequest, user: User = Depends(require_role("clin
     """
     try:
         return {"status": "ok", **biomcp_client.call_tool(req.tool, req.arguments)}
+    except biomcp_client.BioMCPDisabled as e:
+        raise HTTPException(status_code=409, detail=str(e))
     except biomcp_client.BioMCPError as e:
         raise HTTPException(status_code=502, detail=f"BioMCP: {e}")
 

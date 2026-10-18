@@ -1622,6 +1622,7 @@ class ClinLoopApp {
           if (v.status === 'ok') return { ...row, tone: 'ok', text: `${t.connected} · ${t.tools(v.tools)}` };
           // BioMCP started but its test search found nothing: PubMed etc. cannot be reached from the server
           if (v.status === 'sources_unreachable') return { ...row, tone: 'warn', text: t.sourcesDown(v.tools) };
+          if (v.status === 'disabled') return { ...row, tone: 'off', text: t.disabled };
           return { ...row, tone: v.status === 'unreachable' ? 'warn' : 'off', text: v.status === 'unreachable' ? t.unreachable : t.notInstalled };
         case 'pubmed': case 'europe_pmc':
           if (v.status === 'ok') return { ...row, tone: 'ok', text: `${t.connected} · ${v.latency_ms} ms` };

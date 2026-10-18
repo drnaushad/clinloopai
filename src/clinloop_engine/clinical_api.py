@@ -258,11 +258,13 @@ def rule_evidence(rule_id: str, source: str = Query("pubmed", pattern="^(pubmed|
                   limit: int = Query(5, ge=1, le=20)):
     """Live literature for one rule from PubMed, Europe PMC or BioMCP (rule-level query only)."""
     from .literature import LiteratureError, evidence_for_rule
-    from .biomcp_client import BioMCPError, rule_articles
+    from .biomcp_client import BioMCPDisabled, BioMCPError, rule_articles
     try:
         if source == "biomcp":
             return rule_articles(rule_id)
         return evidence_for_rule(rule_id, source, limit)
+    except BioMCPDisabled as e:
+        raise HTTPException(409, str(e))
     except BioMCPError as e:
         raise HTTPException(502, f"BioMCP unreachable: {e}")
     except KeyError:

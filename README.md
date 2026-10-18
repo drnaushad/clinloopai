@@ -453,6 +453,7 @@ Configuration:
 | `CLINLOOP_CORS_ORIGINS` | Allowed browser origins | cockpit origins |
 | `NCBI_API_KEY` | Optional NCBI key (10 instead of 3 PubMed requests/s) | — |
 | `CLINLOOP_LITERATURE` | `off` disables all outbound PubMed / Europe PMC calls | on |
+| `CLINLOOP_BIOMCP` | BioMCP on or off. A reference aid for rule reviewers, never an input to a loop; needs outbound internet | off in the `core` profile (set `1` to use), on in `research` (set `0` to stop) |
 | `CLINLOOP_BIOMCP_URL` | BioMCP over streamable HTTP, e.g. `http://biomcp:8000/mcp` | stdio: runs `biomcp run` |
 | `CLINLOOP_BIOMCP_COMMAND` | Command used for stdio BioMCP | `biomcp run` |
 | `CLINLOOP_OLLAMA_URL` | Ollama address | `http://localhost:11434` |

@@ -18,6 +18,12 @@ BioMCP returns an empty result (not an error) when its upstream sources are
 unreachable, so callers must not read "no results" as "no evidence exists".
 For the same reason the health check runs one small article search: BioMCP counts
 as connected only when that search returns an article, not merely when it starts.
+
+On or off (enabled()): BioMCP is a reference aid for the people who review and maintain the rules,
+never an input to a loop. It needs outbound internet access, which many hospital networks do not
+allow. So in the core profile (hospital installs, profile.py) it is OFF unless the hospital sets
+CLINLOOP_BIOMCP=1; in the research profile it is on unless CLINLOOP_BIOMCP=0. When off, nothing is
+started or contacted, the status reads "disabled", and tool calls are refused.
 """
 
 import asyncio
@@ -55,6 +61,24 @@ PROBE_ARGS = {"keywords": ["pulmonary nodule"], "include_preprints": False,
 
 class BioMCPError(RuntimeError):
     pass
+
+
+class BioMCPDisabled(BioMCPError):
+    """BioMCP is switched off (core profile without CLINLOOP_BIOMCP=1, or CLINLOOP_BIOMCP=0)."""
+
+
+def enabled() -> bool:
+    from .profile import core
+    setting = os.environ.get("CLINLOOP_BIOMCP", "").strip().lower()
+    if core():
+        return setting in ("1", "true", "yes", "on")
+    return setting not in ("0", "false", "no", "off")
+
+
+def _disabled_reason() -> str:
+    from .profile import core
+    return ("off in the core profile; set CLINLOOP_BIOMCP=1 to use it as a reviewer aid where the network "
+            "allows outbound access" if core() else "switched off (CLINLOOP_BIOMCP=0)")
 
 
 def _transport() -> Dict[str, Any]:
@@ -100,7 +124,9 @@ def _run(coro):
 
 
 def status(force: bool = False) -> Dict:
-    """Connect, initialize and list tools. Cached for 5 minutes."""
+    """Connect, initialize and list tools. Cached for 5 minutes. Nothing is started when switched off."""
+    if not enabled():
+        return {"status": "disabled", "reason": _disabled_reason(), "checked_at": datetime.now(timezone.utc).isoformat()}
     if not force:
         cached = _cache.get("health|biomcp", STATUS_TTL)
         if cached is not None:
@@ -149,6 +175,8 @@ def _count_results(text: str) -> int:
 
 def call_tool(name: str, arguments: Dict[str, Any]) -> Dict:
     """Call one allowlisted BioMCP tool; returns parsed JSON when the tool returns JSON."""
+    if not enabled():
+        raise BioMCPDisabled(f"BioMCP is {_disabled_reason()}")
     if name not in ALLOWED_TOOLS:
         raise BioMCPError(f"Tool '{name}' is not on ClinLoop's read-only allowlist")
     key = f"biomcp|{name}|{json.dumps(arguments, sort_keys=True)}"
