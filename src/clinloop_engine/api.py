@@ -562,6 +562,23 @@ def web_config():
                     media_type="application/javascript", headers={"Cache-Control": "no-store"})
 
 
+@app.get("/.well-known/jwks.json", include_in_schema=False)
+def fhir_client_jwks():
+    """ClinLoop's PUBLIC key for SMART Backend Services, for FHIR servers that fetch keys from a URL
+    (CLINLOOP_FHIR_PRIVATE_KEY). Only the public half is ever served."""
+    from .smart_auth import SMARTAuthError, load_private_key, public_jwk
+    path = os.environ.get("CLINLOOP_FHIR_PRIVATE_KEY")
+    if not path:
+        raise HTTPException(404, "No FHIR client key configured")
+    try:
+        key = public_jwk(load_private_key(path), os.environ.get("CLINLOOP_FHIR_KEY_ID") or None)
+    except SMARTAuthError as e:
+        logger.error("JWKS not served: %s", e)
+        raise HTTPException(503, "FHIR client key unavailable")
+    return Response(json.dumps({"keys": [key]}), media_type="application/json",
+                    headers={"Cache-Control": "public, max-age=3600"})
+
+
 # Only a dedicated directory holding the UI files is served (never the
 # project root, which holds source code and, in development, the database).
 if _WEB_ROOT and os.path.isdir(_WEB_ROOT):
