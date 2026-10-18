@@ -677,6 +677,12 @@ that review; it cannot replace it.
 
 ### 8. Validation studies
 
+Both tools also read a folder of NDJSON or Bundle files (`--fhir fhir/`, e.g. `mimic_ingest` output). For
+date-shifted research copies such as MIMIC, `chart_review sample --per-patient-end` judges each record at
+its own last date. The plan for a first real-data study on MIMIC is
+[`docs/STUDY_PROTOCOL_STAGE1A.md`](docs/STUDY_PROTOCOL_STAGE1A.md); MIMIC data must stay on the approved
+machine and never be sent to an online AI service.
+
 **Report reading** (does ClinLoop create the right obligations from each report?):
 
 ```bash

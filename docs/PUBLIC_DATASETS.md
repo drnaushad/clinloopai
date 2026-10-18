@@ -35,7 +35,7 @@ end of their own record (`omop_ingest.record_end`), not at today's date.
 | Dataset | Use for ClinLoop | Status |
 |---|---|---|
 | **MIMIC-IV demo (OMOP)** | Real hospital records of 100 patients; open access (ODbL) | **Tested**: see results below |
-| **MIMIC-IV + MIMIC-IV-Note** | 2.3M radiology reports for the report reader; discharge summaries for the note reader; labs with ranges and abnormal flags; admissions and ED stays | Reader ready; needs credentialed access, to be run locally |
+| **MIMIC-IV + MIMIC-IV-Note** | 2.3M radiology reports for the report reader; discharge summaries for the note reader; labs with ranges and abnormal flags; admissions and ED stays | Reader ready; needs credentialed access, to be run locally. Study plan: [`STUDY_PROTOCOL_STAGE1A.md`](STUDY_PROTOCOL_STAGE1A.md) |
 | **MIMIC-CXR** | Chest X-ray reports: nodules and follow-up advice; the image second reader | Reader ready (reports); credentialed |
 | **CheXpert Plus** | Reports split into sections, from a second hospital (generalisation) | Use the report-validation tool on its report CSV |
 | **PTB-XL** | ECG statements: atrial fibrillation (AF) → anticoagulation decision (R054); long QT | Reader ready; open access (CC BY 4.0) |
