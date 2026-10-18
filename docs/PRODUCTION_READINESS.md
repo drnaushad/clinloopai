@@ -51,7 +51,8 @@ feature-by-feature assessment, including the decision to report the one-hour rul
 
 | Need | In place | Where |
 | --- | --- | --- |
-| Show the basis of every alert | Rule, triggering value or sentence, guideline reference, evidence chain, audit trail per loop | worklist "Why this alert" |
+| Show the basis of every alert | Plain-language basis first (finding with value or quoted sentence, rule and deadline, reasoning, what was found, guideline), then the technical evidence chain and audit trail; the same basis on EHR cards | `basis.py`, worklist "Why this alert", `cds_hooks.py` |
+| Know whether alerts lead to care | Every loop followed to its end: acted on, time to closure, late, dismissed and why, overdue with nobody acting | `outcomes.py`, Quality page |
 | A person decides | Acknowledge, assign, defer with a coded reason, close with evidence; patient messages need a clinician's approval | `loop_store.py`, `worklist.html` |
 | Specialist sign-off before a rule goes live | Hash-bound sign-off; shadow mode on by default with `install.sh` and docker compose | `governance.py` |
 | Tamper-evident record of actions | Hash-chained audit log; `GET /api/v1/audit/verify` | `loop_store.py` |

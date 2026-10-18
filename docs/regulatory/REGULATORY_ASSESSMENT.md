@@ -11,7 +11,9 @@ medical device, feature by feature, and where that position is weakest. It assum
 
 | Market | Law and guidance to confirm against (current editions) |
 | --- | --- |
-| Korea (first market) | Medical Devices Act and its enforcement rules; Digital Medical Products Act (in force from January 2025); MFDS guidance on whether software is a medical device, on medical device software approval and review, and on AI-based medical devices; Personal Information Protection Act; Medical Service Act (electronic medical records) |
+| Korea (first market) | Medical Devices Act and its enforcement rules; Digital Medical Products Act (in force from January 2025); MFDS guidance on whether software is a medical device, on medical device software approval and review, and on AI-based medical devices, including its guidance on generative-AI medical devices (January 2025),
+which applies to the language-model features if they are ever proposed for clinical use (they are off
+in the core profile, §5); Personal Information Protection Act; Medical Service Act (electronic medical records) |
 | United States (design test) | FD&C Act §520(o)(1)(E) (21st Century Cures Act); FDA guidance *Clinical Decision Support Software* (September 2022) |
 | European Union (not targeted) | MDR 2017/745 Annex VIII rule 11; MDCG 2019-11. Rule 11 classifies most decision-support software as at least class IIa, so the non-device argument below would **not** carry over |
 
@@ -39,7 +41,7 @@ passes only if all four hold:
 
 | Feature (core profile) | 1 No image or signal | 2 Medical information | 3 Supports a professional | 4 Basis reviewable | Position |
 | --- | --- | --- | --- | --- | --- |
-| Follow-up rules on lab values, orders, referrals, appointments, medications (R001–R046, R048–R056, R059–R065 except §4) | Yes: values and codes as recorded | Yes | Yes: "this step is not yet recorded", not what to do clinically | Yes: rule text, quoted value, guideline link, deadline arithmetic | Non-device CDS (proposed) |
+| Follow-up rules on lab values, orders, referrals, appointments, medications (R001–R046, R048–R056, R059–R065 except §4) | Yes: values and codes as recorded | Yes | Yes: "this step is not yet recorded", not what to do clinically | Yes: every loop states its basis in plain words: the finding with its value or quoted sentence, the rule and what it expects by when, how the deadline was worked out, what the record holds, and the guideline (`basis.py`, shown first in the worklist and on EHR cards) | Non-device CDS (proposed) |
 | Reading follow-up recommendations from radiology and pathology report text (`radiology.py`, `guideline_reports.py`) | Yes: the radiologist's text, not the image | Yes | Yes | Yes: the quoted sentence is shown | Non-device (proposed). Text extraction errors are a risk to control (risk file H-03), not a device trigger |
 | ECG items: AF on the ECG report (R054), QTc ≥ 500 ms (R059) (`ecg.py`) | Yes in the core profile: uses the interpretation text and the QTc number the ECG machine or reader reported. The waveform is never read | Yes | Yes | Yes: quoted text or value | Non-device (proposed). **Weak point:** a regulator may see a machine-measured QTc as signal-derived. The QTc is already in the record as a result, like a potassium value; the specialist should confirm |
 | Clinical-note plan reading (rules only, `note_reader.py`) | Yes | Yes | Yes | Yes: source sentence shown before filing | Non-device (proposed) |

@@ -19,6 +19,34 @@ Only these claims will be made, and each needs the evidence named:
 Claims that will **not** be made: that ClinLoop detects disease, prevents cancer deaths, or replaces
 any part of the hospital's result-management process.
 
+## 1a. Where ClinLoop stands on the evidence ladder
+
+Clinical AI earns trust in order: each level rests on the one below, and a claim may go only as high as
+the evidence beneath it. ClinLoop's position, October 2026:
+
+| Level | Question | What answers it | Status |
+| --- | --- | --- | --- |
+| 1. Technical | Does the software do what it was designed to do? | Automated tests, deterministic rules, tamper-evident audit, traceability from each risk control to code and tests | **Done** for the core (tests in CI, `TRACEABILITY.md`) |
+| 2. External validity | Is it right on real records it has never seen? | Stage 1: blinded dual chart review (1A on MIMIC, [`STUDY_PROTOCOL_STAGE1A.md`](../STUDY_PROTOCOL_STAGE1A.md); 1B in a Korean hospital) | **Not started.** Tools ready; needs data access, reviewers, ethics |
+| 3. Decision impact | On live data, are its alerts true, wanted and manageable? | Stage 2 silent run: PPV, burden, what usual care misses ([`PILOT_RUNBOOK.md`](../PILOT_RUNBOOK.md)) | **Not started.** Tools ready |
+| 4. Clinical impact | Do patients get their follow-up sooner, without harm? | Stage 3 stepped-wedge trial, primary outcome time to completion of overdue follow-up, measured from the audit log (`outcomes.py`) | **Not started** |
+| 5. Real-world performance | Does it keep working across sites and over time, fairly? | Post-market surveillance: rule monitor, outcome measures, equity breakdowns, yearly re-review ([`POST_MARKET_SURVEILLANCE.md`](POST_MARKET_SURVEILLANCE.md)) | Monitoring built; nothing deployed |
+
+The aim the whole ladder serves is fewer patients harmed by follow-up that never happened. Accuracy
+(levels 2 and 3) is necessary for that but is not the aim: a tool that detects every gap and closes
+none helps no one. So from Stage 2 on, every loop is followed to its end: whether anyone acted on it,
+how long until it closed, whether it closed after the deadline, whether it was dismissed and why, and
+which overdue loops nobody touched (`GET /api/v1/quality/outcomes`, Quality page). These are the
+measures Stage 3 compares between units with and without ClinLoop.
+
+**Safeguards that do not rest on the clinician alone.** "A person decides" is necessary but cannot be
+the only control: it moves the burden of catching the software's errors onto busy staff. ClinLoop
+therefore also carries system-level controls: the plain-language basis on every loop, so the reason can
+be checked in seconds (`basis.py`); dismissal as easy as acceptance, with every reason counted and acted
+on per rule (`rule_monitor.py`); loops nobody acted on surfaced, not buried (`outcomes.py`, escalation);
+specialist sign-off before a rule reaches staff; and the core profile, which keeps unverifiable model
+output out of clinical use. Clinicians who will use the worklist should co-design it during Stage 2.
+
 ## 2. Evidence available now
 
 | Source | What it shows | Limits |

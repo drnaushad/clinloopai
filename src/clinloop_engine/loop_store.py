@@ -29,7 +29,7 @@ import sqlite3
 import threading
 from contextlib import contextmanager
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from .clinical_ontology import LoopStatus
 from .safety_clock import normalize_timestamp, utc_now
@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS loops (
     recommended_action TEXT,
     explanation TEXT,
     evidence_chain TEXT,
+    basis TEXT,                       -- plain-language reasons a clinician can check (basis.py), JSON list
     owner TEXT NOT NULL DEFAULT 'unassigned',
     escalation_level INTEGER NOT NULL DEFAULT 0,
     last_escalated_at TEXT,
@@ -328,8 +329,11 @@ class LoopStore:
             cols = {r["name"] for r in self._db.execute("PRAGMA table_info(image_scan_studies)")}
             if "instances" not in cols:
                 self._db.execute("ALTER TABLE image_scan_studies ADD COLUMN instances INTEGER")
-            if "ruleset_version" not in {r["name"] for r in self._db.execute("PRAGMA table_info(loops)")}:
+            loop_cols = {r["name"] for r in self._db.execute("PRAGMA table_info(loops)")}
+            if "ruleset_version" not in loop_cols:
                 self._db.execute("ALTER TABLE loops ADD COLUMN ruleset_version TEXT")
+            if "basis" not in loop_cols:
+                self._db.execute("ALTER TABLE loops ADD COLUMN basis TEXT")
             self._db.commit()
 
     # ── audit ────────────────────────────────────────────────────────────────
@@ -597,6 +601,15 @@ class LoopStore:
             out.append({"rule_id": parts[1], "action": r["action"], "ts": r["ts"], "reason": detail.get("reason")})
         return out
 
+    def loop_audit_events(self, actions: Sequence[str]) -> List[Dict]:
+        """Audit entries of the given actions that concern a loop, oldest first (for outcome measures)."""
+        marks = ",".join("?" * len(actions))
+        with self._lock:
+            rows = self._db.execute(f"SELECT ts, role, action, loop_key, detail FROM audit_log WHERE action IN ({marks}) "
+                                    "AND loop_key IS NOT NULL ORDER BY id", tuple(actions)).fetchall()
+        return [{"ts": r["ts"], "role": r["role"], "action": r["action"], "loop_key": r["loop_key"],
+                 "detail": json.loads(r["detail"] or "{}")} for r in rows]
+
     def first_loop_opened(self) -> Dict[str, str]:
         """{rule id: time its first loop opened}: how much history the monitor has for each rule."""
         out: Dict[str, str] = {}
@@ -740,6 +753,7 @@ class LoopStore:
                     "recommended_action": d.recommended_action,
                     "explanation": json.dumps(d.explanation, ensure_ascii=False),
                     "evidence_chain": json.dumps(d.evidence_chain, ensure_ascii=False),
+                    "basis": json.dumps(getattr(d, "basis", []) or [], ensure_ascii=False),
                     "last_seen": now, "updated_at": now, "ruleset_version": ruleset,
                 }
                 if existing is None:
@@ -780,7 +794,7 @@ class LoopStore:
     @staticmethod
     def _row(r: sqlite3.Row) -> Dict:
         d = dict(r)
-        for k in ("explanation", "evidence_chain", "strata"):
+        for k in ("explanation", "evidence_chain", "basis", "strata"):
             d[k] = json.loads(d[k]) if d.get(k) else ([] if k != "strata" else {})
         d["escalated_to"] = ESCALATION_CHAIN[min(d["escalation_level"], len(ESCALATION_CHAIN) - 1)]
         return d

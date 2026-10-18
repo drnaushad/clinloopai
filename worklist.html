@@ -109,6 +109,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .action { color: var(--muted); font-size: .9rem; }
 details { margin-top: 8px; }
 summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
+.basis { margin: 8px 0 4px; padding-left: 1.2em; font-size: .9rem; line-height: 1.5; }
+.basis li { margin: 2px 0; }
+details.tech > summary { font-size: .8rem; color: var(--muted); cursor: pointer; margin-top: 4px; }
 .evidence { font: .78rem/1.5 var(--font-mono); color: var(--muted); background: var(--bg); padding: 10px; margin-top: 6px;
   border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -244,7 +247,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       missing: (items, win, any) => `${items.join(any ? ' 또는 ' : ', ')} 미시행 · 기한 ${win}`,
       lateDone: (win) => `후속 조치가 ${win} 기한 이후에 시행됨`,
       actions: { BLACK: '긴급: 즉시 확인 및 조치 — 기한 초과', RED: '오늘 조치 필요 — 기한 임박', YELLOW: '곧 일정 잡기 — 기한 절반 경과', GREEN: '모니터링', review: '검토 필요 — 자동 판단에 필요한 기록이 부족합니다' },
-      why: '이 알림의 근거 (증거·감사 기록)', auditLoading: '감사 기록 불러오는 중…', noActions: '아직 조치 기록이 없습니다.',
+      why: '이 알림의 근거 (증거·감사 기록)', technical: '기술 세부 정보 (위험 점수, 원본 근거)', auditLoading: '감사 기록 불러오는 중…', noActions: '아직 조치 기록이 없습니다.',
       ack: '확인', defer: '보류…', close: '근거와 함께 종결…', assignMe: '나에게 배정', assignTo: '배정…', message: '환자 메시지…',
       reason: '사유', resurface: '재표시 날짜 (선택)', note: '메모', notePh: '임상적 판단 또는 기타 사유일 때 필수', recordDefer: '보류 기록',
       evidence: '완료된 후속 조치의 근거', evidencePh: '예: 대장내시경 오더 C-2231, 2026-09-10 예약', closeLoop: '루프 종결',
@@ -291,7 +294,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       missing: (items, win, any) => `Missing: ${items.join(any ? ' or ' : ', ')} within ${win}`,
       lateDone: (win) => `Completed late: follow-up came after the ${win} deadline`,
       actions: { BLACK: 'URGENT: verify and act now — deadline passed', RED: 'Act today — deadline approaching', YELLOW: 'Schedule soon — half the window used', GREEN: 'Monitor', review: 'Needs review — not enough in the record for an automated judgment' },
-      why: 'Why this alert (evidence & audit)', auditLoading: 'Loading audit trail…', noActions: 'No actions yet.',
+      why: 'Why this alert (evidence & audit)', technical: 'Technical detail (risk score, raw evidence)', auditLoading: 'Loading audit trail…', noActions: 'No actions yet.',
       ack: 'Acknowledge', defer: 'Defer…', close: 'Close with evidence…', assignMe: 'Assign to me', assignTo: 'Assign…', message: 'Message patient…',
       reason: 'Reason', resurface: 'Resurface on (optional)', note: 'Note', notePh: "Required for clinical judgment or 'other'", recordDefer: 'Record deferral',
       evidence: 'Evidence of the completed follow-up', evidencePh: 'e.g. Colonoscopy order C-2231 booked for 2026-09-10', closeLoop: 'Close loop',
@@ -429,7 +432,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       ${l.closure_evidence ? `<div class="action">${esc(t().closedWith(l.closure_evidence))}</div>` : ''}
       <details data-panel="why">
         <summary>${esc(t().why)}</summary>
-        <div class="evidence">${esc([...(l.explanation || []), '', ...(l.evidence_chain || [])].join('\n'))}</div>
+        ${(l.basis || []).length ? `<ul class="basis">${l.basis.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>` : ''}
+        <details class="tech"><summary>${esc(t().technical)}</summary>
+          <div class="evidence">${esc([...(l.explanation || []), '', ...(l.evidence_chain || [])].join('\n'))}</div>
+        </details>
         <div class="evidence" data-audit>${esc(t().auditLoading)}</div>
       </details>
       <div data-messages></div>
