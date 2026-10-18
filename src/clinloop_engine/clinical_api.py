@@ -520,6 +520,42 @@ def breakdowns(user: User = Depends(require_role("viewer"))):
     return get_store().breakdowns()
 
 
+@router.get("/quality/documentation-audit", tags=["Clinical Pilot"])
+def documentation_audit(user: User = Depends(require_role("navigator")), access=Depends(access_recorder)):
+    """
+    Next-day audit of critical-result communication (R022 lab, R035 imaging): for every critical
+    result more than a day old, was the clinician notification documented within the hour, late, or
+    not at all? In the core profile this replaces the live one-hour alert (profile.py). The
+    hospital's critical-result call process is the primary control; this checks its documentation.
+    """
+    _review_team_only(user)
+    from .profile import AUDIT_DELAY, AUDIT_RULES, audit_rules
+    from .safety_clock import utc_now
+    store = get_store()
+    cutoff = (utc_now() - AUDIT_DELAY).isoformat()
+    outcome = {"closed": "documented_on_time", "delayed": "documented_late"}
+    items = []
+    for loop in store.worklist(include_inactive=True):
+        if loop["rule_id"] not in AUDIT_RULES or not loop["trigger_time"] or loop["trigger_time"] > cutoff:
+            continue
+        if loop["workflow_state"] == "superseded":
+            continue
+        result = outcome.get(loop["engine_status"], "not_documented")
+        if result == "not_documented" and loop["workflow_state"] == "closed_by_clinician":
+            result = "closed_by_staff"          # a person closed it with written evidence
+        items.append({"loop_key": loop["loop_key"], "patient_id": loop["patient_id"], "rule_id": loop["rule_id"],
+                      "rule_name": loop["rule_name"], "trigger_time": loop["trigger_time"],
+                      "deadline": loop["deadline"], "result": result, "workflow_state": loop["workflow_state"],
+                      "missing_step": loop["missing_step"]})
+    items.sort(key=lambda i: (i["result"] != "not_documented", i["trigger_time"]))
+    access(user, "view_documentation_audit", sorted({i["patient_id"] for i in items}))
+    counts: Dict[str, int] = {}
+    for i in items:
+        counts[i["result"]] = counts.get(i["result"], 0) + 1
+    return {"rules": sorted(AUDIT_RULES), "replaces_live_alert": sorted(audit_rules()) == sorted(AUDIT_RULES),
+            "older_than_hours": AUDIT_DELAY.total_seconds() / 3600, "counts": counts, "items": items}
+
+
 @router.post("/watchdog/escalate", tags=["Clinical Pilot"])
 def escalate_now(user: User = Depends(require_role("admin"))):
     _not_in_silent_run("escalate")

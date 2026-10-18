@@ -98,7 +98,8 @@ def ruleset_version() -> str:
     parts = [rule_fingerprint(r) for r in OBLIGATION_RULES]
     parts.append(json.dumps(_guidelines(), sort_keys=True, ensure_ascii=False, default=str))
     parts.append(json.dumps(load_critical_findings(), sort_keys=True, ensure_ascii=False, default=str))
-    parts.append("excluded:" + ",".join(sorted(profile_describe()["excluded_rules"])))   # the core profile opens fewer rules
+    prof = profile_describe()                       # the core profile opens fewer rules and audits two
+    parts.append("excluded:" + ",".join(prof["excluded_rules"]) + ";audit:" + ",".join(prof["documentation_audit_rules"]))
     for name in _DECISION_SOURCES:
         path = os.path.join(here, name)
         if os.path.exists(path):
@@ -251,8 +252,10 @@ def _signed_off_or_unenforced(store, rule_id: str, statuses: Optional[Dict[str, 
 
 def live_rule_ids(store, statuses: Optional[Dict[str, Dict]] = None) -> Optional[set]:
     """Rules allowed on the worklist, or None when every rule is. A rule the monitor paused
-    (rule_monitor.py) is out even when sign-off is not enforced."""
-    paused = store.paused_rules()
+    (rule_monitor.py) is out even when sign-off is not enforced; so are the core profile's
+    documentation-audit rules (profile.py), which the Quality page reports the next day."""
+    from .profile import audit_rules
+    paused = store.paused_rules() | audit_rules()
     if not enforcement_enabled():
         return {r.rule_id for r in OBLIGATION_RULES} - paused if paused else None
     statuses = statuses if statuses is not None else all_rule_statuses(store)

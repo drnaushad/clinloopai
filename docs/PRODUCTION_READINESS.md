@@ -44,7 +44,7 @@ clinical use. They are research features today:
 | Model-based second reader (R058) | Model output that the user cannot fully check |
 
 `CLINLOOP_PROFILE=core` now locks all of them off in code (`profile.py`), and new installs use it. The
-feature-by-feature assessment, including the open question on the one-hour rules R022 and R035, is in
+feature-by-feature assessment, including the decision to report the one-hour rules R022 and R035 as a next-day documentation audit in the core profile, is in
 [`regulatory/REGULATORY_ASSESSMENT.md`](regulatory/REGULATORY_ASSESSMENT.md).
 
 ## 3. What is in place

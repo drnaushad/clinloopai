@@ -36,7 +36,9 @@ behave as before; hospital installations for patient care must set `core`.
 ## Decisions still open
 
 1. Device status in Korea, confirmed by a regulatory specialist ([assessment §1](REGULATORY_ASSESSMENT.md)).
-2. One-hour rules R022 and R035 in the core profile: keep, relabel as a next-day documentation audit, or
-   turn off ([assessment §4](REGULATORY_ASSESSMENT.md)).
-3. Software safety class B or C ([lifecycle §1](SOFTWARE_LIFECYCLE.md)).
-4. Machine-measured QTc as an input ([assessment §3](REGULATORY_ASSESSMENT.md)).
+2. Software safety class B or C ([lifecycle §1](SOFTWARE_LIFECYCLE.md)).
+3. Machine-measured QTc as an input ([assessment §3](REGULATORY_ASSESSMENT.md)).
+
+Decided: the one-hour rules R022 and R035 are a next-day documentation audit in the core profile
+(clinical lead, October 2026; [assessment §4](REGULATORY_ASSESSMENT.md)); the regulatory specialist
+confirms.

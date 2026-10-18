@@ -134,6 +134,50 @@ class TestCoreProfileAPI(unittest.TestCase):
             self.assertEqual(self.client.get("/api/v1/governance/summary").json()["profile"]["profile"], "core")
 
 
+@unittest.skipUnless(HAVE_API, "API dependencies not installed (pip install -r requirements-api.txt)")
+class TestDocumentationAudit(unittest.TestCase):
+    """Core profile: R022 and R035 leave the worklist, cards and escalation, and become a next-day audit."""
+
+    def setUp(self):
+        from test_clinloop import _make_hyperkalemia_events
+        from src.clinloop_engine.loop_detector import ClinLoopDetector
+        self.store = LoopStore()
+        clinical_api.set_store(self.store)
+        self.client = TestClient(app)
+        note = {"event_type": "critical_value_notification", "details": {}, "status": "completed"}
+        cases = {"P-NONE": None, "P-LATE": "2026-09-01T14:00:00", "P-ONTIME": "2026-09-01T12:00:00"}
+        for pid, when in cases.items():
+            events = _make_hyperkalemia_events(pid)
+            if when:
+                events.append({**note, "event_id": f"n-{pid}", "patient_id": pid, "timestamp": when})
+            self.store.upsert_detections(ClinLoopDetector(evaluation_time=datetime(2026, 9, 2)).process_patient("t", pid, events))
+        self.h = {"Authorization": f"Bearer {TOKENS['admin']}"}
+
+    def rules_on_worklist(self):
+        return {l["rule_id"] for l in self.client.get("/api/v1/worklist", headers=self.h).json()["loops"]}
+
+    def test_research_profile_keeps_the_live_alert(self):
+        with mock.patch.dict(os.environ, {"CLINLOOP_PROFILE": "research", "CLINLOOP_ENFORCE_SIGNOFF": "0"}):
+            self.assertIn("R022", self.rules_on_worklist())
+
+    def test_core_profile_moves_it_to_the_next_day_audit(self):
+        with mock.patch.dict(os.environ, {"CLINLOOP_PROFILE": "core", "CLINLOOP_ENFORCE_SIGNOFF": "0"}):
+            on_list = self.rules_on_worklist()
+            self.assertNotIn("R022", on_list)
+            self.assertIn("R001", on_list)                    # the abnormal result itself is still followed up
+            self.assertNotIn("R022", governance.live_rule_ids(self.store))
+            escalated = self.store.escalate_overdue(now=datetime(2026, 9, 5), rule_ids=governance.live_rule_ids(self.store))
+            self.assertFalse([e for e in escalated if "|R022|" in e["loop_key"]])
+            audit = self.client.get("/api/v1/quality/documentation-audit", headers=self.h).json()
+        self.assertTrue(audit["replaces_live_alert"])
+        by_patient = {i["patient_id"]: i["result"] for i in audit["items"] if i["rule_id"] == "R022"}
+        self.assertEqual(by_patient, {"P-NONE": "not_documented", "P-LATE": "documented_late",
+                                      "P-ONTIME": "documented_on_time"})
+        self.assertEqual(audit["items"][0]["result"], "not_documented")     # missing documentation first
+        viewer = {"Authorization": f"Bearer {TOKENS['viewer']}"}
+        self.assertEqual(self.client.get("/api/v1/quality/documentation-audit", headers=viewer).status_code, 403)
+
+
 UNUSUAL_TEXT = "IMPRESSION: 4.8 cm complex right adnexal cyst. Please obtain a dedicated pelvic MRI."
 
 if __name__ == "__main__":

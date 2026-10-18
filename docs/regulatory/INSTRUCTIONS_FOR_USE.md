@@ -15,8 +15,9 @@ treatment, read images, or replace your own review of results. Full statement:
 - **An empty list does not mean nothing is due.** ClinLoop sees only what reaches it through the
   hospital's FHIR interface. Care recorded elsewhere, scanned letters not uploaded, or results from
   another hospital are invisible to it.
-- **Critical results:** follow the hospital's critical-result call process. ClinLoop's one-hour
-  checks (R022, R035) only check afterwards that the call was documented.
+- **Critical results:** follow the hospital's critical-result call process. ClinLoop never alerts you
+  to a critical result. R022 and R035 appear the next day on the Quality page, for the quality team
+  to check that each call was documented within the hour.
 - **Check the source.** Every item quotes the value or sentence it came from. If the quote does not
   support the item, defer it as "not clinically indicated" with a note: this feeds the rule monitor.
 - **Feed alarm.** If a page shows that the data feed is failing or silent, new results are not being

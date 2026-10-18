@@ -52,8 +52,8 @@ Three rules have a one-hour window:
 
 | Rule | What it checks | Core profile |
 | --- | --- | --- |
-| R022 | A critical lab value has a documented clinician notification within 1 hour | On |
-| R035 | A critical imaging finding has a documented communication within 1 hour | On |
+| R022 | A critical lab value has a documented clinician notification within 1 hour | **Next-day documentation audit** |
+| R035 | A critical imaging finding has a documented communication within 1 hour | **Next-day documentation audit** |
 | R057 | A critical imaging-AI finding on an unread study is read within 60 minutes | **Off** (needs imaging AI) |
 
 FDA guidance treats software that drives a time-critical decision as failing criterion 3, because
@@ -69,9 +69,21 @@ the professional has no time to review the basis. The argument for keeping R022 
 
 The argument against: an overdue R022 or R035 item, shown within an hour, is read by staff as an
 urgent alert. If the specialist judges that this brings the product into device territory, the
-options are (a) keep them, labelled as a documentation audit shown only to the quality team the
-next day, or (b) turn them off in the core profile. Option (a) keeps the safety value with the least
-regulatory exposure. **Decision needed from the regulatory specialist and the clinical lead.**
+options were (a) keep them, labelled as a documentation audit shown only to the quality team the
+next day, or (b) turn them off in the core profile.
+
+**Decision (clinical lead, October 2026): option (a).** In the core profile (`profile.audit_rules()`):
+
+- the engine still evaluates R022 and R035 and records each loop, its rule-set version and its audit
+  trail;
+- their loops are kept off the worklist and the EHR cards and never escalate
+  (`governance.live_rule_ids`);
+- the Quality page lists every critical result more than 24 hours old as documented within the
+  hour, documented late, not documented, or closed by staff with evidence
+  (`GET /api/v1/quality/documentation-audit`, navigators and above, access recorded).
+
+The output is then a retrospective audit of a documentation process, not an alert that directs a
+time-critical decision. The regulatory specialist still has to confirm this position.
 
 ## 5. Outside the core profile
 

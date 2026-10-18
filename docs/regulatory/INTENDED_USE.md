@@ -62,8 +62,9 @@ text found there is shown with its source sentence before it is filed.
 - **It is a safety net, not the primary process.** A missing item on the list does not mean that no
   follow-up is needed. Clinicians keep full responsibility for reviewing their results.
 - **Critical results.** Rules R022 and R035 check that the hospital's own critical-result call was
-  documented within an hour. They are a back-up check after the fact; the hospital's critical-result
-  call process stays in place and must not be replaced by ClinLoop.
+  documented within an hour. In the core profile they are a next-day documentation audit for the
+  quality team, not a live alert. The hospital's critical-result call process stays in place and
+  must not be replaced by ClinLoop.
 - **Data it cannot see.** Care recorded outside the hospital's FHIR interface (paper, another
   hospital, a scanned letter not uploaded) is invisible, so an item can stay open after the follow-up
   happened. ClinLoop leaves such items open for a person rather than closing them.

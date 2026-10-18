@@ -17,7 +17,7 @@ Reasoning: a failure of ClinLoop (H-01, H-02 in the [risk file](RISK_MANAGEMENT.
 to delayed follow-up, and a delayed diagnosis can be serious. IEC 62304 allows the class to take
 account of risk controls outside the software. Here the external control is usual care: the ordering
 clinician remains responsible for the result, and ClinLoop is a second check. If the specialist does
-not accept usual care as an adequate external control (for example for R022 and R035), the
+not accept usual care as an adequate external control, the
 affected items are class C, and the parts of the code that decide them (the "decision sources" listed
 in `governance._DECISION_SOURCES`) would need class C activities: detailed design and unit
 verification of each unit.
@@ -27,7 +27,7 @@ verification of each unit.
 | Activity | How it is done now | Evidence |
 | --- | --- | --- |
 | Development planning | Phased roadmap; this folder; `AGENTS.md` (rules for every change) | Repository |
-| Requirements | Intended use; rules with guideline references (`clinical_ontology.py`); safety requirements SR-01…SR-20 | [`TRACEABILITY.md`](TRACEABILITY.md) |
+| Requirements | Intended use; rules with guideline references (`clinical_ontology.py`); safety requirements SR-01…SR-21 | [`TRACEABILITY.md`](TRACEABILITY.md) |
 | Architecture | Record → events (`fhir_ingest.py`) → temporal graph (`temporal_hypergraph.py`) → detection (`loop_detector.py`) → store and workflow (`loop_store.py`) → API and pages | README, module docstrings |
 | Detailed design | Module docstrings state purpose, inputs, safety decisions | Source |
 | Unit and integration verification | Automated tests (615 at the time of writing), run in CI on every change and before every image | `tests/`, CI "test" job |

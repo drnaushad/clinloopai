@@ -44,7 +44,7 @@ also needs usual care to fail; this is why many residual probabilities are low.
 | H-15 | Patient data leaves the hospital (to a model, a public service, an export) | Privacy breach | 3 | 2 | SR-16, on-premise only design, outbound network blocked by the hospital, literature queries use rule-level terms only | 1 | 3: acceptable |
 | H-16 | A pilot reviewer finds an urgent open loop during the silent run and nothing reaches the team | Harm during the study | 4 | 2 | SR-19 (safety referral required before an urgent review is saved), patient safety officer reviews referrals weekly | 1 | 4: acceptable |
 | H-17 | A dependency changes behaviour or carries a vulnerability | Wrong output or compromise | 3 | 2 | SR-17 (pinned lock file, SBOM); vulnerability handling in [cybersecurity](CYBERSECURITY.md) §5 | 1 | 3: acceptable |
-| H-18 | A time-critical item (R022, R035) is treated as the primary critical-result alert | Critical result not acted on within the hour | 5 | 2 | SR-05 (a critical rule is never paused), SR-15 (escalation); intended use §6; instructions §4; hospital's critical-result process stays primary; open regulatory question ([assessment §4](REGULATORY_ASSESSMENT.md)) | 1 | 5: acceptable only with benefit; **decision pending** |
+| H-18 | A time-critical item (R022, R035) is treated as the primary critical-result alert | Critical result not acted on within the hour | 5 | 2 | SR-21 (core profile: next-day documentation audit, never a live alert); intended use §6; instructions §2; hospital's critical-result process stays primary ([assessment §4](REGULATORY_ASSESSMENT.md)) | 1 | 5: acceptable only with benefit; confirm with the safety officer |
 
 ## 3. Overall residual risk
 

@@ -174,6 +174,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     <section class="card pane" aria-labelledby="h-rules"><h2 id="h-rules" data-i18n="byRule"></h2><div class="scroll" id="rules"></div></section>
     <section class="card pane" aria-labelledby="h-eq"><h2 id="h-eq" data-i18n="equity"></h2><p class="sub" data-i18n="eqHelp"></p><div id="eq"></div></section>
     <section class="card pane" aria-labelledby="h-own"><h2 id="h-own" data-i18n="owners"></h2><p class="sub" data-i18n="ownHelp"></p><div class="scroll" id="owners"></div></section>
+    <section class="card pane" id="audit-pane" aria-labelledby="h-audit" hidden><h2 id="h-audit" data-i18n="audit"></h2><p class="sub" data-i18n="auditHelp"></p><div class="scroll" id="audit"></div></section>
   </div>
   <footer data-i18n="footer"></footer>
 </div>
@@ -193,6 +194,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       age_group: '연령대', language: '언어', sex: '성별', group: '군', n: '기한 경과', missed: '놓침', rate: '놓친 비율', above: (d) => `전체보다 ${d}%p 높음`,
       owners: '담당자별 업무량', ownHelp: '진행 중·기한 초과 루프 수. 업무를 나누기 위한 것이며 평가가 아닙니다.', owner: '담당자', escalated: '상향 보고',
       none: '없음', noBn: '기한을 넘긴 루프가 없습니다.', working: '불러오는 중…',
+      audit: '위급 결과 통보 기록 감사 (다음 날)', auditHelp: '하루 이상 지난 위급 검사·영상 결과마다 1시간 안에 의료진 통보가 기록되었는지 확인합니다. 병원의 위급 결과 통보 절차가 우선이며, 이 표는 그 기록을 사후에 점검합니다.',
+      auditLive: '핵심 프로필: R022·R035는 실시간 알림 대신 이 감사로 보고됩니다.', auditNone: '하루 이상 지난 위급 결과가 없습니다.',
+      result: '결과', resultTime: '결과 시각', patient: '환자',
+      results: { not_documented: '기록 없음', documented_late: '늦게 기록', documented_on_time: '1시간 내 기록', closed_by_staff: '직원이 근거와 함께 종결' },
       footer: 'ClinLoop AI · 절차의 빈틈을 찾습니다. 사람을 탓하지 않습니다.',
     },
     en: {
@@ -206,6 +211,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       age_group: 'Age group', language: 'Language', sex: 'Sex', group: 'Group', n: 'Past deadline', missed: 'Missed', rate: 'Missed rate', above: (d) => `${d} points above overall`,
       owners: 'Workload by owner', ownHelp: 'Active and overdue loops: to share work, not to judge.', owner: 'Owner', escalated: 'Escalated',
       none: 'none', noBn: 'No loop is past its deadline.', working: 'Loading…',
+      audit: 'Critical-result communication audit (next day)', auditHelp: 'For each critical lab or imaging result more than a day old: was the clinician notification documented within the hour? The hospital\'s critical-result call process is the primary control; this table checks its documentation afterwards.',
+      auditLive: 'Core profile: R022 and R035 are reported here instead of as live alerts.', auditNone: 'No critical result more than a day old.',
+      result: 'Result', resultTime: 'Result time', patient: 'Patient',
+      results: { not_documented: 'Not documented', documented_late: 'Documented late', documented_on_time: 'Documented within the hour', closed_by_staff: 'Closed by staff with evidence' },
       footer: 'ClinLoop AI · Finds gaps in the process. Blames no one.',
     },
   };
@@ -213,7 +222,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
                   set(k, v, s = sessionStorage) { try { s.setItem(k, v); } catch {} } };
   let lang = store.get('clinloop_lang', localStorage) || ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');
   const t = () => T[lang];
-  const state = { base: '', token: '', data: null };
+  const state = { base: '', token: '', data: null, audit: null };
   const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
   $('api-base').value = store.get('clinloop_api') || window.CLINLOOP_API_BASE || (isLocal ? 'http://localhost:8124' : '');
   $('token').value = store.get('clinloop_token');
@@ -262,6 +271,16 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         return `<tr><td>${esc(g)}</td><td class="num">${c.due_passed}</td><td class="num">${c.missed}</td><td>${bar(c.missed_rate, t().rate)}</td>
           <td>${diff >= 10 && c.due_passed >= 5 ? `<span class="gap">⚠ ${esc(t().above(diff))}</span>` : ''}</td></tr>`;
       }).join('')}</tbody></table></div>`).join('');
+    const a = state.audit;
+    $('audit-pane').hidden = !a;
+    if (a) {
+      const counts = Object.entries(a.counts).map(([k, v]) => `<span class="chip${k === 'not_documented' ? ' overdue' : ''}">${esc(t().results[k] || k)} ${esc(v)}</span>`).join(' ');
+      $('audit').innerHTML = (a.replaces_live_alert ? `<p class="sub">${esc(t().auditLive)}</p>` : '') + (a.items.length
+        ? `<p>${counts}</p><table class="tbl"><thead><tr><th>${esc(t().rule)}</th><th>${esc(t().patient)}</th><th>${esc(t().resultTime)}</th><th>${esc(t().result)}</th></tr></thead><tbody>
+          ${a.items.map((i) => `<tr><td><b>${esc(i.rule_id)}</b> ${esc(i.rule_name)}</td><td>${esc(i.patient_id)}</td><td>${esc(i.trigger_time.slice(0, 16).replace('T', ' '))}</td>
+            <td>${i.result === 'not_documented' ? `<span class="gap">${esc(t().results[i.result])}</span>` : esc(t().results[i.result] || i.result)}</td></tr>`).join('')}</tbody></table>`
+        : `<p class="sub">${esc(t().auditNone)}</p>`);
+    }
     $('owners').innerHTML = `<table class="tbl"><thead><tr><th>${esc(t().owner)}</th><th class="num">${esc(t().active)}</th><th class="num">${esc(t().overdue)}</th><th class="num">${esc(t().escalated)}</th></tr></thead><tbody>
       ${d.owners.map((o) => `<tr><td>${esc(o.owner)}</td><td class="num">${o.active}</td><td class="num">${o.overdue}</td><td class="num">${o.escalated}</td></tr>`).join('')}</tbody></table>`;
   }
@@ -273,6 +292,8 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       setStatus(t().working);
       const me = await api('/api/v1/me');
       state.data = await api('/api/v1/metrics/breakdowns');
+      // Patient-level audit: navigators and above (viewers see the hospital-wide tables only)
+      state.audit = await api('/api/v1/quality/documentation-audit').catch(() => null);
       store.set('clinloop_api', state.base); store.set('clinloop_token', state.token);
       $('app').hidden = false;
       setStatus(`${me.user} (${me.role}) · ${state.data.as_of.slice(0, 16)}`);
