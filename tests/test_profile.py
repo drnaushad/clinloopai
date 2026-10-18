@@ -178,6 +178,38 @@ class TestDocumentationAudit(unittest.TestCase):
         self.assertEqual(self.client.get("/api/v1/quality/documentation-audit", headers=viewer).status_code, 403)
 
 
+class TestBioMCPOptional(unittest.TestCase):
+    """BioMCP is a reviewer aid: off in the core profile unless the hospital turns it on."""
+
+    def test_switch(self):
+        from src.clinloop_engine import biomcp_client as b
+        cases = [("core", "", False), ("core", "1", True), ("core", "0", False),
+                 ("research", "", True), ("research", "0", False), ("research", "1", True)]
+        for prof, setting, expected in cases:
+            with mock.patch.dict(os.environ, {"CLINLOOP_PROFILE": prof, "CLINLOOP_BIOMCP": setting}):
+                self.assertEqual(b.enabled(), expected, (prof, setting))
+
+    def test_off_means_nothing_is_started_and_calls_are_refused(self):
+        from src.clinloop_engine import biomcp_client as b
+        with mock.patch.dict(os.environ, {"CLINLOOP_PROFILE": "core", "CLINLOOP_BIOMCP": ""}), \
+                mock.patch.object(b, "_with_session", side_effect=AssertionError("must not connect")):
+            s = b.status(force=True)
+            self.assertEqual(s["status"], "disabled")
+            self.assertIn("CLINLOOP_BIOMCP=1", s["reason"])
+            with self.assertRaises(b.BioMCPDisabled):
+                b.call_tool("article_searcher", {"keywords": ["Fleischner"]})
+
+    @unittest.skipUnless(HAVE_API, "API dependencies not installed (pip install -r requirements-api.txt)")
+    def test_api_says_off_not_unreachable(self):
+        client = TestClient(app)
+        with mock.patch.dict(os.environ, {"CLINLOOP_PROFILE": "core", "CLINLOOP_BIOMCP": ""}):
+            r = client.post("/api/v1/biomcp/call", json={"tool": "article_searcher", "arguments": {"keywords": ["x"]}},
+                            headers={"Authorization": f"Bearer {TOKENS['clinician']}"})
+            self.assertEqual(r.status_code, 409)
+            self.assertIn("core profile", r.json()["detail"])
+            self.assertEqual(client.get("/api/v1/evidence/R001?source=biomcp").status_code, 409)
+
+
 UNUSUAL_TEXT = "IMPRESSION: 4.8 cm complex right adnexal cyst. Please obtain a dedicated pelvic MRI."
 
 if __name__ == "__main__":

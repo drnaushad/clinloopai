@@ -30,6 +30,8 @@ services:
       CLINLOOP_OLLAMA_URL: ${CLINLOOP_OLLAMA_URL:-http://ollama:11434}
       CLINLOOP_LLM_MODEL: ${CLINLOOP_LLM_MODEL:-exaone3.5:7.8b}
       CLINLOOP_BIOMCP_URL: http://biomcp:8000/mcp
+      # BioMCP is a reviewer aid: off in the core profile unless 1; on in research unless 0
+      CLINLOOP_BIOMCP: ${CLINLOOP_BIOMCP:-}
       CLINLOOP_FHIR_BASE: ${CLINLOOP_FHIR_BASE:-}
       CLINLOOP_FHIR_TOKEN: ${CLINLOOP_FHIR_TOKEN:-}
       # SMART Backend Services login (docs/FHIR_CONNECTION.md); the key lives on the data volume

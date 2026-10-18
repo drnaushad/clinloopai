@@ -67,6 +67,8 @@ feature-by-feature assessment, including the decision to report the one-hour rul
 | Shadow pilot (silent run) | Nothing reaches care; weekly sampled, blinded dual review; safety referral required for urgent open loops; protocol metrics and go / no-go; de-identified export | `pilot.py`, `pilot.html`, `docs/PILOT_RUNBOOK.md` |
 | Stop when a rule misbehaves | Hourly rule monitor: mostly dismissed alerts pause a non-critical rule (new alerts held back, work in progress stays visible); a volume jump alone only flags it; critical rules are flagged, never paused; resume needs an administrator's note | `rule_monitor.py`, governance page, `docs/CLINICAL_REVIEW.md` |
 | Roles | Bearer tokens with viewer / navigator / clinician / admin | `auth.py` |
+| Access records in the standard shape | The access log as FHIR R4 AuditEvent resources, with each entry's chain hashes (`GET /api/v1/access-log/audit-events`, admin) | `audit_events.py` |
+| Scale test on synthetic data | Folder runner: Synthea bundles or NDJSON streamed through the normal sync; counts only, no identifiers (1,000 bundles / 7,000 patients in about 25 s, 115 MB) | `fhir_folder.py` |
 | Stay inside the intended use | Core profile locks off image analysis and model features; R047, R057, R058 never opened; shown on the governance page and in the rule-set version | `profile.py` |
 | Know what ships | SBOM (CycloneDX) generated from the lock file and checked by the tests | `docs/regulatory/sbom.cdx.json` |
 
@@ -76,7 +78,8 @@ feature-by-feature assessment, including the decision to report the one-hour rul
 
 The engine counts a follow-up only if it is recorded *after* the triggering event
 (`temporal_hypergraph.py`). A follow-up stamped with exactly the same time as the trigger is not
-counted. The alternative would let the triggering study close its own loop: a CT report and its CT
+counted, and the loop's evidence says so ("SAME_TIMESTAMP"), so a reviewer can close it with
+evidence when it really was the follow-up. The alternative would let the triggering study close its own loop: a CT report and its CT
 study, or a result and the order it answers, often share a timestamp. Keeping strict "after" can
 only produce a false alarm (a loop someone closes with evidence), never a missed follow-up. A
 same-time follow-up is rare in practice; if a hospital's feed produces many, the fix is in the
@@ -102,6 +105,12 @@ code.
   read. A clinician confirms and closes it with evidence.
 - Superseded loops are excluded from the open-loop rate and the follow-up breakdowns, so a report is
   counted once.
+
+Lab results follow the same policy (Phase 5): a preliminary and a final Observation with the same
+code and collection time (and the same specimen or order, when given) are one result. A final result
+that is no longer flagged leaves the preliminary's loop open as "Final result differs from the
+preliminary" for a clinician to confirm with the laboratory. A result without a collection time is
+never matched.
 
 Without an accession number or order reference the two versions cannot be linked safely, and both
 loops remain. Ask the interface team to send the accession number (`DiagnosticReport.identifier`

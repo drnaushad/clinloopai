@@ -45,6 +45,10 @@ ACTIVE_WORKFLOW_STATES = ("new", "acknowledged")
 REPORT_REVISED_STEP = "Final report differs from the preliminary: finding no longer reported"
 REPORT_REVISED_ACTION = ("Confirm the change with radiology and check whether anything was already done on the "
                          "preliminary report (treatment, referral, patient told); then close with that evidence.")
+# The same for a lab result whose final value no longer carries the obligation (e.g. no longer abnormal)
+RESULT_REVISED_STEP = "Final result differs from the preliminary: no longer flagged"
+RESULT_REVISED_ACTION = ("Confirm the change with the laboratory and check whether anything was already done on the "
+                         "preliminary result (treatment, repeat test, patient told); then close with that evidence.")
 
 DEFER_REASONS = {
     "patient_declined": "Patient informed and declined (informed refusal documented)",
@@ -402,8 +406,9 @@ class LoopStore:
         return True
 
     def access_log(self, patient_id: Optional[str] = None, actor: Optional[str] = None,
-                   since: Optional[str] = None, limit: int = 500) -> List[Dict]:
-        """Access records, newest first: by patient (whose data was seen), by person, or since a time."""
+                   since: Optional[str] = None, limit: int = 500, with_hash: bool = False) -> List[Dict]:
+        """Access records, newest first: by patient (whose data was seen), by person, or since a time.
+        ``with_hash`` adds each entry's chain hashes (for the AuditEvent export)."""
         sql, args = "SELECT * FROM access_log WHERE 1=1", []
         if patient_id:
             sql += " AND patients LIKE ? ESCAPE '\\'"
@@ -418,7 +423,8 @@ class LoopStore:
         args.append(limit)
         with self._lock:
             rows = self._db.execute(sql, args).fetchall()
-        return [{**{k: r[k] for k in ("id", "ts", "actor", "role", "action", "client")},
+        keys = ("id", "ts", "actor", "role", "action", "client") + (("prev_hash", "hash") if with_hash else ())
+        return [{**{k: r[k] for k in keys},
                  "patients": json.loads(r["patients"]), "detail": json.loads(r["detail"] or "{}")} for r in rows]
 
     def verify_access_chain(self) -> bool:
@@ -908,15 +914,17 @@ class LoopStore:
                         # The released report no longer carries this obligation. A finding that changed between
                         # the preliminary and the final read is itself a safety event (the patient may already
                         # have been treated on the preliminary): a clinician confirms it before the loop closes.
-                        if old["missing_step"] == REPORT_REVISED_STEP:
+                        step, action = ((RESULT_REVISED_STEP, RESULT_REVISED_ACTION) if old_src.startswith("Observation/")
+                                        else (REPORT_REVISED_STEP, REPORT_REVISED_ACTION))
+                        if old["missing_step"] == step:
                             continue
                         self._db.execute(
                             "UPDATE loops SET engine_status=?, missing_step=?, recommended_action=?, updated_at=? "
                             "WHERE loop_key=?",
-                            (LoopStatus.ABSTAIN.value, REPORT_REVISED_STEP, REPORT_REVISED_ACTION, now, old["loop_key"]))
+                            (LoopStatus.ABSTAIN.value, step, action, now, old["loop_key"]))
                         self._audit(actor, "system", "report_revised", old["loop_key"],
                                     {"released_report": new_src,
-                                     "note": "the released report no longer carries this obligation"})
+                                     "note": "the released version no longer carries this obligation"})
                         continue
                     if new["workflow_state"] == "new" and old["workflow_state"] != "new":
                         take = {k: old[k] for k in carried}

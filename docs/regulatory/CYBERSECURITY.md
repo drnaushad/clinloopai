@@ -14,9 +14,10 @@ October 2026. No penetration test has been done yet (§6).
 - One container (`Dockerfile`: `python:3.12-slim`, runs as the unprivileged user `clinloop`, health
   check) and one database file. Everything runs inside the hospital network.
 - In the core profile ClinLoop makes **no outbound connection with patient data**. It reads from the
-  hospital's FHIR server and identity provider only. The optional literature lookup sends rule-level
+  hospital's FHIR server and identity provider only. The optional literature lookups send rule-level
   search terms (for example "Fleischner pulmonary nodule guideline"), never patient data; the
-  hospital can block it at the firewall.
+  hospital can block them at the firewall. BioMCP, the largest of them, is off in the core profile
+  unless the hospital sets `CLINLOOP_BIOMCP=1`; when off it is never started or contacted.
 - ClinLoop writes nothing to the EHR. EHR integration is read-only cards (CDS Hooks).
 
 ## 2. Controls in place

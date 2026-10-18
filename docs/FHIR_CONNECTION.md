@@ -88,6 +88,20 @@ Group id, a system-level export (`<base>/$export`) is requested. An export not r
 In this mode, `--check` reports whether the server declares `$export` and whether login works; it
 does not start an export.
 
+**Files on disk (Synthea, a saved export).** Before any server is available, a folder of FHIR files
+can be run through the same sync:
+
+```
+python -m src.clinloop_engine.fhir_folder <folder> [--db run.db] [--evaluation-time 2026-09-01T00:00:00]
+```
+
+It reads Synthea's default output (one transaction Bundle per patient, `urn:uuid` references resolved
+through each entry's `fullUrl`) and NDJSON (`exporter.fhir.bulk_data = true`, or Bulk FHIR files),
+streaming one file or line at a time into the local copy, then evaluates every patient. The summary
+holds counts only: files, resources by type, patients, loops per rule, unreadable lines and
+references it had to assume. Use it to test mapping and scale; a synthetic run says nothing about
+accuracy on real patients.
+
 ## 4. Settings summary
 
 | Variable | Purpose |
