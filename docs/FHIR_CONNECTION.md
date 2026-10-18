@@ -67,12 +67,26 @@ with status 1 when a required type cannot be read.
 | **Medplum** (hosted or self-hosted) | Client secret from a `ClientApplication` (`CLINLOOP_FHIR_SECRET_METHOD` as the server expects), or key login if the application is given ClinLoop's JWKS | FHIR base `https://api.medplum.com/fhir/R4` for the hosted service. Load synthetic patients (Synthea or `data/fhir_example_bundle.json`) into a project used for nothing else |
 | **SMART Health IT launcher** | Backend Services, registering ClinLoop's JWKS | Synthetic patients only |
 | **HAPI FHIR** (self-hosted test server) | Often none, or a static token | Good for loading `data/*.json` bundles and testing the sync end to end |
-| **Epic sandbox** | Backend Services with ClinLoop's public key | See the limitation below |
+| **Epic sandbox** | Backend Services with ClinLoop's public key | Use Bulk FHIR mode (below) |
 
-**Epic and population-level reading.** The sync finds changed patients with searches across all
-patients (`_lastUpdated`). Epic's FHIR R4 searches generally need a patient, and Epic provides
-population data through Bulk FHIR (`$export`) instead. Expect the check to show those searches as
-not supported. Bulk FHIR export is not built yet (see `docs/PRODUCTION_READINESS.md` §5).
+**Bulk FHIR mode (Epic and similar).** The default sync finds changed patients with searches across
+all patients (`_lastUpdated`). Epic's FHIR R4 searches generally need a patient, and Epic provides
+population data through Bulk FHIR (`$export`) instead. Set:
+
+```
+CLINLOOP_FHIR_MODE=bulk
+CLINLOOP_FHIR_GROUP_ID=<the Group of patients ClinLoop may monitor>
+```
+
+Each sync then starts a Group-level export, waits for it (honouring `Retry-After`), downloads the
+NDJSON files and deletes the job. The first run exports everything for the Group, so each
+patient's history is complete; later runs export only what changed since the last export's
+`transactionTime`. ClinLoop keeps the exported records in its own database (a local copy, read
+when it evaluates a patient), so protect and back up that database as patient data. Without a
+Group id, a system-level export (`<base>/$export`) is requested. An export not ready within
+`CLINLOOP_FHIR_BULK_TIMEOUT_MINUTES` (default 60) is cancelled and the run is recorded as failed.
+In this mode, `--check` reports whether the server declares `$export` and whether login works; it
+does not start an export.
 
 ## 4. Settings summary
 
@@ -86,6 +100,8 @@ not supported. Bulk FHIR export is not built yet (see `docs/PRODUCTION_READINESS
 | `CLINLOOP_FHIR_TOKEN_URL` | Token endpoint, if the server does not publish one |
 | `CLINLOOP_FHIR_SCOPE` | Scopes to request instead of the read-only default |
 | `CLINLOOP_FHIR_TOKEN` | Static bearer token (test servers) |
+| `CLINLOOP_FHIR_MODE` / `CLINLOOP_FHIR_GROUP_ID` | `search` (default) or `bulk` (Bulk FHIR export), and the Group to export |
+| `CLINLOOP_FHIR_BULK_TIMEOUT_MINUTES` | How long to wait for an export (default 60) |
 | `CLINLOOP_FHIR_SYNC_MINUTES` / `CLINLOOP_FHIR_INITIAL_DAYS` | Sync interval and first look-back |
 
 If login fails at start-up (for example, an unreadable key), the background sync does not start and

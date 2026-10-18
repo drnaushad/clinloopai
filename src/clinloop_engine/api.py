@@ -556,6 +556,10 @@ _WEB_ROOT = os.environ.get("CLINLOOP_WEB_ROOT")
 def web_config():
     """Point the pages at this server: same origin, so no CORS and no address to type."""
     body = "window.CLINLOOP_API_BASE = window.location.origin;\n"
+    from . import oidc
+    sso = oidc.web_config()
+    if sso:                 # hospital single sign-on: public values only (no secret exists for a PKCE client)
+        body += f"window.CLINLOOP_OIDC = {json.dumps(sso)};\n"
     if demo.enabled():
         body += demo.web_config()
     return Response(body,

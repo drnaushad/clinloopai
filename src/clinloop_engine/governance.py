@@ -220,16 +220,20 @@ def summary(store, statuses: Optional[Dict[str, Dict]] = None) -> Dict:
     return {"rules_total": len(statuses), "rules_approved": counts.get("approved", 0), "by_status": counts,
             "approvals_required": approvals_required(), "enforce_signoff": enforcement_enabled(),
             "critical_findings_list": critical["status"], "ruleset_version": ruleset_version(),
+            "paused_rules": sorted(store.paused_rules()),
+            "flagged_rules": sorted(rid for rid, m in store.monitor_state().items() if m["state"] == "flagged"),
             "guideline_updates": sorted(r for r, st in statuses.items()
                                         if any(not a["accepted"] for a in st.get("guideline_alerts") or []))}
 
 
 def live_rule_ids(store, statuses: Optional[Dict[str, Dict]] = None) -> Optional[set]:
-    """Rules allowed on the worklist, or None when sign-off is not enforced."""
+    """Rules allowed on the worklist, or None when every rule is. A rule the monitor paused
+    (rule_monitor.py) is out even when sign-off is not enforced."""
+    paused = store.paused_rules()
     if not enforcement_enabled():
-        return None
+        return {r.rule_id for r in OBLIGATION_RULES} - paused if paused else None
     statuses = statuses if statuses is not None else all_rule_statuses(store)
     live = {rid for rid, s in statuses.items() if s["status"] == "approved"}
     if critical_list_status(store)["status"] != "approved":
         live.discard(CRITICAL_RULE)
-    return live
+    return live - paused

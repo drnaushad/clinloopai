@@ -15,7 +15,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Reques
 from pydantic import BaseModel, Field
 
 from . import governance
-from .auth import ROLE_RANK, User, known_users, require_role
+from .auth import ROLE_RANK, User, known_users, require_role, set_sso_listener
 from .clinical_ontology import OBLIGATION_RULES, RULE_NAMES_KO, format_window
 from .fhir_ingest import bundle_to_events, patient_strata
 from .loop_detector import ClinLoopDetector, hospital_detector, lapse_after_death
@@ -154,6 +154,34 @@ def review_rule(rule_id: str, req: RuleReviewRequest, user: User = Depends(requi
     _workflow(get_store().add_rule_review, rule_id, current, req.decision, user.name, user.role,
               req.specialty, req.note)
     return governance.all_rule_statuses(get_store())[rule_id]
+
+
+class ResumeRuleRequest(BaseModel):
+    note: str = Field(..., max_length=1000, description="What was reviewed before the rule goes back in service")
+
+
+@router.get("/governance/monitor", tags=["Governance"])
+def rule_monitor_report(user: User = Depends(require_role("viewer"))):
+    """Each rule's alert volume and dismissals, and which rules the monitor paused or flagged.
+    Counts only: no patient data."""
+    from . import rule_monitor
+    store = get_store()
+    return {"thresholds": rule_monitor.thresholds(), "acting": rule_monitor.acting(),
+            "rules": rule_monitor.measure(store), "states": store.monitor_state()}
+
+
+@router.post("/governance/monitor/run", tags=["Governance"])
+def rule_monitor_run(user: User = Depends(require_role("admin"))):
+    """Run the rule monitor now (it also runs every hour)."""
+    from . import rule_monitor
+    return rule_monitor.run(get_store(), actor=user.name)
+
+
+@router.post("/governance/rules/{rule_id}/resume", tags=["Governance"])
+def resume_rule(rule_id: str, req: ResumeRuleRequest, user: User = Depends(require_role("admin"))):
+    """Put a paused or flagged rule back in service, with a note of what was reviewed."""
+    from . import rule_monitor
+    return _workflow(rule_monitor.resume, get_store(), rule_id, user.name, user.role, req.note)
 
 
 @router.get("/governance/rule-check", tags=["Governance"])
@@ -381,7 +409,16 @@ def users(user: User = Depends(require_role("clinician"))):
 
 
 def _assignable() -> Dict[str, str]:
-    return {name: role for name, role in known_users().items() if ROLE_RANK[role] >= ROLE_RANK["navigator"]}
+    """Token holders and staff who signed in through the hospital's identity provider."""
+    people = dict(get_store().sso_users())
+    for name, role in known_users().items():
+        if name not in people or ROLE_RANK[role] > ROLE_RANK[people[name]]:
+            people[name] = role
+    return {name: role for name, role in people.items() if ROLE_RANK[role] >= ROLE_RANK["navigator"]}
+
+
+# Staff who sign in through the identity provider are remembered, so loops can be assigned to them
+set_sso_listener(lambda user: get_store().remember_sso_user(user.name, user.role))
 
 
 @router.post("/loops/{loop_key:path}/assign", tags=["Clinical Pilot"])
@@ -519,9 +556,18 @@ def get_loop(loop_key: str, user: User = Depends(require_role("viewer")), access
 
 
 async def escalation_loop(interval_seconds: int = 60):
-    """Background escalation of unacknowledged overdue loops, and the feed-silence alarm."""
+    """Background escalation of unacknowledged overdue loops, the feed-silence alarm and, every hour,
+    the rule monitor."""
+    from . import rule_monitor
+    last_monitor = 0.0
     while True:
         try:
+            if asyncio.get_running_loop().time() - last_monitor >= 3600:
+                last_monitor = asyncio.get_running_loop().time()
+                report = await asyncio.to_thread(rule_monitor.run, get_store())
+                for change in report["changes"]:
+                    logger.warning("Rule monitor: %s %s (%s)", change["rule_id"], change["state"],
+                                   "; ".join(change["reasons"]))
             # The store is blocking (SQLite, a lock): run it in a worker thread, not on the event loop
             store = get_store()
             escalated = await asyncio.to_thread(store.escalate_overdue, rule_ids=governance.live_rule_ids(store))

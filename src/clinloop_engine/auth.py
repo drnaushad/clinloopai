@@ -16,14 +16,18 @@ process and logged once, so the API is never open by default.
 
 In public demo mode (CLINLOOP_DEMO=1, see demo.py) a published view-only token is
 added; it can read only the synthetic demo data and cannot upload or change anything.
+
+With single sign-on configured (oidc.py), tokens issued by the hospital's identity provider are
+accepted too; the person's role comes from their groups at the provider.
 """
 
 import hmac
 import logging
 import os
 import secrets
+import time
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Callable, Dict, Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -79,17 +83,57 @@ def known_users() -> Dict[str, str]:
     return out
 
 
+# People who signed in through the identity provider, so they can be offered when a loop is assigned.
+# clinical_api installs a listener that keeps them in the database across restarts.
+_sso_listener: Optional[Callable[[User], None]] = None
+_sso_seen: Dict[str, float] = {}
+
+
+def set_sso_listener(listener: Optional[Callable[[User], None]]) -> None:
+    global _sso_listener
+    _sso_listener = listener
+
+
+def _remember(user: User) -> None:
+    if _sso_listener is None or time.time() - _sso_seen.get(user.name, 0) < 600:
+        return
+    _sso_seen[user.name] = time.time()
+    try:
+        _sso_listener(user)
+    except Exception:            # remembering a name must never stop a sign-in
+        logger.exception("Could not record a single sign-on user")
+
+
+class NoRole(Exception):
+    """A valid hospital sign-in without any ClinLoop role."""
+
+
 def authenticate(token: str) -> Optional[User]:
     for known, user in _TOKENS.items():
         if hmac.compare_digest(known, token):   # constant-time comparison
             return user
+    from . import oidc
+    if oidc.enabled() and token.count(".") == 2:
+        try:
+            who = oidc.verify(token)
+        except oidc.OIDCError as e:
+            if e.no_role:
+                raise NoRole(str(e)) from None
+            logger.info("Single sign-on token refused: %s", e)
+            return None
+        user = User(who["name"], who["role"])
+        _remember(user)
+        return user
     return None
 
 
 def require_role(minimum: str):
     """FastAPI dependency: the caller must hold at least `minimum` role."""
     def dependency(creds: Optional[HTTPAuthorizationCredentials] = Depends(_bearer)) -> User:
-        user = authenticate(creds.credentials) if creds else None
+        try:
+            user = authenticate(creds.credentials) if creds else None
+        except NoRole as e:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(e))
         if user is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing or invalid bearer token",
                                 headers={"WWW-Authenticate": "Bearer"})

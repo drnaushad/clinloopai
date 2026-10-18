@@ -193,6 +193,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     <div id="policy" class="feed" role="status"></div>
   <div class="feed" id="rulecheck" role="status" hidden></div>
 
+    <section class="card" id="monitor" style="padding:14px;margin-bottom:16px;" aria-labelledby="mon-h" hidden>
+      <div class="loop-head"><strong id="mon-h" class="loop-title" data-i18n="monTitle"></strong></div>
+      <p class="sub" style="font-size:.85rem;" data-i18n="monHelp"></p>
+      <div id="mon-list"></div>
+    </section>
+
     <section class="card" style="padding:14px;margin-bottom:16px;" aria-labelledby="crit-h">
       <div class="loop-head">
         <strong id="crit-h" class="loop-title" data-i18n="critTitle"></strong>
@@ -235,6 +241,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   const RANK = { viewer: 0, navigator: 1, clinician: 2, admin: 3 };
   const T = {
     ko: {
+      monTitle: '규칙 모니터링', monHelp: '알림이 평소보다 크게 늘거나 의료진이 대부분 기각하는 규칙은 자동으로 일시중지(섀도 모드)됩니다. 위급 규칙은 일시중지하지 않고 검토 표시만 하며 알림은 계속됩니다. 매시간 확인합니다.',
+      monNone: '일시중지되거나 검토 표시된 규칙이 없습니다.', monPaused: '일시중지됨', monFlagged: '검토 필요 (알림 계속)',
+      monSince: (m) => `${m.changed_at.slice(0, 16).replace('T', ' ')} · ${m.changed_by}`,
+      resumeNote: '검토한 내용', resumeNotePh: '예: 검사 코드 변경 확인 후 매핑 수정', resume: '다시 사용', resumed: (r) => `${r} 규칙을 다시 사용합니다.`,
       title: '규칙 승인', subtitle: '전문의가 각 규칙을 검토·승인하고, 병원이 위급 소견 목록을 승인합니다.',
       worklist: '작업 목록 →', api: 'ClinLoop API', token: '접근 토큰 (검토 시 필요)', load: '불러오기',
       explain: '승인은 규칙의 현재 버전(지문)에 묶입니다. 규칙이나 판독 로직이 바뀌면 승인은 "재검토 필요"가 되고 다시 검토해야 합니다. 모든 결정은 해시 체인 감사 기록에 남습니다. ClinLoop은 승인 과정을 기록할 뿐, 전문의의 검토를 대신하지 않습니다.',
@@ -264,6 +274,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       footer: 'ClinLoop AI · 전문의가 승인하기 전까지 어떤 규칙도 진료에 사용해서는 안 됩니다.',
     },
     en: {
+      monTitle: 'Rule monitoring', monHelp: 'A rule whose alerts jump far above its usual week, or that clinicians mostly dismiss, is paused automatically (back to shadow mode). Critical rules are never paused: they are flagged for review and keep alerting. Checked every hour.',
+      monNone: 'No rule is paused or flagged.', monPaused: 'Paused', monFlagged: 'Under review (still alerting)',
+      monSince: (m) => `${m.changed_at.slice(0, 16).replace('T', ' ')} · ${m.changed_by}`,
+      resumeNote: 'What was reviewed', resumeNotePh: 'e.g. lab code change confirmed and mapping corrected', resume: 'Resume rule', resumed: (r) => `Rule ${r} is back in service.`,
       title: 'Rule sign-off', subtitle: 'Specialists review and approve each rule; the hospital approves its critical-finding list.',
       worklist: 'Worklist →', api: 'ClinLoop API', token: 'Access token (needed to review)', load: 'Load',
       explain: 'A sign-off is bound to the current version (fingerprint) of a rule. If the rule or the report-reading logic changes, the sign-off becomes "needs re-review". Every decision goes into the hash-chained audit log. ClinLoop records the review; it does not replace it.',
@@ -405,6 +419,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       $('rulecheck').textContent = t().ruleCheck(state.ruleCheck);
     }
     renderCritical();
+    renderMonitor();
     const st = $('f-status').value, dom = $('f-domain').value, q = $('f-text').value.trim().toLowerCase();
     const rows = state.rules.filter((r) => (!st || r.status === st) && (!dom || r.domain === dom)
       && (!q || `${r.rule_id} ${r.name} ${r.name_ko} ${r.description}`.toLowerCase().includes(q)));
@@ -412,11 +427,32 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       + (rows.length ? rows.map(ruleCard).join('') : `<div class="card empty">${esc(t().noRules)}</div>`);
   }
 
+  function renderMonitor() {
+    const m = state.monitor;
+    $('monitor').hidden = !m;
+    if (!m) return;
+    const held = Object.values(m.states || {}).filter((x) => x.state !== 'ok');
+    $('mon-list').innerHTML = held.length ? held.map((x) => `
+      <div class="msg" style="margin-top:8px;">
+        <div class="loop-head">
+          <span class="chip ${x.state === 'paused' ? 'moderate' : 'critical'}">${esc(x.state === 'paused' ? t().monPaused : t().monFlagged)}</span>
+          <strong>${esc(x.rule_id)}</strong>
+          <span class="meta" style="margin:0;">${esc(t().monSince(x))}</span>
+        </div>
+        <div class="action">${esc(x.reason || '')}</div>
+        ${can('admin') ? `<form class="form open" data-resume="${esc(x.rule_id)}">
+          <div><label for="res-${esc(x.rule_id)}">${esc(t().resumeNote)}</label>
+            <input id="res-${esc(x.rule_id)}" name="note" required minlength="5" maxlength="1000" placeholder="${esc(t().resumeNotePh)}"></div>
+          <div><button type="submit">${esc(t().resume)}</button></div></form>` : ''}
+      </div>`).join('') : `<p class="sub" style="margin:0;">${esc(t().monNone)}</p>`;
+  }
+
   async function reload() {
     const [summary, rules, critical] = await Promise.all([
       api('/api/v1/governance/summary'), api('/api/v1/governance/rules'), api('/api/v1/governance/critical-findings')]);
     state.summary = summary; state.rules = rules.rules; state.critical = critical;
     state.ruleCheck = await api('/api/v1/governance/rule-check').catch(() => null);
+    state.monitor = state.user ? await api('/api/v1/governance/monitor').catch(() => null) : null;
     const domains = [...new Set(state.rules.map((r) => r.domain))].sort();
     const current = $('f-domain').value;
     $('f-domain').innerHTML = `<option value="" data-i18n="all">${esc(t().all)}</option>` + domains.map((d) => `<option value="${esc(d)}">${esc(d.replace(/_/g, ' '))}</option>`).join('');
@@ -449,6 +485,17 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       await api('/api/v1/governance/critical-findings/approve', { method: 'POST', body: JSON.stringify({
         title: data.get('title'), note: data.get('note') || '', content_hash: state.critical.content_hash }) });
       setStatus(t().listApproved);
+      await reload();
+    } catch (err) { setStatus(err.message, true); }
+  });
+
+  $('mon-list').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const ruleId = e.target.dataset.resume;
+    try {
+      await api(`/api/v1/governance/rules/${encodeURIComponent(ruleId)}/resume`, { method: 'POST',
+        body: JSON.stringify({ note: new FormData(e.target).get('note') }) });
+      setStatus(t().resumed(ruleId));
       await reload();
     } catch (err) { setStatus(err.message, true); }
   });
