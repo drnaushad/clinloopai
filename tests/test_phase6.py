@@ -79,6 +79,8 @@ class TestBasis(unittest.TestCase):
     def test_long_deadlines_show_a_date_and_review_reason_is_clinical(self):
         r003 = next(b for b in self.d["R003"].basis if b.startswith("Rule R003"))
         self.assertRegex(r003, r"by \d{4}-\d{2}-\d{2} \(")                    # no false clock time
+        self.assertIn("(112 days)", r003)                                      # never "112.5 days"
+        self.assertNotIn("Culture Bacteria identified", self.d["R006"].basis[0])   # code text and display not repeated
         r022 = next(b for b in self.d["R022"].basis if b.startswith("Rule R022"))
         self.assertRegex(r022, r"by \d{4}-\d{2}-\d{2} \d{2}:\d{2} \(1 hour\)")   # a one-hour window keeps the time
         for d in self.d.values():
@@ -93,6 +95,52 @@ class TestBasis(unittest.TestCase):
         card = _card(loop, "https://clinloop.local", EVAL)
         self.assertIn("- The record says:", card["detail"])
         self.assertNotIn("From:", card["detail"])
+
+
+class TestPhase7Korean(unittest.TestCase):
+    """Phase 7: ready for a Korean hospital."""
+
+    def test_korean_basis_states_the_same_facts(self):
+        d = example_detections()
+        ko = d["R009"].basis_ko
+        self.assertTrue(ko[0].startswith("소견: 병리 결과"))
+        self.assertTrue(any("Negative for high-grade dysplasia" in b for b in ko))      # quote in the record's language
+        self.assertTrue(any(b.startswith("규칙 R009") and "환자 통보 및 전문의 의뢰" in b for b in ko))
+        self.assertIn("아직 없음: 전문의 의뢰.", ko)
+        self.assertTrue(d["R022"].basis_ko[0].startswith("소견: potassium 6.6 mmol/L (위급)"))
+        self.assertTrue(any("(1시간)" in b for b in d["R022"].basis_ko))
+        for det in d.values():
+            self.assertEqual(len(det.basis_ko), len(det.basis), det.rule_id)          # line for line
+            self.assertNotRegex(" ".join(det.basis_ko), r"\b[a-z]+_[a-z_]+\b", det.rule_id)
+            if det.should_abstain:
+                self.assertTrue(det.basis_ko[-1].startswith("의료진 검토 필요"))
+
+    def test_korean_basis_is_stored(self):
+        store = LoopStore()
+        d = example_detections()
+        store.upsert_detections(list(d.values()))
+        loop = next(l for l in store.worklist(include_inactive=True) if l["rule_id"] == "R003")
+        self.assertEqual(loop["basis_ko"], d["R003"].basis_ko)
+
+    def test_korean_report_set_agrees(self):
+        """Developer-labelled Korean and mixed reports: tests the reader, does not measure accuracy."""
+        import csv
+        from src.validation.report_validation import score
+        with open(os.path.join(ROOT, "data", "radiology_validation_synthetic_ko.csv"), encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        self.assertGreaterEqual(len(rows), 40)
+        result = score(rows)
+        self.assertEqual(result["exact_agreement"], len(rows), [d for d in result.get("disagreements", [])][:3])
+
+    def test_aneurysm_without_recorded_sex_uses_the_lower_repair_threshold(self):
+        """Clinical review: an unknown sex fell to the men's 5.5 cm threshold, so a woman's 5.2 cm
+        aneurysm would get 6-monthly surveillance instead of a vascular surgery referral."""
+        from src.validation.report_validation import predict
+        row = {"study": "CT abdomen", "conclusion": "Infrarenal abdominal aortic aneurysm 5.2 cm.",
+               "report_date": "2026-05-01", "age": "74"}
+        self.assertEqual(predict({**row, "sex": ""})[0], {"R045"})
+        self.assertEqual(predict({**row, "sex": "female"})[0], {"R045"})
+        self.assertEqual(predict({**row, "sex": "male"})[0], {"R044"})                  # men: 5.5 cm
 
 
 def fit(pid, closed_on=None):

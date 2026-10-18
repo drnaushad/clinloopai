@@ -1346,7 +1346,8 @@ def format_window(days: float) -> str:
     if days < 1.0:
         hours = round(days * 24)
         return f"{hours} hour{'s' if hours != 1 else ''}"
-    whole = int(days) if float(days).is_integer() else round(days, 1)
+    # Windows of two days or more are shown in whole days: "112.5 days" (3 months plus grace) is false precision.
+    whole = int(days) if float(days).is_integer() or days >= 2 else round(days, 1)
     return f"{whole} day{'s' if whole != 1 else ''}"
 
 

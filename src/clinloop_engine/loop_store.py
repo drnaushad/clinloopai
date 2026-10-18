@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS loops (
     explanation TEXT,
     evidence_chain TEXT,
     basis TEXT,                       -- plain-language reasons a clinician can check (basis.py), JSON list
+    basis_ko TEXT,                    -- the same in Korean
     owner TEXT NOT NULL DEFAULT 'unassigned',
     escalation_level INTEGER NOT NULL DEFAULT 0,
     last_escalated_at TEXT,
@@ -332,8 +333,9 @@ class LoopStore:
             loop_cols = {r["name"] for r in self._db.execute("PRAGMA table_info(loops)")}
             if "ruleset_version" not in loop_cols:
                 self._db.execute("ALTER TABLE loops ADD COLUMN ruleset_version TEXT")
-            if "basis" not in loop_cols:
-                self._db.execute("ALTER TABLE loops ADD COLUMN basis TEXT")
+            for col in ("basis", "basis_ko"):
+                if col not in loop_cols:
+                    self._db.execute(f"ALTER TABLE loops ADD COLUMN {col} TEXT")
             self._db.commit()
 
     # ── audit ────────────────────────────────────────────────────────────────
@@ -754,6 +756,7 @@ class LoopStore:
                     "explanation": json.dumps(d.explanation, ensure_ascii=False),
                     "evidence_chain": json.dumps(d.evidence_chain, ensure_ascii=False),
                     "basis": json.dumps(getattr(d, "basis", []) or [], ensure_ascii=False),
+                    "basis_ko": json.dumps(getattr(d, "basis_ko", []) or [], ensure_ascii=False),
                     "last_seen": now, "updated_at": now, "ruleset_version": ruleset,
                 }
                 if existing is None:
@@ -794,7 +797,7 @@ class LoopStore:
     @staticmethod
     def _row(r: sqlite3.Row) -> Dict:
         d = dict(r)
-        for k in ("explanation", "evidence_chain", "basis", "strata"):
+        for k in ("explanation", "evidence_chain", "basis", "basis_ko", "strata"):
             d[k] = json.loads(d[k]) if d.get(k) else ([] if k != "strata" else {})
         d["escalated_to"] = ESCALATION_CHAIN[min(d["escalation_level"], len(ESCALATION_CHAIN) - 1)]
         return d

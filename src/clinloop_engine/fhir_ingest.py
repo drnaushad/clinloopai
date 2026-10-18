@@ -147,7 +147,7 @@ def _concept_text(concept: Optional[Dict]) -> str:
     if not concept:
         return ""
     parts = [concept.get("text", "")] + [c.get("display", "") for c in _codings(concept)]
-    return " ".join(p for p in parts if p)
+    return " ".join(dict.fromkeys(p for p in parts if p))      # text often repeats the display
 
 
 def _codes(concept: Optional[Dict]) -> set:

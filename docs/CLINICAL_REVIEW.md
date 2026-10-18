@@ -71,6 +71,37 @@ Each fix has a regression test (`tests/test_phase6.py`). Left as they are, for r
 wording: R001 for a critical value asks for patient notification within 3 days (the critical call
 itself is R022); mapping notes use the rules' own abbreviations ("aaa 46 mm").
 
+## 3b. Korean hospital readiness (Phase 7, October 2026)
+
+Users at a Korean partner hospital read Korean, and their reports are written in Korean or mixed
+Korean and English. Two gaps were found and closed; one clinical fix came out of the review.
+
+| Finding | Risk | Fix |
+| --- | --- | --- |
+| The basis of each alert was English only | Criterion 4 not met for Korean users: the clinician cannot check the reason quickly | A Korean basis (`basis.build_ko`), line for line with the English one, shown when the worklist is in Korean. Report quotes stay in the language of the record |
+| Korean report reading was untested (1 of 34 validation reports was Korean) | Unknown misses on Korean phrasing | 42 synthetic Korean and mixed reports (`data/radiology_validation_synthetic_ko.csv`), including negated findings, benign findings needing no follow-up and English abbreviations; 42/42 agree with the developer's labels |
+| An abdominal aortic aneurysm with **no recorded sex** used the men's 5.5 cm repair threshold, so a woman's 5.2 cm aneurysm got 6-monthly surveillance instead of a vascular surgery referral | Under-triage of a rupture risk | When sex is not recorded the lower (women's, 5.0 cm) threshold is used and the basis says so (`radiology.py`, R045) |
+
+Three Korean rows were relabelled during the review, with the reason in the `notes` column: KO-019 (man,
+5.3 cm, below 5.5 cm: surveillance, R044), KO-022 (2.1 cm mass with a biopsy recommendation: tissue
+sampling, R036), KO-027 (Bosniak IIF with an explicit recommendation: tracked as the radiologist's
+recommendation, R030, as in the English set).
+
+The labels are the developer's: agreement shows the reader handles these phrasings, not its accuracy
+on real Korean reports, which Stage 1 must measure with the hospital's own reports. Still English: the
+"How this was worked out" mapping notes inside the Korean basis, and EHR (CDS Hooks) cards. Each
+Korean line and the AAA change need a Korean clinician's review before use.
+
+**Clinical read-through before merge (PR #45).** Every Korean line was read beside its English line for
+the example record. Found and fixed: a deadline window shown as "112.5 days / 112.5일" (3 months plus
+grace; now whole days for windows of two days or more); a culture test named twice ("Bacteria identified
+in Blood by Culture Bacteria identified…", the code text repeating its display); the referral step called
+"전문과 의뢰" while the rule names and worklist say "전문의 의뢰" (now one term); "사람의 검토 필요" changed
+to "의료진 검토 필요". The AAA rule was confirmed: with sex unknown the 5.0 cm threshold is the safer
+error (a man may be referred to vascular surgery a little early; a woman is not left on surveillance).
+The 42 Korean labels were checked against ACR, Fleischner, TI-RADS and SVS thresholds; the three
+relabelled rows are correct. "위급" is kept for critical values, as in the hospital critical-finding list.
+
 ## 4. Before clinical use
 
 1. A licensed clinician reviews this document and the code it names, and signs below.
