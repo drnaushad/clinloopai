@@ -29,7 +29,7 @@ import sqlite3
 import threading
 from contextlib import contextmanager
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 from .clinical_ontology import LoopStatus
 from .safety_clock import normalize_timestamp, utc_now
@@ -152,6 +152,23 @@ CREATE TABLE IF NOT EXISTS access_log (
 );
 CREATE INDEX IF NOT EXISTS idx_access_ts ON access_log(ts);
 CREATE INDEX IF NOT EXISTS idx_access_actor ON access_log(actor, action, ts);
+-- Rule monitoring (rule_monitor.py): a rule whose alert volume jumps or whose alerts clinicians mostly
+-- dismiss is paused (back to shadow mode) or, for critical rules, flagged for review. One row per rule.
+CREATE TABLE IF NOT EXISTS rule_monitor (
+    rule_id TEXT PRIMARY KEY,
+    state TEXT NOT NULL,              -- ok | paused | flagged
+    reason TEXT,
+    metrics TEXT,
+    changed_at TEXT NOT NULL,
+    changed_by TEXT NOT NULL,
+    cooldown_until TEXT               -- after a resume, no automatic pause before this time
+);
+-- Staff who signed in through the hospital's identity provider (oidc.py): offered when assigning loops
+CREATE TABLE IF NOT EXISTS sso_users (
+    name TEXT PRIMARY KEY,
+    role TEXT NOT NULL,
+    last_seen TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS sync_state (
     source TEXT PRIMARY KEY,
     cursor TEXT,
@@ -184,6 +201,16 @@ CREATE TABLE IF NOT EXISTS patient_snapshots (
     resources TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
+-- Local copy of the hospital's records, kept up to date by Bulk FHIR export (bulk_fhir.py). Only used
+-- when the FHIR server serves population data through $export instead of searches (e.g. Epic).
+CREATE TABLE IF NOT EXISTS fhir_mirror (
+    resource_key TEXT PRIMARY KEY,    -- Type/id
+    patient_id TEXT,
+    resource_type TEXT NOT NULL,
+    resource TEXT NOT NULL,           -- FHIR JSON as exported
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_mirror_patient ON fhir_mirror(patient_id);
 CREATE TABLE IF NOT EXISTS external_resources (
     id TEXT PRIMARY KEY,              -- FHIR resource id
     patient_id TEXT NOT NULL,
@@ -492,6 +519,100 @@ class LoopStore:
         with self._lock:
             r = self._db.execute("SELECT resources FROM patient_snapshots WHERE patient_id=?", (patient_id,)).fetchone()
         return json.loads(r["resources"]) if r else []
+
+    # ── rule monitoring ──────────────────────────────────────────────────────
+    def monitor_state(self) -> Dict[str, Dict]:
+        with self._lock:
+            rows = self._db.execute("SELECT * FROM rule_monitor").fetchall()
+        return {r["rule_id"]: {**dict(r), "metrics": json.loads(r["metrics"] or "{}")} for r in rows}
+
+    def paused_rules(self) -> set:
+        with self._lock:
+            return {r[0] for r in self._db.execute("SELECT rule_id FROM rule_monitor WHERE state='paused'")}
+
+    def set_monitor_state(self, rule_id: str, state: str, reason: str, metrics: Dict, actor: str, role: str = "system",
+                          cooldown_until: Optional[str] = None, note: str = "") -> Dict:
+        if state not in ("ok", "paused", "flagged"):
+            raise WorkflowError("Monitor state must be ok, paused or flagged")
+        now = utc_now().isoformat()
+        with self._writing():
+            self._db.execute(
+                "INSERT INTO rule_monitor (rule_id, state, reason, metrics, changed_at, changed_by, cooldown_until) "
+                "VALUES (?,?,?,?,?,?,?) ON CONFLICT(rule_id) DO UPDATE SET state=excluded.state, reason=excluded.reason, "
+                "metrics=excluded.metrics, changed_at=excluded.changed_at, changed_by=excluded.changed_by, "
+                "cooldown_until=excluded.cooldown_until",
+                (rule_id, state, reason, json.dumps(metrics, ensure_ascii=False), now, actor, cooldown_until))
+            self._audit(actor, role, {"paused": "rule_paused", "flagged": "rule_flagged", "ok": "rule_resumed"}[state],
+                        None, {"rule_id": rule_id, "reason": reason, "metrics": metrics, "note": note})
+        return self.monitor_state()[rule_id]
+
+    def rule_activity(self, since: str) -> List[Dict]:
+        """Loop openings and clinicians' decisions since `since`, for rule monitoring: rule, action, time,
+        defer reason. Read from the audit log, so the figures match the record."""
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT ts, action, loop_key, detail FROM audit_log WHERE ts>=? AND action IN "
+                "('loop_opened','defer','close') AND loop_key IS NOT NULL", (since,)).fetchall()
+        out = []
+        for r in rows:
+            parts = r["loop_key"].split("|")
+            if len(parts) < 3:
+                continue
+            detail = json.loads(r["detail"] or "{}")
+            out.append({"rule_id": parts[1], "action": r["action"], "ts": r["ts"], "reason": detail.get("reason")})
+        return out
+
+    def first_loop_opened(self) -> Dict[str, str]:
+        """{rule id: time its first loop opened}: how much history the monitor has for each rule."""
+        out: Dict[str, str] = {}
+        with self._lock:
+            for r in self._db.execute("SELECT loop_key, MIN(ts) AS first FROM audit_log WHERE action='loop_opened' "
+                                      "AND loop_key IS NOT NULL GROUP BY loop_key"):
+                parts = r["loop_key"].split("|")
+                if len(parts) >= 3 and (parts[1] not in out or r["first"] < out[parts[1]]):
+                    out[parts[1]] = r["first"]   # loop key: patient | rule | trigger (FHIR ids hold no "|")
+        return out
+
+    # ── single sign-on users ─────────────────────────────────────────────────
+    def remember_sso_user(self, name: str, role: str) -> None:
+        with self._writing():
+            self._db.execute("INSERT INTO sso_users (name, role, last_seen) VALUES (?,?,?) ON CONFLICT(name) "
+                             "DO UPDATE SET role=excluded.role, last_seen=excluded.last_seen",
+                             (name, role, utc_now().isoformat()))
+
+    def sso_users(self, active_days: int = 180) -> Dict[str, str]:
+        """{name: role} of people who signed in through the identity provider recently. Their role is the
+        one from their last sign-in; someone who left stops appearing after `active_days`."""
+        since = (utc_now() - timedelta(days=active_days)).isoformat()
+        with self._lock:
+            return {r["name"]: r["role"] for r in
+                    self._db.execute("SELECT name, role FROM sso_users WHERE last_seen>=?", (since,))}
+
+    # ── Bulk FHIR mirror ─────────────────────────────────────────────────────
+    def mirror_upsert(self, rows: Iterable[Tuple[str, Optional[str], str, Dict]]) -> int:
+        """Store exported resources: (resource type, patient id, resource id, resource). Later exports
+        replace earlier versions of the same resource."""
+        now = utc_now().isoformat()
+        n = 0
+        with self._writing():
+            for rtype, pid, rid, resource in rows:
+                self._db.execute(
+                    "INSERT INTO fhir_mirror (resource_key, patient_id, resource_type, resource, updated_at) "
+                    "VALUES (?,?,?,?,?) ON CONFLICT(resource_key) DO UPDATE SET patient_id=excluded.patient_id, "
+                    "resource=excluded.resource, updated_at=excluded.updated_at",
+                    (f"{rtype}/{rid}", pid, rtype, json.dumps(resource, ensure_ascii=False), now))
+                n += 1
+        return n
+
+    def mirror_history(self, patient_id: str) -> List[Dict]:
+        with self._lock:
+            rows = self._db.execute("SELECT resource FROM fhir_mirror WHERE patient_id=? ORDER BY resource_key",
+                                    (patient_id,)).fetchall()
+        return [json.loads(r["resource"]) for r in rows]
+
+    def mirror_size(self) -> int:
+        with self._lock:
+            return self._db.execute("SELECT COUNT(*) FROM fhir_mirror").fetchone()[0]
 
     def external_patients(self) -> List[str]:
         with self._lock:

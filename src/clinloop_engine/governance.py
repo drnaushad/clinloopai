@@ -220,16 +220,40 @@ def summary(store, statuses: Optional[Dict[str, Dict]] = None) -> Dict:
     return {"rules_total": len(statuses), "rules_approved": counts.get("approved", 0), "by_status": counts,
             "approvals_required": approvals_required(), "enforce_signoff": enforcement_enabled(),
             "critical_findings_list": critical["status"], "ruleset_version": ruleset_version(),
+            "paused_rules": sorted(store.paused_rules()),
+            "flagged_rules": sorted(rid for rid, m in store.monitor_state().items() if m["state"] == "flagged"),
             "guideline_updates": sorted(r for r, st in statuses.items()
                                         if any(not a["accepted"] for a in st.get("guideline_alerts") or []))}
 
 
-def live_rule_ids(store, statuses: Optional[Dict[str, Dict]] = None) -> Optional[set]:
-    """Rules allowed on the worklist, or None when sign-off is not enforced."""
+def visible_loops(store, loops: List[Dict], statuses: Optional[Dict[str, Dict]] = None) -> Tuple[List[Dict], int]:
+    """The loops staff see, and how many are held back. Unsigned rules (shadow mode) hide all their loops;
+    a rule the monitor paused hides only NEW loops: one someone acknowledged or deferred stays in
+    front of them, so work in progress is never taken away."""
+    live = live_rule_ids(store, statuses)
+    if live is None:
+        return loops, 0
+    paused = store.paused_rules()
+    shown = [l for l in loops if l["rule_id"] in live or (l["rule_id"] in paused and l["workflow_state"] != "new"
+                                                         and _signed_off_or_unenforced(store, l["rule_id"], statuses))]
+    return shown, len(loops) - len(shown)
+
+
+def _signed_off_or_unenforced(store, rule_id: str, statuses: Optional[Dict[str, Dict]]) -> bool:
     if not enforcement_enabled():
-        return None
+        return True
+    statuses = statuses if statuses is not None else all_rule_statuses(store)
+    return statuses.get(rule_id, {}).get("status") == "approved"
+
+
+def live_rule_ids(store, statuses: Optional[Dict[str, Dict]] = None) -> Optional[set]:
+    """Rules allowed on the worklist, or None when every rule is. A rule the monitor paused
+    (rule_monitor.py) is out even when sign-off is not enforced."""
+    paused = store.paused_rules()
+    if not enforcement_enabled():
+        return {r.rule_id for r in OBLIGATION_RULES} - paused if paused else None
     statuses = statuses if statuses is not None else all_rule_statuses(store)
     live = {rid for rid, s in statuses.items() if s["status"] == "approved"}
     if critical_list_status(store)["status"] != "approved":
         live.discard(CRITICAL_RULE)
-    return live
+    return live - paused

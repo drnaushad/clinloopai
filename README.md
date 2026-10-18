@@ -398,6 +398,8 @@ CDS Hooks discovery document.
 | `POST /api/v1/outreach/{id}/decision` | clinician | Approve (optionally edited) and send, or reject |
 | `GET /api/v1/feed/status` | viewer | Data feed `OK` / `STALE` / `FAILING` / `NEVER` |
 | `POST /api/v1/fhir/sync` | admin | Run one sync from the configured FHIR server now |
+| `GET /api/v1/governance/monitor` | viewer | Each rule's alert volume and dismissals; paused and flagged rules |
+| `POST /api/v1/governance/rules/{id}/resume` | admin | Put a paused or flagged rule back in service, with a note |
 | `GET /api/v1/fhir/check` | admin | Can ClinLoop log in and read each resource type? (HTTP outcomes only, no patient data) |
 | `GET /.well-known/jwks.json` | public | ClinLoop's public key for SMART Backend Services (when a key is configured) |
 | `GET /api/v1/biomcp/status` | viewer | BioMCP connection and the tools ClinLoop may call |
@@ -425,6 +427,9 @@ Configuration:
 | `CLINLOOP_FHIR_BASE` | Hospital FHIR R4 server; enables background sync | sync off |
 | `CLINLOOP_FHIR_CLIENT_ID` / `CLINLOOP_FHIR_PRIVATE_KEY` | SMART Backend Services login with ClinLoop's signed key (see [`docs/FHIR_CONNECTION.md`](docs/FHIR_CONNECTION.md)); `CLINLOOP_FHIR_CLIENT_SECRET` for sandboxes | — |
 | `CLINLOOP_FHIR_TOKEN` | Static read-only bearer token, for test servers without SMART login | — |
+| `CLINLOOP_FHIR_MODE` / `CLINLOOP_FHIR_GROUP_ID` | `bulk` reads the server through Bulk FHIR export (Epic and similar) for the given Group | `search` |
+| `CLINLOOP_OIDC_ISSUER` / `CLINLOOP_OIDC_CLIENT_ID` | Hospital single sign-on (OpenID Connect); see `src/clinloop_engine/oidc.py` for audience, role claim and role map settings | off |
+| `CLINLOOP_MONITOR` | `0` makes the rule monitor report without pausing or flagging; thresholds via `CLINLOOP_MONITOR_*` | `1` |
 | `CLINLOOP_FHIR_SYNC_MINUTES` / `CLINLOOP_FHIR_INITIAL_DAYS` | Sync interval / first-sync look-back | 15 / 365 |
 | `CLINLOOP_CDS_CLIENTS` | EHRs trusted to call the CDS Hooks service: JSON list of `{"iss", "jwks_url"}` (or inline `"jwks"`) | none |
 | `CLINLOOP_PUBLIC_URL` | ClinLoop's address as clinicians reach it, for links on EHR cards; also gives the CDS Hooks token audience when `CLINLOOP_CDS_AUDIENCE` is unset | none |
@@ -737,9 +742,10 @@ results are identical on every run.
 | Report versions | **Implemented**: a final report replaces its preliminary version's loops; a finding dropped by the final report waits for a clinician |
 | Rule-set version | **Implemented**: each loop and its `loop_opened` audit entry carry the version of the rules, guideline registry, critical-finding list and decision code that raised it |
 | Pinned dependencies | **Implemented**: `requirements.lock` (Python 3.12), used by CI and the Docker image |
-| API authentication | **Implemented**: bearer tokens with roles. Not yet integrated with hospital SSO |
+| API authentication | **Implemented**: hospital single sign-on (OpenID Connect with PKCE; roles from the identity provider's groups) and bearer tokens with roles for service accounts. Tested against a stub provider in a browser; not yet against a hospital's identity provider |
+| Rule monitoring | **Implemented**: hourly check of each rule's alert volume and dismissals. Mostly dismissed alerts pause a non-critical rule (new alerts held back; work in progress stays visible); a volume jump alone only flags it; critical rules are only ever flagged. Resumed by an administrator with a note |
 | Clinician worklist | **Implemented** (`worklist.html`): Korean/English, assignment, my loops, outreach approval |
-| FHIR server sync | **Implemented**: SMART Backend Services login (RS384/ES384 signed key, or client secret for sandboxes), token renewal, connection check. Tested against a standards-following stub server; not yet against a vendor sandbox. Epic needs Bulk FHIR export (not built) |
+| FHIR server sync | **Implemented**: SMART Backend Services login (RS384/ES384 signed key, or client secret for sandboxes), token renewal, connection check. Tested against a standards-following stub server; not yet against a vendor sandbox. Bulk FHIR export (`CLINLOOP_FHIR_MODE=bulk`) for Epic and similar, tested against a stub following the Bulk Data specification |
 | Data-feed monitoring | **Implemented**: OK / STALE / FAILING / NEVER, audited alarm |
 | Patient outreach | **Implemented** with clinician approval. Real delivery requires the hospital's KakaoTalk/SMS integration behind the webhook |
 | Stage 1 validation toolkits | **Implemented** (report-level and chart review); await IRB approval and real, de-identified data |

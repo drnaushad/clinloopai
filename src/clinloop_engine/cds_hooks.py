@@ -245,9 +245,7 @@ def patient_view(request: Request, body: Dict[str, Any] = Body(...)) -> Dict[str
         raise HTTPException(400, "context.patientId is required")
     store = get_store()
     loops = store.worklist(patient_id=patient_id)
-    live = governance.live_rule_ids(store)
-    if live is not None:
-        loops = [loop for loop in loops if loop["rule_id"] in live]     # shadow-mode rules stay silent
+    loops, _ = governance.visible_loops(store, loops)            # shadow-mode and paused rules stay silent
     now = utc_now()
     base = os.environ.get("CLINLOOP_PUBLIC_URL", "").rstrip("/")
     limit = max(1, int(os.environ.get("CLINLOOP_CDS_MAX_CARDS", "5") or 5))

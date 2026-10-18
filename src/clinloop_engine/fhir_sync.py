@@ -17,6 +17,8 @@ Configuration (environment):
   CLINLOOP_FHIR_CLIENT_ID      SMART Backend Services login (with CLINLOOP_FHIR_PRIVATE_KEY): see
                                smart_auth.py. Takes precedence over a static token.
   CLINLOOP_FHIR_TOKEN          static bearer token (read-only scope), for servers without SMART login
+  CLINLOOP_FHIR_MODE           search (default) or bulk: Bulk FHIR export for servers that serve
+                               population data only that way (e.g. Epic); see bulk_fhir.py
   CLINLOOP_FHIR_SYNC_MINUTES   interval for the API's background sync (default 15)
   CLINLOOP_FHIR_INITIAL_DAYS   look-back for the very first sync (default 365)
 
@@ -147,6 +149,8 @@ def patient_record(patient_id: str, store: LoopStore, client: Optional["FHIRClie
     """
     from .pacs_client import PACSError, imaging_studies_for
     warnings: List[str] = []
+    if client is not None and hasattr(client, "bind"):      # Bulk FHIR: history from the local copy
+        client.bind(store)
     resources = client.patient_history(patient_id) if client else store.snapshot(patient_id)
     resources = resources + store.external_resources(patient_id)
     if pacs is not None:
@@ -164,6 +168,8 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
     """One sync run. Never raises: failures are recorded for the feed monitor."""
     now = now or utc_now()
     since = store.get_cursor(source) or (now - timedelta(days=initial_days)).isoformat() + "Z"
+    if hasattr(client, "bind"):
+        client.bind(store)
     try:
         patients, newest = client.changed_patients(since)
         detector = hospital_detector(now)
@@ -225,6 +231,15 @@ def check_connection(client: FHIRClient, now: Optional[datetime] = None) -> Dict
         return report
     if report["fhir_version"] and not str(report["fhir_version"]).startswith("4.0"):
         report["problems"].append(f"FHIR version {report['fhir_version']}: ClinLoop reads R4 (4.0.x)")
+    bulk = hasattr(client, "export_url")
+    if bulk:
+        ops = {str(op.get("name", "")).lstrip("$") for rest in cap.get("rest", [])
+               for op in rest.get("operation", []) + [o for r in rest.get("resource", []) for o in r.get("operation", [])]} \
+            if meta.status_code == 200 else set()
+        report["mode"] = "bulk export"
+        report["export"] = {"url": client.export_url, "declared": "export" in ops if ops else None}
+        if ops and "export" not in ops:
+            report["problems"].append("The CapabilityStatement declares no $export operation")
     auth = client.session.auth
     if isinstance(auth, SMARTBackendAuth):
         try:
@@ -239,6 +254,9 @@ def check_connection(client: FHIRClient, now: Optional[datetime] = None) -> Dict
             return report
     else:
         report["login"] = {"method": "static bearer token" if "Authorization" in client.session.headers else "none"}
+    if bulk:            # no searches: the export itself is what the sync uses (it is started by a sync, not here)
+        report["ok"] = not report["problems"]
+        return report
     for rtype in CLINICAL_TYPES + OPTIONAL_TYPES + ["Patient"]:
         entry: Dict = {"declared": rtype in declared if declared else None}
         url = f"{client.base}/{rtype}?{urlencode({'_lastUpdated': f'gt{since}', '_count': 1})}"
@@ -272,7 +290,14 @@ def client_from_env() -> Optional[FHIRClient]:
         auth = auth_from_env(base, CLINICAL_TYPES + OPTIONAL_TYPES)
     except SMARTAuthError as e:          # a bad key must stop the sync loudly, not fall back to no login
         raise FHIRSyncError(str(e)) from None
-    return FHIRClient(base, token=os.environ.get("CLINLOOP_FHIR_TOKEN"), auth=auth)
+    token = os.environ.get("CLINLOOP_FHIR_TOKEN")
+    mode = (os.environ.get("CLINLOOP_FHIR_MODE") or "search").strip().lower()
+    if mode == "bulk":
+        from .bulk_fhir import bulk_client_from_env
+        return bulk_client_from_env(base, token, auth)
+    if mode != "search":
+        raise FHIRSyncError("CLINLOOP_FHIR_MODE must be 'search' or 'bulk'")
+    return FHIRClient(base, token=token, auth=auth)
 
 
 async def sync_loop(get_store, interval_minutes: Optional[float] = None):
