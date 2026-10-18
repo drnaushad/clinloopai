@@ -14,14 +14,14 @@ Each run:
 
 Configuration (environment):
   CLINLOOP_FHIR_BASE           FHIR base URL, e.g. https://fhir.hospital.local/r4
-  CLINLOOP_FHIR_TOKEN          bearer token for the FHIR server (read-only scope)
+  CLINLOOP_FHIR_CLIENT_ID      SMART Backend Services login (with CLINLOOP_FHIR_PRIVATE_KEY): see
+                               smart_auth.py. Takes precedence over a static token.
+  CLINLOOP_FHIR_TOKEN          static bearer token (read-only scope), for servers without SMART login
   CLINLOOP_FHIR_SYNC_MINUTES   interval for the API's background sync (default 15)
   CLINLOOP_FHIR_INITIAL_DAYS   look-back for the very first sync (default 365)
 
-Production deployments should obtain the token via SMART Backend Services
-(client-credentials with a signed JWT); this module accepts any bearer token.
-
 CLI:
+  python -m src.clinloop_engine.fhir_sync --check   # can ClinLoop log in and read each type? (no patient data shown)
   python -m src.clinloop_engine.fhir_sync --once
 """
 
@@ -40,6 +40,7 @@ from .fhir_ingest import _patient_id, bundle_to_events, patient_strata, supersed
 from .loop_detector import ClinLoopDetector, hospital_detector, lapse_after_death
 from .loop_store import LoopStore
 from .safety_clock import utc_now
+from .smart_auth import SMARTAuthError, SMARTBackendAuth, auth_from_env
 
 logger = logging.getLogger("clinloop.fhir_sync")
 
@@ -61,18 +62,35 @@ class FHIRClient:
     """Minimal read-only FHIR R4 REST client with Bundle paging."""
 
     def __init__(self, base_url: str, token: Optional[str] = None, timeout: float = 30.0,
-                 session: Optional[requests.Session] = None):
+                 session: Optional[requests.Session] = None, auth=None):
+        """``auth``: a SMARTBackendAuth (or any requests auth) that supplies and renews the token."""
         self.base = base_url.rstrip("/")
         self.timeout = timeout
         self.session = session or requests.Session()
         self.session.headers.update({"Accept": "application/fhir+json"})
-        if token:
+        if auth is not None:
+            self.session.auth = auth
+        elif token:
             self.session.headers["Authorization"] = f"Bearer {token}"
+
+    def _get(self, url: str) -> requests.Response:
+        try:
+            resp = self.session.get(url, timeout=self.timeout)
+        except SMARTAuthError as e:
+            raise FHIRSyncError(f"FHIR login failed: {e}") from None
+        invalidate = getattr(self.session.auth, "invalidate", None)
+        if resp.status_code == 401 and invalidate:      # token revoked or expired early: log in again, once
+            invalidate()
+            try:
+                resp = self.session.get(url, timeout=self.timeout)
+            except SMARTAuthError as e:
+                raise FHIRSyncError(f"FHIR login failed: {e}") from None
+        return resp
 
     def search(self, resource_type: str, params: Dict[str, str]) -> Iterable[Dict]:
         url = f"{self.base}/{resource_type}?{urlencode({**params, '_count': PAGE_SIZE})}"
         for _ in range(MAX_PAGES):
-            resp = self.session.get(url, timeout=self.timeout)
+            resp = self._get(url)
             if resp.status_code != 200:
                 raise FHIRSyncError(f"GET {resource_type} failed: HTTP {resp.status_code}")
             bundle = resp.json()
@@ -183,16 +201,88 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
         return {"ok": False, "since": since, "error": str(e)}
 
 
+def check_connection(client: FHIRClient, now: Optional[datetime] = None) -> Dict:
+    """
+    Can ClinLoop read this FHIR server the way the sync does? Reads the CapabilityStatement, logs in,
+    then makes the sync's own search (`_lastUpdated=gt…`, one result) for each resource type.
+    The report holds HTTP outcomes and counts only: no resource content, no patient data.
+    """
+    since = ((now or utc_now()) - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    report: Dict = {"base": client.base, "ok": False, "fhir_version": None, "login": None, "types": {}, "problems": []}
+    try:      # the CapabilityStatement is public on most servers: read it without logging in
+        meta = requests.get(f"{client.base}/metadata", headers={"Accept": "application/fhir+json"},
+                            timeout=client.timeout)
+        if meta.status_code == 200:
+            cap = meta.json()
+            report["fhir_version"] = cap.get("fhirVersion")
+            declared = {r.get("type"): r for rest in cap.get("rest", []) for r in rest.get("resource", [])}
+            report["software"] = (cap.get("software") or {}).get("name")
+        else:
+            declared = {}
+            report["problems"].append(f"CapabilityStatement: HTTP {meta.status_code}")
+    except (requests.RequestException, ValueError) as e:
+        report["problems"].append(f"Server unreachable ({type(e).__name__})")
+        return report
+    if report["fhir_version"] and not str(report["fhir_version"]).startswith("4.0"):
+        report["problems"].append(f"FHIR version {report['fhir_version']}: ClinLoop reads R4 (4.0.x)")
+    auth = client.session.auth
+    if isinstance(auth, SMARTBackendAuth):
+        try:
+            auth.invalidate()
+            auth.token()
+            report["login"] = {"method": "SMART Backend Services" + ("" if auth.private_key is not None
+                                                                    else " (client secret)"),
+                               "token_endpoint": auth.token_url, "scope": auth.scope}
+        except SMARTAuthError as e:
+            report["login"] = {"method": "SMART Backend Services", "error": str(e)}
+            report["problems"].append(f"Login failed: {e}")
+            return report
+    else:
+        report["login"] = {"method": "static bearer token" if "Authorization" in client.session.headers else "none"}
+    for rtype in CLINICAL_TYPES + OPTIONAL_TYPES + ["Patient"]:
+        entry: Dict = {"declared": rtype in declared if declared else None}
+        url = f"{client.base}/{rtype}?{urlencode({'_lastUpdated': f'gt{since}', '_count': 1})}"
+        try:
+            resp = client._get(url)
+            entry["status"] = resp.status_code
+            if resp.status_code == 200:
+                entry["readable"] = True
+            else:
+                entry["readable"] = False
+                hint = {401: "not logged in", 403: "not allowed: check the scopes granted to ClinLoop",
+                        400: "this search is not supported (ClinLoop searches by _lastUpdated)",
+                        404: "resource type not available"}.get(resp.status_code, "error")
+                entry["hint"] = hint
+                if rtype not in OPTIONAL_TYPES:
+                    report["problems"].append(f"{rtype}: HTTP {resp.status_code} ({hint})")
+        except (FHIRSyncError, requests.RequestException) as e:
+            entry.update(readable=False, error=type(e).__name__)
+            if rtype not in OPTIONAL_TYPES:
+                report["problems"].append(f"{rtype}: {type(e).__name__}")
+        report["types"][rtype] = entry
+    report["ok"] = not report["problems"]
+    return report
+
+
 def client_from_env() -> Optional[FHIRClient]:
     base = os.environ.get("CLINLOOP_FHIR_BASE")
     if not base:
         return None
-    return FHIRClient(base, token=os.environ.get("CLINLOOP_FHIR_TOKEN"))
+    try:
+        auth = auth_from_env(base, CLINICAL_TYPES + OPTIONAL_TYPES)
+    except SMARTAuthError as e:          # a bad key must stop the sync loudly, not fall back to no login
+        raise FHIRSyncError(str(e)) from None
+    return FHIRClient(base, token=os.environ.get("CLINLOOP_FHIR_TOKEN"), auth=auth)
 
 
 async def sync_loop(get_store, interval_minutes: Optional[float] = None):
     """Background sync for the API process (enabled when CLINLOOP_FHIR_BASE is set)."""
-    client = client_from_env()
+    try:
+        client = client_from_env()
+    except FHIRSyncError as e:       # e.g. an unreadable key: no sync at all, and the feed alarm must say so
+        logger.error("FHIR sync not started: %s", e)
+        get_store().record_ingest("fhir-sync", "fhir-sync", ok=False, error=f"not started: {e}")
+        return
     if client is None:
         return
     minutes = interval_minutes or float(os.environ.get("CLINLOOP_FHIR_SYNC_MINUTES", "15"))
@@ -211,12 +301,24 @@ async def sync_loop(get_store, interval_minutes: Optional[float] = None):
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(description="Sync ClinLoop from a FHIR R4 server")
     ap.add_argument("--once", action="store_true", help="run a single sync and exit")
+    ap.add_argument("--check", action="store_true",
+                    help="check login and which resource types can be read (prints no patient data)")
     ap.add_argument("--db", default=None, help="loop registry path (default: CLINLOOP_DB)")
     args = ap.parse_args(argv)
-    client = client_from_env()
-    if client is None:
-        print("Set CLINLOOP_FHIR_BASE (and CLINLOOP_FHIR_TOKEN).", file=sys.stderr)
+    try:
+        client = client_from_env()
+    except FHIRSyncError as e:
+        print(f"Cannot start: {e}", file=sys.stderr)
         return 2
+    if client is None:
+        print("Set CLINLOOP_FHIR_BASE, and CLINLOOP_FHIR_CLIENT_ID with CLINLOOP_FHIR_PRIVATE_KEY "
+              "(or CLINLOOP_FHIR_TOKEN).", file=sys.stderr)
+        return 2
+    if args.check:
+        import json
+        report = check_connection(client)
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return 0 if report["ok"] else 1
     from .clinical_api import DEFAULT_DB
     store = LoopStore(args.db or os.environ.get("CLINLOOP_DB", DEFAULT_DB))
     result = sync_once(store, client, initial_days=int(os.environ.get("CLINLOOP_FHIR_INITIAL_DAYS", "365")))

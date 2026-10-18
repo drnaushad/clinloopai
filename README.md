@@ -398,6 +398,8 @@ CDS Hooks discovery document.
 | `POST /api/v1/outreach/{id}/decision` | clinician | Approve (optionally edited) and send, or reject |
 | `GET /api/v1/feed/status` | viewer | Data feed `OK` / `STALE` / `FAILING` / `NEVER` |
 | `POST /api/v1/fhir/sync` | admin | Run one sync from the configured FHIR server now |
+| `GET /api/v1/fhir/check` | admin | Can ClinLoop log in and read each resource type? (HTTP outcomes only, no patient data) |
+| `GET /.well-known/jwks.json` | public | ClinLoop's public key for SMART Backend Services (when a key is configured) |
 | `GET /api/v1/biomcp/status` | viewer | BioMCP connection and the tools ClinLoop may call |
 | `POST /api/v1/biomcp/call` | viewer | Call a read-only BioMCP tool (articles, trials, openFDA, genes, variants) |
 | `GET /api/v1/audit/verify` | admin | Verify the audit hash chain |
@@ -420,7 +422,9 @@ Configuration:
 | `CLINLOOP_API_TOKENS` | `token:user:role,…` | one-time admin token |
 | `CLINLOOP_SIGNING_KEY` | Key for agent audit signatures | per-process random |
 | `CLINLOOP_DB` | Loop registry (SQLite) | `data/clinloop.db` |
-| `CLINLOOP_FHIR_BASE` / `CLINLOOP_FHIR_TOKEN` | Hospital FHIR server and read-only token; enables background sync | sync off |
+| `CLINLOOP_FHIR_BASE` | Hospital FHIR R4 server; enables background sync | sync off |
+| `CLINLOOP_FHIR_CLIENT_ID` / `CLINLOOP_FHIR_PRIVATE_KEY` | SMART Backend Services login with ClinLoop's signed key (see [`docs/FHIR_CONNECTION.md`](docs/FHIR_CONNECTION.md)); `CLINLOOP_FHIR_CLIENT_SECRET` for sandboxes | — |
+| `CLINLOOP_FHIR_TOKEN` | Static read-only bearer token, for test servers without SMART login | — |
 | `CLINLOOP_FHIR_SYNC_MINUTES` / `CLINLOOP_FHIR_INITIAL_DAYS` | Sync interval / first-sync look-back | 15 / 365 |
 | `CLINLOOP_CDS_CLIENTS` | EHRs trusted to call the CDS Hooks service: JSON list of `{"iss", "jwks_url"}` (or inline `"jwks"`) | none |
 | `CLINLOOP_PUBLIC_URL` | ClinLoop's address as clinicians reach it, for links on EHR cards; also gives the CDS Hooks token audience when `CLINLOOP_CDS_AUDIENCE` is unset | none |
@@ -735,7 +739,7 @@ results are identical on every run.
 | Pinned dependencies | **Implemented**: `requirements.lock` (Python 3.12), used by CI and the Docker image |
 | API authentication | **Implemented**: bearer tokens with roles. Not yet integrated with hospital SSO |
 | Clinician worklist | **Implemented** (`worklist.html`): Korean/English, assignment, my loops, outreach approval |
-| FHIR server sync | **Implemented** (bearer token). SMART Backend Services token exchange not yet built |
+| FHIR server sync | **Implemented**: SMART Backend Services login (RS384/ES384 signed key, or client secret for sandboxes), token renewal, connection check. Tested against a standards-following stub server; not yet against a vendor sandbox. Epic needs Bulk FHIR export (not built) |
 | Data-feed monitoring | **Implemented**: OK / STALE / FAILING / NEVER, audited alarm |
 | Patient outreach | **Implemented** with clinician approval. Real delivery requires the hospital's KakaoTalk/SMS integration behind the webhook |
 | Stage 1 validation toolkits | **Implemented** (report-level and chart review); await IRB approval and real, de-identified data |

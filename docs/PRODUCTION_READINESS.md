@@ -57,6 +57,7 @@ about each one separately.
 | Patient's wish not to be messaged | Per-patient opt-out; drafting and approval refused; waiting drafts withdrawn | `PUT /api/v1/patients/{id}/outreach-preference` |
 | Data stays in the hospital | FHIR, PACS, models and LLM all on premises; no patient data sent to outside services | README "Data protection" |
 | Reproducible builds | `requirements.lock` used by CI and the Docker image | `requirements.lock` |
+| Standard FHIR login | SMART Backend Services: signed client assertion, read-only scopes, token renewal; connection check | `smart_auth.py`, `docs/FHIR_CONNECTION.md` |
 | Roles | Bearer tokens with viewer / navigator / clinician / admin | `auth.py` |
 
 ## 4. Design decisions
@@ -137,7 +138,8 @@ edit the range, regenerate the lock (command at the top of the file), run the te
 | Gap | Why it matters | Suggested step |
 | --- | --- | --- |
 | Hospital single sign-on | Tokens are per user but issued by hand; no password policy, no session expiry | OIDC / SAML through the hospital identity provider |
-| SMART Backend Services | FHIR sync uses a static bearer token | Client-credentials JWT exchange |
+| Vendor sandbox run | SMART login is tested against a stub that follows the specification, not yet a vendor's server | Run `fhir_sync --check`, then a sync, against Medplum or the SMART Health IT launcher with synthetic patients (`docs/FHIR_CONNECTION.md`) |
+| Bulk FHIR export | Epic and some others serve population data only through `$export`; the sync's `_lastUpdated` searches will not work there | Group-level `$export` with SMART login, then the same engine |
 | Validation on real data | All accuracy figures are on synthetic or public data | Shadow-mode pilot on retrospective de-identified data with full clinician review (`docs/STUDY_PROTOCOL.md`) |
 | Regulatory file | No intended-use sign-off, no device determination | §1 and §2 to a regulatory specialist |
 | Separate review of clinical-logic changes | One author can change a rule and its tests | Require a clinician reviewer on `clinical_ontology.py`, `radiology.py`, `fhir_ingest.py`, `motifs.py`, `guideline_reports.py`, `note_reader.py` and outreach code (e.g. GitHub CODEOWNERS) |

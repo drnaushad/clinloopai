@@ -34,3 +34,8 @@ sheet.csv
 result.json
 export_bundle.json
 out.json
+
+# Private keys (SMART Backend Services login): never committed
+*.pem
+*.key
+clinloop_fhir_jwks.json

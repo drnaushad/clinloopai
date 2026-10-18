@@ -480,11 +480,28 @@ def feed_status(user: User = Depends(require_role("viewer"))):
 @router.post("/fhir/sync", tags=["Clinical Pilot"])
 def sync_now(user: User = Depends(require_role("admin"))):
     """Run one sync from the configured FHIR server (CLINLOOP_FHIR_BASE)."""
-    from .fhir_sync import client_from_env, sync_once
-    client = client_from_env()
+    from .fhir_sync import FHIRSyncError, client_from_env, sync_once
+    try:
+        client = client_from_env()
+    except FHIRSyncError as e:
+        raise HTTPException(503, str(e))
     if client is None:
         raise HTTPException(503, "No FHIR server configured (set CLINLOOP_FHIR_BASE)")
     return sync_once(get_store(), client)
+
+
+@router.get("/fhir/check", tags=["Clinical Pilot"])
+def fhir_check(user: User = Depends(require_role("admin"))):
+    """Can ClinLoop log in to the configured FHIR server and read each resource type the sync needs?
+    Reports HTTP outcomes only: no resource content or patient data."""
+    from .fhir_sync import FHIRSyncError, check_connection, client_from_env
+    try:
+        client = client_from_env()
+    except FHIRSyncError as e:
+        raise HTTPException(503, str(e))
+    if client is None:
+        raise HTTPException(503, "No FHIR server configured (set CLINLOOP_FHIR_BASE)")
+    return check_connection(client)
 
 
 @router.get("/audit/verify", tags=["Clinical Pilot"])
