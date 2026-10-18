@@ -30,6 +30,7 @@ from typing import Dict, List, Optional, Tuple
 
 from .clinical_ontology import OBLIGATION_RULES, EventType, ObligationRule
 from .radiology import load_critical_findings
+from .profile import describe as profile_describe
 
 _RADIOLOGY_SOURCE = os.path.join(os.path.dirname(__file__), "radiology.py")
 CRITICAL_FINDINGS_KIND = "critical_findings"
@@ -83,7 +84,7 @@ def rule_fingerprint(rule: ObligationRule) -> str:
 # The code that turns records into obligations. A change to any of these can change which loops open.
 _DECISION_SOURCES = ("clinical_ontology.py", "fhir_ingest.py", "radiology.py", "temporal_hypergraph.py",
                      "loop_detector.py", "safety_clock.py", "motifs.py", "guideline_reports.py", "note_reader.py",
-                     "ecg.py", "report_text.py", "imaging_fhir.py", "ai_review.py")
+                     "ecg.py", "report_text.py", "imaging_fhir.py", "ai_review.py", "profile.py")
 
 
 def ruleset_version() -> str:
@@ -97,6 +98,8 @@ def ruleset_version() -> str:
     parts = [rule_fingerprint(r) for r in OBLIGATION_RULES]
     parts.append(json.dumps(_guidelines(), sort_keys=True, ensure_ascii=False, default=str))
     parts.append(json.dumps(load_critical_findings(), sort_keys=True, ensure_ascii=False, default=str))
+    prof = profile_describe()                       # the core profile opens fewer rules and audits two
+    parts.append("excluded:" + ",".join(prof["excluded_rules"]) + ";audit:" + ",".join(prof["documentation_audit_rules"]))
     for name in _DECISION_SOURCES:
         path = os.path.join(here, name)
         if os.path.exists(path):
@@ -220,6 +223,7 @@ def summary(store, statuses: Optional[Dict[str, Dict]] = None) -> Dict:
     return {"rules_total": len(statuses), "rules_approved": counts.get("approved", 0), "by_status": counts,
             "approvals_required": approvals_required(), "enforce_signoff": enforcement_enabled(),
             "critical_findings_list": critical["status"], "ruleset_version": ruleset_version(),
+            "profile": profile_describe(),
             "paused_rules": sorted(store.paused_rules()),
             "flagged_rules": sorted(rid for rid, m in store.monitor_state().items() if m["state"] == "flagged"),
             "guideline_updates": sorted(r for r, st in statuses.items()
@@ -248,8 +252,10 @@ def _signed_off_or_unenforced(store, rule_id: str, statuses: Optional[Dict[str, 
 
 def live_rule_ids(store, statuses: Optional[Dict[str, Dict]] = None) -> Optional[set]:
     """Rules allowed on the worklist, or None when every rule is. A rule the monitor paused
-    (rule_monitor.py) is out even when sign-off is not enforced."""
-    paused = store.paused_rules()
+    (rule_monitor.py) is out even when sign-off is not enforced; so are the core profile's
+    documentation-audit rules (profile.py), which the Quality page reports the next day."""
+    from .profile import audit_rules
+    paused = store.paused_rules() | audit_rules()
     if not enforcement_enabled():
         return {r.rule_id for r in OBLIGATION_RULES} - paused if paused else None
     statuses = statuses if statuses is not None else all_rule_statuses(store)

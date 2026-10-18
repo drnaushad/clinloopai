@@ -113,8 +113,13 @@ class ClinLoopDetector:
         # Step 3: Score each loop
         detections = []
         risk_assessments = []
+        # Core profile: rules only device-like features can open are not evaluated (profile.py)
+        from .profile import excluded_rules
+        excluded = excluded_rules()
 
         for he in all_loops:
+            if he.obligation_rule.rule_id in excluded:
+                continue
             severity = he.obligation_rule.severity
             is_open = he.status in (LoopStatus.OPEN.value, LoopStatus.DELAYED.value)
 

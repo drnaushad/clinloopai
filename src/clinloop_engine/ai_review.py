@@ -58,7 +58,9 @@ def critical_read_minutes() -> float:
 
 
 def research_ai_enabled() -> bool:
-    return os.environ.get("CLINLOOP_IMAGING_RESEARCH_AI", "").strip().lower() in ("1", "true", "yes", "on")
+    from .profile import allows
+    return (os.environ.get("CLINLOOP_IMAGING_RESEARCH_AI", "").strip().lower() in ("1", "true", "yes", "on")
+            and allows("research_imaging_ai"))
 
 
 def _unread_critical(ai: Dict[str, Any], spec: Dict[str, Any], reports: List[Dict[str, Any]], ts) -> List[Dict[str, Any]]:

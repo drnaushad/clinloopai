@@ -492,7 +492,10 @@ def _on_premise(url: str) -> bool:
 
 
 def registered_models() -> List[ImagingModel]:
+    from .profile import allows
     models: List[ImagingModel] = []
+    if not allows("imaging_models"):                 # core profile: no image analysis
+        return models
     names = [n.strip().lower() for n in os.environ.get("CLINLOOP_IMAGING_MODELS", "").split(",") if n.strip()]
     if "txrv" in names:
         models.append(TorchXRayVisionModel())

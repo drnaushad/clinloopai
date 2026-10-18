@@ -85,8 +85,9 @@ def available() -> Optional[str]:
 
 
 def enabled() -> bool:
+    from .profile import allows
     names = [n.strip().lower() for n in os.environ.get("CLINLOOP_IMAGING_MODELS", "").split(",")]
-    return "totalseg" in names
+    return "totalseg" in names and allows("ct_organs")
 
 
 def describe() -> Dict[str, Any]:

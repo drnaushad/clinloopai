@@ -109,5 +109,7 @@ def check_rules() -> Dict[str, object]:
         if r.rule_id not in EVIDENCE_QUERIES:
             add(r.rule_id, "warning", "no literature query for live evidence")
     errors = [i for i in issues if i["level"] == "error"]
-    return {"rules": len(OBLIGATION_RULES), "errors": len(errors),
+    from .profile import excluded_rules
+    excluded = sorted(excluded_rules())          # core profile: these never open (profile.py)
+    return {"rules": len(OBLIGATION_RULES) - len(excluded), "excluded_by_profile": excluded, "errors": len(errors),
             "warnings": len(issues) - len(errors), "issues": issues}

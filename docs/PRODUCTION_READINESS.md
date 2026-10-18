@@ -7,6 +7,9 @@ legal or regulatory advice.
 
 ## 1. Intended use (draft for review)
 
+The full statement, with users, inputs, outputs and limits, is in
+[`regulatory/INTENDED_USE.md`](regulatory/INTENDED_USE.md); the summary:
+
 > ClinLoop tracks clinical follow-up obligations that arise from results, reports, orders and
 > referrals already in the hospital record. It shows staff which expected follow-up step has not been
 > recorded by its guideline deadline, why (the rule, the source sentence or value, the guideline
@@ -40,8 +43,9 @@ clinical use. They are research features today:
 | Critical-finding alerts (R035) and other hour-scale rules | Time-critical alerts leave little time to review the basis |
 | Model-based second reader (R058) | Model output that the user cannot fully check |
 
-Recommendation: ship the tracking core on its own, with these features off by default, and decide
-about each one separately.
+`CLINLOOP_PROFILE=core` now locks all of them off in code (`profile.py`), and new installs use it. The
+feature-by-feature assessment, including the decision to report the one-hour rules R022 and R035 as a next-day documentation audit in the core profile, is in
+[`regulatory/REGULATORY_ASSESSMENT.md`](regulatory/REGULATORY_ASSESSMENT.md).
 
 ## 3. What is in place
 
@@ -63,6 +67,8 @@ about each one separately.
 | Shadow pilot (silent run) | Nothing reaches care; weekly sampled, blinded dual review; safety referral required for urgent open loops; protocol metrics and go / no-go; de-identified export | `pilot.py`, `pilot.html`, `docs/PILOT_RUNBOOK.md` |
 | Stop when a rule misbehaves | Hourly rule monitor: mostly dismissed alerts pause a non-critical rule (new alerts held back, work in progress stays visible); a volume jump alone only flags it; critical rules are flagged, never paused; resume needs an administrator's note | `rule_monitor.py`, governance page, `docs/CLINICAL_REVIEW.md` |
 | Roles | Bearer tokens with viewer / navigator / clinician / admin | `auth.py` |
+| Stay inside the intended use | Core profile locks off image analysis and model features; R047, R057, R058 never opened; shown on the governance page and in the rule-set version | `profile.py` |
+| Know what ships | SBOM (CycloneDX) generated from the lock file and checked by the tests | `docs/regulatory/sbom.cdx.json` |
 
 ## 4. Design decisions
 
@@ -146,7 +152,8 @@ edit the range, regenerate the lock (command at the top of the file), run the te
 | Hospital identity provider run | Single sign-on is tested against a stub provider in a real browser, not yet the hospital's Keycloak / Entra ID / ADFS | Register ClinLoop as a public client (PKCE) with `https://<server>/worklist.html` as its redirect address, map groups to roles, sign in once per role |
 | Monitor thresholds | The default volume and dismissal thresholds are reasonable guesses, not tuned on real alert patterns | Run with `CLINLOOP_MONITOR=0` (report only) during the shadow pilot and set thresholds from what is seen |
 | Validation on real data | All accuracy figures are on synthetic or public data. The tools for Stages 1 and 2 are built; the studies have not been run | Ethics approval, then Stage 1 chart review and the silent run (`docs/PILOT_RUNBOOK.md`) |
-| Regulatory file | No intended-use sign-off, no device determination | §1 and §2 to a regulatory specialist |
+| Regulatory file | Drafted ([`regulatory/`](regulatory/README.md)): intended use, device assessment, risk file, lifecycle, SBOM, cybersecurity, evaluation and post-market plans, instructions for use. Nothing signed | Regulatory specialist, clinical lead and security officer review and sign; decide the open questions listed there |
+| HTTPS and encryption at rest | The container serves plain HTTP and does not encrypt its database | Hospital reverse proxy with TLS; encrypted, backed-up volume ([`regulatory/CYBERSECURITY.md`](regulatory/CYBERSECURITY.md) §3) |
 | Separate review of clinical-logic changes | One author can change a rule and its tests | Require a clinician reviewer on `clinical_ontology.py`, `radiology.py`, `fhir_ingest.py`, `motifs.py`, `guideline_reports.py`, `note_reader.py` and outreach code (e.g. GitHub CODEOWNERS) |
 | Access-log review | Records exist; nobody is prompted to look at them | Periodic review report for the privacy officer |
 | Database | SQLite suits one server; no replication | PostgreSQL for multi-server deployments |

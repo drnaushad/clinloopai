@@ -96,7 +96,8 @@ def _flag(name: str) -> bool:
 
 
 def enabled() -> bool:
-    return _flag("CLINLOOP_IMAGE_SCAN")
+    from .profile import allows
+    return _flag("CLINLOOP_IMAGE_SCAN") and allows("image_scan")
 
 
 @dataclass

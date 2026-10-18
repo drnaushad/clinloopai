@@ -265,6 +265,15 @@ def file_clinical_note(req: ClinicalNote, user: User = Depends(require_role("nav
 
 # ── DICOM images ────────────────────────────────────────────────────────────
 
+def _require_profile(feature: str) -> None:
+    """409 when the core profile locks this feature off (profile.py)."""
+    from .profile import OutsideIntendedUse, require
+    try:
+        require(feature)
+    except OutsideIntendedUse as e:
+        raise HTTPException(409, str(e))
+
+
 @router.post("/imaging/analyze", tags=["Imaging & Documents"])
 def analyze_image(req: DicomUpload, user: User = Depends(require_role("navigator")), access=Depends(access_recorder)):
     """
@@ -337,6 +346,7 @@ def receive_ai_results(req: AIResults, user: User = Depends(require_role("admin"
     """
     from .imaging_ai import ImagingError, parse_dicom_sr
     from .imaging_fhir import ai_observation_resource, dicom_datetime, imaging_study_resource
+    _require_profile("imaging_ai_results")
     patient = _patient_resource(req.patient_id)
     resources: List[Dict[str, Any]] = []
     if req.bundle:
@@ -433,6 +443,7 @@ def second_read_preview(req: SecondReadPreview, user: User = Depends(require_rol
     """
     from .loop_detector import ClinLoopDetector
     from .second_reader import CATEGORIES, local_model, read_report, uncovered
+    _require_profile("second_reader")
     model = local_model()
     if model is None:
         raise HTTPException(503, "No on-premise model server (CLINLOOP_OLLAMA_URL must be a private address)")

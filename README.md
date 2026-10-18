@@ -232,6 +232,11 @@ Each image is published only after the tests pass and a smoke test of the built 
 For clinicians on the hospital network, put an HTTPS reverse proxy (e.g. nginx with the hospital
 certificate) in front of port 8124 rather than exposing it over plain HTTP.
 
+New installs run the **core profile** (`CLINLOOP_PROFILE=core`): only the follow-up tracking that the
+[intended use](docs/regulatory/INTENDED_USE.md) covers. Research features (image models, the model
+second reader, language-model suggestions) need `CLINLOOP_PROFILE=research` and are not for patient
+care.
+
 ### Developers
 
 **Requirements:** Python **3.10+** (tested on 3.13), `pip`, and git. A GPU is not required.
@@ -429,6 +434,7 @@ Configuration:
 | `CLINLOOP_FHIR_TOKEN` | Static read-only bearer token, for test servers without SMART login | — |
 | `CLINLOOP_FHIR_MODE` / `CLINLOOP_FHIR_GROUP_ID` | `bulk` reads the server through Bulk FHIR export (Epic and similar) for the given Group | `search` |
 | `CLINLOOP_OIDC_ISSUER` / `CLINLOOP_OIDC_CLIENT_ID` | Hospital single sign-on (OpenID Connect); see `src/clinloop_engine/oidc.py` for audience, role claim and role map settings | off |
+| `CLINLOOP_PROFILE` | `core` locks off every feature outside the intended use (image models, CT measurement, image scanning, imaging-AI comparison and triage, model second reader, language-model features) never opens R047, R057 or R058, and reports the one-hour critical-result rules R022 and R035 as a next-day documentation audit on the Quality page instead of live alerts; `research` leaves each to its own setting ([`docs/regulatory/`](docs/regulatory/README.md)). An unknown value counts as `core` | `research` (`core` in new installs) |
 | `CLINLOOP_SILENT_RUN` / `CLINLOOP_PILOT_REVIEWERS` | Silent-run pilot: nothing reaches clinical care; only the named review team sees loops ([`docs/PILOT_RUNBOOK.md`](docs/PILOT_RUNBOOK.md)) | off / any clinician |
 | `CLINLOOP_MONITOR` | `0` makes the rule monitor report without pausing or flagging; thresholds via `CLINLOOP_MONITOR_*` | `1` |
 | `CLINLOOP_FHIR_SYNC_MINUTES` / `CLINLOOP_FHIR_INITIAL_DAYS` | Sync interval / first-sync look-back | 15 / 365 |
@@ -745,6 +751,7 @@ results are identical on every run.
 | Pinned dependencies | **Implemented**: `requirements.lock` (Python 3.12), used by CI and the Docker image |
 | API authentication | **Implemented**: hospital single sign-on (OpenID Connect with PKCE; roles from the identity provider's groups) and bearer tokens with roles for service accounts. Tested against a stub provider in a browser; not yet against a hospital's identity provider |
 | Silent-run pilot (protocol Stage 2) | **Implemented**: `CLINLOOP_SILENT_RUN=1` keeps everything away from clinical care; weekly reproducible samples of overdue loops; blinded dual review of the protocol's three questions; an urgent open loop cannot be filed without a safety referral; PPV, true open loops per 1,000 patients per month beyond usual care, alert burden, delay, feed uptime and agreement against the go / no-go criteria; de-identified export. See [`docs/PILOT_RUNBOOK.md`](docs/PILOT_RUNBOOK.md) |
+| Regulatory file (Phase 4) | **Drafted, not reviewed**: intended use, device-status assessment (MFDS, FDA non-device CDS criteria as a design test), risk management with traceability to code and tests, software lifecycle, SBOM, cybersecurity, clinical evaluation plan, post-market surveillance, instructions for use ([`docs/regulatory/`](docs/regulatory/README.md)). The `core` profile enforces the intended use in code. Needs a regulatory specialist, clinical lead and security officer to sign |
 | Rule monitoring | **Implemented**: hourly check of each rule's alert volume and dismissals. Mostly dismissed alerts pause a non-critical rule (new alerts held back; work in progress stays visible); a volume jump alone only flags it; critical rules are only ever flagged. Resumed by an administrator with a note |
 | Clinician worklist | **Implemented** (`worklist.html`): Korean/English, assignment, my loops, outreach approval |
 | FHIR server sync | **Implemented**: SMART Backend Services login (RS384/ES384 signed key, or client secret for sandboxes), token renewal, connection check. Tested against a standards-following stub server; not yet against a vendor sandbox. Bulk FHIR export (`CLINLOOP_FHIR_MODE=bulk`) for Epic and similar, tested against a stub following the Bulk Data specification |
