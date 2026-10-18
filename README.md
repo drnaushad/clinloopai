@@ -743,7 +743,7 @@ results are identical on every run.
 | Rule-set version | **Implemented**: each loop and its `loop_opened` audit entry carry the version of the rules, guideline registry, critical-finding list and decision code that raised it |
 | Pinned dependencies | **Implemented**: `requirements.lock` (Python 3.12), used by CI and the Docker image |
 | API authentication | **Implemented**: hospital single sign-on (OpenID Connect with PKCE; roles from the identity provider's groups) and bearer tokens with roles for service accounts. Tested against a stub provider in a browser; not yet against a hospital's identity provider |
-| Rule monitoring | **Implemented**: hourly check of each rule's alert volume and dismissals; a misbehaving rule returns to shadow mode, a critical one is flagged and keeps alerting; resumed by an administrator with a note |
+| Rule monitoring | **Implemented**: hourly check of each rule's alert volume and dismissals. Mostly dismissed alerts pause a non-critical rule (new alerts held back; work in progress stays visible); a volume jump alone only flags it; critical rules are only ever flagged. Resumed by an administrator with a note |
 | Clinician worklist | **Implemented** (`worklist.html`): Korean/English, assignment, my loops, outreach approval |
 | FHIR server sync | **Implemented**: SMART Backend Services login (RS384/ES384 signed key, or client secret for sandboxes), token renewal, connection check. Tested against a standards-following stub server; not yet against a vendor sandbox. Bulk FHIR export (`CLINLOOP_FHIR_MODE=bulk`) for Epic and similar, tested against a stub following the Bulk Data specification |
 | Data-feed monitoring | **Implemented**: OK / STALE / FAILING / NEVER, audited alarm |

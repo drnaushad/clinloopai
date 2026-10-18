@@ -60,7 +60,7 @@ about each one separately.
 | Standard FHIR login | SMART Backend Services: signed client assertion, read-only scopes, token renewal; connection check | `smart_auth.py`, `docs/FHIR_CONNECTION.md` |
 | Population data from Epic and similar | Bulk FHIR export (Group `$export`), local copy of the records, incremental by `transactionTime` | `bulk_fhir.py` |
 | Staff sign-in | Hospital single sign-on (OpenID Connect, PKCE): roles from the person's groups; people without a ClinLoop role refused; sign-out ends the hospital session. Hand-issued tokens remain for service accounts | `oidc.py`, `js/appnav.js` |
-| Stop when a rule misbehaves | Hourly rule monitor: a jump in alert volume or mostly dismissed alerts pauses the rule (shadow mode); critical rules are flagged, never paused; resume needs an administrator's note | `rule_monitor.py`, governance page |
+| Stop when a rule misbehaves | Hourly rule monitor: mostly dismissed alerts pause a non-critical rule (new alerts held back, work in progress stays visible); a volume jump alone only flags it; critical rules are flagged, never paused; resume needs an administrator's note | `rule_monitor.py`, governance page, `docs/CLINICAL_REVIEW.md` |
 | Roles | Bearer tokens with viewer / navigator / clinician / admin | `auth.py` |
 
 ## 4. Design decisions

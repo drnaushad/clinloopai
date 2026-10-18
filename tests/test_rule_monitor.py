@@ -63,17 +63,33 @@ class TestRuleMonitor(unittest.TestCase):
         self.assertEqual(report["changes"], [])
         self.assertFalse(report["rules"][HIGH]["history_weeks_enough"])
 
-    def test_volume_spike_pauses_a_rule_and_takes_it_off_the_worklist(self):
+    def test_volume_spike_alone_only_flags_a_rule(self):
+        # A surge can be real (a screening campaign, a new clinic): it never hides a rule by itself
         _usual(self.store, HIGH)
         _opened(self.store, HIGH, 20, days_ago=2)
         report = rule_monitor.run(self.store, NOW)
+        self.assertEqual([c["state"] for c in report["changes"]], ["flagged"])
+        self.assertEqual(self.store.paused_rules(), set())
+        self.assertIsNone(governance.live_rule_ids(self.store))            # still alerting
+
+    def test_dismissals_after_a_flag_pause_the_rule_and_take_new_loops_off_the_worklist(self):
+        _usual(self.store, HIGH)
+        _opened(self.store, HIGH, 20, days_ago=2)
+        rule_monitor.run(self.store, NOW)
+        _decided(self.store, HIGH, dismissed=9, kept=3)
+        report = rule_monitor.run(self.store, NOW + timedelta(minutes=5))
         self.assertEqual([c["state"] for c in report["changes"]], ["paused"])
-        self.assertEqual(self.store.paused_rules(), {HIGH})
-        live = governance.live_rule_ids(self.store)
-        self.assertIsNotNone(live)
-        self.assertNotIn(HIGH, live)
+        self.assertNotIn(HIGH, governance.live_rule_ids(self.store))
         self.assertIn("rule_paused", [a["action"] for a in self.store.audit_trail(limit=5)])
         self.assertTrue(self.store.verify_audit_chain())
+
+    def test_paused_rule_keeps_work_in_progress_visible(self):
+        self.store.set_monitor_state(HIGH, "paused", "test", {}, "rule-monitor")
+        loops = [{"rule_id": HIGH, "workflow_state": "new"}, {"rule_id": HIGH, "workflow_state": "acknowledged"},
+                 {"rule_id": HIGH, "workflow_state": "deferred"}, {"rule_id": CRITICAL, "workflow_state": "new"}]
+        shown, held = governance.visible_loops(self.store, loops)
+        self.assertEqual(held, 1)
+        self.assertEqual([l["workflow_state"] for l in shown if l["rule_id"] == HIGH], ["acknowledged", "deferred"])
 
     def test_critical_rule_is_flagged_never_paused(self):
         _usual(self.store, CRITICAL)
@@ -93,14 +109,15 @@ class TestRuleMonitor(unittest.TestCase):
     def test_resume_needs_a_note_and_holds_for_the_cooldown(self):
         _usual(self.store, HIGH)
         _opened(self.store, HIGH, 20, days_ago=2)
+        _decided(self.store, HIGH, dismissed=9, kept=3)
         rule_monitor.run(self.store, NOW)
+        self.assertEqual(self.store.paused_rules(), {HIGH})
         with self.assertRaises(WorkflowError):
             rule_monitor.resume(self.store, HIGH, "it.admin", "admin", "ok", now=NOW)
         rule_monitor.resume(self.store, HIGH, "it.admin", "admin", "Lab code change found and mapping fixed", now=NOW)
         self.assertEqual(self.store.paused_rules(), set())
         self.assertEqual(rule_monitor.run(self.store, NOW + timedelta(hours=1))["changes"], [])   # cool-down
-        # A week later the first spike is part of the usual week, so a new spike must stand out from it
-        _opened(self.store, HIGH, 40, days_ago=-6, tag="later")
+        # After the cool-down the same dismissals (still within 4 weeks) pause it again
         later = rule_monitor.run(self.store, NOW + timedelta(days=8))
         self.assertEqual([c["state"] for c in later["changes"]], ["paused"])
         with self.assertRaises(WorkflowError):

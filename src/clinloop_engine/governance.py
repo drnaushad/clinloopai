@@ -226,6 +226,26 @@ def summary(store, statuses: Optional[Dict[str, Dict]] = None) -> Dict:
                                         if any(not a["accepted"] for a in st.get("guideline_alerts") or []))}
 
 
+def visible_loops(store, loops: List[Dict], statuses: Optional[Dict[str, Dict]] = None) -> Tuple[List[Dict], int]:
+    """The loops staff see, and how many are held back. Unsigned rules (shadow mode) hide all their loops;
+    a rule the monitor paused hides only NEW loops: one someone acknowledged or deferred stays in
+    front of them, so work in progress is never taken away."""
+    live = live_rule_ids(store, statuses)
+    if live is None:
+        return loops, 0
+    paused = store.paused_rules()
+    shown = [l for l in loops if l["rule_id"] in live or (l["rule_id"] in paused and l["workflow_state"] != "new"
+                                                         and _signed_off_or_unenforced(store, l["rule_id"], statuses))]
+    return shown, len(loops) - len(shown)
+
+
+def _signed_off_or_unenforced(store, rule_id: str, statuses: Optional[Dict[str, Dict]]) -> bool:
+    if not enforcement_enabled():
+        return True
+    statuses = statuses if statuses is not None else all_rule_statuses(store)
+    return statuses.get(rule_id, {}).get("status") == "approved"
+
+
 def live_rule_ids(store, statuses: Optional[Dict[str, Dict]] = None) -> Optional[set]:
     """Rules allowed on the worklist, or None when every rule is. A rule the monitor paused
     (rule_monitor.py) is out even when sign-off is not enforced."""

@@ -9,12 +9,16 @@ report template changes, a feed starts sending duplicates. Two signals show it:
   * dismissals: clinicians mostly dismiss its alerts as not indicated or duplicates
     (at least MIN_DECISIONS decisions in 4 weeks, DISMISS_RATE or more of them dismissals).
 
-What happens then:
+What happens then (clinical review, 2026-10: a surge alone can be real, e.g. a screening campaign or
+a new clinic, so volume never hides a rule by itself; dismissals by clinicians are the evidence that
+a rule is wrong):
 
-  * a rule that is not critical is PAUSED: back in shadow mode, so its loops stay recorded but leave
-    the worklist and page nobody, until an administrator resumes it with a note;
-  * a CRITICAL rule is never paused (hiding a critical alert is the larger danger): it is FLAGGED for
-    review on the governance page and worklist banner, and keeps alerting.
+  * dismissals: a rule that is not critical is PAUSED: its NEW, unacknowledged loops leave the
+    worklist and page nobody, until an administrator resumes it with a note. Loops someone already
+    acknowledged or deferred stay visible to them, so work in progress is never hidden;
+  * volume only: the rule is FLAGGED for review on the governance page and worklist banner and keeps
+    alerting; dismissals that follow can still pause it;
+  * a CRITICAL rule is never paused (hiding a critical alert is the larger danger): it is only flagged.
 
 Guards:
   * volume is judged only for rules with at least 5 weeks of history, so go-live and the first sync's
@@ -88,16 +92,26 @@ def measure(store, now: Optional[datetime] = None) -> Dict[str, Dict]:
     return out
 
 
-def tripped(metrics: Dict, limits: Dict[str, float]) -> List[str]:
-    reasons = []
+def tripped(metrics: Dict, limits: Dict[str, float]) -> Dict[str, Optional[str]]:
+    """Which signal tripped, in words: {"volume": … or None, "dismissal": … or None}."""
+    out: Dict[str, Optional[str]] = {"volume": None, "dismissal": None}
     if (metrics["history_weeks_enough"] and metrics["opened_this_week"] >= limits["min_volume"]
             and metrics["opened_this_week"] > limits["volume_ratio"] * max(metrics["usual_week"], 1.0)):
-        reasons.append(f"{metrics['opened_this_week']} loops this week against a usual {metrics['usual_week']}")
+        out["volume"] = f"{metrics['opened_this_week']} loops this week against a usual {metrics['usual_week']}"
     if metrics["decisions"] >= limits["min_decisions"] and metrics["dismissal_rate"] is not None \
             and metrics["dismissal_rate"] >= limits["dismiss_rate"]:
-        reasons.append(f"{metrics['dismissals']} of {metrics['decisions']} decisions dismissed the alert "
-                       f"as not indicated or duplicate")
-    return reasons
+        out["dismissal"] = (f"{metrics['dismissals']} of {metrics['decisions']} decisions dismissed the alert "
+                            f"as not indicated or duplicate")
+    return out
+
+
+def decide(severity: str, signals: Dict[str, Optional[str]], current: Optional[str]) -> Optional[str]:
+    """The new state for a rule, or None to leave it. Pause only on dismissals and never a critical rule;
+    a flagged rule can still be paused when dismissals follow."""
+    if not any(signals.values()) or current == "paused":
+        return None
+    new = "paused" if signals["dismissal"] and severity != "critical" else "flagged"
+    return None if new == current else new
 
 
 def run(store, now: Optional[datetime] = None, actor: str = "rule-monitor") -> Dict:
@@ -109,13 +123,14 @@ def run(store, now: Optional[datetime] = None, actor: str = "rule-monitor") -> D
     current = store.monitor_state()
     changes = []
     for rid, row in sorted(metrics.items()):
-        reasons = tripped(row, limits)
+        signals = tripped(row, limits)
         state = current.get(rid, {})
-        if not reasons or state.get("state") in ("paused", "flagged"):
-            continue
         if state.get("cooldown_until") and state["cooldown_until"] > now.isoformat():
             continue
-        new = "flagged" if severity.get(rid) == "critical" else "paused"
+        new = decide(severity.get(rid, ""), signals, state.get("state"))
+        if new is None:
+            continue
+        reasons = [r for r in signals.values() if r]
         changes.append({"rule_id": rid, "state": new, "reasons": reasons})
         if acting():
             store.set_monitor_state(rid, new, "; ".join(reasons), row, actor)

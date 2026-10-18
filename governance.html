@@ -241,7 +241,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   const RANK = { viewer: 0, navigator: 1, clinician: 2, admin: 3 };
   const T = {
     ko: {
-      monTitle: '규칙 모니터링', monHelp: '알림이 평소보다 크게 늘거나 의료진이 대부분 기각하는 규칙은 자동으로 일시중지(섀도 모드)됩니다. 위급 규칙은 일시중지하지 않고 검토 표시만 하며 알림은 계속됩니다. 매시간 확인합니다.',
+      monTitle: '규칙 모니터링', monHelp: '의료진이 알림을 대부분 기각하는 규칙은 자동으로 일시중지됩니다: 새 알림만 작업 목록에서 빠지고, 이미 확인·보류한 루프는 그대로 보입니다. 알림이 평소보다 크게 늘기만 한 경우(검진 캠페인 등 실제 증가일 수 있음)는 검토 표시만 하고 알림은 계속됩니다. 위급 규칙은 일시중지하지 않습니다. 매시간 확인합니다.',
       monNone: '일시중지되거나 검토 표시된 규칙이 없습니다.', monPaused: '일시중지됨', monFlagged: '검토 필요 (알림 계속)',
       monSince: (m) => `${m.changed_at.slice(0, 16).replace('T', ' ')} · ${m.changed_by}`,
       resumeNote: '검토한 내용', resumeNotePh: '예: 검사 코드 변경 확인 후 매핑 수정', resume: '다시 사용', resumed: (r) => `${r} 규칙을 다시 사용합니다.`,
@@ -274,7 +274,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       footer: 'ClinLoop AI · 전문의가 승인하기 전까지 어떤 규칙도 진료에 사용해서는 안 됩니다.',
     },
     en: {
-      monTitle: 'Rule monitoring', monHelp: 'A rule whose alerts jump far above its usual week, or that clinicians mostly dismiss, is paused automatically (back to shadow mode). Critical rules are never paused: they are flagged for review and keep alerting. Checked every hour.',
+      monTitle: 'Rule monitoring', monHelp: 'A rule whose alerts clinicians mostly dismiss is paused automatically: its new alerts leave the worklist, while loops someone already acknowledged or deferred stay visible. A rule whose alerts only jump above its usual week (which can be real, e.g. a screening campaign) is flagged for review and keeps alerting. Critical rules are never paused. Checked every hour.',
       monNone: 'No rule is paused or flagged.', monPaused: 'Paused', monFlagged: 'Under review (still alerting)',
       monSince: (m) => `${m.changed_at.slice(0, 16).replace('T', ' ')} · ${m.changed_by}`,
       resumeNote: 'What was reviewed', resumeNotePh: 'e.g. lab code change confirmed and mapping corrected', resume: 'Resume rule', resumed: (r) => `Rule ${r} is back in service.`,

@@ -367,11 +367,7 @@ def worklist(owner: Optional[str] = None, include_inactive: bool = False,
     statuses = governance.all_rule_statuses(store)
     for loop in loops:
         loop["rule_signoff"] = statuses.get(loop["rule_id"], {}).get("status", "pending")
-    live = governance.live_rule_ids(store, statuses)
-    shadow = 0
-    if live is not None:
-        shadow = sum(1 for loop in loops if loop["rule_id"] not in live)
-        loops = [loop for loop in loops if loop["rule_id"] in live]
+    loops, shadow = governance.visible_loops(store, loops, statuses)
     access(user, "view_worklist", [loop["patient_id"] for loop in loops],
            {"owner": owner, "include_inactive": include_inactive} if owner or include_inactive else None)
     return {"count": len(loops), "loops": loops, "defer_reasons": DEFER_REASONS,
