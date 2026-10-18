@@ -73,6 +73,9 @@ Each stage proceeds only if the previous one meets its go/no-go criteria (sectio
 - **Question:** each reviewer answers "was a follow-up obligation created, and was it completed in time?"
   using the full chart.
 - **Disagreements:** a third clinician adjudicates.
+- **Stage 1A on MIMIC** (public credentialed data, before a hospital partnership): obligation detection in
+  radiology reports and three in-hospital loops; see [`STUDY_PROTOCOL_STAGE1A.md`](STUDY_PROTOCOL_STAGE1A.md).
+  Loop closure for outpatient follow-up and Korean reports stay with Stage 1 in the hospital (1B).
 - **Tools:**
   - `python -m src.validation.chart_review sample` draws the sample and the blinded packets;
   - `analyze` computes the results;

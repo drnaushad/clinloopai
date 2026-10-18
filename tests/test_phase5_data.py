@@ -169,6 +169,64 @@ class TestFolderRunner(unittest.TestCase):
             self.assertEqual(main([empty]), 1)
 
 
+class TestValidationToolsOnFolders(unittest.TestCase):
+    """Stage 1A (docs/STUDY_PROTOCOL_STAGE1A.md): the validators read mimic_ingest's NDJSON folder, and
+    date-shifted records are judged at each patient's own record end."""
+
+    def setUp(self):
+        import json
+        import tempfile
+        self.tmp = tempfile.TemporaryDirectory()
+        # Two date-shifted patients, decades apart: a warfarin dose change; one has the INR recheck
+        rows = {"Patient": [{**PATIENT, "id": "a"}, {**PATIENT, "id": "b"}], "Observation": [], "MedicationRequest": []}
+        for pid, year, recheck in (("a", "2131", True), ("b", "2178", False)):
+            rows["MedicationRequest"].append({
+                "resourceType": "MedicationRequest", "id": f"w-{pid}", "status": "active", "intent": "order",
+                "subject": {"reference": f"Patient/{pid}"}, "authoredOn": f"{year}-03-01T10:00:00Z",
+                "medicationCodeableConcept": {"text": "warfarin 5 mg"},
+                "dosageInstruction": [{"text": "warfarin dose changed from 3 mg to 5 mg"}]})
+            if recheck:
+                rows["Observation"].append({**potassium(f"inr-{pid}", value=2.4, flag="N", when=f"{year}-03-05T08:00:00Z"),
+                                            "subject": {"reference": f"Patient/{pid}"},
+                                            "code": {"coding": [{"system": "http://loinc.org", "code": "6301-6",
+                                                                 "display": "INR"}]}})
+            # the record goes on for a year: the deadline has passed within the patient's own timeline
+            rows["Observation"].append({**potassium(f"late-{pid}", value=4.1, flag="N", when=f"{int(year) + 1}-03-01T08:00:00Z"),
+                                        "subject": {"reference": f"Patient/{pid}"}})
+        for rtype, items in rows.items():
+            with open(os.path.join(self.tmp.name, f"{rtype}.ndjson"), "w") as f:
+                f.write("".join(json.dumps(r) + "\n" for r in items))
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_chart_review_reads_a_folder_and_judges_each_record_at_its_own_end(self):
+        from src.clinloop_engine.fhir_folder import load_resources
+        from src.validation.chart_review import build_frame
+        resources = load_resources(self.tmp.name)
+        frame = build_frame(resources, per_patient_end=True)
+        r007 = {r["patient_id"]: r["predicted_status"] for r in frame if r["rule_id"] == "R007"}
+        if not r007:
+            self.skipTest("the warfarin fixture opens no R007 in this rule set")
+        self.assertEqual(r007.get("a"), "closed")
+        self.assertIn(r007.get("b"), ("open", "delayed", "needs_human_review"))
+        self.assertTrue(all(r["rule_id"] == "R007" for r in build_frame(resources, per_patient_end=True, rules=["r007"])))
+
+    def test_report_template_reads_a_folder_and_samples(self):
+        import csv
+        import json
+        from src.validation.report_validation import main
+        rad = {"resourceType": "DiagnosticReport", "status": "final", "subject": {"reference": "Patient/a"},
+               "category": [{"coding": [{"code": "RAD"}]}], "code": {"text": "CT chest"},
+               "effectiveDateTime": "2131-04-01T09:00:00Z", "conclusion": "6 mm solid nodule right upper lobe."}
+        with open(os.path.join(self.tmp.name, "DiagnosticReport.ndjson"), "w") as f:
+            f.write("".join(json.dumps({**rad, "id": f"r{i}"}) + "\n" for i in range(5)))
+        out = os.path.join(self.tmp.name, "sheet.csv")
+        self.assertEqual(main(["template", "--fhir", self.tmp.name, "--out", out, "--sample", "3"]), 0)
+        with open(out) as f:
+            self.assertEqual(len(list(csv.DictReader(f))), 3)
+
+
 try:
     from fastapi.testclient import TestClient
     from src.clinloop_engine import clinical_api

@@ -108,6 +108,20 @@ def iter_folder(path: str, stats: Counter) -> Iterator[Dict]:
             yield e["resource"]
 
 
+def load_resources(path: str) -> List[Dict]:
+    """A FHIR export as a list of resources: a folder (bundles and NDJSON, as above) or one JSON file
+    (a Bundle or a resource). For the validation tools, which work on samples that fit in memory."""
+    if os.path.isdir(path):
+        return list(iter_folder(path, Counter()))
+    with open(path, encoding="utf-8") as f:
+        doc = json.load(f)
+    if isinstance(doc, list):
+        return doc
+    if doc.get("resourceType") == "Bundle":
+        return [e["resource"] for e in doc.get("entry", []) if isinstance(e, dict) and isinstance(e.get("resource"), dict)]
+    return [doc]
+
+
 class FolderClient:
     """Looks like BulkFHIRClient to the sync: changed_patients() loads the folder into the local copy."""
 

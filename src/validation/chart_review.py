@@ -20,7 +20,9 @@ Positive class = loop NOT closed in time (the patient is exposed).
 
 Usage:
   python -m src.validation.chart_review sample --fhir export.json --out review/ \
-         --per-stratum 20 [--evaluation-time 2026-09-01T00:00:00]
+         --per-stratum 20 [--evaluation-time 2026-09-01T00:00:00 | --per-patient-end] [--rules R007,R015]
+  (--fhir may also be a folder of NDJSON or Bundle files, e.g. mimic_ingest output; research copies
+   such as MIMIC shift dates per patient, so use --per-patient-end to judge each record at its own end)
   python -m src.validation.chart_review analyze --packet review/review_packet.csv \
          --key review/prediction_key.csv
 """
@@ -55,14 +57,22 @@ KEY_FIELDS = ["review_id", "rule_id", "predicted_status", "predicted_positive", 
 
 # ── 1. Sampling ──────────────────────────────────────────────────────────────
 
-def build_frame(fhir_bundle: Dict, evaluation_time: Optional[str] = None) -> List[Dict]:
-    """One row per loop the engine identified in the export."""
+def build_frame(fhir_bundle, evaluation_time: Optional[str] = None, per_patient_end: bool = False,
+                rules: Optional[Sequence[str]] = None) -> List[Dict]:
+    """One row per loop the engine identified in the export. ``per_patient_end``: judge each patient at
+    the last date in their own record (date-shifted research copies); ``rules``: keep only these rules."""
     when = normalize_timestamp(evaluation_time) if evaluation_time else None
     events_by_patient, _ = bundle_to_events(fhir_bundle)
     detector = ClinLoopDetector(evaluation_time=when)
+    keep = {r.strip().upper() for r in rules} if rules else None
     frame = []
     for pid, events in sorted(events_by_patient.items()):
-        for d in detector.process_patient("chart-review", pid, events):
+        det = detector
+        if per_patient_end and events:
+            det = ClinLoopDetector(evaluation_time=max(normalize_timestamp(e["timestamp"]) for e in events))
+        for d in det.process_patient("chart-review", pid, events):
+            if keep is not None and d.rule_id not in keep:
+                continue
             frame.append({
                 "patient_id": pid, "rule_id": d.rule_id, "rule_name": d.rule_name,
                 "trigger_event_id": d.trigger_event_id, "trigger_time": d.trigger_time,
@@ -258,10 +268,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser(description="ClinLoop Stage 1 chart-review validation")
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("sample", help="draw a stratified, blinded review sample")
-    s.add_argument("--fhir", required=True, help="FHIR R4 Bundle export (JSON)")
+    s.add_argument("--fhir", required=True, help="FHIR R4 Bundle (JSON) or a folder of NDJSON / Bundle files")
     s.add_argument("--out", required=True, help="output directory")
     s.add_argument("--per-stratum", type=int, default=20)
     s.add_argument("--evaluation-time", default=None)
+    s.add_argument("--per-patient-end", action="store_true",
+                   help="judge each patient at the end of their own record (date-shifted research data)")
+    s.add_argument("--rules", default="", help="comma-separated rule ids to sample (default: all)")
     s.add_argument("--seed", type=int, default=SEED)
     a = sub.add_parser("analyze", help="estimate accuracy from completed reviews")
     a.add_argument("--packet", required=True)
@@ -270,8 +283,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = ap.parse_args(argv)
 
     if args.cmd == "sample":
-        with open(args.fhir, encoding="utf-8") as f:
-            frame = build_frame(json.load(f), args.evaluation_time)
+        from src.clinloop_engine.fhir_folder import load_resources
+        if args.evaluation_time and args.per_patient_end:
+            ap.error("use --evaluation-time or --per-patient-end, not both")
+        frame = build_frame(load_resources(args.fhir), args.evaluation_time, args.per_patient_end,
+                            [r for r in args.rules.split(",") if r.strip()] or None)
         sample = stratified_sample(frame, args.per_stratum, args.seed)
         packet, key = export_review_files(sample, args.out, _rule_lookup())
         print(f"{len(frame)} loops in frame; {len(sample)} sampled.\n"

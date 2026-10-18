@@ -17,7 +17,8 @@ Workflow:
   3. score     ClinLoop reads every report and the labels are compared.
 
 Usage:
-  python -m src.validation.report_validation template --fhir export.json --out sheet.csv
+  python -m src.validation.report_validation template --fhir export.json --out sheet.csv [--sample 800]
+  (--fhir may also be a folder of NDJSON or Bundle files, e.g. mimic_ingest output)
   python -m src.validation.report_validation score --sheet sheet.csv [--out result.json]
 
 Each report is scored on its own (no earlier reports), so stepped Fleischner
@@ -185,7 +186,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
     t = sub.add_parser("template", help="Build a blind labelling sheet from a FHIR export")
-    t.add_argument("--fhir", required=True)
+    t.add_argument("--fhir", required=True, help="FHIR Bundle (JSON) or a folder of NDJSON / Bundle files")
+    t.add_argument("--sample", type=int, default=0, help="keep a random sample of this many reports (0 = all)")
+    t.add_argument("--seed", type=int, default=42)
     t.add_argument("--out", required=True)
     t.add_argument("--keep-text", action="store_true", help="Do not de-identify the report text")
     s = sub.add_parser("score", help="Compare ClinLoop with a labelled sheet")
@@ -194,8 +197,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = ap.parse_args(argv)
 
     if args.cmd == "template":
-        with open(args.fhir, encoding="utf-8") as f:
-            rows = template_rows(json.load(f), deidentify=not args.keep_text)
+        from src.clinloop_engine.fhir_folder import load_resources
+        rows = template_rows(load_resources(args.fhir), deidentify=not args.keep_text)
+        if args.sample and len(rows) > args.sample:
+            import random
+            rows = sorted(random.Random(args.seed).sample(rows, args.sample), key=lambda r: r["report_id"])
         with open(args.out, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=SHEET_FIELDS)
             w.writeheader()
