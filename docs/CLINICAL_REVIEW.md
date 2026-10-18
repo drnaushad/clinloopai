@@ -92,6 +92,16 @@ on real Korean reports, which Stage 1 must measure with the hospital's own repor
 "How this was worked out" mapping notes inside the Korean basis, and EHR (CDS Hooks) cards. Each
 Korean line and the AAA change need a Korean clinician's review before use.
 
+**Clinical read-through before merge (PR #45).** Every Korean line was read beside its English line for
+the example record. Found and fixed: a deadline window shown as "112.5 days / 112.5일" (3 months plus
+grace; now whole days for windows of two days or more); a culture test named twice ("Bacteria identified
+in Blood by Culture Bacteria identified…", the code text repeating its display); the referral step called
+"전문과 의뢰" while the rule names and worklist say "전문의 의뢰" (now one term); "사람의 검토 필요" changed
+to "의료진 검토 필요". The AAA rule was confirmed: with sex unknown the 5.0 cm threshold is the safer
+error (a man may be referred to vascular surgery a little early; a woman is not left on surveillance).
+The 42 Korean labels were checked against ACR, Fleischner, TI-RADS and SVS thresholds; the three
+relabelled rows are correct. "위급" is kept for critical values, as in the hospital critical-finding list.
+
 ## 4. Before clinical use
 
 1. A licensed clinician reviews this document and the code it names, and signs below.

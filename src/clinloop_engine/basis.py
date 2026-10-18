@@ -117,13 +117,13 @@ def _reasoning(details: Dict[str, Any]) -> List[str]:
 _EVENT_NAMES_KO = {
     "lab_result": "검사 결과", "radiology_report": "영상 판독", "pathology_result": "병리 결과",
     "culture_result": "배양 결과", "medication_change": "약물 변경", "discharge": "퇴원",
-    "specialist_referral": "전문과 의뢰", "clinical_note_plan": "진료 기록의 계획", "ecg": "심전도",
+    "specialist_referral": "전문의 의뢰", "clinical_note_plan": "진료 기록의 계획", "ecg": "심전도",
     "echocardiogram": "심장초음파", "diagnosis": "진단", "diagnostic_pattern": "여러 결과에 걸친 패턴",
     "colonoscopy_finding": "대장내시경 소견", "liver_imaging": "간 영상검사",
 }
 FOLLOWUP_NAMES_KO = {
     "critical_value_notification": "담당 의료진 통보 기록", "followup_ct": "추적 CT", "followup_lab": "모니터링 검사",
-    "followup_appointment": "외래 방문", "referral_visit": "전문과 진료", "specialist_referral": "전문과 의뢰",
+    "followup_appointment": "외래 방문", "referral_visit": "전문과 진료", "specialist_referral": "전문의 의뢰",
     "bp_check": "혈압 확인", "inr_recheck": "INR 재검", "hba1c_recheck": "HbA1c 재검", "hcv_rna_test": "HCV RNA 검사",
     "hbv_dna_test": "HBV DNA 검사", "hiv_supplemental_test": "HIV 확인 검사", "imaging_ct": "CT", "imaging_mri": "MRI",
     "imaging_ultrasound": "초음파", "imaging_xray": "X선 촬영", "imaging_pet": "PET-CT", "imaging_order": "영상검사 오더",
@@ -141,7 +141,7 @@ _FLAG_KO = {"critical": "위급", "high": "높음", "low": "낮음", "abnormal":
 def _window_ko(days: float) -> str:
     if days < 1:
         return f"{round(days * 24)}시간"
-    return f"{days:g}일"
+    return f"{int(days) if days >= 2 else round(days, 1):g}일"
 
 
 def build_ko(trigger, rule, deadline: Optional[datetime], deadline_days: float, followups, status: str,
@@ -195,7 +195,7 @@ def build_ko(trigger, rule, deadline: Optional[datetime], deadline_days: float, 
     return lines
 
 
-REVIEW_SPARSE_KO = ("사람의 검토 필요: ClinLoop이 볼 수 있는 기록만으로는 이 후속 조치가 이루어졌는지 판단할 수 없습니다. "
+REVIEW_SPARSE_KO = ("의료진 검토 필요: ClinLoop이 볼 수 있는 기록만으로는 이 후속 조치가 이루어졌는지 판단할 수 없습니다. "
                     "차트를 확인하세요.")
 
 

@@ -53,7 +53,7 @@ def _review_reason(reason: str, ko: bool = False) -> str:
     """Why a person must look, in clinical words (the score itself stays in the technical detail)."""
     if ko:
         from .basis import REVIEW_SPARSE_KO
-        return REVIEW_SPARSE_KO if reason.startswith("Uncertainty") else f"사람의 검토 필요: {reason}"
+        return REVIEW_SPARSE_KO if reason.startswith("Uncertainty") else f"의료진 검토 필요: {reason}"
     if reason.startswith("Uncertainty"):
         return ("Needs a person's review: the record ClinLoop can see holds too little to tell whether this "
                 "follow-up happened. Check the chart.")
