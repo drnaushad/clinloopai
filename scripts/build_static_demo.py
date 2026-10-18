@@ -76,7 +76,7 @@ def build() -> Dict[str, int]:
                      "/api/v1/metrics/open-loop-rate", "/api/v1/governance/summary", "/api/v1/governance/rules",
                      "/api/v1/governance/critical-findings", "/api/v1/governance/rule-check",
                      "/api/v1/imaging/models", "/api/v1/imaging/scan/status", "/api/v1/reports/second-read/status",
-                     "/api/v1/connections/status", "/cds-services"):
+                     "/api/v1/connections/status", "/cds-services", "/api/v1/pilot/status"):
             save(path)
         for by in ("rule", "language", "age_group", "sex"):
             save("/api/v1/metrics/open-loop-rate", {"stratify_by": by})

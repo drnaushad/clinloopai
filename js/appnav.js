@@ -14,6 +14,7 @@
     { href: 'patient.html', en: 'Patient graph', ko: '환자 그래프' },
     { href: 'quality.html', en: 'Quality', ko: '품질 지표' },
     { href: 'governance.html', en: 'Rule sign-off', ko: '규칙 승인' },
+    { href: 'pilot.html', en: 'Pilot review', ko: '시범 검토' },
     { href: 'imaging.html', en: 'Imaging', ko: '영상' }
   ];
 

@@ -60,6 +60,7 @@ about each one separately.
 | Standard FHIR login | SMART Backend Services: signed client assertion, read-only scopes, token renewal; connection check | `smart_auth.py`, `docs/FHIR_CONNECTION.md` |
 | Population data from Epic and similar | Bulk FHIR export (Group `$export`), local copy of the records, incremental by `transactionTime` | `bulk_fhir.py` |
 | Staff sign-in | Hospital single sign-on (OpenID Connect, PKCE): roles from the person's groups; people without a ClinLoop role refused; sign-out ends the hospital session. Hand-issued tokens remain for service accounts | `oidc.py`, `js/appnav.js` |
+| Shadow pilot (silent run) | Nothing reaches care; weekly sampled, blinded dual review; safety referral required for urgent open loops; protocol metrics and go / no-go; de-identified export | `pilot.py`, `pilot.html`, `docs/PILOT_RUNBOOK.md` |
 | Stop when a rule misbehaves | Hourly rule monitor: mostly dismissed alerts pause a non-critical rule (new alerts held back, work in progress stays visible); a volume jump alone only flags it; critical rules are flagged, never paused; resume needs an administrator's note | `rule_monitor.py`, governance page, `docs/CLINICAL_REVIEW.md` |
 | Roles | Bearer tokens with viewer / navigator / clinician / admin | `auth.py` |
 
@@ -144,7 +145,7 @@ edit the range, regenerate the lock (command at the top of the file), run the te
 | Vendor Bulk FHIR run | Bulk export is tested against a stub that follows the Bulk Data specification, not yet Epic | Group-level export from the Epic sandbox with synthetic patients |
 | Hospital identity provider run | Single sign-on is tested against a stub provider in a real browser, not yet the hospital's Keycloak / Entra ID / ADFS | Register ClinLoop as a public client (PKCE) with `https://<server>/worklist.html` as its redirect address, map groups to roles, sign in once per role |
 | Monitor thresholds | The default volume and dismissal thresholds are reasonable guesses, not tuned on real alert patterns | Run with `CLINLOOP_MONITOR=0` (report only) during the shadow pilot and set thresholds from what is seen |
-| Validation on real data | All accuracy figures are on synthetic or public data | Shadow-mode pilot on retrospective de-identified data with full clinician review (`docs/STUDY_PROTOCOL.md`) |
+| Validation on real data | All accuracy figures are on synthetic or public data. The tools for Stages 1 and 2 are built; the studies have not been run | Ethics approval, then Stage 1 chart review and the silent run (`docs/PILOT_RUNBOOK.md`) |
 | Regulatory file | No intended-use sign-off, no device determination | §1 and §2 to a regulatory specialist |
 | Separate review of clinical-logic changes | One author can change a rule and its tests | Require a clinician reviewer on `clinical_ontology.py`, `radiology.py`, `fhir_ingest.py`, `motifs.py`, `guideline_reports.py`, `note_reader.py` and outreach code (e.g. GitHub CODEOWNERS) |
 | Access-log review | Records exist; nobody is prompted to look at them | Periodic review report for the privacy officer |

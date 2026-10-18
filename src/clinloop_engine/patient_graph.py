@@ -251,6 +251,9 @@ def patient_graph(patient_id: str,
             when = normalize_timestamp(evaluation_time)
         except (TypeError, ValueError):
             raise HTTPException(422, "evaluation_time must be an ISO date-time")
+    from .pilot import may_see_loops
+    if not may_see_loops(user):
+        raise HTTPException(403, "Silent run in progress: only the pilot review team sees ClinLoop's loops")
     access(user, "view_patient_graph", [patient_id])
     _patient_resource(patient_id)
     store = get_store()

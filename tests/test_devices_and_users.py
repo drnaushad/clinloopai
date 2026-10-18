@@ -18,7 +18,7 @@ sys.path.insert(0, ROOT)
 
 from src.clinloop_engine.loop_store import LoopStore  # noqa: E402
 
-PAGES = ["index.html", "worklist.html", "patient.html", "quality.html", "governance.html", "imaging.html"]
+PAGES = ["index.html", "worklist.html", "patient.html", "quality.html", "governance.html", "imaging.html", "pilot.html"]
 
 
 class TestEveryDevice(unittest.TestCase):
@@ -74,7 +74,7 @@ class TestEveryDevice(unittest.TestCase):
         self.assertIn("setInterval(() => { if (state.user && !busy()) refresh(); }, 30000)", wl)
         self.assertIn("/api/v1/users", wl)
         self.assertIn("Someone else changed this loop first", wl)
-        for page in ("worklist.html", "patient.html", "quality.html", "governance.html", "imaging.html"):
+        for page in ("worklist.html", "patient.html", "quality.html", "governance.html", "imaging.html", "pilot.html"):
             self.assertNotIn("throw new Error(body.detail ||", read(page), page)   # FastAPI lists → readable text
 
     def test_plain_professional_wording_and_no_overclaims(self):
