@@ -1,6 +1,6 @@
 # Production readiness: what is in place, what is not
 
-ClinLoop is a research prototype. This page lists what a hospital pilot needs, what the code already
+ClinLoop is the clinical-use edition (core profile by default), not yet validated at a hospital. This page lists what a hospital pilot needs, what the code already
 does about each need, the design decisions behind it, and what is still missing. It is a working
 document for the team, the hospital's IT and privacy officers and its regulatory adviser. It is not
 legal or regulatory advice.

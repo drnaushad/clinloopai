@@ -64,8 +64,8 @@ services:
       # Governance: shadow mode for rules a specialist has not signed off (set 1 for clinical use),
       # approvals needed per rule, and the hospital's own critical-finding list (on the data volume)
       # Intended-use profile: core (clinical use; research features locked off) or research.
-      # New installs write core into .env (install.sh); older installs keep research until they set it
-      CLINLOOP_PROFILE: ${CLINLOOP_PROFILE:-research}
+      # core is the default; research only when set on purpose (never for patient care)
+      CLINLOOP_PROFILE: ${CLINLOOP_PROFILE:-core}
       # Shadow mode on by default: rules no specialist has signed off stay off the worklist
       CLINLOOP_ENFORCE_SIGNOFF: ${CLINLOOP_ENFORCE_SIGNOFF:-1}
       CLINLOOP_SIGNOFF_APPROVALS: ${CLINLOOP_SIGNOFF_APPROVALS:-1}

@@ -246,7 +246,7 @@ body.dark-theme {
   flex: 0 0 auto;
   color: var(--amber-warning);
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
@@ -604,7 +604,7 @@ body.dark-theme .brand-title {
 }
 
 .case-status-badge {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
   padding: 0.2rem 0.5rem;
@@ -735,7 +735,7 @@ body.dark-theme .brand-title {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.09);
   color: #94a3b8;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 600;
   font-family: var(--font-mono);
   padding: 0.2rem 0.55rem;
@@ -955,7 +955,7 @@ body.dark-theme .hypergraph-canvas-container {
 }
 
 .risk-label {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -979,7 +979,7 @@ body.dark-theme .hypergraph-canvas-container {
 }
 
 .stat-title {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
@@ -1003,7 +1003,7 @@ body.dark-theme .hypergraph-canvas-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--text-dim);
   font-family: var(--font-mono);
 }
@@ -1115,7 +1115,7 @@ body.dark-theme .hypergraph-canvas-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
   z-index: 2;
   flex-shrink: 0;
@@ -1135,7 +1135,7 @@ body.dark-theme .hypergraph-canvas-container {
 }
 
 .step-sub {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--text-dim);
   font-family: var(--font-mono);
 }
@@ -1269,7 +1269,7 @@ body.dark-theme .hypergraph-canvas-container {
 
 .biomcp-status-pill {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   font-weight: 800;
   background: rgba(0, 240, 255, 0.2);
   color: var(--cyan-neon);
@@ -1340,7 +1340,7 @@ body.dark-theme .hypergraph-canvas-container {
 
 .biomcp-tag-cyan {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--cyan-neon);
   background: rgba(0, 240, 255, 0.1);
   border: 1px solid rgba(0, 240, 255, 0.3);
@@ -1350,7 +1350,7 @@ body.dark-theme .hypergraph-canvas-container {
 
 .biomcp-grade-badge {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--emerald-safe);
   background: rgba(5, 223, 114, 0.12);
@@ -1370,7 +1370,7 @@ body.dark-theme .hypergraph-canvas-container {
 
 .biomcp-stream-label {
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1444,7 +1444,7 @@ body.dark-theme .hypergraph-canvas-container {
 }
 
 .biomcp-param-label {
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   color: var(--text-dim);
   text-transform: uppercase;
   font-weight: 700;
@@ -1515,7 +1515,7 @@ body.dark-theme .hypergraph-canvas-container {
 
 .tab-pill {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 700;
   padding: 0.12rem 0.45rem;
   border-radius: 4px;
@@ -1628,7 +1628,7 @@ body.dark-theme .hypergraph-canvas-container {
 }
 
 .cf-metric-label {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1745,7 +1745,7 @@ body.dark-theme .hypergraph-canvas-container {
 
 .cf-step-stage {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
 }
@@ -1771,7 +1771,7 @@ body.dark-theme .hypergraph-canvas-container {
 .cf-step-meta {
   display: flex;
   gap: 0.8rem;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-family: var(--font-mono);
   color: var(--text-dim);
   margin-top: 0.2rem;
@@ -1895,7 +1895,7 @@ body.dark-theme .hypergraph-canvas-container {
 }
 
 .omop-prop-label {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-dim);
   text-transform: uppercase;
@@ -2738,7 +2738,7 @@ body.dark-theme .case-card.active {
 }
 
 .pt-dept-badge {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   display: inline-flex;
   white-space: nowrap;
@@ -3146,7 +3146,7 @@ body.dark-theme .btn-api-highlight:hover {
 }
 
 .api-status-pill {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 800;
   padding: 0.12rem 0.45rem;
   border-radius: 9999px;
@@ -3334,7 +3334,7 @@ body.dark-theme .api-test-btn:hover {
 .firewall-shield-anim { font-size: 1.8rem; transition: transform 0.3s; }
 .firewall-shield-anim.active { animation: shieldPulse 0.5s ease; }
 .firewall-arrow { font-size: 1.4rem; color: #10b981; font-weight: 900; }
-.firewall-stats { font-size: 0.68rem; color: var(--text-muted); text-align: center; }
+.firewall-stats { font-size: 0.72rem; color: var(--text-muted); text-align: center; }
 .fstat { margin: 0.1rem 0; }
 @keyframes shieldPulse { 0%{transform:scale(1)} 50%{transform:scale(1.3)} 100%{transform:scale(1)} }
 
@@ -3357,7 +3357,7 @@ body.dark-theme .api-test-btn:hover {
 .prv-status-future  { border-color: rgba(139,92,246,0.3); background: linear-gradient(135deg, var(--bg-card), rgba(139,92,246,0.04)); }
 .prv-layer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
 .prv-layer-num { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim); font-weight: 700; }
-.prv-layer-status-badge { font-size: 0.65rem; font-weight: 700; padding: 0.18rem 0.5rem; border-radius: 20px; border: 1px solid; }
+.prv-layer-status-badge { font-size: 0.72rem; font-weight: 700; padding: 0.18rem 0.5rem; border-radius: 20px; border: 1px solid; }
 .prv-badge-active  { background: rgba(16,185,129,0.15); color: #10b981; border-color: rgba(16,185,129,0.4); }
 .prv-badge-roadmap { background: rgba(245,158,11,0.15); color: #f59e0b; border-color: rgba(245,158,11,0.4); }
 .prv-badge-future  { background: rgba(139,92,246,0.15); color: #8b5cf6; border-color: rgba(139,92,246,0.4); }
@@ -3365,14 +3365,14 @@ body.dark-theme .api-test-btn:hover {
 .prv-layer-title { font-family: var(--font-heading); font-size: 0.92rem; font-weight: 800; color: var(--text-main); margin: 0 0 0.4rem; }
 .prv-layer-desc { font-size: 0.76rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 0.7rem; }
 .prv-layer-tech { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.6rem; }
-.tech-tag { font-size: 0.64rem; font-weight: 600; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); color: #a5b4fc; border-radius: 6px; padding: 0.15rem 0.4rem; }
+.tech-tag { font-size: 0.72rem; font-weight: 600; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25); color: #a5b4fc; border-radius: 6px; padding: 0.15rem 0.4rem; }
 .prv-layer-metric { font-size: 0.7rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.4rem; background: var(--bg-surface); border-radius: 8px; padding: 0.3rem 0.5rem; }
 .metric-icon { font-size: 0.8rem; }
 
 /* Federated Learning Diagram */
 .prv-federated-diagram { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; margin-bottom: 0.6rem; }
-.fed-node { font-size: 0.68rem; background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.3); color: #06b6d4; border-radius: 8px; padding: 0.2rem 0.4rem; }
-.fed-center { font-size: 0.65rem; background: rgba(16,185,129,0.12); border: 1px dashed rgba(16,185,129,0.4); color: #10b981; border-radius: 8px; padding: 0.2rem 0.4rem; width: 100%; text-align: center; }
+.fed-node { font-size: 0.72rem; background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.3); color: #06b6d4; border-radius: 8px; padding: 0.2rem 0.4rem; }
+.fed-center { font-size: 0.72rem; background: rgba(16,185,129,0.12); border: 1px dashed rgba(16,185,129,0.4); color: #10b981; border-radius: 8px; padding: 0.2rem 0.4rem; width: 100%; text-align: center; }
 
 /* Differential Privacy Demo */
 .prv-dp-demo { background: var(--bg-surface); border-radius: 8px; padding: 0.5rem; margin-bottom: 0.6rem; }
@@ -3381,7 +3381,7 @@ body.dark-theme .api-test-btn:hover {
 .dp-val { font-family: var(--font-mono); font-weight: 700; }
 .dp-danger { color: #ef4444; }
 .dp-safe { color: #10b981; }
-.dp-note { color: var(--text-dim); font-size: 0.65rem; }
+.dp-note { color: var(--text-dim); font-size: 0.72rem; }
 
 /* PHI Vault Demo */
 .prv-vault-demo { background: var(--bg-surface); border-radius: 8px; padding: 0.5rem; margin-bottom: 0.6rem; }
@@ -3406,7 +3406,7 @@ body.dark-theme .api-test-btn:hover {
 
 /* ── DP Formula + Slider ── */
 .dp-formula {
-  font-family: var(--font-mono); font-size: 0.65rem; color: #8b5cf6;
+  font-family: var(--font-mono); font-size: 0.72rem; color: #8b5cf6;
   background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2);
   border-radius: 6px; padding: 0.3rem 0.5rem; margin-bottom: 0.5rem;
   letter-spacing: 0.01em;
@@ -3445,10 +3445,10 @@ body.dark-theme .api-test-btn:hover {
 .audit-entry-order   { border-color: rgba(99,102,241,0.5); }
 .audit-entry-model   { border-color: rgba(6,182,212,0.5); }
 .audit-entry-warning { border-color: rgba(239,68,68,0.5); }
-.audit-ts { font-family: var(--font-mono); color: var(--text-dim); min-width: 80px; font-size: 0.65rem; }
+.audit-ts { font-family: var(--font-mono); color: var(--text-dim); min-width: 80px; font-size: 0.72rem; }
 .audit-engine { font-weight: 700; color: #a5b4fc; min-width: 90px; }
 .audit-action { flex: 1; color: var(--text-muted); }
-.audit-phi-badge { font-size: 0.62rem; font-weight: 700; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #10b981; border-radius: 4px; padding: 0.1rem 0.35rem; }
+.audit-phi-badge { font-size: 0.72rem; font-weight: 700; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #10b981; border-radius: 4px; padding: 0.1rem 0.35rem; }
 
 /* ── Hippocratic Oath Banner (inside Nobility Modal) ── */
 .hippocratic-oath-banner {
@@ -3461,5 +3461,5 @@ body.dark-theme .api-test-btn:hover {
   position: relative; z-index: 1;
 }
 .hippocratic-oath-attr {
-  font-size: 0.68rem; color: var(--text-dim); margin-top: 0.5rem; font-style: normal;
+  font-size: 0.72rem; color: var(--text-dim); margin-top: 0.5rem; font-style: normal;
 }

@@ -57,6 +57,21 @@ class TestStaticDemo(unittest.TestCase):
         index = json.load(open(os.path.join(API, "index.json"), encoding="utf-8"))
         self.assertIn("synthetic", index["note"])
 
+    def test_every_fixed_request_a_page_makes_is_in_the_snapshot(self):
+        """Device check, Oct 2026: Quality and Rule sign-off asked for three endpoints the snapshot lacked.
+        A role-limited endpoint is stored as its refusal, so the page gets the same 403 as from a server."""
+        import glob
+        import re
+        paths = set()
+        for page in glob.glob(os.path.join(ROOT, "*.html")):
+            paths |= set(re.findall(r"api\('(/api/v1/[^'$?]+)'\)", open(page, encoding="utf-8").read()))
+        self.assertGreaterEqual(len(paths), 8)
+        for path in sorted(paths):
+            self.assertTrue(os.path.exists(os.path.join(API, fnv1a(request_key(path, None)) + ".json")), path)
+        with open(os.path.join(API, fnv1a(request_key("/api/v1/quality/documentation-audit", None)) + ".json"),
+                  encoding="utf-8") as f:
+            self.assertEqual(json.load(f)["__status"], 403)
+
 
 if __name__ == "__main__":
     unittest.main()

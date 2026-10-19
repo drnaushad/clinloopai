@@ -110,6 +110,7 @@ class TestCriticalListApproval(unittest.TestCase):
 
 
 @unittest.skipUnless(HAVE_API, "API dependencies not installed")
+@mock.patch.dict(os.environ, {"CLINLOOP_PROFILE": "research"})
 class TestGovernanceAPI(unittest.TestCase):
 
     def setUp(self):

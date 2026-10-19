@@ -9,6 +9,7 @@ import json
 import os
 import sys
 import unittest
+from unittest import mock
 from datetime import datetime, timedelta
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -46,6 +47,7 @@ def _usual(store, rule, per_week=2):
         _opened(store, rule, per_week, days_ago=7 * week + 1, tag=f"h{week}")
 
 
+@mock.patch.dict(os.environ, {"CLINLOOP_PROFILE": "research"})
 class TestRuleMonitor(unittest.TestCase):
 
     def setUp(self):

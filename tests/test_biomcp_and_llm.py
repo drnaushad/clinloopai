@@ -19,7 +19,20 @@ import threading
 import time
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from unittest import mock
 from unittest.mock import patch
+
+# These tests exercise research-profile features; the default profile is core (clinical).
+_RESEARCH_PROFILE = mock.patch.dict(os.environ, {"CLINLOOP_PROFILE": "research"})
+
+
+def setUpModule():
+    _RESEARCH_PROFILE.start()
+
+
+def tearDownModule():
+    _RESEARCH_PROFILE.stop()
+
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT)

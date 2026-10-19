@@ -173,6 +173,7 @@ class TestNotePlanLoops(unittest.TestCase):
         self.assertEqual(ids, [e["event_id"] for e in e2["N"]])
 
 
+@mock.patch.dict(os.environ, {"CLINLOOP_PROFILE": "research"})
 class TestLLMSuggestions(unittest.TestCase):
 
     def test_suggestions_must_quote_the_note_and_are_never_tracked(self):

@@ -67,6 +67,8 @@ a { color: var(--accent); font-weight: 600; }
   border: 1px solid var(--border); }
 .feed.ok { background: var(--ok-soft); color: var(--ok); font-weight: 500; }
 .feed.alarm { background: var(--critical); color: #fff; }
+.feed.warn { background: #f6edd9; color: #5c4300; font-weight: 500; }
+@media (prefers-color-scheme: dark) { .feed.warn { background: #3a2f17; color: #f3d99b; } }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
 .connect { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 10px; padding: 14px; align-items: end; }
 label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
@@ -150,9 +152,9 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 @media (max-width: 720px) { .q { grid-template-columns: 1fr; } }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js"></script>
-<script src="js/appnav.js"></script>
-<link rel="stylesheet" href="css/responsive.css?v=20261020">
+<script src="js/demo.js?v=20261021"></script>
+<script src="js/appnav.js?v=20261021"></script>
+<link rel="stylesheet" href="css/responsive.css?v=20261021">
 </head>
 <body>
 <div class="wrap">
@@ -297,7 +299,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t()[el.dataset.i18n]; });
     if (!state.status) return;
     const s = state.status, m = state.metrics;
-    $('mode').className = `feed ${s.silent_run ? 'ok' : 'alarm'}`;
+    $('mode').className = `feed ${s.silent_run ? 'ok' : 'warn'}`;
     $('mode').textContent = s.silent_run ? t().silentOn : t().silentOff;
     $('kpis').innerHTML = [[s.monitored_patients, t().kPatients], [s.sampled, t().kSampled], [m ? m.reviewed : '–', t().kReviewed],
       [m ? pct(m.ppv.value) : '–', t().kPpv]].map(([v, l]) => `<div class="card kpi"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join('');
@@ -342,7 +344,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       store.set('clinloop_api', state.base); store.set('clinloop_token', state.token);
       await reload();
       $('app').hidden = false;
-      setStatus(`${state.me.user} (${state.me.role})`);
+      setStatus((lang === 'ko' ? `${state.me.user}(${state.me.role})님으로 로그인했습니다.` : `Signed in as ${state.me.user} (${state.me.role}).`));
     } catch (err) { $('app').hidden = true; setStatus(err.message, true); }
   });
   $('sample-all').addEventListener('change', () => { $('sample-size').disabled = $('sample-all').checked; });

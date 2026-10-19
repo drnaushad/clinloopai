@@ -143,9 +143,9 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 .bn { padding: 10px 12px; border-left: 4px solid var(--critical); margin: 8px 0; background: var(--surface); border-radius: 8px; }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js"></script>
-<script src="js/appnav.js"></script>
-<link rel="stylesheet" href="css/responsive.css?v=20261020">
+<script src="js/demo.js?v=20261021"></script>
+<script src="js/appnav.js?v=20261021"></script>
+<link rel="stylesheet" href="css/responsive.css?v=20261021">
 </head>
 <body>
 <div class="wrap">
@@ -321,7 +321,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       state.outcomes = await api('/api/v1/quality/outcomes').catch(() => null);
       store.set('clinloop_api', state.base); store.set('clinloop_token', state.token);
       $('app').hidden = false;
-      setStatus(`${me.user} (${me.role}) · ${state.data.as_of.slice(0, 16)}`);
+      setStatus(`${(lang === 'ko' ? `${me.user}(${me.role})님으로 로그인했습니다.` : `Signed in as ${me.user} (${me.role}).`)} · ${lang === 'ko' ? '기준' : 'as of'} ${state.data.as_of.slice(0, 16).replace('T', ' ')}`);
       render();
     } catch (err) { $('app').hidden = true; setStatus(err.message, true); }
   });

@@ -13,9 +13,9 @@ const safeStorage = {
 const CLINLOOP_I18N = {
 
   ko: {
-    platformLabel: '연구용 프로토타입',
+    platformLabel: '임상용 에디션 · 공개 데모',
     kpiExamples: '예시', kpiOpen: '미완료', kpiRules: '규칙',
-    platformNotice: '합성(가상) 예시 사례만 사용 · EHR·메시지·병원 연결 없음 · 환자 진료용 아님',
+    platformNotice: '이 공개 페이지는 합성(가상) 예시 사례만 사용 · 병원 적용은 현지 검증과 전문의 규칙 승인 후',
     brandSubtitle: '검사·영상 결과의 후속 조치 누락을 찾는 임상 안전 시스템',
     hospitalText: '합성 임상 궤적 데이터 기반',
     nobilityBtn: '윤리·안전 헌장',
@@ -36,7 +36,7 @@ const CLINLOOP_I18N = {
     tabHypergraph: '지식 그래프',
     tabPrivacy: '데이터 보호',
     guideTitle: 'ClinLoop AI는 무엇인가요?',
-    guideDesc: 'ClinLoop AI는 후속 조치 업무 흐름을 검토하기 위한 연구 프로토타입입니다. 이 화면은 임상 사례만 사용하며 진단, 치료 권고, 환자 연락 또는 병원 연동을 수행하지 않습니다.',
+    guideDesc: 'ClinLoop AI 임상용 에디션은 기록에 남은 후속 조치 의무(이상 검사결과, 영상 소견, 의뢰)를 추적하고, 의료진이 확인할 수 있는 근거와 함께 누락을 알려줍니다. 진단이나 치료 권고는 하지 않습니다. 이 공개 데모는 합성 예시 사례만 사용하며 환자 연락이나 병원 연동을 수행하지 않습니다.',
     guideSteps: '<span class="guide-step">임상 사례 선택</span> <span class="guide-arrow">➔</span> <span class="guide-step">규칙 매칭과 근거를 검토</span> <span class="guide-arrow">➔</span> <span class="guide-step">브라우저에서만 시뮬레이션</span>',
     deadlineLabel: '후속 조치 기한',
     q1Title: '발견 소견',
@@ -93,9 +93,9 @@ const CLINLOOP_I18N = {
     btnCancelApi: '닫기'
   },
   en: {
-    platformLabel: 'Research prototype',
+    platformLabel: 'Clinical edition · public demo',
     kpiExamples: 'Examples', kpiOpen: 'Open', kpiRules: 'Rules',
-    platformNotice: 'Synthetic example cases only · No EHR, messaging or hospital connection · Not for patient care.',
+    platformNotice: 'Synthetic example cases on this public page · Hospital use after local validation and specialist rule sign-off.',
     brandSubtitle: 'Finds and closes missed follow-up of clinical results',
     hospitalText: 'Synthetic Clinical Trajectories',
     nobilityBtn: 'Ethics & safety charter',
@@ -116,7 +116,7 @@ const CLINLOOP_I18N = {
     tabHypergraph: 'Knowledge graph',
     tabPrivacy: 'Data protection',
     guideTitle: 'What is ClinLoop AI?',
-    guideDesc: 'ClinLoop AI is a research prototype for reviewing follow-up workflows. This page uses synthetic example cases only and does not diagnose, recommend treatment, contact patients or connect to a hospital.',
+    guideDesc: 'ClinLoop AI clinical edition tracks the follow-up obligations already in the record (abnormal results, imaging findings, referrals) and flags missed ones with a basis the clinician can check. It does not diagnose or recommend treatment. This public demo uses synthetic example cases only and does not contact patients or connect to a hospital.',
     guideSteps: '<span class="guide-step">Select a clinical case</span> <span class="guide-arrow">➔</span> <span class="guide-step">Review the rule match and evidence</span> <span class="guide-arrow">➔</span> <span class="guide-step">Simulate in this browser only</span>',
     deadlineLabel: 'Follow-up deadline',
     q1Title: 'Finding',
@@ -138,7 +138,7 @@ const CLINLOOP_I18N = {
     summaryKakaoSub: 'Example text from a synthetic case. Never send it to a real patient.',
     summaryOrderLblDefault: 'Simulate local resolution (not sent)',
     summaryOrderLblClosed: 'State changed in this browser only (not sent)',
-    summaryOrderSub: 'This prototype sends no orders or patient messages.',
+    summaryOrderSub: 'This demo sends no orders or patient messages.',
     clockTelemetryTitle: 'Deadline status (example)',
     riskMetricLabel: 'Research score · not clinically validated',
     statRuleTitle: 'Rule',
@@ -927,7 +927,9 @@ class ClinLoopApp {
     };
 
     const urlParamsTheme = new URLSearchParams(window.location.search).get('theme');
-    const initialTheme = urlParamsTheme || safeStorage.get('clinloop_theme') || 'light';
+    // A choice made on any ClinLoop page is kept; otherwise follow the device (as the clinical pages do)
+    const deviceDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = urlParamsTheme || safeStorage.get('clinloop_theme') || (deviceDark ? 'dark' : 'light');
     setTheme(initialTheme);
 
     if (btnThemeLight) btnThemeLight.addEventListener('click', () => { setTheme('light'); this._playTelemetrySound(800, 'sine', 0.05); });
@@ -1657,7 +1659,7 @@ class ClinLoopApp {
         name.textContent = r.name;
         const badge = document.createElement('span');
         badge.className = 'badge';
-        badge.style.cssText = 'font-size:0.68rem;';
+        badge.style.cssText = 'font-size:0.72rem;';
         badge.textContent = `${r.tone === 'ok' ? '● ' : r.tone === 'warn' ? '▲ ' : '○ '}${r.text}`;
         style(badge, r.tone);
         item.append(name, badge);

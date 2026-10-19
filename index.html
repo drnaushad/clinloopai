@@ -7,12 +7,12 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
   <title>ClinLoop AI | Closed-Loop Follow-up of Clinical Results</title>
-  <meta name="description" content="Research prototype that finds and tracks missed follow-up of abnormal lab results, imaging findings and referrals, with guideline-based rules. Synthetic examples only; not a medical device.">
+  <meta name="description" content="Clinical-use edition: finds and tracks missed follow-up of abnormal lab results, imaging findings and referrals with guideline-based rules a clinician can check. This public demo uses synthetic examples.">
   <link rel="canonical" href="https://clinloopai.app/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ClinLoop AI">
   <meta property="og:title" content="ClinLoop AI | Closed-Loop Follow-up of Clinical Results">
-  <meta property="og:description" content="Finds and tracks missed follow-up of abnormal results, imaging findings and referrals. Research prototype; synthetic examples only.">
+  <meta property="og:description" content="Finds and tracks missed follow-up of abnormal results, imaging findings and referrals. Clinical-use edition; public demo with synthetic examples.">
   <meta property="og:url" content="https://clinloopai.app/">
   <meta property="og:image" content="https://clinloopai.app/icons/icon-512.png">
   <meta name="twitter:card" content="summary">
@@ -20,14 +20,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="css/styles.css?v=20261020">
+  <link rel="stylesheet" href="css/styles.css?v=20261021">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0e7490">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<link rel="stylesheet" href="css/responsive.css?v=20261020">
+<link rel="stylesheet" href="css/responsive.css?v=20261021">
 </head>
 
 <body>
@@ -101,8 +101,8 @@
   <!-- One status strip: the safety notice, then the example data at a glance -->
   <div class="status-strip">
     <div class="platform-status" role="note" aria-label="Safety notice">
-      <span class="platform-status-label" id="platform-notice-label">Research prototype</span>
-      <span class="platform-status-copy" id="platform-notice-copy">Synthetic example cases only · No EHR, messaging or hospital connection · Not for patient care.</span>
+      <span class="platform-status-label" id="platform-notice-label">Clinical edition · public demo</span>
+      <span class="platform-status-copy" id="platform-notice-copy">Synthetic example cases on this public page · Hospital use after local validation and specialist rule sign-off.</span>
     </div>
     <div id="global-impact-bar" class="kpi-strip" aria-label="Example data at a glance">
       <div class="impact-stat-item" title="Example cases loaded on this page">
@@ -587,7 +587,7 @@
                 <div class="standards-card-title">
                   <span style="color: #c084fc;">●</span> OHDSI OMOP-CDM Standard Mapping
                 </div>
-                <span class="badge" style="font-size: 0.65rem;">Concept ID: <span id="omop-val-id" style="color: var(--cyan-neon);">4180497</span></span>
+                <span class="badge" style="font-size: 0.72rem;">Concept ID: <span id="omop-val-id" style="color: var(--cyan-neon);">4180497</span></span>
               </div>
 
               <div class="omop-property-grid">
@@ -621,14 +621,14 @@
                   <span style="color: var(--cyan-neon);">●</span> HL7 FHIR R4 Interoperability Resource
                 </div>
                 <div style="display: flex; gap: 0.35rem;">
-                  <button class="filter-btn active" id="fhir-btn-dr" style="font-size: 0.68rem; padding: 0.2rem 0.5rem;">DiagnosticReport</button>
-                  <button class="filter-btn" id="fhir-btn-comm" style="font-size: 0.68rem; padding: 0.2rem 0.5rem;">CommunicationRequest</button>
+                  <button class="filter-btn active" id="fhir-btn-dr" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">DiagnosticReport</button>
+                  <button class="filter-btn" id="fhir-btn-comm" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">CommunicationRequest</button>
                 </div>
               </div>
 
               <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: var(--text-muted);">
                 <span>Resource Type: <strong id="fhir-res-type" style="color: var(--cyan-neon);">DiagnosticReport</strong></span>
-                <span id="fhir-profile-tag" style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted);">Example JSON · active</span>
+                <span id="fhir-profile-tag" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">Example JSON · active</span>
               </div>
 
               <pre class="fhir-code-viewer" id="fhir-raw-json" style="max-height: 250px;"></pre>
@@ -856,7 +856,7 @@
             </li>
             <li>
               <span>⚠️</span>
-              <span><strong>platform limitation:</strong> This prototype has not been compared against a hospital EMR.</span>
+              <span><strong>platform limitation:</strong> ClinLoop has not yet been compared against a hospital EMR (Stage 1 validation).</span>
             </li>
             <li>
               <span>⚠️</span>
@@ -1002,16 +1002,16 @@
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
               <span style="font-size: 1rem;">🏥</span>
               <strong style="color: #38bdf8; font-size: 0.85rem;">EHR/SMART-on-FHIR Integration</strong>
-              <span class="badge" style="font-size: 0.55rem; padding: 0.1rem 0.4rem; color: #059669; border-color: rgba(5,150,105,0.3);">CONNECTED</span>
+              <span class="badge" style="font-size: 0.72rem; padding: 0.1rem 0.4rem; color: var(--text-dim); border-color: var(--border-subtle);">On a hospital server</span>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
               <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 6px; padding: 0.45rem 0.6rem;">
                 <code style="color: #38bdf8; font-size: 0.7rem;">ehr_query_encounters</code>
-                <div style="font-size: 0.62rem; color: var(--text-dim); margin-top: 0.15rem;">Query patient visit history from hospital EHR</div>
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.15rem;">Query patient visit history from hospital EHR</div>
               </div>
               <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 6px; padding: 0.45rem 0.6rem;">
                 <code style="color: #38bdf8; font-size: 0.7rem;">ehr_push_fhir_task</code>
-                <div style="font-size: 0.62rem; color: var(--text-dim); margin-top: 0.15rem;">Push 1-click FHIR orders back to EHR</div>
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.15rem;">Push 1-click FHIR orders back to EHR</div>
               </div>
             </div>
           </div>
@@ -1020,12 +1020,12 @@
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
               <span style="font-size: 1rem;">🩻</span>
               <strong style="color: #f59e0b; font-size: 0.85rem;">PACS / DICOM Imaging Integration</strong>
-              <span class="badge" style="font-size: 0.55rem; padding: 0.1rem 0.4rem; color: #059669; border-color: rgba(5,150,105,0.3);">CONNECTED</span>
+              <span class="badge" style="font-size: 0.72rem; padding: 0.1rem 0.4rem; color: var(--text-dim); border-color: var(--border-subtle);">On a hospital server</span>
             </div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 0.4rem;">
               <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 6px; padding: 0.45rem 0.6rem;">
                 <code style="color: #f59e0b; font-size: 0.7rem;">pacs_fetch_dicom_metadata</code>
-                <div style="font-size: 0.62rem; color: var(--text-dim); margin-top: 0.15rem;">Fetch DICOM metadata from hospital PACS (CT, MRI, X-ray)</div>
+                <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.15rem;">Fetch DICOM metadata from hospital PACS (CT, MRI, X-ray)</div>
               </div>
             </div>
           </div>
@@ -1328,8 +1328,8 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
             <div class="phone-chat-header">
               <div class="phone-chat-avatar">AJ</div>
               <div class="phone-chat-name">
-                <span>ClinLoop research prototype</span>
-                <span style="font-size: 0.65rem; background: #64748b; color: #fff; padding: 0.1rem 0.35rem; border-radius: 3px;">Not sent</span>
+                <span>ClinLoop (demo)</span>
+                <span style="font-size: 0.72rem; background: #64748b; color: #fff; padding: 0.1rem 0.35rem; border-radius: 3px;">Not sent</span>
               </div>
             </div>
 
@@ -1337,7 +1337,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
               <div class="kakao-card">
                 <div class="kakao-card-top">
                   <span>임상 사례 안내문 미리보기</span>
-                  <span id="kakao-date-pill" style="font-family: var(--font-mono); font-size: 0.68rem;">2026.03.20</span>
+                  <span id="kakao-date-pill" style="font-family: var(--font-mono); font-size: 0.72rem;">2026.03.20</span>
                 </div>
 
                 <div class="kakao-card-body">
@@ -1346,7 +1346,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
                   </div>
 
                   <div class="kakao-jargon-box">
-                    <span style="color: #64748b; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;">EMR Diagnostic Finding</span>
+                    <span style="color: #64748b; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;">EMR Diagnostic Finding</span>
                     <div id="kakao-jargon-text" style="font-family: var(--font-mono); font-size: 0.72rem; color: #0f172a; margin-top: 0.15rem; font-weight: 600;">
                       Cervical cytology HSIL
                     </div>
@@ -1376,7 +1376,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
         <div class="outreach-meta-panel">
           <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 1rem;">
             <div style="font-size: 0.72rem; color: var(--cyan-neon); font-family: var(--font-mono); font-weight: 700; text-transform: uppercase;">
-              research prototype · no patient delivery
+              public demo · no patient delivery
             </div>
             <h3 style="font-family: var(--font-heading); font-size: 1.05rem; color: var(--text-main); margin: 0.35rem 0;">
               Patient messaging is not enabled (환자 메시지 전송 비활성화됨)
@@ -1401,10 +1401,10 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div style="background: var(--bg-card); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; padding: 0.7rem 0.85rem; display: flex; flex-direction: column; gap: 0.4rem;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <span style="font-size: 0.72rem; font-weight: 800; color: #c084fc;">Drafting engine:</span>
-              <span class="badge" id="outreach-model-pill" style="font-size: 0.62rem; color: var(--text-dim); border-color: var(--border-card);">CHECKING…</span>
+              <span class="badge" id="outreach-model-pill" style="font-size: 0.72rem; color: var(--text-dim); border-color: var(--border-card);">CHECKING…</span>
             </div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 0.35rem;">
-              <button class="filter-btn active btn-outreach-engine" data-engine="local" id="btn-engine-local" style="padding: 0.35rem 0.2rem; font-size: 0.67rem; text-align: center;">Local model</button>
+              <button class="filter-btn active btn-outreach-engine" data-engine="local" id="btn-engine-local" style="padding: 0.35rem 0.2rem; font-size: 0.72rem; text-align: center;">Local model</button>
             </div>
           </div>
 
@@ -1428,7 +1428,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
       <div class="charter-head">
         <div>
           <h2 id="charter-title">Ethics &amp; safety charter</h2>
-          <p class="charter-sub">How ClinLoop is meant to be built and used. Status: research prototype; not a medical device.</p>
+          <p class="charter-sub">How ClinLoop is meant to be built and used. Status: clinical-use edition (core profile); research features locked off; non-device CDS proposed, MFDS confirmation pending.</p>
         </div>
         <button id="btn-close-nobility" aria-label="Close">✕</button>
       </div>
@@ -1512,7 +1512,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
           <div>
             <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;" id="modal-api-title">
               Hospital AI & Biomedical API Credentials
-              <span class="badge" style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.4); color: #a78bfa; font-size: 0.62rem;">Zero-Leakage Security</span>
+              <span class="badge" style="background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.4); color: #a78bfa; font-size: 0.72rem;">Zero-Leakage Security</span>
             </h2>
             <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0.2rem 0 0 0;" id="modal-api-sub">
               Configure external biomedical LLM fallback, NCBI/PubMed research access, and Hospital EHR FHIR tokens.
@@ -1561,11 +1561,11 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
     </div>
   </div>
   <script src="config.js"></script>
-<script src="js/demo.js"></script>
+<script src="js/demo.js?v=20261021"></script>
 <script src="js/top-chrome.js?v=20261015"></script>
-<script src="js/appnav.js"></script>
+<script src="js/appnav.js?v=20261021"></script>
   <script src="js/safety_clock.js?v=20260930_final"></script>
   <script src="js/hypergraph.js?v=20260930_final"></script>
-  <script src="js/app.js?v=20261020"></script>
+  <script src="js/app.js?v=20261021"></script>
 </body>
 </html>

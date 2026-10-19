@@ -22,8 +22,9 @@ legal advice. Each document ends with the sign-offs it needs.
 The intended use covers the follow-up tracking core only. `CLINLOOP_PROFILE=core` locks every
 research feature off (image models, CT measurement, image scanning, imaging-AI comparison and
 triage, the model second reader, language-model features) and never opens R047, R057 or R058
-(`src/clinloop_engine/profile.py`). The default profile stays `research`, so existing installations
-behave as before; hospital installations for patient care must set `core`.
+(`src/clinloop_engine/profile.py`). `core` is the default (October 2026): an installation is the
+clinical edition unless `CLINLOOP_PROFILE=research` is set on purpose, which must never be done for
+patient care.
 
 ## Keeping the file true
 

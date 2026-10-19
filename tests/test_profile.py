@@ -29,9 +29,16 @@ ALL_ON = {"CLINLOOP_IMAGING_MODELS": "txrv,vlm,totalseg", "CLINLOOP_IMAGE_SCAN":
 
 class TestProfileSwitch(unittest.TestCase):
 
-    def test_default_is_research_and_changes_nothing(self):
+    def test_default_is_core(self):
+        """The app is the clinical (core) edition unless research is chosen on purpose."""
         with mock.patch.dict(os.environ, ALL_ON):
             os.environ.pop("CLINLOOP_PROFILE", None)
+            self.assertEqual(profile.name(), "core")
+            self.assertFalse(imaging_scanner.enabled() or sr.enabled() or ai_review.research_ai_enabled())
+            self.assertEqual(profile.excluded_rules(), frozenset({"R047", "R057", "R058"}))
+
+    def test_research_must_be_chosen_and_changes_nothing(self):
+        with mock.patch.dict(os.environ, {**ALL_ON, "CLINLOOP_PROFILE": "research"}):
             self.assertEqual(profile.name(), "research")
             self.assertTrue(imaging_scanner.enabled() and sr.enabled() and ai_review.research_ai_enabled())
             self.assertTrue(ct_organs.enabled())
@@ -87,6 +94,7 @@ class TestCoreProfileRules(unittest.TestCase):
             statuses = t.run_at(bleed, when)[0]
         self.assertEqual(set(statuses), {"R035"})   # the report's own critical result is still tracked
 
+    @mock.patch.dict(os.environ, {"CLINLOOP_PROFILE": "research"})
     def test_second_reader_flags_are_not_opened(self):
         from test_second_reader import NOW, PATIENT, UNUSUAL, FakeModel, loops, report
         rep = report(UNUSUAL)

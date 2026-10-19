@@ -28,10 +28,16 @@ an INR recheck, a referral that needs a visit. When a required follow-up does no
 guideline window, ClinLoop flags the **open loop**, scores its risk, and explains why. It does this
 with transparent, rule-grounded logic and an audit trail.
 
-> ⚠️ **Research prototype.** Everything in this repository runs on **synthetic** patient data. It is
-> not a medical device, has not been clinically validated, and must not be used for patient care.
-> Several components (EHR/PACS connectors, counterfactual survival paths, LLM baselines) are
-> **simulations or fixed lookup tables**. See [Implementation status](#implementation-status).
+> **Clinical-use edition (core profile, the default).** ClinLoop is built for use in a hospital as
+> decision support that a clinician checks: it tracks follow-up obligations already in the record and
+> states the basis of every alert. Research features (image models, model second reader, language-model
+> suggestions) are locked off unless `CLINLOOP_PROFILE=research` is set on purpose.
+>
+> **Before patient care** at a hospital: local validation on its own records (Stage 1–2,
+> [`docs/regulatory/CLINICAL_EVALUATION_PLAN.md`](docs/regulatory/CLINICAL_EVALUATION_PLAN.md)),
+> specialist sign-off of each rule, and confirmation of device status with MFDS (non-device CDS is
+> proposed in [`docs/regulatory/REGULATORY_ASSESSMENT.md`](docs/regulatory/REGULATORY_ASSESSMENT.md)).
+> This repository and its public demo use **synthetic** data only. See [Implementation status](#implementation-status).
 
 ---
 
@@ -232,7 +238,7 @@ Each image is published only after the tests pass and a smoke test of the built 
 For clinicians on the hospital network, put an HTTPS reverse proxy (e.g. nginx with the hospital
 certificate) in front of port 8124 rather than exposing it over plain HTTP.
 
-New installs run the **core profile** (`CLINLOOP_PROFILE=core`): only the follow-up tracking that the
+ClinLoop runs the **core profile** by default (`CLINLOOP_PROFILE=core`): only the follow-up tracking that the
 [intended use](docs/regulatory/INTENDED_USE.md) covers. Research features (image models, the model
 second reader, language-model suggestions) need `CLINLOOP_PROFILE=research` and are not for patient
 care.
@@ -434,7 +440,7 @@ Configuration:
 | `CLINLOOP_FHIR_TOKEN` | Static read-only bearer token, for test servers without SMART login | — |
 | `CLINLOOP_FHIR_MODE` / `CLINLOOP_FHIR_GROUP_ID` | `bulk` reads the server through Bulk FHIR export (Epic and similar) for the given Group | `search` |
 | `CLINLOOP_OIDC_ISSUER` / `CLINLOOP_OIDC_CLIENT_ID` | Hospital single sign-on (OpenID Connect); see `src/clinloop_engine/oidc.py` for audience, role claim and role map settings | off |
-| `CLINLOOP_PROFILE` | `core` locks off every feature outside the intended use (image models, CT measurement, image scanning, imaging-AI comparison and triage, model second reader, language-model features) never opens R047, R057 or R058, and reports the one-hour critical-result rules R022 and R035 as a next-day documentation audit on the Quality page instead of live alerts; `research` leaves each to its own setting ([`docs/regulatory/`](docs/regulatory/README.md)). An unknown value counts as `core` | `research` (`core` in new installs) |
+| `CLINLOOP_PROFILE` | `core` locks off every feature outside the intended use (image models, CT measurement, image scanning, imaging-AI comparison and triage, model second reader, language-model features) never opens R047, R057 or R058, and reports the one-hour critical-result rules R022 and R035 as a next-day documentation audit on the Quality page instead of live alerts; `research` leaves each to its own setting ([`docs/regulatory/`](docs/regulatory/README.md)). An unknown value counts as `core` | `core` |
 | `CLINLOOP_SILENT_RUN` / `CLINLOOP_PILOT_REVIEWERS` | Silent-run pilot: nothing reaches clinical care; only the named review team sees loops ([`docs/PILOT_RUNBOOK.md`](docs/PILOT_RUNBOOK.md)) | off / any clinician |
 | `CLINLOOP_MONITOR` | `0` makes the rule monitor report without pausing or flagging; thresholds via `CLINLOOP_MONITOR_*` | `1` |
 | `CLINLOOP_FHIR_SYNC_MINUTES` / `CLINLOOP_FHIR_INITIAL_DAYS` | Sync interval / first-sync look-back | 15 / 365 |
@@ -760,6 +766,7 @@ results are identical on every run.
 | Silent-run pilot (protocol Stage 2) | **Implemented**: `CLINLOOP_SILENT_RUN=1` keeps everything away from clinical care; weekly reproducible samples of overdue loops; blinded dual review of the protocol's three questions; an urgent open loop cannot be filed without a safety referral; PPV, true open loops per 1,000 patients per month beyond usual care, alert burden, delay, feed uptime and agreement against the go / no-go criteria; de-identified export. See [`docs/PILOT_RUNBOOK.md`](docs/PILOT_RUNBOOK.md) |
 | Explainability and outcome tracking (Phase 6) | **Implemented**: every loop states its basis in plain words (finding with value or quoted sentence, rule, expected follow-up and deadline, how the deadline was worked out, what the record holds, guideline), shown first in the worklist and on EHR cards; technical detail folded away. Every loop is followed to its end from the audit log: acted on, time to first action and to closure, closed late, dismissed with reasons, and overdue loops nobody acted on (Quality page, `GET /api/v1/quality/outcomes`). Evidence ladder in `docs/regulatory/CLINICAL_EVALUATION_PLAN.md` |
 | Korean hospital readiness (Phase 7) | **Implemented**: every loop's basis also in Korean (`basis_ko`), shown when the worklist is in Korean; 42 synthetic Korean and mixed-language reports in `data/radiology_validation_synthetic_ko.csv` (developer-labelled; tests the reader, does not measure accuracy); an aneurysm with no recorded sex now uses the lower repair threshold. Clinician review in `docs/CLINICAL_REVIEW.md` §3b |
+| Clinical edition by default | **Implemented**: `CLINLOOP_PROFILE` defaults to `core` (research features locked off; R022/R035 as the next-day documentation audit); research must be chosen on purpose. All seven pages checked on phone (360/390 px), tablet, laptop and wide screens in light and dark: no sideways scrolling, no text under 11 px, touch targets ≥ 24 px, one navigation and one sign-in line on every page, theme choice kept across pages. The public demo no longer shows integrations as "connected" |
 | Data pipeline hardening (Phase 5) | **Implemented**: one loop per lab result when a preliminary and a final version arrive; a follow-up with exactly the trigger's time stays uncounted and is labelled for the reviewer; access log exported as FHIR AuditEvent; a folder runner for Synthea / NDJSON (`python -m src.clinloop_engine.fhir_folder <folder>`). Synthetic runs test the pipeline, not clinical accuracy |
 | Regulatory file (Phase 4) | **Drafted, not reviewed**: intended use, device-status assessment (MFDS, FDA non-device CDS criteria as a design test), risk management with traceability to code and tests, software lifecycle, SBOM, cybersecurity, clinical evaluation plan, post-market surveillance, instructions for use ([`docs/regulatory/`](docs/regulatory/README.md)). The `core` profile enforces the intended use in code. Needs a regulatory specialist, clinical lead and security officer to sign |
 | Rule monitoring | **Implemented**: hourly check of each rule's alert volume and dismissals. Mostly dismissed alerts pause a non-critical rule (new alerts held back; work in progress stays visible); a volume jump alone only flags it; critical rules are only ever flagged. Resumed by an administrator with a note |

@@ -27,8 +27,8 @@ on the Quality page once a day has passed since the result, for the quality team
 hospital's critical-result call process stays the primary control; ClinLoop only checks afterwards
 that the call was documented.
 
-The default profile is "research" (everything as configured), so existing installations and the
-tests behave as before. An unknown value is treated as "core": a typo must not widen the scope.
+The default profile is "core": ClinLoop is the clinical edition unless research is chosen on purpose
+(CLINLOOP_PROFILE=research). An unknown value is also treated as "core": a typo must not widen the scope.
 """
 
 import os
@@ -62,7 +62,7 @@ class OutsideIntendedUse(Exception):
 
 
 def name() -> str:
-    value = os.environ.get("CLINLOOP_PROFILE", "research").strip().lower() or "research"
+    value = os.environ.get("CLINLOOP_PROFILE", "core").strip().lower() or "core"
     return value if value in PROFILES else "core"
 
 
