@@ -434,6 +434,9 @@ _INDETERMINATE_MALIGNANCY = re.compile(
     r"|cannot (?:exclude|rule out) (?:a )?(?:malignan\w*|carcinoma|neoplasm)"
     r"|suspicious for (?:malignan\w*|carcinoma|neoplasm|adenocarcinoma|lymphoma)"
     r"|atypical cells? (?:present|identified|seen)"
+    # Thyroid cytology: Bethesda III (AUS), IV (follicular neoplasm), V (suspicious), VI (malignant) need action
+    r"|bethesda\s*(?:system\s*)?(?:category\s*)?(?:III|IV|V|VI|3|4|5|6)\b|atypia of undetermined significance|\bAUS\b"
+    r"|follicular neoplasm|follicular lesion of undetermined significance|\bFLUS\b"
     r"|악성\s*(?:을|를|의\s*가능성을?)?\s*배제(?:할\s*)?\s*수\s*없|악성\s*(?:이|으로)?\s*의심)", re.I)
 
 

@@ -348,6 +348,8 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
         for m in pattern.finditer(text):
             if not affirmed(text, m) or _nodule_site(text, m, code_text) != "lung" or _is_threshold(text, m.start(a), m.end(unit)):
                 continue
+            if _in_history_section(text, m.start()):
+                continue   # "HISTORY: … 2.1 cm spiculated nodule in 2023, s/p lobectomy": not this report's finding
             if _RESOLVED.search(text[m.start(): m.end() + 140].split("\n")[0]):
                 continue   # "the previously noted 8 mm nodule … is no longer visible"
             if re.search(r"component|portion|성분", m.group(0), re.I) \
@@ -496,7 +498,9 @@ _THYROID = re.compile(rf"(?:thyroid|갑상선){_GAP}{{0,40}}?{_LESION}|{_LESION}
 _THYROID_SUSPICIOUS = re.compile(r"invasi\w*|invad\w*|extrathyroidal|abnormal (?:cervical )?lymph nodes?|suspicious", re.I)
 _BENIGN_CYTOLOGY = re.compile(r"bethesda\s*(?:category\s*)?(?:II|2)\b|benign (?:FNA|cytology|biopsy)|"
                              r"biops\w*[^.;]{0,30}?benign|양성\s*(?:세포검사|세침)", re.I)
-_PET_AVID = re.compile(r"fdg[- ]avid|hypermetabolic|increased (?:fdg )?uptake|\bsuv\b|대사\s*증가", re.I)
+_PET_AVID = re.compile(r"fdg[- ]avid|hypermetabolic|increased (?:fdg )?uptake|focal (?:fdg )?uptake|\bsuv\b|대사\s*증가"
+                       r"|FDG\s*섭취|섭취\s*증가", re.I)
+_THYROID_UPTAKE = re.compile(r"(?:thyroid|갑상선)[^.;\n]{0,40}?(?:focal (?:fdg )?uptake|fdg[- ]avid|FDG\s*섭취|섭취\s*증가)", re.I)
 
 _AAA = re.compile(r"aneurysm\w*|ectatic|ectasia|dilat\w*|\baaa\b|대동맥류|확장", re.I)
 _RUPTURE = re.compile(r"ruptur\w*|leak\w*|파열", re.I)
@@ -507,11 +511,21 @@ _HISTORY_LINE = re.compile(r"\s*(?:comparison|compared with|clinical (?:history|
                            r"비교|임상\s*(?:정보|소견|병력)|병력)\s*[:：]", re.I)
 
 
+_SECTION_HEADING = re.compile(r"\b(?:FINDINGS|IMPRESSION|CONCLUSIONS?|RECOMMENDATIONS?|OPINION)\s*[:：]|판독\s*소견|결론|소견\s*[:：]", re.I)
+
+
+def _in_history_section(text: str, pos: int) -> bool:
+    """Inside a history or comparison heading's text, and before the next section heading on that line:
+    "COMPARISON: 2025-09-08. FINDINGS: LUL nodule now 10 mm" puts the nodule in FINDINGS."""
+    line = text[text.rfind("\n", 0, pos) + 1:pos]
+    return bool(_HISTORY_LINE.match(line)) and not _SECTION_HEADING.search(line)
+
+
 def _incidental_findings(text: str, code_text: str, study_modality: Optional[str]) -> List[Dict[str, Any]]:
     out: List[Dict[str, Any]] = []
     thyroid_us = study_modality == "ultrasound" and "thyroid" in regions_in(code_text)
     for start, s in _sentences(text):
-        if _HISTORY_LINE.match(s):
+        if _in_history_section(text, start + len(s) - 1):
             continue          # "비교: 2025-10-02 US (AAA 4.6 cm)", "CLINICAL HISTORY: 3 cm adrenal mass": not this report's finding
         sizes = _sizes(s)
         nxt = _next_sentence(text, start + len(s))
@@ -562,7 +576,7 @@ def _incidental_findings(text: str, code_text: str, study_modality: Optional[str
                         "surveillance_ended": bool(first_affirmed(_SURVEILLANCE_ENDED, text)),
                         "evidence_span": s.strip()})
         # Thyroid
-        m = _THYROID.search(s)
+        m = _THYROID.search(s) or _THYROID_UPTAKE.search(s)
         if not m and thyroid_us:
             m = re.search(r"nodules?|결절", s, re.I)
         if m and affirmed(s, m) and (sizes or _PET_AVID.search(s)):
@@ -636,9 +650,9 @@ _REC_CUE = re.compile(r"recommend|suggest|advis|권고|권장|권함|권합니�
 # A description of a study that already happened is not a recommendation
 _PAST_STUDY = re.compile(r"\b(showed|shows|demonstrat\w*|revealed|was performed|were performed|performed on|dated)\b", re.I)
 MAX_REC_INTERVAL_DAYS = 10 * 365.25
-_KO_MOD = r"(CTA|CT|MRI|MRA|MRCP|초음파|흉부\s*X선|X선|엑스레이|CXR|X-?ray|radiographs?)"
+_KO_MOD = r"(CTA|CT|MRI|MRA|MRCP|초음파|흉부\s*X선|X선|엑스레이|CXR|X-?ray|radiographs?|(?:Chest|흉부)\s*(?:PA|AP|사진)|단순\s*흉부\s*촬영)"
 _REC_KO = re.compile(rf"(\d+)\s*(?:[-~]\s*(\d+))?\s*(개월|주|일|년)\s*(?:후|뒤|이내|내)?\s*(?:에\s*)?(?:추적\s*)?(?:검사\s*)?"
-                     rf"(?:[A-Za-z가-힣/-]+\s+){{0,3}}?{_KO_MOD}[^.]{{0,20}}?(?:{_KO_REC[3:-1]}|(?<!불)필요|f/u)", re.I)
+                     rf"(?:[A-Za-z가-힣/-]+\s+){{0,3}}?{_KO_MOD}[^.]{{0,40}}?(?:{_KO_REC[3:-1]}|(?<!불)필요|f/u)", re.I)
 _NOT_GUIDED = r"(?![\s-]*(?:guided|targeted|fusion))"   # "MRI-targeted biopsy" is a biopsy
 _REC_NO_INTERVAL = [
     re.compile(rf"recommend\w*[^.;]{{0,40}}?\b{_MOD}\b{_NOT_GUIDED}", re.I),
@@ -673,7 +687,8 @@ def _norm_modality(text: str) -> Optional[str]:
         return "mri"
     if t == "us" or "sonograph" in t or "ultrasound" in t or t == "초음파":
         return "ultrasound"
-    if "radiograph" in t or t.replace("-", "").rstrip("s") in ("xray", "cxr") or "x선" in t or t == "엑스레이":
+    if "radiograph" in t or t.replace("-", "").rstrip("s") in ("xray", "cxr") or "x선" in t or t == "엑스레이" \
+            or re.fullmatch(r"(?:chest|흉부)\s*(?:pa|ap|사진)|단순\s*흉부\s*촬영", t):
         return "xray"
     return None
 
@@ -822,6 +837,11 @@ def load_critical_findings() -> Dict[str, Any]:
     return entry
 
 
+_EXPECTED_POSTOP_AIR = re.compile(r"post-?operative|post-?op\b|(?<!un)expected|after (?:laparotomy|laparoscopy|surgery)"
+                                  r"|수술\s*(?:직)?후|예상", re.I)
+_LEAK = re.compile(r"leak\w*|perforat\w*|누출|천공", re.I)
+
+
 def _critical_findings(text: str) -> List[Dict[str, Any]]:
     found = []
     for item, rx in load_critical_findings()["compiled"]:
@@ -832,6 +852,14 @@ def _critical_findings(text: str) -> List[Dict[str, Any]]:
             before = re.split(r"\n|[.;!?](?:\s|$)", before)[-1]
             not_new = (_NOT_NEW.search(before) or _NOT_NEW_AFTER.search(text[m.end():])) \
                 and not _EXPLICITLY_NEW.search(before) and not _WORSENING_AFTER.search(text[m.end():])
+            if item["id"] == "free_air":
+                own = sentence(text, m.start(), m.end())
+                leak = bool(first_affirmed(_LEAK, own))
+                if _EXPECTED_POSTOP_AIR.search(own) and not leak \
+                        and not re.search(r"unexpected|예상\s*(?:치\s*)?(?:못|밖|외)", own, re.I):
+                    continue    # "postoperative pneumoperitoneum, expected 2 days after laparotomy"
+                if leak:
+                    not_new = False     # "postoperative free air with contrast leak": an anastomotic leak is an emergency
             if affirmed(text, m) and not not_new:
                 found.append({"id": item["id"], "label": item.get("label", {}).get("en", item["id"]),
                               "category": item.get("category", 1), "window_minutes": float(item.get("window_minutes", 60)),
@@ -881,7 +909,7 @@ def clean_report_text(text: str) -> str:
 
 
 # The heading only ("ADDENDUM (2026-05-08):"): text on the same line belongs to the addendum
-_ADDENDUM = re.compile(r"\n\s*[\[(*]*\s*(?:ADDENDUM|Addendum|Correction(?:\s+note)?|CORRECTION|추가\s*판독|수정\s*판독|정정\s*판독)\b(?:[^\]\n:：]*\])?"
+_ADDENDUM = re.compile(r"\n\s*[\[(*]*\s*(?:ADDENDUM|Addendum|CORRECTED\s+(?:REPORT|IMPRESSION)|Corrected\s+(?:report|impression)|Correction(?:\s+note)?|CORRECTION|추가\s*판독|수정\s*판독|정정\s*판독)\b(?:[^\]\n:：]*\])?"
                        r"(?:\s*\([^)\n]*\))?\s*[:：]?", re.I)
 _REC_WORDS = re.compile(r"recommend\w*|follow-?up|imaging|work-?up|\b(?:ct|mri|us|ultrasound|pet|biopsy|"
                         r"scan|surveillance)\b|권고|추적|검사", re.I)

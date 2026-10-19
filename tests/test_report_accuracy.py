@@ -366,6 +366,35 @@ class TestRound8BlindFindings(unittest.TestCase):
                     sex="female")
         self.assertEqual(got, {"R045"})
 
+    def test_confirmation_round(self):
+        """Found by the round-8 confirmation set, written after the first fixes."""
+        path = dict(title="Thyroid FNA cytology", category="PAT", sex="female")
+        self.assertEqual(rules("진단:\nThyroid, right, FNA:\n  Atypia of undetermined significance (AUS).\n  The Bethesda System "
+                               "category III.", **path), {"R009"})
+        self.assertEqual(rules("DIAGNOSIS: Thyroid, FNA: benign follicular nodule (Bethesda II).", **path), set())
+        self.assertEqual(rules("결론:\nRLL pneumonia.\n\n권고:\n치료 후 6주 뒤 Chest PA 추적검사로 resolution 확인 요망.",
+                               title="Chest PA"), {"R033"})
+        self.assertIn("R043", rules("판독소견:\n갑상선 우엽에 새로운 국소적 FDG 섭취 (SUVmax 7.4), CT상 1.3 cm 저음영 결절.",
+                                    title="F-18 FDG PET-CT"))
+        self.assertIn("R034", rules("FINDINGS:\nRight middle lobe solid nodule, mean diameter 5 mm.\n\nIMPRESSION:\nLung-RADS 2. "
+                                    "Annual LDCT.\n\n*** CORRECTED REPORT 2026-02-18 ***\nOn re-measurement the nodule is 6.5 mm.\n"
+                                    "CORRECTED IMPRESSION: Lung-RADS 3 (probably benign). Recommend 6-month LDCT.",
+                                    title="Low-dose CT chest, lung cancer screening"))
+        self.assertEqual(rules("HISTORY: Right upper lobe adenocarcinoma, presenting as a 2.1 cm spiculated nodule in 2023, "
+                               "status post lobectomy.\nFINDINGS:\nPostsurgical changes. No new pulmonary nodules.\n"
+                               "IMPRESSION:\nNo evidence of recurrence.", title="CT chest with contrast"), set())
+
+    def test_expected_postoperative_air_and_negated_trauma_list_are_not_critical(self):
+        self.assertNotIn("free_air", critical("1. Small amount of postoperative pneumoperitoneum, expected 2 days after laparotomy."))
+        self.assertIn("free_air", critical("Free intraperitoneal air, unexpected after laparoscopy."))
+        self.assertIn("free_air", critical("Postoperative free air with contrast leak at the anastomosis."))
+        self.assertNotIn("pneumothorax", critical("늑골 골절이나 기흉, 혈흉 없음."))
+        self.assertIn("pneumothorax", critical("우측 기흉, 약 2 cm. 혈흉 없음."))
+
+    def test_measured_finding_in_a_korean_list_stays_present(self):
+        """The list-negation reading must never hide a measured finding: "8 mm 결절, 흉수 없음"."""
+        self.assertIn("R003", rules("판독소견:\nRLL 8 mm 결절, 흉수 없음.", title="Chest CT", smoking="77176002"))
+
     def test_called_to_and_acknowledged_by_is_a_documented_call(self):
         from src.clinloop_engine.radiology import _communication_done
         self.assertIsNotNone(_communication_done("CRITICAL RESULT: Called to and acknowledged by Dr. P. Okafor at 22:47."))

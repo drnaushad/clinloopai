@@ -116,6 +116,21 @@ confirm:
 | An urgent real miss cannot be saved without a safety referral | Fail toward a human: the log must never be where an urgent finding is seen and left |
 | Proposed gate: ≥ 300 judged, ≥ 10 real misses, precision lower 95% bound ≥ 20%, wrong quotes ≤ 1% | To be set by the clinical lead before measurement starts |
 
+## 3d. Report reading, blind round 8 (October 2026)
+
+Full results are in [`ACCURACY_EVALUATION.md`](ACCURACY_EVALUATION.md) (round 8). Changes to clinical logic
+for the clinical lead to confirm:
+
+| Change | Clinical basis |
+| --- | --- |
+| BI-RADS 0 opens a recall: diagnostic imaging within 30 days (ultrasound when named, otherwise the diagnostic mammogram) | ACR BI-RADS: category 0 is incomplete and needs additional imaging |
+| Pathology "malignancy cannot be excluded", "suspicious for …", atypical cells, and thyroid Bethesda III–VI are abnormal results (R009) | Indeterminate cytology needs notification and repeat sampling, molecular testing or referral. Not a cancer diagnosis, but not benign |
+| "Pulmonary thromboembolism", "PTE" and "폐동맥 혈전색전" are acute PE; chronic thromboembolism is not | ACR communication parameter, category 1 |
+| Expected post-operative free air is not critical, **unless** a leak or perforation is described | Expected after laparotomy; an anastomotic leak is an emergency |
+| The radiologist's explicit "no further follow-up / 추가 검사 불필요" for a finding is honoured (not for AAA) | The reporting radiologist has assessed that finding. AAA decisions stay with the size rule |
+| A thyroid nodule already TI-RADS 1–2 (or K-TIRADS 2) on ultrasound needs no further ultrasound | ACR 2015 incidental-thyroid guidance assumes an uncharacterised nodule |
+| A Korean list of bare nouns shares its negation ("기흉, 혈흉 없음"); a measured finding is always present ("8 mm 결절, 흉수 없음") | Korean report grammar; fail toward a person for anything measured |
+
 ## 4. Before clinical use
 
 1. A licensed clinician reviews this document and the code it names, and signs below.
