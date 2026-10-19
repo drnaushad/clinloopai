@@ -71,6 +71,12 @@ API endpoints:
 - **Bounded:** a report is read once, and again only if its text changes. Only recent reports are read
   (`CLINLOOP_SECOND_READER_LOOKBACK_DAYS`, default 30), with at most `CLINLOOP_SECOND_READER_MAX` per
   sync run (default 20).
+- **Which model:** `CLINLOOP_SECOND_READER_MODEL` (default `medgemma:27b`, which reads English
+  radiology/pathology reports) when it is installed on the Ollama server, otherwise the general best
+  model (EXAONE first, for Korean patient messages). Install with `ollama pull medgemma:27b` (~17 GB at
+  Q4, ~20 GB GPU/RAM). MedGemma is a Google research model under the Health AI Developer Foundations
+  terms, not cleared as a medical device; its flags remain suggestions for a person to review, and in
+  the core profile the reader stays silent.
 - **Never blocks the sync:** if the model fails, the rules' result stands.
 - **Monitored:** `GET /api/v1/reports/second-read/status`.
 - **Preview:** `POST /api/v1/reports/second-read/preview` shows what the rules and the model each find

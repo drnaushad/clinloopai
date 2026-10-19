@@ -80,12 +80,15 @@ services:
       CLINLOOP_IMAGE_SCAN: ${CLINLOOP_IMAGE_SCAN:-0}
       # Model-based second reader of reports with the on-premise model (ollama service); flags go to a person (R058)
       CLINLOOP_SECOND_READER: ${CLINLOOP_SECOND_READER:-0}
+      # Second reader model: MedGemma 27B when installed, else the general best model
+      CLINLOOP_SECOND_READER_MODEL: ${CLINLOOP_SECOND_READER_MODEL:-medgemma:27b}
       CLINLOOP_SECOND_READER_MAX: ${CLINLOOP_SECOND_READER_MAX:-20}
       CLINLOOP_IMAGE_SCAN_MINUTES: ${CLINLOOP_IMAGE_SCAN_MINUTES:-10}
       CLINLOOP_IMAGE_SCAN_MODALITIES: ${CLINLOOP_IMAGE_SCAN_MODALITIES:-CR,DX,MG,CT,MR,US}
-      # Vision-language model (add "vlm" to CLINLOOP_IMAGING_MODELS), e.g. MedGemma pulled into the ollama service
+      # Vision-language model (add "vlm" to CLINLOOP_IMAGING_MODELS; core profile rules still apply):
+      # MedGemma 4B pulled into the ollama service (research model, not a medical device)
       CLINLOOP_VLM_URL: ${CLINLOOP_VLM_URL:-http://ollama:11434}
-      CLINLOOP_VLM_MODEL: ${CLINLOOP_VLM_MODEL:-}
+      CLINLOOP_VLM_MODEL: ${CLINLOOP_VLM_MODEL:-medgemma:4b}
       # CT organ measurement (add "totalseg"; image built with WITH_CT_SEGMENTATION=1); 0 = full 1.5 mm model
       CLINLOOP_CT_SEG_FAST: ${CLINLOOP_CT_SEG_FAST:-1}
       # DICOM dates/times are local: the hospital's time zone (IANA name)
@@ -125,12 +128,16 @@ services:
     #           capabilities: [gpu]
 
   ollama-pull:
-    # One-off: download the model into the shared volume, then exit
+    # One-off: download the models into the shared volume, then exit.
+    # Default list: EXAONE 3.5 7.8B (Korean text, ~5 GB VRAM), MedGemma 4B (imaging VLM,
+    # ~3.3 GB download, ~6-8 GB GPU/RAM), MedGemma 27B (English report reader, ~17 GB
+    # download at Q4, ~20 GB GPU/RAM). Drop medgemma:27b from the list on smaller servers.
     image: ollama/ollama:latest
     profiles: ["llm"]
     environment:
       OLLAMA_HOST: http://ollama:11434
-    entrypoint: ["ollama", "pull", "${CLINLOOP_LLM_MODEL:-exaone3.5:7.8b}"]
+      CLINLOOP_PULL_MODELS: ${CLINLOOP_PULL_MODELS:-${CLINLOOP_LLM_MODEL:-exaone3.5:7.8b} medgemma:4b medgemma:27b}
+    entrypoint: ["/bin/sh", "-c", "for m in $$CLINLOOP_PULL_MODELS; do ollama pull \"$$m\" || exit 1; done"]
     depends_on:
       - ollama
     restart: "no"

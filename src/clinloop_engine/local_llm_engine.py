@@ -65,6 +65,18 @@ PREFERRED_MODELS = [
         "vram_gb": 5,
     },
     {
+        # Google MedGemma 27B (text-only instruct release in Ollama, ~17 GB at Q4).
+        # Research model (Health AI Developer Foundations terms), not a medical device.
+        # Strong on English medical text; weaker Korean than EXAONE, so it ranks after
+        # EXAONE for patient messages but is the default second reader of reports.
+        "name": "medgemma:27b",
+        "label": "MedGemma 27B (English medical text; Korean weaker than EXAONE)",
+        "context_window": 128000,
+        "strengths": ["English-medical-text", "report-reading"],
+        "vram_gb": 20,
+        "role": "report reader",
+    },
+    {
         "name": "deepseek-r1:70b",
         "label": "DeepSeek-R1 70B (Best Clinical Reasoning)",
         "context_window": 128000,
@@ -99,7 +111,21 @@ PREFERRED_MODELS = [
         "strengths": ["general-medicine", "patient-communication"],
         "vram_gb": 5,
     },
+    {
+        # Google MedGemma 4B (image + text, ~3.3 GB): the imaging vision-language model
+        # (CLINLOOP_VLM_MODEL). Listed last so it is never picked for text generation
+        # ahead of a text model.
+        "name": "medgemma:4b",
+        "label": "MedGemma 4B (vision-language, imaging)",
+        "context_window": 128000,
+        "strengths": ["image+text", "radiology-draft"],
+        "vram_gb": 8,
+        "role": "vision",
+    },
 ]
+
+# The report second reader reads English radiology/pathology reports.
+SECOND_READER_DEFAULT = "medgemma:27b"
 
 
 def get_available_models() -> list:
@@ -122,6 +148,17 @@ def get_available_models() -> list:
     except Exception as e:
         logger.warning(f"Ollama unreachable: {e}")
         return []
+
+
+def get_second_reader_model() -> Optional[str]:
+    """Model for the report second reader: CLINLOOP_SECOND_READER_MODEL, else MedGemma 27B,
+    when installed; otherwise the general best model."""
+    models = get_available_models()
+    names = [m["name"] for m in models]
+    for want in (os.environ.get("CLINLOOP_SECOND_READER_MODEL"), SECOND_READER_DEFAULT):
+        if want and want in names:
+            return want
+    return names[0] if names else None
 
 
 def get_best_model() -> Optional[str]:

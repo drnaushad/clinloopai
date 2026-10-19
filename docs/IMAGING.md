@@ -352,10 +352,19 @@ Add `vlm` to `CLINLOOP_IMAGING_MODELS`. It runs on any modality, one image at a 
 
 ```
 CLINLOOP_VLM_URL=http://ollama:11434        # the hospital's own Ollama, or an OpenAI-compatible server (vLLM, llama.cpp)
-CLINLOOP_VLM_MODEL=medgemma-4b-it           # whatever name the server gives the model
+CLINLOOP_VLM_MODEL=medgemma:4b              # default; whatever name the server gives the model
 CLINLOOP_VLM_API=ollama | openai            # default: ollama for port 11434
 CLINLOOP_VLM_REGULATORY=…                   # default "Research use only — not a medical device"
 ```
+
+**MedGemma on the on-premise Ollama.** `docker compose --profile llm run --rm ollama-pull` pulls
+`CLINLOOP_PULL_MODELS` (default `exaone3.5:7.8b medgemma:4b medgemma:27b`); by hand:
+`ollama pull medgemma:4b` (image + text, ~3.3 GB, ~6–8 GB GPU/RAM) and `ollama pull medgemma:27b`
+(text only, ~17 GB at Q4, ~20 GB GPU/RAM; used by the report second reader, see SECOND_READER.md).
+MedGemma is a Google research model released under the Health AI Developer Foundations terms. It is
+not cleared as a medical device: its output is a suggestion for clinician review only. Configuring it
+does not unlock anything: the core profile's rules for imaging AI still apply.
+`GET /api/v1/connections/status` lists the installed models with label and role (`local_llm.installed`).
 
 **Safeguards against the known failure modes of generative models:**
 - **Images stay inside the hospital.** The image goes only to a server whose address is private or
