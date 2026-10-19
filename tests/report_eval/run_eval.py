@@ -69,13 +69,23 @@ def resources(case):
 
 
 def run_case(case):
+    got, days, _ = run_case_full(case)
+    return got, days
+
+
+def run_case_full(case):
+    """Like run_case, plus whether a report obligation was sent to a person for a clinical reason (round 9 on)."""
     pid, date, res = resources(case)
     events, warnings = bundle_to_events(res)
     dets = ClinLoopDetector(evaluation_time=date + timedelta(days=1)).process_patient("eval", pid, events.get(pid, []))
     got = {d.rule_id for d in dets if d.rule_id in REPORT_RULES}
     days = {d.rule_id: round((datetime.fromisoformat(d.deadline) - datetime.fromisoformat(d.trigger_time)).total_seconds() / 86400, 1)
             for d in dets if d.rule_id in REPORT_RULES}
-    return got, days
+    # A content reason for review (e.g. a Fleischner exclusion). The generic "too little data" abstention is
+    # a harness artefact (one report, no other history), so it does not count.
+    review = any(x.startswith("⚠ ABSTENTION:") and "Uncertainty" not in x
+                 for d in dets if d.rule_id in REPORT_RULES for x in d.explanation)
+    return got, days, review
 
 
 def main():
@@ -86,13 +96,17 @@ def main():
     exact = equiv = 0
     none_cases = none_ok = pos_cases = pos_any = 0
     window_ok = window_n = 0
+    review_n = review_ok = 0
     failures = []
     for c in cases:
         exp = set(c.get("expected_rules") or []) & REPORT_RULES
         try:
-            got, days = run_case(c)
+            got, days, review = run_case_full(c)
         except Exception as e:  # a crash is a failure
-            got, days = {"CRASH:" + type(e).__name__}, {}
+            got, days, review = {"CRASH:" + type(e).__name__}, {}, False
+        if "expected_review" in c:  # round 9 on: does the loop stay with a person when it should?
+            review_n += 1
+            review_ok += int(bool(c["expected_review"]) == review or (not c["expected_review"] and not exp))
         for r in exp & got:
             tp[r] += 1
         for r in got - exp:
@@ -125,6 +139,8 @@ def main():
     print(f"reports needing nothing with no alert (specificity): {none_ok}/{none_cases} = {none_ok / max(1, none_cases):.1%}")
     if window_n:
         print(f"deadline within the expected window: {window_ok}/{window_n} = {window_ok / window_n:.1%}")
+    if review_n:
+        print(f"needs_human_review flag as expected: {review_ok}/{review_n} = {review_ok / review_n:.1%}")
     print("per rule (tp/fn/fp):", {r: (tp[r], fn[r], fp[r]) for r in sorted(set(tp) | set(fn) | set(fp))})
     if show:
         for f in failures:

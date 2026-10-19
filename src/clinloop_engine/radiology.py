@@ -134,7 +134,8 @@ _SIZE = (r"(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?(?:\s*[x×]\s*\d+(?:\.\
          r"(mm|cm|밀리미터|밀리|센티미터|센티)(?![a-zA-Z])")       # "9 mm", "9mm", "9-mm"
 _SIZE_RE = re.compile(_SIZE, re.I)
 # Gap inside a sentence: any character except a sentence break ("2.5" is not one)
-_GAP = r"(?:[^.;]|(?<=\d)\.(?=\d))"
+# A gap inside one sentence: no sentence end, but decimals ("2.0 cm") and side abbreviations ("Thyroid Lt. lobe")
+_GAP = r"(?:[^.;]|(?<=\d)\.(?=\d)|(?<=(?<![A-Za-z])[RrLl]t)\.|(?<=(?<![A-Za-z])[Bb]il)\.)"
 
 
 def _size_mm(a: str, b: Optional[str], unit: str, longest: bool = False) -> float:
@@ -177,7 +178,8 @@ def _sizes(text: str) -> List[float]:
 
 def _sentences(text: str) -> List[Tuple[int, str]]:
     out, start = [], 0
-    for m in re.finditer(r"(?<=[.;])\s+|\n", text):
+    # "Thyroid Lt. lobe에 2.0 cm 결절": "Rt."/"Lt."/"Bil." abbreviate a side, they do not end the sentence
+    for m in re.finditer(r"(?<=[.;])(?<!(?<![A-Za-z])[RrLl]t\.)(?<!(?<![A-Za-z])[Bb]il\.)\s+|\n", text):
         out.append((start, text[start:m.start()]))
         start = m.end()
     out.append((start, text[start:]))
@@ -344,12 +346,20 @@ def _nodule_site(text: str, m: re.Match, code_text: str) -> str:
 
 def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
     found: Dict[int, Dict[str, Any]] = {}
+    compared: List[Tuple[float, Optional[str]]] = []     # (size, lobe) of nodules named on the COMPARISON line
     for pattern, (a, b, unit) in ((_NODULE_SIZE_FIRST, (1, 2, 3)), (_NODULE_WORD_FIRST, (2, 3, 4))):
         for m in pattern.finditer(text):
             if not affirmed(text, m) or _nodule_site(text, m, code_text) != "lung" or _is_threshold(text, m.start(a), m.end(unit)):
                 continue
             if _in_history_section(text, m.start()):
-                continue   # "HISTORY: … 2.1 cm spiculated nodule in 2023, s/p lobectomy": not this report's finding
+                # "HISTORY: … 2.1 cm spiculated nodule in 2023, s/p lobectomy": not this report's finding. A size
+                # on the COMPARISON line is the earlier size of a nodule this report measures again
+                line = text[text.rfind("\n", 0, m.start()) + 1:m.start()]
+                if _COMPARISON_LINE.match(line):
+                    hs = sentence(text, m.start(), m.end())
+                    hloc = nodule_location(hs, max(0, m.start() - text.find(hs)) if hs in text else 0)
+                    compared.append((_size_mm(m.group(a), m.group(b), m.group(unit)), hloc["lobe"]))
+                continue
             if _RESOLVED.search(text[m.start(): m.end() + 140].split("\n")[0]):
                 continue   # "the previously noted 8 mm nodule … is no longer visible"
             if re.search(r"component|portion|성분", m.group(0), re.I) \
@@ -438,6 +448,16 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
         unique.append(n)
     for n in unique:
         n.pop("_start", None)
+    # "COMPARISON: CT 2025-04-10, at which time the RLL nodule measured 6 mm" + "RLL nodule measures 9 mm":
+    # growth, though no sentence says so. Only growth is read from there (it asks for more work-up, never
+    # less); the same lobe is required, or a single nodule on each side when no lobe is named
+    for n in unique:
+        if n["change"] is None and compared:
+            prior = [sz for sz, lobe in compared if lobe and lobe == n["lobe"]] or \
+                    ([compared[0][0]] if len(compared) == 1 and len(unique) == 1
+                     and (compared[0][1] is None or n["lobe"] is None) else [])
+            if prior and n["size_mm"] - max(prior) >= 2:
+                n["change"] = "growing"
     if len(unique) > 1:
         for n in unique:
             n["multiple"] = True
@@ -511,6 +531,7 @@ _HISTORY_LINE = re.compile(r"\s*(?:comparison|compared with|clinical (?:history|
                            r"비교|임상\s*(?:정보|소견|병력)|병력)\s*[:：]", re.I)
 
 
+_COMPARISON_LINE = re.compile(r"\s*(?:comparison|compared with|비교)\s*[:：]", re.I)
 _SECTION_HEADING = re.compile(r"\b(?:FINDINGS|IMPRESSION|CONCLUSIONS?|RECOMMENDATIONS?|OPINION)\s*[:：]|판독\s*소견|결론|소견\s*[:：]", re.I)
 
 
@@ -519,6 +540,11 @@ def _in_history_section(text: str, pos: int) -> bool:
     "COMPARISON: 2025-09-08. FINDINGS: LUL nodule now 10 mm" puts the nodule in FINDINGS."""
     line = text[text.rfind("\n", 0, pos) + 1:pos]
     return bool(_HISTORY_LINE.match(line)) and not _SECTION_HEADING.search(line)
+
+
+_SUPERSEDED_QUOTE = re.compile(
+    r"\b(?:preliminary|original|initial)\s+(?:report|impression|read\w*|interpretation)\s+(?:described|stated|reported|read|said|noted)"
+    r"|\b(?:retracted|withdrawn|superseded)\b|철회", re.I)
 
 
 def _incidental_findings(text: str, code_text: str, study_modality: Optional[str]) -> List[Dict[str, Any]]:
@@ -599,6 +625,15 @@ def _incidental_findings(text: str, code_text: str, study_modality: Optional[str
                             "evidence_span": s.strip()})
         for f in out[first:]:
             f["no_followup_stated"] = stated_none
+            f["superseded"] = bool(_SUPERSEDED_QUOTE.search(s))
+    # "CORRECTION NOTE: The preliminary impression described a '2.4 cm indeterminate adrenal nodule …'. That
+    # recommendation is RETRACTED": the quoted earlier reading is not a second finding. Dropped only when the
+    # report describes the same kind of finding elsewhere (it is never the only trace of a finding)
+    kept = [f for f in out if not f["superseded"] or not any(
+        g is not f and g["kind"] == f["kind"] and not g["superseded"] for g in out)]
+    for f in kept:
+        del f["superseded"]
+    out = kept
     # A finding described in FINDINGS and again in the conclusion is one finding: the radiologist's
     # "no further evaluation" about it applies to every mention of the same lesion (same kind and size)
     for f in out:
@@ -956,7 +991,12 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
                        f"{', multiple' if dominant['multiple'] else ''}"
                        f"{', ' + dominant['change'] if dominant['change'] else ''}")
     if addendum:
-        revised = _incidental_findings(addendum, code_text, modality)
+        original = _incidental_findings(main, code_text, modality)
+        # A correction note that quotes the earlier reading ("The preliminary impression described a '2.4 cm
+        # indeterminate adrenal nodule'. … RETRACTED") does not revise the finding the report now describes
+        revised = [f for f in _incidental_findings(addendum, code_text, modality)
+                   if not (_SUPERSEDED_QUOTE.search(f["evidence_span"])
+                           and any(o["kind"] == f["kind"] for o in original))]
         kinds = {f["kind"] for f in revised}
 
         def _revises(new, old):
@@ -965,8 +1005,7 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
                 return False
             a, b = new.get("size_mm") or new.get("diameter_mm"), old.get("size_mm") or old.get("diameter_mm")
             return a is None or b is None or abs(a - b) <= 2.0
-        rad["incidental"] = [f for f in _incidental_findings(main, code_text, modality)
-                             if not any(_revises(r, f) for r in revised)] + revised
+        rad["incidental"] = [f for f in original if not any(_revises(r, f) for r in revised)] + revised
         b = _BOSNIAK.search(addendum)
         if b and "renal" not in kinds:
             # "… Bosniak II, benign" with no organ named: it re-classifies the report's kidney lesion
@@ -1409,6 +1448,8 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
                                 if rec_ct else None)
                 if rec_ct and rec["recommended_interval_stated"] and rec_deadline < decision["days"]:
                     mapping.append("radiologist interval is tighter than Fleischner: tracked as R030")
+                    if decision["review"]:      # the exclusion still applies to the CT that is tracked
+                        reviews["R030"] = decision["review"]
                 else:
                     add("R003", "incidental_nodule_ge_6mm", decision["days"], regs=["lung", "chest"],
                         review=decision["review"], evidence=n["evidence_span"])

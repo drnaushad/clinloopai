@@ -1,0 +1,156 @@
+{
+ "dev_percent": 30,
+ "name": "ClinLoop-Bench",
+ "random_state": 42,
+ "rule_groups": {
+  "T1": [
+   [
+    "R003",
+    "R019",
+    "R030",
+    "R031",
+    "R032",
+    "R033",
+    "R034",
+    "R037",
+    "R040",
+    "R041",
+    "R043",
+    "R044"
+   ],
+   [
+    "R009",
+    "R018",
+    "R020",
+    "R036",
+    "R038",
+    "R039",
+    "R042",
+    "R045",
+    "R046"
+   ],
+   [
+    "R035"
+   ]
+  ],
+  "T2": [
+   [
+    "R003",
+    "R019",
+    "R030",
+    "R031",
+    "R032",
+    "R033",
+    "R034",
+    "R037",
+    "R040",
+    "R041",
+    "R043",
+    "R044"
+   ],
+   [
+    "R018",
+    "R020",
+    "R036",
+    "R038",
+    "R039",
+    "R042",
+    "R045",
+    "R046"
+   ],
+   [
+    "R009"
+   ],
+   [
+    "R035"
+   ]
+  ],
+  "T3": [
+   [
+    "R003",
+    "R019",
+    "R030",
+    "R031",
+    "R032",
+    "R033",
+    "R034",
+    "R037",
+    "R040",
+    "R041",
+    "R043",
+    "R044"
+   ],
+   [
+    "R009",
+    "R018",
+    "R020",
+    "R036",
+    "R038",
+    "R039",
+    "R042",
+    "R045",
+    "R046"
+   ],
+   [
+    "R035"
+   ]
+  ]
+ },
+ "sources": {
+  "blind_reports_2": {
+   "path": "tests/blind_reports_2/cases.json",
+   "sha256": "6f692ea5ba3b1fb2f66feffd6ecce27792807eedd499d7f7493dd893b2497e79"
+  },
+  "blind_reports_3": {
+   "path": "tests/blind_reports_3/cases.json",
+   "sha256": "17e7cf720357927094be74edc31d4e509b67c78dd45de8116f8672cd38fc1812"
+  },
+  "report_eval": {
+   "path": "tests/report_eval/cases.json",
+   "sha256": "1c6ed15252762872c7d70fdd35a0b1dfdf0dc255e16e47677cbcf8028dd16983"
+  },
+  "timelines": {
+   "path": "tests/report_eval/timelines.json",
+   "sha256": "96400a0312221254cd6cd3c14f58c9272ab61b99ec2ca07f3826f68f7eb50566"
+  }
+ },
+ "tasks": {
+  "T1": {
+   "file": "t1_report_obligations.jsonl",
+   "language": {
+    "en": 456
+   },
+   "records": 456,
+   "split": {
+    "dev": 141,
+    "test": 315
+   }
+  },
+  "T2": {
+   "file": "t2_loop_status.jsonl",
+   "language": {
+    "en": 262,
+    "ko": 4,
+    "mixed": 51
+   },
+   "records": 317,
+   "split": {
+    "dev": 108,
+    "test": 209
+   }
+  },
+  "T3": {
+   "file": "t3_korean_mixed.jsonl",
+   "language": {
+    "ko": 53,
+    "mixed": 251
+   },
+   "records": 304,
+   "split": {
+    "dev": 83,
+    "test": 221
+   }
+  }
+ },
+ "version": "1.0"
+}

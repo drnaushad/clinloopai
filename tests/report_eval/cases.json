@@ -19149,5 +19149,2032 @@
    "ultrasound",
    "fna"
   ]
+ },
+ {
+  "id": "Y9E-001",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest with Contrast",
+  "date": "2026-03-04",
+  "language": "en",
+  "patient": {
+   "age": 62,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST WITH IV CONTRAST\nINDICATION: Persistent cough for 6 weeks.\nCOMPARISON: None.\nTECHNIQUE: Axial 1.25 mm images from thoracic inlet to adrenals after 75 mL IV contrast.\nFINDINGS:\nLungs: Mild centrilobular emphysema. No consolidation. No pleural effusion.\nMediastinum: No lymphadenopathy. Heart size normal.\nUpper abdomen: Unremarkable.\nIMPRESSION:\n1. No acute cardiopulmonary process.\n2. Mild centrilobular emphysema.\n\nADDENDUM (2026-03-05, Dr. A):\nOn re-review of the images, there is a 7 mm solid nodule in the right upper lobe (series 3, image 45) that was not described in the original report. No calcification. Recommend non-contrast CT chest in 6-12 months per Fleischner Society 2017 guidelines.",
+  "expected_rules": [
+   "R003"
+  ],
+  "expected_window_days": [
+   180,
+   365
+  ],
+  "expected_review": false,
+  "rationale": "Addendum adds a single solid 6-8 mm nodule in a former smoker (high risk). Fleischner: CT at 6-12 months; deadline 12 months. The original impression is negative, so the reader must process the addendum.",
+  "tags": [
+   "addendum",
+   "added-finding",
+   "lung-nodule",
+   "fleischner"
+  ]
+ },
+ {
+  "id": "Y9E-002",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen and Pelvis without and with Contrast",
+  "date": "2026-01-22",
+  "language": "en",
+  "patient": {
+   "age": 58,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "*** CORRECTED REPORT ***\nThis report replaces the preliminary report issued 2026-01-21.\n\nEXAM: CT ABDOMEN AND PELVIS WITHOUT AND WITH IV CONTRAST\nINDICATION: Right lower quadrant pain.\nCOMPARISON: None.\nFINDINGS:\nAdrenals: The left adrenal nodule measures 2.4 cm and has an attenuation of -6 HU on the unenhanced series, diagnostic of a lipid-rich adenoma. The unenhanced series was not available at the time of the preliminary interpretation.\nKidneys: Normal.\nPancreas: Normal.\nBowel: Normal appendix. No bowel obstruction.\nIMPRESSION:\n1. No acute abdominal process.\n2. Left adrenal adenoma (2.4 cm, -6 HU). Benign; no further imaging required.\n\nCORRECTION NOTE: The preliminary impression described a '2.4 cm indeterminate left adrenal nodule, recommend adrenal protocol CT in 3 months.' That recommendation is RETRACTED.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Corrected report retracts the indeterminate adrenal nodule: -6 HU on unenhanced CT is a benign adenoma (R037 exclusion). The retracted recommendation must not generate R037 or R030.",
+  "tags": [
+   "corrected-report",
+   "retraction",
+   "adrenal",
+   "benign",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-003",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen and Pelvis with Contrast",
+  "date": "2026-02-11",
+  "language": "en",
+  "patient": {
+   "age": 67,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT ABDOMEN AND PELVIS WITH IV CONTRAST\nINDICATION: Postoperative day 4 after right hip arthroplasty, abdominal distension.\nCOMPARISON: None.\nFINDINGS:\nMild diffuse small bowel dilatation without transition point, compatible with ileus. Liver, spleen, pancreas, adrenals and kidneys unremarkable. No free air. No abscess.\nIMPRESSION:\n1. Postoperative ileus. No obstruction.\n\nADDENDUM (2026-02-11 14:25, Dr. A):\nOn review of the lung bases, there are filling defects in the right lower lobe segmental pulmonary arteries consistent with acute pulmonary embolism. Findings were discussed by telephone with Dr. B, the ordering physician, at 14:20 on 2026-02-11, with read-back confirmed.",
+  "expected_rules": [
+   "R035"
+  ],
+  "expected_window_days": [
+   0,
+   0.05
+  ],
+  "expected_review": false,
+  "rationale": "Addendum adds a critical finding (acute PE) but documents direct clinician communication within the report, so R035 is closed and not listed. No other trackable finding. LABEL CORRECTED after scoring: by the harness convention used since round 8, a documented call opens R035 and closes it at once, so R035 is listed (the writer brief wrongly said to omit it).",
+  "tags": [
+   "addendum",
+   "critical-finding",
+   "communication-documented",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-004",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Head without Contrast",
+  "date": "2026-04-02",
+  "language": "en",
+  "patient": {
+   "age": 49,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT HEAD WITHOUT CONTRAST\nINDICATION: Headache, worst of life.\nCOMPARISON: None.\nFINDINGS: No mass effect or midline shift. Ventricles normal in size. No acute territorial infarct. Paranasal sinuses clear.\nIMPRESSION: No acute intracranial abnormality.\n\nADDENDUM (2026-04-02 23:10, Dr. A):\nOn second review, there is a small amount of hyperdense subarachnoid hemorrhage in the right sylvian fissure and along the right ambient cistern. Recommend CTA head to evaluate for aneurysm.",
+  "expected_rules": [
+   "R035",
+   "R030"
+  ],
+  "expected_window_days": [
+   0,
+   0
+  ],
+  "expected_review": false,
+  "rationale": "Addendum changes a negative head CT to subarachnoid (intracranial) hemorrhage, a critical finding, with no documented communication. R035 opens (1 hour). The CTA is part of the acute work-up of the same finding. ADJUDICATED: the recommended CTA head is a radiologist-recommended CT that must be tracked (R030) in addition to the critical-result call.",
+  "tags": [
+   "addendum",
+   "upgrade",
+   "critical-finding",
+   "no-communication"
+  ]
+ },
+ {
+  "id": "Y9E-005",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen and Pelvis with Contrast",
+  "date": "2026-05-14",
+  "language": "en",
+  "patient": {
+   "age": 74,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "*** CORRECTED REPORT ***\nReason for correction: dictation error in aortic measurement.\n\nEXAM: CT ABDOMEN AND PELVIS WITH IV CONTRAST\nINDICATION: Lower back pain.\nCOMPARISON: None.\nFINDINGS:\nVascular: Fusiform infrarenal abdominal aortic aneurysm measuring 5.8 cm in maximal transverse diameter (previously dictated in error as 3.8 cm). Mural thrombus. No periaortic stranding or retroperitoneal hematoma.\nOther: Degenerative changes of the lumbar spine. Kidneys, adrenals and pancreas unremarkable.\nIMPRESSION:\n1. 5.8 cm infrarenal abdominal aortic aneurysm without signs of rupture. Vascular surgery referral recommended.\n2. Lumbar spondylosis.",
+  "expected_rules": [
+   "R045"
+  ],
+  "expected_window_days": [
+   0,
+   14
+  ],
+  "expected_review": false,
+  "rationale": "Corrected size 5.8 cm in a man meets the AAA repair threshold (>=5.5 cm) -> vascular surgery within 14 days. One alert per finding: R045 supersedes surveillance R044; the erroneous 3.8 cm value must be ignored.",
+  "tags": [
+   "corrected-report",
+   "upgrade",
+   "aaa"
+  ]
+ },
+ {
+  "id": "Y9E-006",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest and Abdomen with Contrast",
+  "date": "2026-06-03",
+  "language": "en",
+  "patient": {
+   "age": 67,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST AND ABDOMEN WITHOUT AND WITH IV CONTRAST\nINDICATION: Follow-up of left lower lobe pneumonia.\nCOMPARISON: Chest radiograph 2026-04-20.\nFINDINGS:\nNeck base: 2.0 cm hypodense nodule in the left thyroid lobe.\nLungs: Resolution of left lower lobe consolidation. A 9 mm solid nodule in the right lower lobe (series 4, image 112), smooth margins. No other nodules.\nMediastinum: No lymphadenopathy.\nAdrenals: 1.6 cm right adrenal nodule measuring 24 HU on unenhanced images and 61 HU on portal venous images. Left adrenal normal.\nLiver, pancreas, kidneys: Unremarkable.\nIMPRESSION:\n1. Resolved left lower lobe pneumonia.\n2. 9 mm solid right lower lobe nodule. Per Fleischner, consider CT at 3 months, PET/CT, or tissue sampling.\n3. 1.6 cm indeterminate right adrenal nodule. Recommend adrenal protocol CT in 12 months.\n4. 2.0 cm left thyroid nodule. Recommend thyroid ultrasound.",
+  "expected_rules": [
+   "R003",
+   "R037",
+   "R043"
+  ],
+  "expected_window_days": [
+   0,
+   90
+  ],
+  "expected_review": false,
+  "rationale": "Three independent findings: solid nodule >8 mm (R003, 3 months), indeterminate 1-2 cm adrenal nodule at 24 HU unenhanced (R037, 12 months), thyroid nodule >=1.5 cm on CT (R043, 90 days). Guideline ids replace the radiologist-recommendation rules. Window shown is the earliest deadline.",
+  "tags": [
+   "multiple-findings",
+   "lung-nodule",
+   "adrenal",
+   "thyroid"
+  ]
+ },
+ {
+  "id": "Y9E-007",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen and Pelvis without and with Contrast",
+  "date": "2026-02-27",
+  "language": "en",
+  "patient": {
+   "age": 70,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT ABDOMEN AND PELVIS, RENAL MASS PROTOCOL\nINDICATION: Microscopic hematuria.\nCOMPARISON: None.\nFINDINGS:\nKidneys: 2.8 cm solid mass in the interpolar left kidney measuring 32 HU unenhanced and 118 HU nephrographic (enhancement 86 HU). No renal vein involvement. Right kidney normal.\nVascular: Infrarenal abdominal aortic aneurysm measuring 4.2 cm AP x 4.0 cm transverse. No periaortic stranding.\nAdrenals, liver, pancreas: Unremarkable. No lymphadenopathy.\nIMPRESSION:\n1. 2.8 cm enhancing solid left renal mass, highly suspicious for renal cell carcinoma. Urology referral recommended.\n2. 4.2 cm infrarenal AAA. Recommend surveillance ultrasound in 12 months.",
+  "expected_rules": [
+   "R039",
+   "R044"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "Solid enhancing renal mass -> urology (R039, 30 days). AAA 4.0-4.4 cm -> surveillance in 1 year (R044). Window shown is the earliest deadline.",
+  "tags": [
+   "multiple-findings",
+   "aaa",
+   "renal-mass"
+  ]
+ },
+ {
+  "id": "Y9E-008",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen without and with Contrast",
+  "date": "2026-07-09",
+  "language": "en",
+  "patient": {
+   "age": 64,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT ABDOMEN WITHOUT AND WITH IV CONTRAST\nINDICATION: Elevated liver enzymes.\nCOMPARISON: None.\nFINDINGS:\nLiver: Mild hepatic steatosis. No focal lesion.\nPancreas: 1.8 cm unilocular cystic lesion in the pancreatic body. Main pancreatic duct measures 3 mm. No mural nodule, no solid component, no thickened enhancing wall.\nAdrenals: 2.1 cm left adrenal nodule measuring -2 HU on the unenhanced series, consistent with a lipid-rich adenoma. Right adrenal normal.\nKidneys: Normal.\nIMPRESSION:\n1. 1.8 cm pancreatic body cyst without worrisome features. Recommend MRI/MRCP in 1 year.\n2. Left adrenal adenoma; no follow-up needed.\n3. Hepatic steatosis.",
+  "expected_rules": [
+   "R041"
+  ],
+  "expected_window_days": [
+   0,
+   365
+  ],
+  "expected_review": false,
+  "rationale": "Pancreatic cyst 1.5-2.5 cm without worrisome features -> MRI/MRCP in 1 year (R041). The adrenal nodule is a benign adenoma (<=10 HU) and is excluded from R037.",
+  "tags": [
+   "multiple-findings",
+   "pancreatic-cyst",
+   "adrenal",
+   "benign-exclusion"
+  ]
+ },
+ {
+  "id": "Y9E-009",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen and Pelvis with Contrast",
+  "date": "2026-03-30",
+  "language": "en",
+  "patient": {
+   "age": 69,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT ABDOMEN AND PELVIS WITH IV CONTRAST\nINDICATION: Diverticulitis suspected.\nCOMPARISON: None.\nFINDINGS:\nBowel: Sigmoid diverticulosis without diverticulitis.\nKidneys: 3.0 cm cystic lesion in the lower pole of the left kidney with multiple minimally thickened smooth septa and nodular calcification; no measurable enhancing soft tissue (Bosniak IIF). Several simple cortical cysts bilaterally, the largest 2.2 cm on the right (Bosniak I).\nLiver: Two simple hepatic cysts, up to 1.5 cm.\nVascular: Infrarenal abdominal aorta measures 2.6 cm.\nIMPRESSION:\n1. Bosniak IIF left renal cyst. Recommend renal CT or MRI in 6 months.\n2. Small 2.6 cm infrarenal abdominal aortic aneurysm.\n3. Simple renal and hepatic cysts. Sigmoid diverticulosis.",
+  "expected_rules": [
+   "R040",
+   "R044"
+  ],
+  "expected_window_days": [
+   0,
+   180
+  ],
+  "expected_review": false,
+  "rationale": "Bosniak IIF -> renal imaging at 6 months (R040). AAA 2.5-2.9 cm -> surveillance in 5 years (R044) even without an explicit radiologist recommendation. Simple renal/hepatic cysts excluded. Window is the earliest deadline.",
+  "tags": [
+   "multiple-findings",
+   "aaa",
+   "renal-cyst",
+   "bosniak"
+  ]
+ },
+ {
+  "id": "Y9E-010",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest with Contrast",
+  "date": "2026-08-18",
+  "language": "en",
+  "patient": {
+   "age": 58,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST WITH IV CONTRAST\nINDICATION: Chest pain, rule out aortic pathology.\nCOMPARISON: None.\nFINDINGS:\nAorta: Normal caliber. No dissection.\nLungs: 4 mm solid nodule in the left upper lobe (series 3, image 61). No consolidation.\nThyroid: 1.1 cm hypodense nodule in the right thyroid lobe without calcification, extrathyroidal extension or adjacent lymphadenopathy.\nIMPRESSION:\n1. No aortic dissection or aneurysm.\n2. 4 mm left upper lobe nodule. No routine follow-up recommended in a low-risk patient (Fleischner 2017).\n3. 1.1 cm thyroid nodule without suspicious features; no further evaluation needed per ACR incidental thyroid nodule guidance.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Solid nodule <6 mm in a low-risk never-smoker needs no follow-up. Thyroid nodule 1.1 cm in a 58-year-old without suspicious features is below the R043 threshold (>=1.5 cm). Negative dissection statement must not trigger R035.",
+  "tags": [
+   "multiple-findings",
+   "no-followup",
+   "subthreshold",
+   "lung-nodule",
+   "thyroid"
+  ]
+ },
+ {
+  "id": "Y9E-011",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest without Contrast",
+  "date": "2026-08-25",
+  "language": "en",
+  "patient": {
+   "age": 66,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST WITHOUT CONTRAST\nINDICATION: Follow-up of pulmonary nodule.\nCOMPARISON: CT chest 2024-01-15 and 2025-02-02.\nFINDINGS:\nLungs: The 7 mm solid nodule in the right middle lobe (series 2, image 78) is unchanged in size and morphology compared with 2024-01-15 and 2025-02-02, i.e. stable for more than 2.5 years. No new nodules. Mild emphysema.\nMediastinum: No lymphadenopathy.\nIMPRESSION:\n1. Right middle lobe solid nodule stable for over 2 years, consistent with a benign process. No further imaging follow-up is required.\n2. Mild emphysema.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Solid nodule stable for >2 years completes Fleischner follow-up; no rule opens.",
+  "tags": [
+   "comparison",
+   "stable",
+   "lung-nodule",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-012",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest without Contrast",
+  "date": "2026-05-19",
+  "language": "en",
+  "patient": {
+   "age": 71,
+   "sex": "female",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST WITHOUT CONTRAST\nINDICATION: Follow-up of left upper lobe nodule.\nCOMPARISON: CT chest 2025-11-12.\nFINDINGS:\nLungs: The solid left upper lobe nodule now measures 12 mm (series 3, image 40), previously 8 mm, with new mild spiculation. No other nodules. Moderate emphysema.\nMediastinum: No enlarged lymph nodes.\nIMPRESSION:\n1. Interval growth of left upper lobe solid nodule from 8 mm to 12 mm over 6 months, suspicious for malignancy. Recommend PET/CT and thoracic surgery or pulmonology referral for tissue diagnosis.",
+  "expected_rules": [
+   "R046"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "Growing lung nodule -> PET/CT, sampling or referral within 30 days (R046). One alert per finding, so R003 is not also listed.",
+  "tags": [
+   "comparison",
+   "interval-growth",
+   "lung-nodule"
+  ]
+ },
+ {
+  "id": "Y9E-013",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest with Contrast",
+  "date": "2026-06-22",
+  "language": "en",
+  "patient": {
+   "age": 44,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST WITH IV CONTRAST\nINDICATION: Shortness of breath; evaluate for pulmonary embolism.\nCOMPARISON: CT chest 2025-03-03.\nFINDINGS:\nPulmonary arteries: No filling defect. No pulmonary embolism.\nLungs: New 4 mm solid nodule in the right lower lobe (series 4, image 99), not present on 2025-03-03, likely inflammatory/intrapulmonary lymph node. No consolidation. No pneumothorax.\nIMPRESSION:\n1. No pulmonary embolism.\n2. New 4 mm right lower lobe nodule. In a low-risk patient, no routine follow-up is recommended.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "New but <6 mm solid nodule in a low-risk patient: Fleischner recommends no routine follow-up. 'New' alone is not interval growth of a known nodule. Negative PE/pneumothorax statements must not trigger R035.",
+  "tags": [
+   "comparison",
+   "new-nodule",
+   "negation",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-014",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest without Contrast",
+  "date": "2026-07-14",
+  "language": "en",
+  "patient": {
+   "age": 59,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST WITHOUT CONTRAST\nINDICATION: Follow-up of ground-glass nodule.\nCOMPARISON: CT chest 2026-01-10.\nFINDINGS:\nLungs: The previously described 8 mm ground-glass nodule in the right upper lobe is no longer seen. No new nodules. No consolidation.\nIMPRESSION:\n1. Resolution of the previously seen right upper lobe ground-glass nodule, consistent with a transient inflammatory process. No further follow-up needed.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Resolved ground-glass nodule closes the follow-up; no rule opens even though '8 mm ground-glass nodule' appears in the text.",
+  "tags": [
+   "comparison",
+   "resolved",
+   "lung-nodule",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-015",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest without Contrast",
+  "date": "2026-09-08",
+  "language": "en",
+  "patient": {
+   "age": 63,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST WITHOUT CONTRAST\nINDICATION: Follow-up of right lower lobe nodule.\nCOMPARISON: CT chest 2025-04-10, at which time the solid right lower lobe nodule measured 6 mm.\nFINDINGS:\nLungs: Solid right lower lobe nodule measures 9 mm (series 4, image 88), smooth margins. No additional nodules. No effusion.\nMediastinum: Normal.\nIMPRESSION:\n1. 9 mm solid right lower lobe nodule. Recommend management per Fleischner guidelines.",
+  "expected_rules": [
+   "R046"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "The prior size (6 mm) appears only in the COMPARISON section; current 9 mm = interval growth of a known nodule -> R046. A reader ignoring the comparison would wrongly treat it as a new >8 mm nodule (R003).",
+  "tags": [
+   "comparison",
+   "prior-size-in-comparison",
+   "interval-growth",
+   "lung-nodule"
+  ]
+ },
+ {
+  "id": "Y9E-016",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest without Contrast",
+  "date": "2026-08-04",
+  "language": "en",
+  "patient": {
+   "age": 66,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST WITHOUT CONTRAST\nINDICATION: Follow-up of part-solid nodule.\nCOMPARISON: CT chest 2026-03-02.\nFINDINGS:\nLungs: Persistent part-solid nodule in the left upper lobe measuring 18 mm overall with a 7 mm solid component (series 3, image 52), unchanged from 2026-03-02. No other nodules.\nMediastinum: No lymphadenopathy.\nIMPRESSION:\n1. Persistent part-solid left upper lobe nodule with 7 mm solid component, concerning for adenocarcinoma. Recommend PET/CT and multidisciplinary thoracic referral.",
+  "expected_rules": [
+   "R046"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "Persistent part-solid nodule with solid component >=6 mm -> R046 (PET/CT, sampling or referral, 30 days).",
+  "tags": [
+   "comparison",
+   "persistent",
+   "part-solid",
+   "lung-nodule"
+  ]
+ },
+ {
+  "id": "Y9E-017",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen and Pelvis with Contrast",
+  "date": "2026-04-16",
+  "language": "en",
+  "patient": {
+   "age": 52,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT ABDOMEN AND PELVIS WITH IV CONTRAST (PORTAL VENOUS PHASE ONLY)\nINDICATION: Left lower quadrant pain.\nCOMPARISON: None.\nFINDINGS:\nKidneys: 1.4 cm round lesion in the upper pole of the left kidney measuring 38 HU. This is indeterminate on this single-phase examination; a solid enhancing lesion cannot be excluded. No hydronephrosis.\nBowel: Uncomplicated sigmoid diverticulitis.\nIMPRESSION:\n1. Uncomplicated sigmoid diverticulitis.\n2. Indeterminate 1.4 cm left renal lesion; cannot exclude a solid neoplasm. Recommend renal mass protocol MRI.",
+  "expected_rules": [
+   "R040"
+  ],
+  "expected_window_days": [
+   0,
+   90
+  ],
+  "expected_review": false,
+  "rationale": "Hedged ('cannot exclude') indeterminate renal lesion >=1 cm -> renal CT/MRI within 90 days (R040). Not R039 (not established as solid enhancing). Guideline id replaces R031.",
+  "tags": [
+   "hedging",
+   "cannot-exclude",
+   "renal-lesion"
+  ]
+ },
+ {
+  "id": "Y9E-018",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen with Contrast",
+  "date": "2026-05-27",
+  "language": "en",
+  "patient": {
+   "age": 55,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT ABDOMEN WITH IV CONTRAST\nINDICATION: Epigastric pain.\nCOMPARISON: None available.\nFINDINGS:\nAdrenals: 1.2 cm right adrenal nodule measuring 42 HU on portal venous phase. No unenhanced or delayed images available. Left adrenal normal.\nGallbladder: Cholelithiasis without cholecystitis.\nIMPRESSION:\n1. 1.2 cm right adrenal nodule, likely a benign adenoma; however, it is indeterminate on this single-phase examination. Recommend adrenal protocol CT in 12 months.\n2. Cholelithiasis.",
+  "expected_rules": [
+   "R037"
+  ],
+  "expected_window_days": [
+   0,
+   365
+  ],
+  "expected_review": false,
+  "rationale": "'Likely benign' is a hedge without a benign imaging feature (no <=10 HU, no fat, no prior stability). Indeterminate 1-2 cm adrenal nodule -> 12-month adrenal CT (R037).",
+  "tags": [
+   "hedging",
+   "likely-benign",
+   "adrenal"
+  ]
+ },
+ {
+  "id": "Y9E-019",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "Chest Radiograph, 2 Views",
+  "date": "2026-01-08",
+  "language": "en",
+  "patient": {
+   "age": 61,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CHEST RADIOGRAPH, PA AND LATERAL\nINDICATION: Fever and productive cough.\nCOMPARISON: None.\nFINDINGS: Patchy airspace opacity in the right lower lobe. No pleural effusion. No pneumothorax. Heart size normal.\nIMPRESSION:\n1. Right lower lobe opacity, likely pneumonia in the appropriate clinical setting. Clinical correlation recommended.\n2. Recommend follow-up chest radiograph in 6-8 weeks after treatment to document resolution and exclude an underlying lesion.",
+  "expected_rules": [
+   "R033"
+  ],
+  "expected_window_days": [
+   0,
+   70
+  ],
+  "expected_review": false,
+  "rationale": "Explicit radiograph recommendation with a stated interval (8 weeks = 56 days, +25% grace = 70 days) -> R033. 'Clinical correlation' alone would not open a rule.",
+  "tags": [
+   "hedging",
+   "clinical-correlation",
+   "radiograph-recommendation"
+  ]
+ },
+ {
+  "id": "Y9E-020",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen and Pelvis with Contrast",
+  "date": "2026-06-30",
+  "language": "en",
+  "patient": {
+   "age": 60,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT ABDOMEN AND PELVIS WITH IV CONTRAST\nINDICATION: Hematuria.\nCOMPARISON: None.\nFINDINGS:\nLung bases: 0.9 cm solid nodule in the right lower lobe (series 2, image 14).\nAdrenals: No adrenal nodule.\nPancreas: No pancreatic lesion or ductal dilatation.\nKidneys: No renal mass. No hydronephrosis. No calculi.\nBladder: Normal.\nVascular: Abdominal aorta normal in caliber.\nIMPRESSION:\n1. No source of hematuria identified.\n2. 0.9 cm solid right lower lobe nodule at the lung base. Recommend dedicated CT chest.",
+  "expected_rules": [
+   "R003"
+  ],
+  "expected_window_days": [
+   0,
+   90
+  ],
+  "expected_review": false,
+  "rationale": "Negations ('No adrenal nodule', 'No renal mass') must not suppress the lung finding. 0.9 cm = 9 mm solid nodule (>8 mm) -> Fleischner CT at 3 months (R003); guideline id replaces R030.",
+  "tags": [
+   "negation-scope",
+   "cm-to-mm",
+   "lung-nodule"
+  ]
+ },
+ {
+  "id": "Y9E-021",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen and Pelvis with Contrast",
+  "date": "2026-09-14",
+  "language": "en",
+  "patient": {
+   "age": 45,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT ABDOMEN AND PELVIS WITH IV CONTRAST\nINDICATION: Acute abdominal pain.\nCOMPARISON: None.\nFINDINGS:\nLung bases: Clear. No pulmonary nodules.\nLiver: No focal lesion.\nPancreas: No pancreatic cyst or mass.\nAdrenals: No adrenal nodule.\nKidneys: No renal mass. No hydronephrosis.\nVascular: No abdominal aortic aneurysm. No dissection.\nBowel: No free air. No obstruction. Normal appendix.\nPelvis: Small physiologic free fluid.\nIMPRESSION:\n1. No acute abnormality. No incidental findings requiring follow-up.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Pertinent-negative list mentions every trigger term (nodule, cyst, adrenal, renal mass, AAA, dissection, free air) only in negated form; nothing opens.",
+  "tags": [
+   "pertinent-negatives",
+   "negation",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-022",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "Chest Radiograph, Portable",
+  "date": "2026-03-12",
+  "language": "en",
+  "patient": {
+   "age": 77,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "CHEST RADIOGRAPH, PORTABLE AP\nINDICATION: Right internal jugular central venous catheter placement.\nCOMPARISON: 2026-03-11.\nFINDINGS: Right internal jugular catheter tip projects over the cavoatrial junction. No pneumothorax. Lungs clear. No effusion.\nIMPRESSION: Appropriately positioned right IJ catheter. No pneumothorax.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Post-procedure film explicitly negates pneumothorax; no critical finding, no follow-up.",
+  "tags": [
+   "negation",
+   "critical-term-negated",
+   "no-followup",
+   "short-report"
+  ]
+ },
+ {
+  "id": "Y9E-023",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Neck with Contrast",
+  "date": "2026-02-03",
+  "language": "en",
+  "patient": {
+   "age": 55,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT NECK WITH IV CONTRAST\nINDICATION: Sore throat, evaluate for abscess.\nCOMPARISON: None.\nFINDINGS:\nPharynx: Mild tonsillar enlargement. No peritonsillar abscess.\nThyroid: Hypodense nodule in the left thyroid lobe measuring 1.4 x 1.1 x 0.9 cm (AP x TR x CC). No calcification, no extrathyroidal extension. No abnormal cervical lymph nodes.\nIMPRESSION:\n1. Tonsillitis without abscess.\n2. 1.4 cm left thyroid nodule without suspicious features; per ACR guidance no further evaluation is required.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "3-axis measurement: longest axis 1.4 cm < 1.5 cm threshold in a 55-year-old without suspicious features -> no R043.",
+  "tags": [
+   "3-axis-measurement",
+   "thyroid",
+   "subthreshold",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-024",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen without Contrast",
+  "date": "2026-07-21",
+  "language": "en",
+  "patient": {
+   "age": 61,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT ABDOMEN AND PELVIS WITHOUT CONTRAST (STONE PROTOCOL)\nINDICATION: Right flank pain.\nCOMPARISON: None.\nFINDINGS:\nKidneys: 4 mm nonobstructing right lower pole calculus. No hydronephrosis.\nAdrenals: Left adrenal mass measuring 3.1 x 2.4 x 2.2 cm containing macroscopic fat (-60 HU), consistent with a myelolipoma.\nIMPRESSION:\n1. Nonobstructing right renal calculus.\n2. 3.1 cm left adrenal myelolipoma, benign. No follow-up imaging required.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Adrenal lesion 2-4 cm would ordinarily trigger R037, but macroscopic fat (myelolipoma) is a benign exclusion.",
+  "tags": [
+   "3-axis-measurement",
+   "adrenal",
+   "benign-exclusion",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-025",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest and Abdomen with Contrast",
+  "date": "2026-04-28",
+  "language": "en",
+  "patient": {
+   "age": 58,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST AND ABDOMEN WITH IV CONTRAST\nINDICATION: Blunt trauma, motor vehicle collision.\nCOMPARISON: None.\nFINDINGS:\nLungs: Several tiny (<4 mm) solid pulmonary nodules scattered in both lungs. No contusion. No pneumothorax.\nKidneys: Several subcentimeter hypodensities in both kidneys, too small to characterize.\nLiver, spleen: No laceration.\nIMPRESSION:\n1. No traumatic injury in the chest or abdomen.\n2. Multiple tiny pulmonary nodules; no routine follow-up needed in a low-risk patient.\n3. Subcentimeter renal hypodensities too small to characterize, likely cysts.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Multiple <6 mm nodules in a low-risk patient need no routine follow-up (Fleischner); subcentimeter too-small-to-characterize renal lesions are excluded from R040.",
+  "tags": [
+   "tiny",
+   "subcentimeter",
+   "multiple-nodules",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-026",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Neck with Contrast",
+  "date": "2026-05-05",
+  "language": "en",
+  "patient": {
+   "age": 30,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT NECK WITH IV CONTRAST\nINDICATION: Palpable right neck lymph node after upper respiratory infection.\nCOMPARISON: None.\nFINDINGS:\nLymph nodes: Several mildly prominent, oval, fatty-hilum level II lymph nodes bilaterally, up to 1.1 cm short axis, likely reactive.\nThyroid: 1.2 cm hypodense nodule in the left thyroid lobe. No calcification.\nIMPRESSION:\n1. Likely reactive cervical lymphadenopathy.\n2. 1.2 cm left thyroid nodule. If not already performed, thyroid ultrasound is recommended.",
+  "expected_rules": [
+   "R043"
+  ],
+  "expected_window_days": [
+   0,
+   90
+  ],
+  "expected_review": false,
+  "rationale": "Conditional wording ('if not already performed'). Patient under 35 with a thyroid nodule >=1 cm meets the incidental-thyroid criterion -> thyroid US within 90 days (R043), which replaces R032.",
+  "tags": [
+   "conditional-recommendation",
+   "thyroid",
+   "age-threshold"
+  ]
+ },
+ {
+  "id": "Y9E-027",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest without Contrast",
+  "date": "2026-06-09",
+  "language": "en",
+  "patient": {
+   "age": 48,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST WITHOUT CONTRAST\nINDICATION: Chronic cough.\nCOMPARISON: None.\nFINDINGS:\nLungs: Single 5 mm solid nodule in the left lower lobe (series 2, image 130). Mild bronchial wall thickening.\nMediastinum: Normal.\nIMPRESSION:\n1. Mild bronchial wall thickening suggesting airways disease.\n2. 5 mm left lower lobe nodule. If the patient is at high risk, an optional CT at 12 months may be considered; no follow-up is needed for a low-risk patient.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Conditional recommendation applies only to high-risk patients; this patient is a 48-year-old never-smoker (low risk), and Fleischner gives no routine follow-up for a solid nodule <6 mm in a low-risk patient.",
+  "tags": [
+   "conditional-recommendation",
+   "lung-nodule",
+   "low-risk",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-028",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "Low-Dose CT Chest, Lung Cancer Screening",
+  "date": "2026-03-18",
+  "language": "en",
+  "patient": {
+   "age": 64,
+   "sex": "female",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: LOW-DOSE CT CHEST FOR LUNG CANCER SCREENING (BASELINE)\nINDICATION: 40 pack-year current smoker.\nCOMPARISON: None.\nFINDINGS:\nLungs: Solid nodule in the right upper lobe. Mild emphysema.\nIMPRESSION: Lung-RADS 3, probably benign. Recommend 6-month LDCT.\n\nADDENDUM (2026-03-19, Dr. A):\nThe right upper lobe solid nodule was mismeasured in the original report. Mean diameter is 9 mm (10 x 8 mm), not 7 mm. Category is upgraded to Lung-RADS 4A, suspicious. Recommend 3-month LDCT; PET/CT may be considered. The Lung-RADS 3 recommendation is superseded.",
+  "expected_rules": [
+   "R019"
+  ],
+  "expected_window_days": [
+   0,
+   90
+  ],
+  "expected_review": false,
+  "rationale": "Addendum upgrades a screening category from Lung-RADS 3 to 4A; only the final category counts -> R019 (3-month LDCT). R034 must not be listed. Screening LDCT, so not R003.",
+  "tags": [
+   "addendum",
+   "upgrade",
+   "lung-rads",
+   "screening"
+  ]
+ },
+ {
+  "id": "Y9E-029",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "Low-Dose CT Chest, Lung Cancer Screening",
+  "date": "2026-09-01",
+  "language": "en",
+  "patient": {
+   "age": 68,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: LOW-DOSE CT CHEST FOR LUNG CANCER SCREENING (ANNUAL)\nCOMPARISON: LDCT 2025-08-28.\nFINDINGS:\nLungs: 5 mm solid nodule in the left upper lobe, unchanged. Mild paraseptal emphysema.\nOther: Coronary artery calcification, moderate.\nIMPRESSION:\nLung-RADS 2, benign appearance or behavior. Continue annual screening with LDCT in 12 months.\nS modifier: moderate coronary artery calcification.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Lung-RADS 2 has no catalogue rule (routine annual screening); the Fleischner rule does not apply to screening LDCT.",
+  "tags": [
+   "lung-rads",
+   "screening",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-030",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "Low-Dose CT Chest, Lung Cancer Screening",
+  "date": "2026-07-07",
+  "language": "en",
+  "patient": {
+   "age": 72,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: LOW-DOSE CT CHEST FOR LUNG CANCER SCREENING (BASELINE)\nCOMPARISON: None.\nFINDINGS:\nLungs: 17 mm solid nodule in the right upper lobe (mean diameter), lobulated margins. Moderate centrilobular emphysema.\nIMPRESSION:\nLung-RADS 4B, very suspicious. Recommend diagnostic chest CT with or without contrast, PET/CT, and/or tissue sampling. Referral to pulmonology recommended.",
+  "expected_rules": [
+   "R020"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "Lung-RADS 4B -> diagnostic work-up within 30 days (R020). The PET/CT and sampling recommendations belong to the same finding; R036 is not applied when Lung-RADS governs.",
+  "tags": [
+   "lung-rads",
+   "screening",
+   "suspicious"
+  ]
+ },
+ {
+  "id": "Y9E-031",
+  "set": "r9en",
+  "report_type": "pathology",
+  "title": "Surgical Pathology: Left Breast Lumpectomy",
+  "date": "2026-02-19",
+  "language": "en",
+  "patient": {
+   "age": 57,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": true,
+   "immunocompromised": false
+  },
+  "text": "SURGICAL PATHOLOGY REPORT\nSPECIMEN: Left breast, wire-localized lumpectomy, oriented.\nCLINICAL HISTORY: Biopsy-proven invasive ductal carcinoma, left breast 2 o'clock.\nFINAL DIAGNOSIS:\nLeft breast, lumpectomy:\n- Invasive ductal carcinoma, Nottingham grade 2, 1.6 cm.\n- Ductal carcinoma in situ, intermediate grade, associated.\n- MARGINS: Invasive carcinoma present at the inked superior margin. DCIS 0.5 mm from posterior margin.\n- Lymphovascular invasion: not identified.\nCOMMENT: Positive superior margin. Findings communicated to the surgeon's office via the electronic result system.",
+  "expected_rules": [
+   "R009"
+  ],
+  "expected_window_days": [
+   0,
+   5
+  ],
+  "expected_review": false,
+  "rationale": "Positive surgical margin is an abnormal pathology result requiring notification and referral (R009, 5 days). Delivery through the electronic result system is not documented clinician communication and R035 does not apply to pathology.",
+  "tags": [
+   "pathology",
+   "positive-margins"
+  ]
+ },
+ {
+  "id": "Y9E-032",
+  "set": "r9en",
+  "report_type": "pathology",
+  "title": "Surgical Pathology: Esophageal Biopsies",
+  "date": "2026-04-07",
+  "language": "en",
+  "patient": {
+   "age": 63,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "SURGICAL PATHOLOGY REPORT\nSPECIMEN: Distal esophagus, biopsies at 36-38 cm (4 fragments).\nCLINICAL HISTORY: Barrett esophagus surveillance.\nFINAL DIAGNOSIS:\nDistal esophagus, biopsies:\n- Barrett esophagus (intestinal metaplasia).\n- HIGH-GRADE DYSPLASIA in 2 of 4 fragments.\n- Negative for invasive carcinoma in the sampled tissue.\nCOMMENT: The diagnosis of high-grade dysplasia was confirmed by a second gastrointestinal pathologist (Dr. C). Referral for endoscopic eradication therapy is suggested.",
+  "expected_rules": [
+   "R009"
+  ],
+  "expected_window_days": [
+   0,
+   5
+  ],
+  "expected_review": false,
+  "rationale": "High-grade dysplasia is an abnormal pathology result -> notification and referral (R009). 'Negative for invasive carcinoma' does not negate the dysplasia.",
+  "tags": [
+   "pathology",
+   "high-grade-dysplasia",
+   "negation-scope"
+  ]
+ },
+ {
+  "id": "Y9E-033",
+  "set": "r9en",
+  "report_type": "pathology",
+  "title": "Surgical Pathology: Appendectomy",
+  "date": "2026-06-15",
+  "language": "en",
+  "patient": {
+   "age": 29,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "SURGICAL PATHOLOGY REPORT\nSPECIMEN: Appendix, laparoscopic appendectomy.\nCLINICAL HISTORY: Acute appendicitis.\nGROSS: Appendix, 7.5 cm x 0.9 cm, with fibrinopurulent serosal exudate. A 1.2 cm firm yellow nodule at the tip.\nFINAL DIAGNOSIS:\nAppendix, appendectomy:\n- Acute suppurative appendicitis with periappendicitis.\n- INCIDENTAL well-differentiated neuroendocrine tumor (carcinoid), grade 1 (Ki-67 <3%), 1.2 cm, at the tip, invading the subserosa.\n- Lymphovascular invasion: present.\n- Proximal margin: negative.\nCOMMENT: Given size >1 cm with lymphovascular invasion, surgical oncology consultation regarding right hemicolectomy is suggested.",
+  "expected_rules": [
+   "R009"
+  ],
+  "expected_window_days": [
+   0,
+   5
+  ],
+  "expected_review": false,
+  "rationale": "An unexpected neuroendocrine neoplasm in an appendectomy for appendicitis is an abnormal pathology result requiring notification and referral (R009). The radiology-only Fleischner review flags (e.g. age <35) do not apply.",
+  "tags": [
+   "pathology",
+   "incidental-carcinoma",
+   "appendectomy"
+  ]
+ },
+ {
+  "id": "Y9E-034",
+  "set": "r9en",
+  "report_type": "pathology",
+  "title": "Surgical Pathology: Cholecystectomy",
+  "date": "2026-05-12",
+  "language": "en",
+  "patient": {
+   "age": 46,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "SURGICAL PATHOLOGY REPORT\nSPECIMEN: Gallbladder, laparoscopic cholecystectomy.\nCLINICAL HISTORY: Symptomatic cholelithiasis.\nGROSS: Gallbladder, 8.0 x 3.0 cm, containing multiple yellow-green faceted stones up to 1.1 cm. Wall thickness 0.3 cm.\nFINAL DIAGNOSIS:\nGallbladder, cholecystectomy:\n- Chronic cholecystitis with cholelithiasis.\n- Negative for dysplasia and malignancy.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Benign pathology; the words 'dysplasia' and 'malignancy' appear only in a negated statement.",
+  "tags": [
+   "pathology",
+   "benign",
+   "negation",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-035",
+  "set": "r9en",
+  "report_type": "pathology",
+  "title": "Surgical Pathology: Cholecystectomy (Addendum)",
+  "date": "2026-08-11",
+  "language": "en",
+  "patient": {
+   "age": 71,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "SURGICAL PATHOLOGY REPORT\nSPECIMEN: Gallbladder, laparoscopic cholecystectomy.\nCLINICAL HISTORY: Acute cholecystitis.\nFINAL DIAGNOSIS (2026-08-06):\nGallbladder, cholecystectomy:\n- Acute and chronic cholecystitis with cholelithiasis.\n- Focal mucosal atypia, see addendum.\n\nADDENDUM (2026-08-11, Dr. D):\nDeeper levels and additional sections of the fundus reveal a focus of invasive adenocarcinoma, 0.4 cm, invading the perimuscular connective tissue (pT2a). Cystic duct margin negative. Results should prompt hepatobiliary surgical referral for consideration of re-resection.",
+  "expected_rules": [
+   "R009"
+  ],
+  "expected_window_days": [
+   0,
+   5
+  ],
+  "expected_review": false,
+  "rationale": "Addendum upgrades a benign-appearing diagnosis to incidental invasive gallbladder adenocarcinoma -> notification and referral (R009).",
+  "tags": [
+   "pathology",
+   "addendum",
+   "upgrade",
+   "incidental-carcinoma",
+   "cholecystectomy"
+  ]
+ },
+ {
+  "id": "Y9E-036",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Chest with Contrast",
+  "date": "2026-09-22",
+  "language": "en",
+  "patient": {
+   "age": 72,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": true,
+   "immunocompromised": false
+  },
+  "text": "EXAM: CT CHEST WITH IV CONTRAST\nINDICATION: Shortness of breath. History of colon adenocarcinoma, resected 2025.\nCOMPARISON: None available.\nFINDINGS:\nLungs: 8 mm solid nodule in the left lower lobe (series 3, image 140), well circumscribed. No other nodules. No effusion.\nMediastinum: No lymphadenopathy.\nIMPRESSION:\n1. 8 mm solid left lower lobe nodule. In the setting of known malignancy, metastasis cannot be excluded; Fleischner guidelines do not apply. Recommend correlation with oncologic staging imaging.",
+  "expected_rules": [
+   "R003"
+  ],
+  "expected_window_days": null,
+  "expected_review": true,
+  "rationale": "Known malignancy is a Fleischner exclusion: per harness convention list R003 and set expected_review true. There is no guideline deadline, so the window is null.",
+  "tags": [
+   "fleischner-exclusion",
+   "known-malignancy",
+   "lung-nodule",
+   "human-review"
+  ]
+ },
+ {
+  "id": "Y9E-037",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "Outside MRI Abdomen / MRCP",
+  "date": "2026-07-28",
+  "language": "en",
+  "patient": {
+   "age": 69,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "OUTSIDE IMAGING REPORT - SCANNED FOR RECORD\nFACILITY: Outside imaging center (Facility E)\nEXAM: MRI ABDOMEN WITHOUT AND WITH CONTRAST / MRCP\nDATE OF EXAM: 2026-07-20\nREADING PHYSICIAN: Dr. F\n\nRESULT:\nPANCREAS ........ 3.2 CM CYSTIC LESION, PANCREATIC HEAD\nMURAL NODULE .... YES, 6 MM, ENHANCING\nMAIN PD ......... 5 MM\nCBD ............. 6 MM, NO STONE\nLIVER ........... NO FOCAL LESION\nADRENALS ........ NORMAL\n\nIMPRESSION: 3.2 cm pancreatic head cyst with an enhancing mural nodule, high-risk stigma for IPMN. Recommend EUS and pancreatic surgery referral.",
+  "expected_rules": [
+   "R042"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "Outside report in a lab-style list format. Pancreatic cyst with an enhancing mural nodule -> EUS/specialist within 30 days (R042). One alert per finding: R041 (>2.5 cm, 6-month MRI) is superseded.",
+  "tags": [
+   "outside-report",
+   "plain-text-format",
+   "pancreatic-cyst",
+   "high-risk"
+  ]
+ },
+ {
+  "id": "Y9E-038",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "Diagnostic Mammogram and Breast Ultrasound, Right",
+  "date": "2026-04-21",
+  "language": "en",
+  "patient": {
+   "age": 51,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: RIGHT DIAGNOSTIC MAMMOGRAM AND TARGETED RIGHT BREAST ULTRASOUND\nINDICATION: Callback from screening for a right breast mass.\nCOMPARISON: Screening mammogram 2026-04-02; prior 2025-03-30.\nFINDINGS:\nMammogram: Persistent 1.1 cm irregular mass with indistinct margins in the right breast upper outer quadrant, middle depth.\nUltrasound: At 10 o'clock, 6 cm from the nipple, a 1.0 x 0.8 x 0.9 cm irregular hypoechoic mass, not parallel, with angular margins and internal vascularity. Right axilla normal.\nIMPRESSION:\nBI-RADS 4C: High suspicion for malignancy. Ultrasound-guided core needle biopsy is recommended.",
+  "expected_rules": [
+   "R018"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "BI-RADS 4 (4C) -> tissue diagnosis within 30 days (R018). R036 is not applied when BI-RADS governs; the biopsy recommendation must not also open R032.",
+  "tags": [
+   "bi-rads",
+   "mammography",
+   "3-axis-measurement"
+  ]
+ },
+ {
+  "id": "Y9E-039",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "Thyroid Ultrasound",
+  "date": "2026-08-13",
+  "language": "en",
+  "patient": {
+   "age": 47,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "EXAM: ULTRASOUND THYROID\nINDICATION: Incidental thyroid nodule on CT.\nCOMPARISON: None.\nFINDINGS:\nRight lobe: 4.6 x 1.7 x 1.5 cm. Left lobe: 4.4 x 1.6 x 1.4 cm. Isthmus 3 mm.\nNodule 1, right mid lobe: 1.2 x 0.9 x 0.8 cm, solid, isoechoic, wider-than-tall, smooth margins, no echogenic foci.\nACR TI-RADS: Composition solid 2 + Echogenicity isoechoic 1 + Shape 0 + Margin 0 + Foci 0 = 3 points, TR3.\nNo abnormal cervical lymph nodes.\nIMPRESSION:\nTR3 right thyroid nodule measuring 1.2 cm. Does not meet ACR TI-RADS criteria for FNA (>=2.5 cm) or follow-up (>=1.5 cm). No further imaging required.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Thyroid US: TI-RADS applies, not R043. TR3 at 1.2 cm is below both the FNA and follow-up thresholds, so neither R036 nor R032 opens. The lobe dimensions are not nodule sizes.",
+  "tags": [
+   "thyroid",
+   "ti-rads",
+   "3-axis-measurement",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9E-040",
+  "set": "r9en",
+  "report_type": "radiology",
+  "title": "CT Abdomen without and with Contrast",
+  "date": "2026-10-06",
+  "language": "en",
+  "patient": {
+   "age": 53,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "CT ABDOMEN W/WO CONTRAST -- FINAL REPORT\nINDICATION: Follow-up of renal lesions seen on outside ultrasound.\nCOMPARISON: Outside renal ultrasound 2026-09-15 (report only).\n\nRIGHT KIDNEY: 1.8 cm cyst, upper pole, single thin septum, no enhancement. BOSNIAK II.\nLEFT KIDNEY: 1.0 cm lesion, interpolar, containing macroscopic fat (-45 HU). ANGIOMYOLIPOMA.\nADRENALS: Normal.\nPANCREAS: Normal.\nAORTA: 2.1 cm, normal.\n\nIMPRESSION:\n1. Bosniak II right renal cyst - benign, no follow-up.\n2. 1.0 cm left renal angiomyolipoma - benign, no follow-up.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Bosniak II cyst and fat-containing angiomyolipoma are explicit R040/R039 exclusions; the aorta is normal (2.1 cm).",
+  "tags": [
+   "plain-text-format",
+   "renal",
+   "bosniak",
+   "benign-exclusion",
+   "no-followup"
+  ]
+ },
+ {
+  "id": "Y9K-001",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Chest CT (enhanced)",
+  "date": "2026-03-04",
+  "language": "mixed",
+  "patient": {
+   "age": 61,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Chest CT, enhanced\n임상정보: 기침 2주, pneumonia r/o\n비교: 없음\n\n판독소견:\nRt. upper lobe posterior segment에 8 mm 크기의 solid nodule이 관찰됨 (image 45). 경계는 비교적 명확함.\nRt. lower lobe에 patchy consolidation, pneumonia 가능성.\n종격동 및 폐문부 림프절 비대 없음. Pleural effusion 없음.\n\n결론:\n1. Rt. lower lobe pneumonia 가능성.\n2. Rt. upper lobe 8 mm solid nodule, incidental.\n\n권고: 폐결절에 대해 Fleischner guideline에 따라 6-12개월 후 chest CT 추적검사 권함.",
+  "expected_rules": [
+   "R003"
+  ],
+  "expected_window_days": [
+   180,
+   365
+  ],
+  "expected_review": false,
+  "rationale": "Single incidental solid 6-8 mm nodule in a former smoker (high risk): Fleischner CT at 6-12 months, so the deadline is 12 months. The radiologist's CT recommendation covers the same finding, so only the guideline id is listed.",
+  "tags": [
+   "lung_nodule",
+   "fleischner",
+   "incidental",
+   "single_finding"
+  ]
+ },
+ {
+  "id": "Y9K-002",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Chest CT (non-enhanced)",
+  "date": "2026-02-11",
+  "language": "mixed",
+  "patient": {
+   "age": 44,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Chest CT, non-enhanced\n임상정보: 건강검진상 흉부 X선 이상 음영\n비교: 없음\n\n판독소견:\nLt. lower lobe superior segment에 4 mm solid nodule 1개 관찰됨.\n그 외 폐실질에 특이 소견 없음. 림프절 비대 없음.\n\n결론:\nLt. lower lobe 4 mm solid nodule, benign 가능성 높음.\n\n권고: 저위험군의 경우 추적관찰 필요 없음. 고위험군인 경우 12개월 후 CT 고려.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Solid nodule <6 mm in a never-smoker (low risk) needs no routine follow-up. The 12-month CT is recommended only if the patient is high risk, and she is not.",
+  "tags": [
+   "lung_nodule",
+   "conditional_recommendation",
+   "no_followup",
+   "low_risk"
+  ]
+ },
+ {
+  "id": "Y9K-003",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Chest CT (low-dose, follow-up)",
+  "date": "2026-05-20",
+  "language": "mixed",
+  "patient": {
+   "age": 67,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Chest CT, follow-up\n임상정보: 폐결절 추적\n비교: 2023-11-15, 2024-12-02 chest CT\n\n판독소견:\nRt. middle lobe의 7 mm solid nodule은 2023-11-15 검사와 비교하여 크기 및 형태 변화 없음 (2년 이상 변화 없음).\n새로 생긴 폐결절 없음. Centrilobular emphysema, upper lobe predominant.\n\n결론:\n1. Rt. middle lobe 7 mm solid nodule, 2년 이상 stable, benign으로 판단됨.\n2. Emphysema.\n\n권고: 폐결절에 대한 추가 추적관찰 필요 없음.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Solid nodule stable for more than 2 years is benign under Fleischner, so the follow-up loop is complete.",
+  "tags": [
+   "lung_nodule",
+   "comparison",
+   "stable",
+   "no_followup"
+  ]
+ },
+ {
+  "id": "Y9K-004",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Chest CT (enhanced, follow-up)",
+  "date": "2026-06-08",
+  "language": "mixed",
+  "patient": {
+   "age": 64,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Chest CT, enhanced\n임상정보: Lt. upper lobe nodule f/u\n비교: 2025-12-03 chest CT\n\n판독소견:\nLt. upper lobe apicoposterior segment의 solid nodule은 이전 6 mm에서 현재 10 x 9 mm로 크기 증가함. Spiculated margin.\n새로 생긴 림프절 비대 없음. Pleural effusion 없음.\n\n결론:\nLt. upper lobe solid nodule, 6개월간 크기 증가 (6 → 10 mm). 원발성 폐암 가능성 배제할 수 없음.\n\n권고: PET/CT 및 조직검사 등 추가 평가 요망.",
+  "expected_rules": [
+   "R046"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "A known nodule that grew is a growing nodule, so it needs PET/CT, sampling or referral within 30 days. R046 replaces the routine R003 interval for this finding.",
+  "tags": [
+   "lung_nodule",
+   "comparison",
+   "growth",
+   "suspicious"
+  ]
+ },
+ {
+  "id": "Y9K-005",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Low-dose Chest CT (lung cancer screening)",
+  "date": "2026-04-14",
+  "language": "mixed",
+  "patient": {
+   "age": 59,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: 저선량 흉부 CT (폐암 검진)\n임상정보: 국가폐암검진, 30 pack-years current smoker\n비교: 없음 (baseline)\n\n판독소견:\nRt. upper lobe anterior segment에 10 x 9 mm solid nodule 관찰됨 (mean 9.5 mm).\n그 외 폐결절 없음. 경도의 emphysema.\n\n결론:\nLung-RADS category 4A.\n\n권고: 3개월 후 저선량 흉부 CT 추적검사 권함.",
+  "expected_rules": [
+   "R019"
+  ],
+  "expected_window_days": [
+   60,
+   90
+  ],
+  "expected_review": false,
+  "rationale": "Baseline screening LDCT with a solid nodule of 8 to <15 mm is Lung-RADS 4A, which calls for LDCT at 3 months. This is screening, so Lung-RADS applies, not Fleischner.",
+  "tags": [
+   "lung_rads",
+   "screening",
+   "4A"
+  ]
+ },
+ {
+  "id": "Y9K-006",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Low-dose Chest CT (lung cancer screening, annual)",
+  "date": "2026-07-02",
+  "language": "mixed",
+  "patient": {
+   "age": 66,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: 저선량 흉부 CT (폐암 검진)\n임상정보: 연례 검진. 이전 Lung-RADS 3\n비교: 2026-01-05 LDCT\n\n판독소견:\n이전 검사에서 관찰된 Lt. lower lobe 7 mm solid nodule은 소실됨. Inflammatory lesion이었을 가능성.\n새로 생긴 폐결절 없음.\n\n결론:\nLung-RADS category 1. Negative.\n\n권고: 12개월 후 연례 저선량 CT 검진.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "The prior Lung-RADS 3 nodule has resolved and the scan is now Lung-RADS 1. Routine annual screening is not a tracked rule.",
+  "tags": [
+   "lung_rads",
+   "comparison",
+   "resolved",
+   "no_followup"
+  ]
+ },
+ {
+  "id": "Y9K-007",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Low-dose Chest CT (lung cancer screening)",
+  "date": "2026-03-27",
+  "language": "ko",
+  "patient": {
+   "age": 57,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: 저선량 흉부 CT\n임상정보: 폐암 검진\n비교: 없음\n\n판독소견:\n우하엽에 4 mm 크기의 고형 결절이 있음.\n좌상엽에 수 mm 크기의 석회화 육아종.\n종격동 림프절 비대 없음.\n\n결론:\nLung-RADS 2, 양성 소견.\n\n권고: 12개월 후 연례 검진 지속.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Lung-RADS 2 needs only annual screening, so no rule fires.",
+  "tags": [
+   "lung_rads",
+   "screening",
+   "no_followup"
+  ]
+ },
+ {
+  "id": "Y9K-008",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "CT Abdomen-Pelvis (enhanced)",
+  "date": "2026-05-11",
+  "language": "mixed",
+  "patient": {
+   "age": 72,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Abdomen-pelvis CT, enhanced\n임상정보: 복부 박동성 종괴 촉지\n비교: 없음\n\n판독소견:\nInfrarenal abdominal aorta에 fusiform aneurysm, 최대 직경 5.8 cm. Mural thrombus 동반. Rupture 또는 periaortic hematoma 소견 없음.\nRt. kidney lower pole에 2.1 cm cystic lesion, thin septa 다수 및 minimal thickened septal wall, Bosniak IIF.\n간, 췌장, 비장에 특이 소견 없음.\n\n결론:\n1. Infrarenal AAA, 5.8 cm.\n2. Rt. renal cyst, Bosniak IIF.\n\n권고:\n1. 혈관외과 협진 권함.\n2. 신장 병변은 6개월 후 CT 또는 MRI 추적검사 권함.",
+  "expected_rules": [
+   "R045",
+   "R040"
+  ],
+  "expected_window_days": [
+   0,
+   14
+  ],
+  "expected_review": false,
+  "rationale": "AAA ≥5.5 cm in a man needs vascular surgery referral within 14 days. R045 governs this finding, not R044 surveillance. The Bosniak IIF cyst needs renal CT/MRI at 6 months. The window shown is the earliest deadline (R045).",
+  "tags": [
+   "aaa",
+   "renal",
+   "multiple_findings",
+   "different_followup"
+  ]
+ },
+ {
+  "id": "Y9K-009",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "CT Abdomen (enhanced)",
+  "date": "2026-06-23",
+  "language": "mixed",
+  "patient": {
+   "age": 55,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Abdomen CT, pre/post enhanced\n임상정보: 우상복부 통증, 담석 r/o\n비교: 없음\n\n판독소견:\nGallbladder에 다수의 small stones, cholecystitis 소견 없음.\nRt. adrenal gland에 2.6 x 2.2 cm 크기의 nodule, unenhanced 28 HU로 lipid-poor. Delayed phase 없어 washout 평가 불가.\n좌측 부신 정상.\n\n결론:\n1. Cholelithiasis.\n2. Rt. adrenal indeterminate nodule, 2.6 cm. Lipid-poor adenoma 가능성 있으나 다른 병변 배제할 수 없음.\n\n권고: Adrenal protocol CT 또는 chemical shift MRI 권함.",
+  "expected_rules": [
+   "R037"
+  ],
+  "expected_window_days": [
+   0,
+   90
+  ],
+  "expected_review": false,
+  "rationale": "Indeterminate 2-4 cm adrenal nodule (28 HU, no washout) needs adrenal CT/MRI within 90 days.",
+  "tags": [
+   "adrenal",
+   "incidental",
+   "indeterminate"
+  ]
+ },
+ {
+  "id": "Y9K-010",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "CT Abdomen (non-enhanced)",
+  "date": "2026-08-03",
+  "language": "mixed",
+  "patient": {
+   "age": 62,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Abdomen CT, non-enhanced\n임상정보: Rt. flank pain, urolithiasis r/o\n비교: 없음\n\n판독소견:\nRt. distal ureter에 4 mm stone, mild hydronephrosis 동반.\nLt. adrenal gland에 1.8 cm 크기의 nodule, unenhanced -5 HU, c/w lipid-rich adenoma.\n\n결론:\n1. Rt. distal ureter stone (4 mm) with mild hydronephrosis.\n2. Lt. adrenal adenoma (benign).\n\n권고: 부신 결절에 대해 추적관찰 필요 없음.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Adrenal nodule at ≤10 HU is a benign adenoma and is excluded. The ureteral stone has no rule.",
+  "tags": [
+   "adrenal",
+   "benign_features",
+   "no_followup"
+  ]
+ },
+ {
+  "id": "Y9K-011",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Chest CT (enhanced)",
+  "date": "2026-04-02",
+  "language": "mixed",
+  "patient": {
+   "age": 63,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Chest CT, enhanced (neck base to upper abdomen 포함)\n임상정보: 만성 기침\n비교: 없음\n\n판독소견:\n1) Rt. lower lobe lateral basal segment에 9 mm solid nodule.\n2) Thyroid Lt. lobe에 2.0 cm 크기의 저음영 결절.\n3) Lt. adrenal gland에 1.5 cm nodule, 본 검사는 조영증강 검사로 HU 평가 제한적 (portal phase 30 HU).\n그 외 림프절 비대 없음.\n\n결론:\n1. Rt. lower lobe 9 mm solid nodule.\n2. Thyroid Lt. lobe 2.0 cm nodule.\n3. Lt. adrenal 1.5 cm indeterminate nodule.\n\n권고:\n1. 폐결절은 3개월 후 chest CT 권함.\n2. 갑상선 초음파 권함.\n3. 부신결절은 12개월 후 adrenal protocol CT 권함.",
+  "expected_rules": [
+   "R003",
+   "R037",
+   "R043"
+  ],
+  "expected_window_days": [
+   60,
+   90
+  ],
+  "expected_review": false,
+  "rationale": "Three separate findings. The solid nodule >8 mm in a high-risk patient needs CT at 3 months (R003, which covers the radiologist's CT recommendation). The incidental thyroid nodule ≥1.5 cm on CT needs thyroid US within 90 days (R043). The 1-2 cm indeterminate adrenal nodule needs adrenal imaging at 12 months (R037). The window shown is the earliest deadline (R003).",
+  "tags": [
+   "multiple_findings",
+   "lung_nodule",
+   "thyroid",
+   "adrenal",
+   "different_followup"
+  ]
+ },
+ {
+  "id": "Y9K-012",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "CT Pulmonary Angiography",
+  "date": "2026-02-19",
+  "language": "mixed",
+  "patient": {
+   "age": 48,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Chest CT angiography (PE protocol)\n임상정보: 호흡곤란, D-dimer 상승\n비교: 없음\n\n판독소견:\nRt. and Lt. lower lobe segmental pulmonary artery에 filling defect, acute pulmonary embolism.\nRV/LV ratio 0.9, RV strain 소견 없음.\n폐결절 없음. Pleural effusion 없음.\n\n결론:\nAcute pulmonary embolism, bilateral lower lobe segmental arteries. RV strain 없음.\n\n본 판독 결과는 2026-02-19 14:20 응급의학과 담당의에게 전화로 통보함.",
+  "expected_rules": [
+   "R035"
+  ],
+  "expected_window_days": [
+   0,
+   0.05
+  ],
+  "expected_review": false,
+  "rationale": "Acute PE is a critical finding, but the report itself documents communication to the treating physician, so R035 is closed. No other findings. LABEL CORRECTED after scoring: by the harness convention used since round 8, a documented call opens R035 and closes it at once, so R035 is listed (the writer brief wrongly said to omit it).",
+  "tags": [
+   "critical_finding",
+   "communication_documented",
+   "no_followup"
+  ]
+ },
+ {
+  "id": "Y9K-013",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Brain CT (non-enhanced)",
+  "date": "2026-09-07",
+  "language": "mixed",
+  "patient": {
+   "age": 71,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Brain CT, non-enhanced\n임상정보: 갑작스런 두통, 좌측 위약감\n비교: 없음\n\n판독소견:\nRt. temporoparietal lobe에 약 3.2 x 2.5 cm 크기의 acute intracerebral hemorrhage, perilesional edema 동반. Midline shift 약 4 mm.\nIntraventricular extension 없음.\n\n결론:\n1. Rt. temporoparietal acute ICH with mild midline shift.\n2. Underlying mass 또는 vascular malformation 가능성 배제할 수 없음.\n\n권고: Hematoma 흡수 후 2-4주 후 brain MRI (enhanced) 권함.",
+  "expected_rules": [
+   "R035",
+   "R031"
+  ],
+  "expected_window_days": [
+   0,
+   0
+  ],
+  "expected_review": false,
+  "rationale": "Acute ICH is a critical finding and the report documents no communication, so R035 applies (≤1 hour). The radiologist also recommends brain MRI in 2-4 weeks, so R031 applies (28 days plus grace). The window shown is R035.",
+  "tags": [
+   "critical_finding",
+   "no_communication",
+   "mri_recommendation",
+   "hedging"
+  ]
+ },
+ {
+  "id": "Y9K-014",
+  "set": "r9ko",
+  "report_type": "pathology",
+  "title": "위 내시경 생검 (Stomach, endoscopic biopsy)",
+  "date": "2026-03-16",
+  "language": "mixed",
+  "patient": {
+   "age": 66,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검체: Stomach, antrum, lesser curvature, endoscopic biopsy (3 pieces)\n임상정보: 0-IIa lesion\n\n육안소견: 회백색 조직 3개, 최대 0.3 cm.\n\n현미경소견 및 진단:\nTubular adenoma with high-grade dysplasia (고도이형성).\n침윤성 암종은 본 검체에서 관찰되지 않음. 단, 생검 검체의 한계로 침윤 여부를 완전히 배제할 수 없음.\n\nComment: 내시경적 완전 절제 (ESD) 고려 바람.",
+  "expected_rules": [
+   "R009"
+  ],
+  "expected_window_days": [
+   0,
+   5
+  ],
+  "expected_review": false,
+  "rationale": "High-grade dysplasia is an abnormal pathology result that needs patient notification and referral within 5 days.",
+  "tags": [
+   "pathology",
+   "high_grade_dysplasia"
+  ]
+ },
+ {
+  "id": "Y9K-015",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Chest CT (enhanced)",
+  "date": "2026-01-22",
+  "language": "mixed",
+  "patient": {
+   "age": 52,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Chest CT, enhanced\n임상정보: 기관지확장증 f/u\n비교: 2025-01-18 chest CT\n\n판독소견:\nRt. middle lobe 및 lingula의 cylindrical bronchiectasis, 이전과 비교하여 큰 변화 없음.\nThyroid Rt. lobe에 1.0 cm 크기의 저음영 결절, 석회화 또는 주변 침윤 등 의심 소견 없음.\n폐결절 없음. 림프절 비대 없음.\n\n결론:\n1. Bronchiectasis, stable.\n2. Thyroid Rt. lobe 1.0 cm nodule, 의심 소견 없음. 추가 평가 필요 없음.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Incidental thyroid nodule of 1.0 cm in a patient over 35 with no suspicious features is below the 1.5 cm threshold for R043. The bronchiectasis is stable.",
+  "tags": [
+   "thyroid",
+   "below_threshold",
+   "no_followup"
+  ]
+ },
+ {
+  "id": "Y9K-016",
+  "set": "r9ko",
+  "report_type": "pathology",
+  "title": "대장 용종절제술 (Colon, polypectomy)",
+  "date": "2026-05-06",
+  "language": "ko",
+  "patient": {
+   "age": 49,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검체: 대장, S상결장, 용종절제술\n\n육안소견: 0.5 cm 크기의 용종 1개.\n\n진단:\n과증식성 용종 (Hyperplastic polyp).\n이형성 또는 악성 소견 없음.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "Benign hyperplastic polyp with no dysplasia, so there is no abnormal pathology. The negation 'no dysplasia' has to be scoped correctly.",
+  "tags": [
+   "pathology",
+   "benign",
+   "negation",
+   "no_followup"
+  ]
+ },
+ {
+  "id": "Y9K-017",
+  "set": "r9ko",
+  "report_type": "pathology",
+  "title": "담낭절제술 (Gallbladder, laparoscopic cholecystectomy)",
+  "date": "2026-07-14",
+  "language": "mixed",
+  "patient": {
+   "age": 69,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검체: Gallbladder, laparoscopic cholecystectomy\n임상정보: Symptomatic cholelithiasis\n\n육안소견: 7.5 x 3.0 cm 담낭, 다수의 담석. Fundus 점막 일부 비후.\n\n진단:\n1. Adenocarcinoma, well differentiated, incidental, fundus\n   - Depth of invasion: perimuscular connective tissue (pT2a)\n   - Lymphovascular invasion: not identified\n   - Cystic duct resection margin: POSITIVE (절제연 양성)\n2. Chronic cholecystitis with cholelithiasis.\n\nComment: 담당의에게 결과 확인 및 추가 치료 고려 바람.",
+  "expected_rules": [
+   "R009"
+  ],
+  "expected_window_days": [
+   0,
+   5
+  ],
+  "expected_review": false,
+  "rationale": "Incidental gallbladder carcinoma with a positive margin is an abnormal pathology result that needs notification and referral within 5 days.",
+  "tags": [
+   "pathology",
+   "incidental_carcinoma",
+   "positive_margin"
+  ]
+ },
+ {
+  "id": "Y9K-018",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Mammography + Breast US",
+  "date": "2026-06-01",
+  "language": "mixed",
+  "patient": {
+   "age": 51,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Bilateral mammography, Lt. breast US\n임상정보: 검진\n비교: 2024-05-20 mammography\n\n판독소견:\nBreast composition: heterogeneously dense (C).\nLt. breast UOQ, 2시 방향, nipple로부터 5 cm에 1.3 x 1.0 cm 크기의 irregular shape, indistinct margin의 hypoechoic mass, 이전 검사에서 없던 새로 생긴 병변.\nRt. breast 특이 소견 없음.\n\n결론:\nLt. breast 2시 방향 1.3 cm new irregular mass.\nBI-RADS category 4B.\n\n권고: US-guided core needle biopsy 권함.",
+  "expected_rules": [
+   "R018"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "BI-RADS 4B needs tissue diagnosis within 30 days. R036 does not apply because BI-RADS governs this finding.",
+  "tags": [
+   "birads",
+   "new_lesion",
+   "biopsy"
+  ]
+ },
+ {
+  "id": "Y9K-019",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Screening Mammography",
+  "date": "2026-08-19",
+  "language": "mixed",
+  "patient": {
+   "age": 58,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Bilateral screening mammography\n임상정보: 정기 검진\n비교: 2025-08-11 mammography\n\n판독소견:\nBreast composition: scattered fibroglandular (B).\nBoth breasts에 scattered benign-appearing coarse calcifications, 이전과 변화 없음.\nSuspicious mass, architectural distortion 또는 suspicious microcalcification 없음.\n\n결론:\nBI-RADS category 2, benign.\n\n권고: 1년 후 정기 검진.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "BI-RADS 2 is benign and needs only routine screening. The negative list of suspicious features must not trigger anything.",
+  "tags": [
+   "birads",
+   "benign",
+   "negative_list",
+   "no_followup"
+  ]
+ },
+ {
+  "id": "Y9K-020",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "CT Abdomen (enhanced) — 추가판독",
+  "date": "2026-04-28",
+  "language": "mixed",
+  "patient": {
+   "age": 47,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Abdomen CT, enhanced\n임상정보: 상복부 불편감\n\n[원판독 2026-04-27]\n판독소견: Liver S6에 1.8 cm 크기의 indeterminate enhancing lesion.\n결론: Liver S6 indeterminate lesion.\n권고: Liver MRI (dynamic) 권함.\n\n[추가판독 2026-04-28]\n외부 병원 2023-03 liver MRI 영상과 비교함. Liver S6 병변은 당시 typical hemangioma로 확인되었으며 크기 변화 없음 (3년간 stable).\n결론: Liver S6 hemangioma.\n앞서 권고한 Liver MRI는 필요 없으며, 권고를 철회함. 추적관찰 필요 없음.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "The addendum withdraws the original MRI recommendation because the lesion is a known, stable hemangioma. R031 must not fire from the superseded text.",
+  "tags": [
+   "addendum",
+   "withdrawn_recommendation",
+   "comparison",
+   "no_followup"
+  ]
+ },
+ {
+  "id": "Y9K-021",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Low-dose Chest CT (lung cancer screening) — 정정판독",
+  "date": "2026-05-29",
+  "language": "mixed",
+  "patient": {
+   "age": 63,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: 저선량 흉부 CT (폐암 검진)\n임상정보: 국가폐암검진\n비교: 없음 (baseline)\n\n[원판독 2026-05-27]\nLt. upper lobe에 14 mm part-solid nodule, solid component 7 mm.\n결론: Lung-RADS 4A. 3개월 후 LDCT 권함.\n\n[정정판독 2026-05-29]\nSolid component를 재측정한 결과 9 mm로 확인되어 정정함.\n결론: Lung-RADS category 4B로 정정함.\n권고: 이전의 3개월 후 LDCT 권고를 철회하고, PET/CT 및 조직검사 등 진단적 검사 권함.",
+  "expected_rules": [
+   "R020"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "The corrected report upgrades the nodule to Lung-RADS 4B (part-solid with solid component ≥8 mm at baseline) and withdraws the 3-month LDCT recommendation. Only R020 (diagnostic work-up within 30 days) applies, not R019.",
+  "tags": [
+   "corrected_report",
+   "lung_rads",
+   "4B",
+   "withdrawn_recommendation"
+  ]
+ },
+ {
+  "id": "Y9K-022",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "CT Abdomen-Pelvis (enhanced)",
+  "date": "2026-03-10",
+  "language": "mixed",
+  "patient": {
+   "age": 68,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Abdomen-pelvis CT, enhanced\n임상정보: 육안적 혈뇨\n비교: 없음\n\n판독소견:\nLt. kidney upper pole에 3.1 x 2.8 x 2.9 cm 크기의 heterogeneous enhancing solid mass (unenhanced 35 HU → nephrographic 110 HU). Renal vein invasion 없음.\nInfrarenal abdominal aorta의 최대 직경 3.2 cm, fusiform dilatation.\nRt. kidney에 1.5 cm simple cyst (Bosniak I).\n후복막 림프절 비대 없음.\n\n결론:\n1. Lt. renal enhancing solid mass, renal cell carcinoma 의심됨.\n2. Infrarenal AAA, 3.2 cm.\n3. Rt. renal simple cyst.\n\n권고: 비뇨의학과 진료 권함. AAA는 정기적 초음파 추적관찰 요망.",
+  "expected_rules": [
+   "R039",
+   "R044"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "Enhancing solid renal mass needs urology referral within 30 days (R039; R036 is not separately listed). AAA of 3.0-3.4 cm needs surveillance at 3 years (R044). The Bosniak I simple cyst is excluded. The window shown is the earliest deadline (R039).",
+  "tags": [
+   "renal",
+   "aaa",
+   "multiple_findings",
+   "simple_cyst_excluded"
+  ]
+ },
+ {
+  "id": "Y9K-023",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "CT Abdomen (enhanced)",
+  "date": "2026-07-21",
+  "language": "mixed",
+  "patient": {
+   "age": 64,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Abdomen CT, enhanced\n임상정보: 체중감소 r/o\n비교: 없음\n\n판독소견:\nPancreas body에 2.0 x 1.6 x 1.7 cm 크기의 unilocular cystic lesion. Enhancing mural nodule 또는 solid component 없음. MPD 직경 2 mm로 확장 없음.\nSide-branch IPMN 가능성.\n그 외 간, 비장, 신장에 특이 소견 없음.\n\n결론:\nPancreas body 2.0 cm cystic lesion, side-branch IPMN 가능성. Worrisome feature 없음.\n\n권고: 1년 후 MRI/MRCP 추적검사 권함.",
+  "expected_rules": [
+   "R041"
+  ],
+  "expected_window_days": [
+   0,
+   365
+  ],
+  "expected_review": false,
+  "rationale": "Incidental pancreatic cyst of 1.5-2.5 cm with no worrisome features needs MRI/MRCP at 1 year. The negated mural nodule and duct dilatation must not trigger R042.",
+  "tags": [
+   "pancreatic_cyst",
+   "negation",
+   "3_axis"
+  ]
+ },
+ {
+  "id": "Y9K-024",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Pancreas MRI/MRCP",
+  "date": "2026-08-12",
+  "language": "mixed",
+  "patient": {
+   "age": 71,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Pancreas MRI with MRCP\n임상정보: 췌장 낭종 f/u\n비교: 2025-08-05 MRI\n\n판독소견:\nPancreas head의 multilocular cystic lesion은 이전 2.6 cm에서 현재 3.2 cm로 크기 증가함.\n내부에 새로 생긴 6 mm 크기의 enhancing mural nodule 관찰됨.\nMPD 직경 5 mm.\n\n결론:\nBranch-duct IPMN, 크기 증가 및 enhancing mural nodule. High-risk stigmata, malignant transformation 가능성.\n\n권고: EUS 및 췌담도 외과 협진 요망.",
+  "expected_rules": [
+   "R042"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "An enhancing mural nodule in a pancreatic cyst needs EUS or specialist work-up within 30 days. R042 governs this finding rather than R041 interval imaging.",
+  "tags": [
+   "pancreatic_cyst",
+   "comparison",
+   "growth",
+   "mural_nodule"
+  ]
+ },
+ {
+  "id": "Y9K-025",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Thyroid Ultrasound",
+  "date": "2026-09-15",
+  "language": "mixed",
+  "patient": {
+   "age": 45,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Thyroid US\n임상정보: CT상 갑상선 결절\n비교: 없음\n\n판독소견:\nRt. lobe mid portion에 1.6 x 1.2 x 1.4 cm 크기의 solid hypoechoic nodule, taller-than-wide, microcalcification 동반. K-TIRADS 5.\nLt. lobe에 0.8 cm spongiform nodule, K-TIRADS 2.\n경부 림프절 비대 없음.\n\n결론:\n1. Rt. thyroid nodule, K-TIRADS 5, 악성 가능성 높음.\n2. Lt. thyroid nodule, K-TIRADS 2, benign. 추적관찰 필요 없음.\n\n권고: Rt. thyroid nodule에 대해 US-guided FNA 권함.",
+  "expected_rules": [
+   "R036"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": false,
+  "rationale": "On thyroid US, TI-RADS applies rather than R043. The K-TIRADS 5 nodule ≥1 cm with FNA recommended needs tissue sampling within 30 days. The benign K-TIRADS 2 nodule needs nothing.",
+  "tags": [
+   "thyroid",
+   "tirads",
+   "fna",
+   "multiple_findings"
+  ]
+ },
+ {
+  "id": "Y9K-026",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Chest CT (trauma)",
+  "date": "2026-02-02",
+  "language": "mixed",
+  "patient": {
+   "age": 29,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Chest CT, enhanced (trauma protocol)\n임상정보: 교통사고, 흉부 둔상\n비교: 없음\n\n판독소견:\nLt. 5th-6th rib fracture, nondisplaced. Pneumothorax 없음. Hemothorax 없음.\nRt. upper lobe에 7 mm solid nodule, incidental.\n종격동 혈종 없음.\n\n결론:\n1. Lt. 5th-6th rib fractures.\n2. Rt. upper lobe 7 mm solid nodule, incidental. 임상적 상관관계 요망.",
+  "expected_rules": [
+   "R003"
+  ],
+  "expected_window_days": null,
+  "expected_review": true,
+  "rationale": "Fleischner does not apply to patients under 35, so R003 is opened and flagged for human review. Pneumothorax is negated, so R035 does not apply.",
+  "tags": [
+   "lung_nodule",
+   "fleischner_exclusion",
+   "age_under_35",
+   "negation",
+   "human_review"
+  ]
+ },
+ {
+  "id": "Y9K-027",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Chest CT (enhanced)",
+  "date": "2026-06-30",
+  "language": "mixed",
+  "patient": {
+   "age": 56,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": true,
+   "immunocompromised": false
+  },
+  "text": "검사명: Chest CT, enhanced\n임상정보: Lt. breast cancer s/p mastectomy (2024), 정기 추적\n비교: 2025-12-22 chest CT\n\n판독소견:\nRt. middle lobe에 새로 생긴 7 mm solid nodule.\nLt. adrenal gland에 새로 생긴 1.4 cm nodule, portal phase 45 HU.\n수술 부위 국소 재발 소견 없음. 림프절 비대 없음.\n\n결론:\n1. Rt. middle lobe new 7 mm nodule, 전이 가능성 배제할 수 없음.\n2. Lt. adrenal new 1.4 cm nodule, 전이 가능성.\n\n권고: 폐결절은 3개월 후 chest CT 추적 권함. 부신 병변은 PET/CT 등 추가 평가 바람.",
+  "expected_rules": [
+   "R003",
+   "R038"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "expected_review": true,
+  "rationale": "Fleischner does not apply in known cancer, so R003 is opened for the lung nodule with review=true (and replaces the radiologist's R030 CT recommendation for the same finding). An adrenal nodule ≥1 cm with known cancer needs specialist work-up within 30 days (R038), not R037. The window shown is R038.",
+  "tags": [
+   "known_malignancy",
+   "fleischner_exclusion",
+   "adrenal",
+   "new_lesion",
+   "human_review",
+   "multiple_findings"
+  ]
+ },
+ {
+  "id": "Y9K-028",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Chest CT (non-enhanced)",
+  "date": "2026-09-24",
+  "language": "ko",
+  "patient": {
+   "age": 60,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: 흉부 CT, 비조영\n임상정보: 건강검진\n비교: 없음\n\n판독소견:\n양측 폐에 결절, 종괴 또는 경화 소견 없음.\n종격동 및 폐문부 림프절 비대 없음.\n기흉 또는 흉수 없음.\n촬영 범위 내 갑상선, 부신에 특이 소견 없음.\n흉부 대동맥 직경 정상, 대동맥류 없음.\n\n결론:\n특이 소견 없음.\n\n권고: 추적관찰 필요 없음.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "A purely negative list. The negated nodule, pneumothorax, thyroid, adrenal and aneurysm mentions must not trigger anything.",
+  "tags": [
+   "negative_list",
+   "negation",
+   "no_followup"
+  ]
+ },
+ {
+  "id": "Y9K-029",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "CT Abdomen-Pelvis (enhanced)",
+  "date": "2026-10-05",
+  "language": "mixed",
+  "patient": {
+   "age": 54,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Abdomen-pelvis CT, enhanced\n임상정보: 하복부 통증\n비교: 없음\n\n판독소견:\nAcute appendicitis 소견 없음. Bowel obstruction 없음. Free air 없음.\nRt. kidney에 1 cm 미만 크기의 저음영 병변, too small to characterize. 신장 낭종일 가능성 높음.\nLung base에 수 mm 크기의 calcified granuloma.\nLiver에 수 mm 크기의 small cysts.\n\n결론:\n1. 복통의 원인이 될 만한 급성 소견 없음.\n2. Rt. kidney 1 cm 미만 저음영 병변, too small to characterize. 임상적 의미 없을 것으로 판단됨.\n\n권고: 추적관찰 필요 없음.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "expected_review": false,
+  "rationale": "The sub-centimetre renal lesion is too small to characterise and is excluded from R040. Calcified granulomas are benign. Free air is negated, so R035 does not apply.",
+  "tags": [
+   "renal",
+   "too_small_to_characterize",
+   "hedging",
+   "negation",
+   "no_followup",
+   "subcentimeter"
+  ]
+ },
+ {
+  "id": "Y9K-030",
+  "set": "r9ko",
+  "report_type": "radiology",
+  "title": "Abdomen Ultrasound",
+  "date": "2026-08-26",
+  "language": "mixed",
+  "patient": {
+   "age": 50,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "검사명: Abdomen US\n임상정보: 간기능 이상\n비교: 없음\n\n판독소견:\nLiver parenchymal echogenicity 증가, moderate fatty liver.\nLiver S7에 1.2 cm 크기의 hypoechoic nodule, focal fatty sparing 가능성 있으나 다른 병변 배제할 수 없음.\nGallbladder, CBD, pancreas, spleen, both kidneys 특이 소견 없음.\n\n결론:\n1. Moderate fatty liver.\n2. Liver S7 1.2 cm hypoechoic nodule, focal fatty sparing 가능성. 임상적 상관관계 요망.\n\n권고: 6개월 후 간 초음파 추적검사 권함.",
+  "expected_rules": [
+   "R032"
+  ],
+  "expected_window_days": [
+   150,
+   212
+  ],
+  "expected_review": false,
+  "rationale": "The radiologist recommends a liver US in 6 months (about 182 days), plus 25% grace capped at 30 days, giving a deadline of about 212 days. No guideline rule covers this liver finding.",
+  "tags": [
+   "us_recommendation",
+   "hedging",
+   "liver",
+   "stated_interval"
+  ]
  }
 ]
