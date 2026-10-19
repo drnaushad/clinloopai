@@ -549,8 +549,25 @@ the demo server's answers that `scripts/build_static_demo.py` builds from the sy
 python scripts/build_static_demo.py
 ```
 
-`js/demo.js` answers the pages' requests from those files when no server is present. Requests that
-would change something get a clear "read-only demo" answer.
+`js/demo.js` answers the pages' requests from those files when no server is present.
+
+**Practice mode (on by default on the website).** Every step of the clinical workflow works on the synthetic
+patients:
+- acknowledge, assign, defer (with a reason) and close (with evidence) a loop;
+- draft a patient message and approve or reject it (nothing is ever sent);
+- record a patient's messaging opt-out;
+- sign off a rule;
+- judge the model second reader's suggestions (three practice examples).
+
+The same rules as the server apply. For example, an urgent real miss needs a safety referral, a loop
+cannot be acknowledged twice, and closing needs evidence. Each action appears in the loop's audit
+trail.
+
+Changes are kept **only in this browser** (local storage) until "Reset practice" in the banner. They
+are never sent anywhere. "View read-only" turns practice off.
+
+Data import, imaging upload, pilot sampling and approving the critical-finding list need a real server
+and say so.
 
 **With your own server (read-only, live engine):**
 
@@ -770,6 +787,7 @@ results are identical on every run.
 | Silent-run pilot (protocol Stage 2) | **Implemented**: `CLINLOOP_SILENT_RUN=1` keeps everything away from clinical care; weekly reproducible samples of overdue loops; blinded dual review of the protocol's three questions; an urgent open loop cannot be filed without a safety referral; PPV, true open loops per 1,000 patients per month beyond usual care, alert burden, delay, feed uptime and agreement against the go / no-go criteria; de-identified export. See [`docs/PILOT_RUNBOOK.md`](docs/PILOT_RUNBOOK.md) |
 | Explainability and outcome tracking (Phase 6) | **Implemented**: every loop states its basis in plain words (finding with value or quoted sentence, rule, expected follow-up and deadline, how the deadline was worked out, what the record holds, guideline), shown first in the worklist and on EHR cards; technical detail folded away. Every loop is followed to its end from the audit log: acted on, time to first action and to closure, closed late, dismissed with reasons, and overdue loops nobody acted on (Quality page, `GET /api/v1/quality/outcomes`). Evidence ladder in `docs/regulatory/CLINICAL_EVALUATION_PLAN.md` |
 | Korean hospital readiness (Phase 7) | **Implemented**: every loop's basis also in Korean (`basis_ko`), shown when the worklist is in Korean; 42 synthetic Korean and mixed-language reports in `data/radiology_validation_synthetic_ko.csv` (developer-labelled; tests the reader, does not measure accuracy); an aneurysm with no recorded sex now uses the lower repair threshold. Clinician review in `docs/CLINICAL_REVIEW.md` §3b |
+| Practice mode on the public demo | **Implemented**: the website at clinloopai.app lets anyone try the whole clinical workflow on synthetic patients (worklist actions, patient-message approval, opt-out, rule sign-off, second-reader verdicts) with the server's rules, kept only in their browser until reset. Nothing is sent anywhere |
 | Clinical edition by default | **Implemented**: `CLINLOOP_PROFILE` defaults to `core` (research features locked off; R022/R035 as the next-day documentation audit); research must be chosen on purpose. All seven pages checked on phone (360/390 px), tablet, laptop and wide screens in light and dark: no sideways scrolling, no text under 11 px, touch targets ≥ 24 px, one navigation and one sign-in line on every page, theme choice kept across pages. The public demo no longer shows integrations as "connected" |
 | Language model in the clinical edition, silent (step 1) | **Implemented**: the on-premise second reader may run in the clinical edition in silent mode only. Suggestions go to the quality team's log (Quality page), never to the record, worklist or loops. Clinicians judge each one (real miss / already handled / not needed / wrong quote); an urgent real miss needs a safety referral. Precision per category with its 95% interval feeds the gate for ever showing suggestions to clinicians (`docs/regulatory/CLINICAL_EVALUATION_PLAN.md` §4). Hazard H-19, SR-24. Needs clinician review |
 | Report reading, blind round 8 | **Measured and improved**: 240 new blind reports. First pass: 87.5% (Korean), 82.5% (hard English). After the fixes, a confirmation set written afterwards scored **91.2%** clinically equivalent (Korean 87.5%, English 95.0%), specificity 93.1%. Fixed: 6 missed-follow-up patterns, 1 missed critical-finding wording, 1 pre-existing missed anastomotic leak, and 10 false-alarm patterns. All 690 cases are regression tests. Synthetic reports: software verification, not clinical validation (`docs/ACCURACY_EVALUATION.md`) |
