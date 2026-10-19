@@ -90,7 +90,7 @@ class TestCDSHooks(unittest.TestCase):
         card = cards[0]
         self.assertLessEqual(len(card["summary"]), 140)
         self.assertIn(card["indicator"], ("info", "warning", "critical"))
-        self.assertTrue(card["links"][0]["url"].startswith("https://clinloop.hospital.example/worklist.html"))
+        self.assertTrue(card["links"][0]["url"].startswith("https://clinloop.hospital.example/worklist#loop="))
         self.assertIn("not a diagnosis", card["detail"])
 
     def test_untrusted_or_invalid_tokens_are_refused(self):

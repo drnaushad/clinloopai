@@ -104,8 +104,9 @@ class TestEveryDevice(unittest.TestCase):
                 self.assertRegex(html, r'src="js/appnav\.js(\?v=[0-9a-z_]+)?"')
         with open(os.path.join(ROOT, "js", "appnav.js"), encoding="utf-8") as f:
             nav = f.read()
-        for page in PAGES:
-            self.assertIn(f"'{page}'", nav)
+        for page in PAGES:                      # every page in the menu, by its clean address
+            self.assertIn(f"page: '{page[:-5]}'", nav)
+        self.assertIn("history.replaceState", nav)   # an old .html address is tidied to the clean form
         with open(os.path.join(ROOT, "index.html"), encoding="utf-8") as f:
             cockpit = f.read()
         self.assertNotIn("run.app", cockpit)                          # no link to an outside, unvetted app

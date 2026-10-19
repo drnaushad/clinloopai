@@ -605,6 +605,17 @@ def fhir_client_jwks():
 # Only a dedicated directory holding the UI files is served (never the
 # project root, which holds source code and, in development, the database).
 if _WEB_ROOT and os.path.isdir(_WEB_ROOT):
+    from fastapi.responses import FileResponse
+
+    def _page_route(name: str):
+        def page():
+            return FileResponse(os.path.join(_WEB_ROOT, f"{name}.html"), media_type="text/html")
+        return page
+
+    # Clean addresses ("/worklist"); "/worklist.html" keeps working through the static mount below
+    for _page in ("worklist", "patient", "quality", "governance", "imaging", "pilot"):
+        if os.path.isfile(os.path.join(_WEB_ROOT, f"{_page}.html")):
+            app.add_api_route(f"/{_page}", _page_route(_page), methods=["GET"], include_in_schema=False)
     app.mount("/", StaticFiles(directory=_WEB_ROOT, html=True), name="web")
 
 

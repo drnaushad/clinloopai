@@ -161,7 +161,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
 </style>
 <script src="config.js"></script>
 <script src="js/demo.js?v=20261022"></script>
-<script src="js/appnav.js?v=20261021"></script>
+<script src="js/appnav.js?v=20261022"></script>
 <link rel="stylesheet" href="css/responsive.css?v=20261021">
 </head>
 <body>
@@ -169,7 +169,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
   <header>
     <nav class="app-nav"></nav>
     <div>
-      <h1><a class="brand-home" href="index.html" title="ClinLoop home"><svg class="brand-mark" viewBox="0 0 48 48" role="img" aria-label="ClinLoop logo: rod of Asclepius inside a closing loop"><path d="M37.6 10.4A19 19 0 1 0 43 24" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/><path d="M44.2 8.6 43.9 18.9 34 16.2Z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M24 8.6v30.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><g class="bm-serpent"><path d="M27 14.2C21.2 13.8 19 17.4 24 18.6 29 19.8 29 22.8 24 23.8 19 24.8 19 28 24 29 28 29.8 27.8 32.6 25 34.2" fill="none" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="28.6" cy="13.4" rx="3" ry="2.1" transform="rotate(-18 28.6 13.4)" stroke="none"/></g></svg></a>ClinLoop <span data-i18n="title"></span></h1>
+      <h1><a class="brand-home" href="./" title="ClinLoop home"><svg class="brand-mark" viewBox="0 0 48 48" role="img" aria-label="ClinLoop logo: rod of Asclepius inside a closing loop"><path d="M37.6 10.4A19 19 0 1 0 43 24" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/><path d="M44.2 8.6 43.9 18.9 34 16.2Z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M24 8.6v30.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><g class="bm-serpent"><path d="M27 14.2C21.2 13.8 19 17.4 24 18.6 29 19.8 29 22.8 24 23.8 19 24.8 19 28 24 29 28 29.8 27.8 32.6 25 34.2" fill="none" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="28.6" cy="13.4" rx="3" ry="2.1" transform="rotate(-18 28.6 13.4)" stroke="none"/></g></svg></a>ClinLoop <span data-i18n="title"></span></h1>
       <p class="sub" data-i18n="subtitle"></p>
     </div>
     <nav>
@@ -426,7 +426,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
       const h = g.hyperedges.find((x) => x.id === state.sel.slice(2));
       if (!h) return;
       const tr = nodeById[h.trigger];
-      const wl = h.worklist ? `${esc(h.worklist.state)} · ${esc(h.worklist.owner)} · <a href="worklist.html">${esc(t().openWorklist)}</a>` : esc(t().notInWorklist);
+      const wl = h.worklist ? `${esc(h.worklist.state)} · ${esc(h.worklist.owner)} · <a href="worklist">${esc(t().openWorklist)}</a>` : esc(t().notInWorklist);
       html = `<h2 style="margin:0 0 6px;font:700 1.05rem var(--font-head);">${esc(h.rule_id)} · ${esc(h.rule_name)}</h2>
         <div class="meta"><span><span class="chip ${h.status === 'open' ? 'critical' : h.status === 'delayed' ? 'moderate' : 'ok'}">${esc(statusWord(h.status))}</span>${h.overdue ? ` <span class="chip overdue">${esc(t().overdue)}</span>` : ''}</span>
           <span>${esc(t().detailDeadline)} <b>${esc(day(h.deadline))}</b></span><span>${esc(h.severity)}</span></div>

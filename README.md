@@ -5,9 +5,9 @@
 > 설명가능 AI 기반 미완결 진료루프 탐지·종결 지원 플랫폼
 > **Try it:** [https://clinloopai.app](https://clinloopai.app) works on any phone, tablet or computer, with
 > no sign-up and no install.
-> - **The whole app:** [worklist](https://clinloopai.app/worklist.html), [patient graph](https://clinloopai.app/patient.html),
->   [quality](https://clinloopai.app/quality.html), [rule sign-off](https://clinloopai.app/governance.html) and
->   [imaging](https://clinloopai.app/imaging.html).
+> - **The whole app:** [worklist](https://clinloopai.app/worklist), [patient graph](https://clinloopai.app/patient),
+>   [quality](https://clinloopai.app/quality), [rule sign-off](https://clinloopai.app/governance) and
+>   [imaging](https://clinloopai.app/imaging).
 > - **The data:** synthetic patients only, read-only.
 > - **No server:** the website serves a pre-computed snapshot from a global CDN, so any number of people can
 >   use it at once. To act on loops (acknowledge, close, upload), run your own server
@@ -217,7 +217,7 @@ key, pulls the published images, and starts:
 - BioMCP;
 - a local LLM (Ollama with EXAONE 3.5).
 
-When it finishes, open **http://localhost:8124/worklist.html** and sign in with the printed admin
+When it finishes, open **http://localhost:8124/worklist** and sign in with the printed admin
 token. Re-running the command updates to the latest image and keeps the existing `.env`.
 
 | Option | Example |
@@ -524,7 +524,7 @@ COMPOSE_PROFILES=llm docker compose up -d     # API + BioMCP + Ollama + model do
 docker compose up -d                          # without the bundled LLM
 ```
 
-The container serves the worklist and cockpit itself, at `http://localhost:8124/worklist.html`
+The container serves the worklist and cockpit itself, at `http://localhost:8124/worklist`
 and `http://localhost:8124/`. It is published on `127.0.0.1` only; BioMCP and Ollama stay inside
 the compose network. For an NVIDIA GPU, uncomment the `deploy` block of the `ollama` service.
 
@@ -585,7 +585,7 @@ One command:
 
 ```bash
 docker run -p 8124:8124 -e CLINLOOP_DEMO=1 ghcr.io/drnaushad/clinloopai:latest
-# open http://localhost:8124/worklist.html
+# open http://localhost:8124/worklist
 ```
 
 One click: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/drnaushad/clinloopai)
