@@ -195,3 +195,18 @@ class TestManyUsers(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSameVersionOnEveryDevice(unittest.TestCase):
+    def test_pages_reload_when_a_newer_version_is_live(self):
+        """version.json and the page script carry the same release; pages check it uncached, so a phone
+        holding yesterday's copy reloads instead of showing an older app."""
+        import json
+        import re
+        live = json.load(open(os.path.join(ROOT, "version.json"), encoding="utf-8"))["version"]
+        nav = open(os.path.join(ROOT, "js", "appnav.js"), encoding="utf-8").read()
+        self.assertEqual(re.search(r"APP_VERSION = '([^']+)'", nav).group(1), live)
+        self.assertIn("cache: 'no-store'", nav)
+        for page in PAGES:
+            html = open(os.path.join(ROOT, page), encoding="utf-8").read()
+            self.assertIn('http-equiv="Cache-Control" content="no-cache"', html, page)

@@ -8,6 +8,23 @@
  */
 (function () {
   'use strict';
+  // Every device shows the same version: a phone may keep yesterday's page in its cache. Each page
+  // asks for version.json (never cached); if the live version is newer than this script, the page
+  // reloads once, fetching fresh copies. Bump APP_VERSION and version.json together on each release.
+  var APP_VERSION = '2026-10-19.1';
+  (function checkVersion() {
+    if (!window.fetch || location.protocol === 'file:') return;
+    fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (v) {
+        if (!v || !v.version || v.version === APP_VERSION) return;
+        var key = 'clinloop_reloaded_for';
+        try { if (sessionStorage.getItem(key) === v.version) return; sessionStorage.setItem(key, v.version); }
+        catch (e) { return; }                         // cannot remember the reload: never risk a loop
+        location.reload();
+      })
+      .catch(function () { /* offline: keep the page as it is */ });
+  })();
   var PAGES = [
     { page: 'index', href: './', en: 'Cockpit', ko: '종합 화면' },
     { page: 'worklist', href: 'worklist', en: 'Worklist', ko: '업무 목록' },
