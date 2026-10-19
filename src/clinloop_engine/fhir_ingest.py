@@ -429,6 +429,14 @@ _MALIGNANT = re.compile(r"(adenocarcinoma|carcinoma|malignan\w*|high-grade dyspl
                         re.I)
 
 
+_INDETERMINATE_MALIGNANCY = re.compile(
+    r"((?:malignan\w*|carcinoma|malignant cells?|neoplasm)\s+(?:cannot|can ?not|could not)\s+be\s+(?:excluded|ruled out)"
+    r"|cannot (?:exclude|rule out) (?:a )?(?:malignan\w*|carcinoma|neoplasm)"
+    r"|suspicious for (?:malignan\w*|carcinoma|neoplasm|adenocarcinoma|lymphoma)"
+    r"|atypical cells? (?:present|identified|seen)"
+    r"|악성\s*(?:을|를|의\s*가능성을?)?\s*배제(?:할\s*)?\s*수\s*없|악성\s*(?:이|으로)?\s*의심)", re.I)
+
+
 def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
     ts = _first(r.get("effectiveDateTime"), (r.get("effectivePeriod") or {}).get("end"), r.get("issued"))
     from .ecg import is_ecg, map_ecg
@@ -477,7 +485,14 @@ def _map_diagnostic_report(r: Dict) -> List[Tuple[str, str, Dict]]:
         # Read the diagnosis, not the clinical history ("r/o melanoma vs SK" is the question, not the answer)
         dx = re.search(r"(?:^|\n)\s*(?:final\s+)?(?:pathologic(?:al)?\s+)?diagnos[ie]s\s*[:：]|(?:^|\n)\s*(?:병리\s*)?진단\s*[:：]",
                        conclusion, re.I)
-        m = _first_affirmed(_MALIGNANT, conclusion[dx.end():] if dx else conclusion)
+        diagnosis = conclusion[dx.end():] if dx else conclusion
+        m = _first_affirmed(_MALIGNANT, diagnosis)
+        if not m:
+            # "Atypical cells present; malignancy cannot be excluded", "suspicious for carcinoma": not a
+            # diagnosis of cancer, but not a benign result either. It needs the same notification and work-up
+            m = _INDETERMINATE_MALIGNANCY.search(diagnosis)
+            if m and re.search(r"\b(?:no|not|negative)\b[^.;\n]{0,15}$", diagnosis[max(0, m.start() - 20):m.start()], re.I):
+                m = None
         if m:
             details.update(condition="abnormal", evidence_span=_span(conclusion, m))
             mapping.append(f"'{m.group(1)}'→abnormal")

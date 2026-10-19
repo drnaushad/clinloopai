@@ -287,6 +287,91 @@ class TestConfirmationRoundFixes(unittest.TestCase):
                                        "enhancing nodule. Bosniak IIF. RECOMMENDATION: Follow-up CT in 6 months."))
 
 
+class TestRound8BlindFindings(unittest.TestCase):
+    """Defects found by the round-8 blind sets (Korean hospital style and hard English reports, October 2026);
+    each first-pass miss or false alarm, reduced to the wording that caused it."""
+
+    def test_pulmonary_thromboembolism_and_pte_are_critical(self):          # missed critical finding
+        self.assertIn("pulmonary_embolism", critical("1. Acute bilateral PTE with RV strain."))
+        self.assertIn("pulmonary_embolism", critical("다발성 filling defects — acute pulmonary thromboembolism."))
+        self.assertIn("pulmonary_embolism", critical("양측 폐동맥 혈전색전증."))
+        self.assertIn("explicit_critical", critical("1. Acute PE with RV strain.  [CRITICAL]"))
+        self.assertNotIn("pulmonary_embolism", critical("No pulmonary thromboembolism."))
+        self.assertNotIn("pulmonary_embolism", critical("Chronic pulmonary thromboembolism with mosaic perfusion."))
+
+    def test_bi_rads_0_recall_is_tracked(self):                               # missed follow-up
+        got = rules("New focal asymmetry, left upper outer quadrant. Recommend recall for additional imaging evaluation "
+                    "with diagnostic mammography and targeted left breast ultrasound within 30 days.\n\n"
+                    "BI-RADS CATEGORY 0: Incomplete - Need additional imaging evaluation.",
+                    title="Screening mammogram bilateral", sex="female")
+        self.assertEqual(got, {"R032"})
+        self.assertEqual(rules("BI-RADS 0. Additional views recommended.", title="Screening mammogram", sex="female"),
+                         {"R033"})                  # the diagnostic mammogram (breast X-ray) closes it
+        self.assertEqual(rules("BI-RADS 1: negative.", title="Screening mammogram", sex="female"), set())
+
+    def test_atypical_cytology_that_cannot_exclude_malignancy_is_abnormal(self):   # missed follow-up
+        path = dict(title="Cytopathology", category="PAT")
+        self.assertEqual(rules("DIAGNOSIS:\nLymph node, station 7, EBUS-TBNA:\nATYPICAL CELLS PRESENT; "
+                               "malignancy cannot be excluded.", **path), {"R009"})
+        self.assertEqual(rules("DIAGNOSIS: Lung, FNA: suspicious for adenocarcinoma.", **path), {"R009"})
+        self.assertEqual(rules("진단: 악성을 배제할 수 없음 (atypical cells).", **path), {"R009"})
+        self.assertEqual(rules("DIAGNOSIS: Lymph node, FNA: negative for malignancy. Reactive lymphocytes.", **path), set())
+        self.assertEqual(rules("DIAGNOSIS: Not suspicious for malignancy.", **path), set())
+
+    def test_thyroid_or_adrenal_nodule_after_rt_lt_is_not_a_lung_nodule(self):
+        chest = dict(title="Chest CT, enhanced", smoking="77176002")
+        self.assertNotIn("R003", rules("판독소견:\n갑상선 Rt. lobe에 1.2 cm low-density nodule 있음. 석회화 없음.", **chest))
+        self.assertNotIn("R003", rules("판독소견:\nLt. adrenal에 1.6 cm 크기의 nodule (portal phase 38 HU).", **chest))
+        # A lung nodule after a negated organ on the same line is still a lung nodule (no missed nodule)
+        self.assertIn("R003", rules("판독소견:\n부신 결절 없음. RLL에 12 mm solid nodule.", **chest))
+
+    def test_guideline_thresholds_are_not_measurements(self):
+        self.assertEqual(rules("RML 4 mm solid nodule. 권고: Fleischner 기준 저위험군 6 mm 미만 결절로 추적 검사 불필요.",
+                               title="Chest CT", smoking="266919005"), set())
+        self.assertNotIn("R036", rules("Left thyroid TR3 nodule 1.6 cm: below the 2.5 cm FNA threshold; meets the 1.5 cm "
+                                       "threshold for follow-up. Recommend follow-up ultrasound in 1 year.",
+                                       title="US thyroid", sex="female"))
+        self.assertEqual(rules("0.8 cm right TR4 nodule: below thresholds for FNA (1.5 cm) and follow-up (1.0 cm); no "
+                               "further imaging is recommended.", title="Ultrasound thyroid"), set())
+
+    def test_one_nodule_in_findings_and_impression_is_not_multiple(self):
+        text = ("FINDINGS:\nLungs: 4 mm pure ground-glass nodule in the left upper lobe. No solid nodule.\n\nIMPRESSION:\n"
+                "4 mm ground-glass nodule left upper lobe: no routine follow-up is required (Fleischner 2017).")
+        self.assertEqual(rules(text, title="CT chest without contrast", smoking="8517006"), set())
+        stable = ("FINDINGS:\nThe 6 mm solid nodule in the left upper lobe is unchanged since 2024-02-22. No new pulmonary nodules."
+                  "\n\nIMPRESSION:\nLeft upper lobe 6 mm solid nodule stable over 24 months, consistent with a benign nodule. "
+                  "No further follow-up imaging is recommended.")
+        self.assertEqual(rules(stable, title="CT chest", smoking="8517006"), set())
+
+    def test_radiologist_states_no_further_evaluation(self):
+        self.assertNotIn("R043", rules("판독소견:\n갑상선 좌엽에 2.0 cm 크기의 저음영 결절 있음.\n결론:\n좌측 갑상선 결절 — 이미 시행된 "
+                                       "초음파에서 양성(TR2) 확인됨. 추가 검사 불필요.", title="Chest CT", sex="female"))
+        self.assertNotIn("R037", rules("판독소견:\nLt. adrenal gland의 1.3 cm 크기 nodule, portal phase 28 HU.\n결론:\n1. Lt. adrenal "
+                                       "1.3 cm nodule, 1년 이상 안정적 — benign으로 판단, 추가 영상 추적 불필요."))
+        self.assertNotIn("R036", rules("Rt. 2.3 cm spongiform nodule — TR2, K-TIRADS 2.\nFNA 및 추적 검사 불필요.",
+                                       title="Thyroid sonography"))
+        # Without that statement the guideline still applies
+        self.assertIn("R037", rules("Lt. adrenal 1.6 cm indeterminate nodule, 33 HU."))
+
+    def test_corrected_report_withdraws_advice_and_category(self):
+        self.assertNotIn("R019", rules("RLL 10 mm solid nodule — Lung-RADS 4A.\n권고: 3개월 후 LDCT.\n\n[추가판독 2026-04-16]\n"
+                                       "외부 LDCT와 비교, 2년 이상 안정적.\n→ Lung-RADS 2로 정정함. 3개월 추적 권고는 철회함.",
+                                       title="LDCT lung cancer screening"))
+        self.assertNotIn("R031", rules("Simple left renal cyst (Bosniak I). No follow-up required.\n\nCorrection note: the original "
+                                       "report described the lesion as \"indeterminate, recommend renal MRI\". The MRI recommendation "
+                                       "is withdrawn."))
+
+    def test_prior_size_in_comparison_is_not_a_second_aneurysm(self):
+        got = rules("비교: 2025-10-02 US (AAA 4.6 cm)\n판독소견:\nInfrarenal AAA, 최대 직경 5.2 cm (이전 US 4.6 cm).",
+                    sex="female")
+        self.assertEqual(got, {"R045"})
+
+    def test_called_to_and_acknowledged_by_is_a_documented_call(self):
+        from src.clinloop_engine.radiology import _communication_done
+        self.assertIsNotNone(_communication_done("CRITICAL RESULT: Called to and acknowledged by Dr. P. Okafor at 22:47."))
+        self.assertIsNone(_communication_done("Please ensure this is called to the referring doctor."))
+
+
 class TestBlindCaseSets(unittest.TestCase):
     """The 270 blind-written cases (docs/ACCURACY_EVALUATION.md) stay above a floor: a change that loses
     findings or adds false alerts fails CI."""

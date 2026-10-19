@@ -4,10 +4,10 @@
   "findings": [
     {"id": "explicit_critical", "category": 1, "window_minutes": 60,
      "label": {"en": "Report states a critical result", "ko": "판독문에 위급 결과 명시"},
-     "patterns": ["critical (?:result|finding)", "위급\\s*(?:소견|결과)"]},
+     "patterns": ["critical (?:result|finding)", "\\[\\s*critical\\s*\\]", "위급\\s*(?:소견|결과)"]},
     {"id": "pulmonary_embolism", "category": 1, "window_minutes": 60,
      "label": {"en": "Acute pulmonary embolism", "ko": "급성 폐색전증"},
-     "patterns": ["pulmonary (?:embolism|emboli|embolus)", "saddle embol\\w*", "폐색전증"]},
+     "patterns": ["pulmonary (?:embolism|emboli|embolus)", "(?<!chronic )pulmonary thromboembol(?:ism|i)", "acute (?:\\w+\\s+){0,2}?thromboembol(?:ism|i)", "\\bPTE\\b", "saddle embol\\w*", "폐색전증", "폐동맥\\s*(?:혈전\\s*)?색전", "폐\\s*혈전\\s*색전"]},
     {"id": "aortic_dissection", "category": 1, "window_minutes": 60,
      "label": {"en": "Aortic dissection or intramural haematoma", "ko": "대동맥 박리"},
      "patterns": ["aortic dissection", "intramural h(?:a)?ematoma", "대동맥\\s*박리"]},

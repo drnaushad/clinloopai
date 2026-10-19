@@ -149,20 +149,25 @@ def _size_mm(a: str, b: Optional[str], unit: str, longest: bool = False) -> floa
 _SIZE_ALL_AXES = re.compile(r"(\d+(?:\.\d+)?)((?:\s*[x×]\s*\d+(?:\.\d+)?){0,2})\s*-?\s*(mm|cm|밀리미터|밀리|센티미터|센티)(?![a-zA-Z])", re.I)
 
 
-_THRESHOLD_BEFORE = re.compile(r"(?:<|≤|=<|less than|smaller than|under|below|threshold|cut-?off|미만|이하|기준)"
-                               r"\s*(?:of\s+)?\(?\s*$", re.I)
+_THRESHOLD_BEFORE = re.compile(r"(?:<|≤|=<|less than|smaller than|under|below|threshold\w*(?:\s+for\s+[\w/-]+)?|cut-?off|"
+                               r"미만|이하|기준)\s*(?:of\s+)?\(?\s*$", re.I)
+# "the 2.5 cm FNA threshold", "6 mm 미만 결절은" (under 6 mm): the cut-off word follows the size
+_THRESHOLD_AFTER = re.compile(r"\s*(?:(?:FNA|biopsy|follow-?up|size)\s+)?(?:threshold|cut-?off)\b"
+                              r"|\s*(?:미만|이하|초과)|\s*이상(?:의|인|이면|은|에서)", re.I)
 
 
-def _is_threshold(text: str, start: int) -> bool:
-    """'(<6 mm)', 'below FNA threshold (1.5 cm)': a cut-off quoted from a guideline, not a measurement."""
-    return bool(_THRESHOLD_BEFORE.search(text[max(0, start - 30):start]))
+def _is_threshold(text: str, start: int, end: Optional[int] = None) -> bool:
+    """'(<6 mm)', 'below FNA threshold (1.5 cm)', 'the 2.5 cm FNA threshold', '6 mm 미만': a cut-off quoted
+    from a guideline, not a measurement."""
+    return bool(_THRESHOLD_BEFORE.search(text[max(0, start - 30):start])
+                or (end is not None and _THRESHOLD_AFTER.match(text[end:end + 30])))
 
 
 def _sizes(text: str) -> List[float]:
     """Longest axis of every size in the text, in mm (guideline thresholds excluded)."""
     out = []
     for m in _SIZE_ALL_AXES.finditer(text):
-        if _is_threshold(text, m.start()):
+        if _is_threshold(text, m.start(), m.end()):
             continue
         dims = [float(m.group(1))] + [float(x) for x in re.findall(r"\d+(?:\.\d+)?", m.group(2))]
         factor = 10.0 if m.group(3).lower().startswith(("cm", "센티")) else 1.0
@@ -237,6 +242,9 @@ _LUNG_SITE = re.compile(r"\b(lungs?|pulmonary|(?:upper|middle|lower)\s+lobes?|li
 _OTHER_SITE = re.compile(r"\b(adrenal|thyroid|renal|kidneys?|liver|hepatic|pancrea\w*|splen\w*|breast|ovar\w*|"
                          r"prostat\w*|parotid|lymph\s+nodes?|subcutaneous|skin)\b"
                          r"|부신|갑상선|신장|콩팥|(?<![가-힣])[좌우양]신(?=\s)|췌장|유방|비장|전립선|(?<![가-힣])간(?=[\s의에내])", re.I)
+# The same organs, matched with a Korean particle attached ("adrenal에", "thyroid의"): \b fails before 에
+_ORGAN_IN_LINE = re.compile(r"\b(?:adrenal|thyroid|renal|kidneys?|liver|hepatic|pancrea\w*|splen\w*|breast|ovar\w*|"
+                            r"prostat\w*|parotid)|부신|갑상선|신장|콩팥|췌장|유방|비장|전립선", re.I)
 _CHEST_STUDY = re.compile(r"chest|thora\w*|lung|ldct|흉부|폐", re.I)
 _GGN = re.compile(r"ground[- ]glass|\bggn\b|\bggo\b|non-?solid|간유리", re.I)
 _PART_SOLID = re.compile(r"part[- ]solid|semi-?solid|sub-?solid|mixed (?:attenuation|density)|부분\s*고형", re.I)
@@ -294,6 +302,15 @@ def nodule_location(s: str, at: int) -> Dict[str, Optional[str]]:
     return {"lobe": None, "side": min(sides)[1] if sides else None}
 
 
+# The radiologist says this finding needs nothing more ("No further follow-up imaging is recommended",
+# "work-up is complete", "추가 검사 불필요", "FNA 및 추적 검사 불필요", "추가 영상 추적 불필요")
+_NO_FOLLOWUP_STATED = re.compile(
+    r"\bno (?:further |routine |additional )?(?:follow-?up|imaging|surveillance|evaluation|work-?up)"
+    r"(?: imaging| (?:ct|mri|ultrasound|evaluation))?(?: is| are)? (?:needed|required|necessary|recommended|indicated|warranted)"
+    r"|work-?up (?:is|was) complete|neither FNA nor follow-?up"
+    r"|(?:추가|추적|정밀)\s*(?:영상\s*)?(?:검사|추적|평가|영상)?\s*(?:는|은|이|가)?\s*(?:불필요|필요\s*(?:하지\s*)?않|필요\s*없)"
+    r"|(?:FNA|세침\s*흡인|조직\s*검사)\s*(?:및|와|과|,)\s*(?:추적\s*)?(?:검사\s*)?(?:는|은)?\s*불필요", re.I)
+
 _RESOLVED = re.compile(r"no longer (?:visible|seen|identified|present|evident)|(?:has|have) resolved|\bresolution\b"
                        r"|소실|사라", re.I)
 
@@ -306,6 +323,14 @@ def _nodule_site(text: str, m: re.Match, code_text: str) -> str:
                     re.split(r"nodules?|결절", m.group(0), maxsplit=1, flags=re.I)[0], re.I)
     if own and not re.search(r"lungs?|pulmonary|lobe|폐", own.group(0), re.I):
         return own.group(0).strip().split()[0].lower()
+    # "갑상선 Rt. lobe에 1.2 cm … nodule", "Lt. adrenal에 1.6 cm 크기의 nodule": the sentence splitter breaks
+    # at "Rt."/"Lt.", so look back along the line for an organ, with no sentence end or lung word in between
+    line = text[text.rfind("\n", 0, m.start()) + 1:m.start()]
+    organs = list(_ORGAN_IN_LINE.finditer(line))
+    if organs:
+        between = re.sub(r"\b(?:Rt|Lt|Bil|Rt\.?\s*and\s*Lt|No|Fig|Ser|Im|approx)\.", "", line[organs[-1].end():], flags=re.I)
+        if not re.search(r"[.;!?](?:\s|$)|[다음함됨]\.", between) and not _LUNG_SITE.search(between):
+            return organs[-1].group(0).lower()
     if _LUNG_SITE.search(s):
         return "lung"
     other = _OTHER_SITE.search(s)
@@ -321,7 +346,7 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
     found: Dict[int, Dict[str, Any]] = {}
     for pattern, (a, b, unit) in ((_NODULE_SIZE_FIRST, (1, 2, 3)), (_NODULE_WORD_FIRST, (2, 3, 4))):
         for m in pattern.finditer(text):
-            if not affirmed(text, m) or _nodule_site(text, m, code_text) != "lung" or _is_threshold(text, m.start(a)):
+            if not affirmed(text, m) or _nodule_site(text, m, code_text) != "lung" or _is_threshold(text, m.start(a), m.end(unit)):
                 continue
             if _RESOLVED.search(text[m.start(): m.end() + 140].split("\n")[0]):
                 continue   # "the previously noted 8 mm nodule … is no longer visible"
@@ -375,12 +400,15 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
                     stable_since = ("date", datetime(int(sy.group(1) or sy.group(2)), 7, 1))
                 elif cd:
                     stable_since = ("date", datetime(int(cd.group(1)), int(cd.group(2)), int(cd.group(3) or 1)))
-            benign = bool(_BENIGN_NODULE.search(s)) or (bool(_PERIFISSURAL.search(s)) and size < 10)
+            nxt_s = _next_sentence(text, text.find(s) + len(s)) if s and text.find(s) >= 0 else ""
+            benign = bool(_BENIGN_NODULE.search(s)) or (bool(_PERIFISSURAL.search(s)) and size < 10) \
+                or bool(_NO_FOLLOWUP_STATED.search(s)) \
+                or bool(_NO_FOLLOWUP_STATED.search(nxt_s) and not _NODULE_ANY.search(nxt_s))
             sent_start = text.find(s) if s else -1
             loc = nodule_location(s, (m.start() - sent_start) if sent_start >= 0 else 0)
             found[m.start()] = {
                 "size_mm": size, "type": typ, "solid_component_mm": comp_mm, "lobe": loc["lobe"], "side": loc["side"],
-                "multiple": bool(_MULTIPLE.search(s)), "change": change, "stable_since": stable_since,
+                "multiple": bool(first_affirmed(_MULTIPLE, s)), "change": change, "stable_since": stable_since,
                 "benign": benign, "risk_features": [k for k, rx in _RISK_FEATURES if rx.search(s)],
                 "evidence_span": span(text, m), "_start": m.start(),
             }
@@ -391,6 +419,19 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
     unique: List[Dict[str, Any]] = []
     for n in nodules:
         if unique and abs(n["_start"] - unique[-1]["_start"]) < 15 and n["size_mm"] == unique[-1]["size_mm"]:
+            continue
+        # The same nodule in FINDINGS and again in IMPRESSION is one nodule, not "multiple": same size and
+        # type, and not in different lobes. What either mention says about it applies to it
+        same = next((u for u in unique if abs(u["size_mm"] - n["size_mm"]) <= 0.5 and u["type"] == n["type"]
+                     and not (u["lobe"] and n["lobe"] and u["lobe"] != n["lobe"])), None)
+        if same:
+            same["benign"] = same["benign"] or n["benign"]
+            same["lobe"] = same["lobe"] or n["lobe"]
+            same["side"] = same["side"] or n["side"]
+            same["change"] = same["change"] or n["change"]
+            same["stable_since"] = same["stable_since"] or n["stable_since"]
+            same["multiple"] = same["multiple"] or n["multiple"]
+            same["risk_features"] = sorted(set(same["risk_features"]) | set(n["risk_features"]))
             continue
         unique.append(n)
     for n in unique:
@@ -462,11 +503,21 @@ _RUPTURE = re.compile(r"ruptur\w*|leak\w*|파열", re.I)
 _AAA_MEASURE = re.compile(r"\b(measur\w*|diameter|caliber|calibre)\b|직경", re.I)
 
 
+_HISTORY_LINE = re.compile(r"\s*(?:comparison|compared with|clinical (?:history|information|indication)|history|indication|"
+                           r"비교|임상\s*(?:정보|소견|병력)|병력)\s*[:：]", re.I)
+
+
 def _incidental_findings(text: str, code_text: str, study_modality: Optional[str]) -> List[Dict[str, Any]]:
     out: List[Dict[str, Any]] = []
     thyroid_us = study_modality == "ultrasound" and "thyroid" in regions_in(code_text)
     for start, s in _sentences(text):
+        if _HISTORY_LINE.match(s):
+            continue          # "비교: 2025-10-02 US (AAA 4.6 cm)", "CLINICAL HISTORY: 3 cm adrenal mass": not this report's finding
         sizes = _sizes(s)
+        nxt = _next_sentence(text, start + len(s))
+        stated_none = bool(_NO_FOLLOWUP_STATED.search(s)) or bool(
+            _NO_FOLLOWUP_STATED.search(nxt) and not re.search(_LESION, nxt, re.I))
+        first = len(out)
         # Adrenal
         m = _ADRENAL.search(s)
         if m and affirmed(s, m) and sizes:
@@ -532,6 +583,19 @@ def _incidental_findings(text: str, code_text: str, study_modality: Optional[str
             if affirmed(s, m) and max(sizes) >= 25:
                 out.append({"kind": "aaa", "organ": "abdominal_aorta", "diameter_mm": max(sizes),
                             "evidence_span": s.strip()})
+        for f in out[first:]:
+            f["no_followup_stated"] = stated_none
+    # A finding described in FINDINGS and again in the conclusion is one finding: the radiologist's
+    # "no further evaluation" about it applies to every mention of the same lesion (same kind and size)
+    for f in out:
+        if f["no_followup_stated"]:
+            continue
+        a = f.get("size_mm") or f.get("diameter_mm")
+        f["no_followup_stated"] = any(
+            g["no_followup_stated"] and g["kind"] == f["kind"] and g["kind"] != "aaa"
+            and (a is None or (g.get("size_mm") or g.get("diameter_mm")) is None
+                 or abs(a - (g.get("size_mm") or g.get("diameter_mm"))) <= 2.0)
+            for g in out if g is not f)
     return out
 
 
@@ -706,7 +770,7 @@ _WORSENING_AFTER = re.compile(r"^[^.;\n]{0,40}?\b(?:now\s+)?(?:larger|bigger|inc
 _COMMUNICATED = re.compile(
     r"(?<!will be )(?<!to be )(?<!should be )(?:discussed (?:(?:by|over the|via) (?:tele)?phone |in person |verbally )?with|"
     r"communicated (?:(?:by|over the|via) (?:tele)?phone |verbally )?(?:to|with)|called to|telephoned|"
-    r"notified|conveyed to|relayed to)\s+(?:the\s+)?(?:(?:referring|ordering|treating|on-?call|covering|responsible|"
+    r"notified|conveyed to|relayed to|acknowledged by|read back by)\s+(?:the\s+)?(?:(?:referring|ordering|treating|on-?call|covering|responsible|"
     r"primary|ED|emergency|ICU)\s+)*(?:dr\.?\s|doctor|physician|clinician|provider|surgeon|team|ED\b|emergency|"
     r"nurse practitioner|NP\b|PA\b|attending|house officer|intensivist|consultant)"
     r"|(?:담당의|주치의|담당\s*의사|당직의|의료진|응급실|응급의학과|교수)\w*\s*에게\s*(?:전화로?\s*|구두로?\s*)?"
@@ -723,7 +787,9 @@ def _communication_done(text: str):
     notified"), skipping ones that only ask for it to be made."""
     for m in _COMMUNICATED.finditer(text):
         sentence = re.split(r"\n|[.;!?](?:\s|$)", text[max(0, m.start() - 120):m.start()])[-1]
-        if _COMM_REQUESTED.search(sentence) and not re.search(r"\b(?:has|have|was|were|been)\s+(?:\w+\s+){0,2}$", sentence, re.I):
+        done_verb = re.search(r"\b(?:has|have|was|were|been)\s+(?:\w+\s+){0,2}$"
+                              r"|\b(?:called|phoned|telephoned|paged|discussed)\b[^.]{0,15}\band\s+$", sentence, re.I)
+        if _COMM_REQUESTED.search(sentence) and not done_verb:   # "Called to and acknowledged by Dr X" was made
             continue
         if affirmed(text, m):
             return m
@@ -815,7 +881,7 @@ def clean_report_text(text: str) -> str:
 
 
 # The heading only ("ADDENDUM (2026-05-08):"): text on the same line belongs to the addendum
-_ADDENDUM = re.compile(r"\n\s*[\[(*]*\s*(?:ADDENDUM|Addendum|추가\s*판독|수정\s*판독)\b(?:[^\]\n:：]*\])?"
+_ADDENDUM = re.compile(r"\n\s*[\[(*]*\s*(?:ADDENDUM|Addendum|Correction(?:\s+note)?|CORRECTION|추가\s*판독|수정\s*판독|정정\s*판독)\b(?:[^\]\n:：]*\])?"
                        r"(?:\s*\([^)\n]*\))?\s*[:：]?", re.I)
 _REC_WORDS = re.compile(r"recommend\w*|follow-?up|imaging|work-?up|\b(?:ct|mri|us|ultrasound|pet|biopsy|"
                         r"scan|surveillance)\b|권고|추적|검사", re.I)
@@ -839,7 +905,8 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
 
     for key, pattern, label in (("lung_rads", _LUNG_RADS, "Lung-RADS"), ("birads", _BIRADS, "BI-RADS"),
                                 ("tirads", _TIRADS, "TI-RADS TR"), ("ktirads", _KTIRADS, "K-TIRADS")):
-        m = _current_category(pattern, conclusion)
+        # A category in the addendum ("reclassified as Lung-RADS 2", "Lung-RADS 2로 정정함") replaces the original
+        m = (_current_category(pattern, addendum) if addendum else None) or _current_category(pattern, conclusion)
         if m:
             value = next(g for g in m.groups() if g).upper()
             details[key] = value
@@ -891,23 +958,36 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
         mapping.append(f"{f['kind'].replace('_', ' ')}" + (f" {size:g} mm" if size else ""))
     # Withdrawn only when the withdrawal is about the recommendation: "please disregard the comparison
     # date" does not cancel "recommend MRI liver in 3 months"
-    withdrawn = bool(addendum) and any(
-        _WITHDRAWN.search(sent) and _REC_WORDS.search(sent)
-        for sent in re.split(r"(?<=[.;!?])\s+|\n", addendum))
-    rec_add = _extract_recommendation(addendum, code_text) if addendum else None
+    withdraw_end = None
+    if addendum:
+        for sent in re.split(r"(?<=[.;!?])\s+|\n", addendum):
+            if _WITHDRAWN.search(sent) and _REC_WORDS.search(sent):
+                withdraw_end = addendum.find(sent) + len(sent)
+    withdrawn = withdraw_end is not None
+    # Only advice given after the withdrawal counts: 'the original report said "recommend renal MRI" … withdrawn'
+    after_withdrawal = addendum[withdraw_end:] if withdrawn else addendum
+    rec_add = _extract_recommendation(after_withdrawal, code_text) if after_withdrawal else None
     if rec_add and _WITHDRAWN.search(rec_add["evidence_span"]):
         rec_add = None              # "the previous recommendation for MRI is withdrawn" is not a recommendation
     rec = rec_add or \
         (None if withdrawn else _extract_recommendation(main if addendum else conclusion, code_text))
     if withdrawn:
         mapping.append("addendum withdraws the earlier recommendation")
+    if not rec and details.get("birads") == "0":
+        # BI-RADS 0 (incomplete): recall for diagnostic mammography and/or ultrasound (ACR BI-RADS 2013).
+        # Ultrasound when the report names it, otherwise the diagnostic mammogram (an X-ray study of the breast)
+        us = re.search(r"ultrasound|sonograph|\bUS\b|초음파", conclusion, re.I)
+        rec = {"recommended_modality": "ultrasound" if us else "xray", "recommended_interval_days": 30.0,
+               "recommended_interval_stated": False, "regions": ["breast"],
+               "evidence_span": "BI-RADS 0: incomplete, needs additional imaging"}
+        mapping.append("BI-RADS 0: recall for additional breast imaging (ACR BI-RADS) → 30 days")
     if rec and rec["recommended_modality"]:
         rad["recommendation"] = rec
         mapping.append(f"radiologist recommends {rec['recommended_modality']} in "
                        f"{rec['recommended_interval_days']:g} days"
                        + ("" if rec["recommended_interval_stated"] else " (no interval stated: 30-day default)")
                        + (f" [{', '.join(rec['regions'])}]" if rec["regions"] else ""))
-    biopsy = (_biopsy_recommendation(addendum) if addendum else None) or \
+    biopsy = (_biopsy_recommendation(after_withdrawal) if after_withdrawal else None) or \
         (None if withdrawn else _biopsy_recommendation(main if addendum else conclusion))
     if biopsy:
         rad["biopsy_recommendation"] = biopsy
@@ -1105,6 +1185,10 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,
         return {"rule_id": rule_id, "condition": condition, "days": round(days, 1),
                 "regions": regions or [f["organ"]], "note": note}
 
+    if f.get("no_followup_stated") and kind != "aaa":
+        return {"none": f"{kind.replace('_', ' ')}: the radiologist states no further evaluation is needed"}
+    if kind == "thyroid_incidental" and (f.get("tirads") in (1, 2) or f.get("ktirads") == 2):
+        return {"none": "thyroid nodule already characterised as benign on ultrasound (TI-RADS TR1–2 / K-TIRADS 2)"}
     if kind == "adrenal":
         if f["benign"]:
             return {"none": "adrenal: benign features (adenoma ≤10 HU, myelolipoma, cyst, or stable ≥1 year) → no follow-up (ACR 2017)"}
