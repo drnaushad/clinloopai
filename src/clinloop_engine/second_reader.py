@@ -112,13 +112,13 @@ def _norm(text: str) -> str:
 def local_model() -> Optional[Callable[[str, str], Dict[str, Any]]]:
     """The hospital's on-premise model, or None when it is not on a private address."""
     from .imaging_ai import _on_premise
-    from .local_llm_engine import OLLAMA_BASE_URL, generate_clinical_text
+    from .local_llm_engine import OLLAMA_BASE_URL, generate_clinical_text, get_second_reader_model
     if not _on_premise(OLLAMA_BASE_URL):
         logger.error("Second reader: the model server (CLINLOOP_OLLAMA_URL) is not on a private address: not used")
         return None
 
     def call(prompt: str, system: str) -> Dict[str, Any]:
-        return generate_clinical_text(prompt, temperature=0.0, max_tokens=600, system_prompt=system)
+        return generate_clinical_text(prompt, model=get_second_reader_model(), temperature=0.0, max_tokens=600, system_prompt=system)
     return call
 
 

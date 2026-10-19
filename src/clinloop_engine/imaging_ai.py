@@ -361,7 +361,7 @@ class VisionLanguageModel(ImagingModel):
 
       CLINLOOP_VLM_URL        http://localhost:11434 (Ollama) or http://vlm.hospital.local:8000 (OpenAI-compatible)
       CLINLOOP_VLM_API        ollama | openai (default: ollama for port 11434, else openai)
-      CLINLOOP_VLM_MODEL      e.g. medgemma-4b-it
+      CLINLOOP_VLM_MODEL      default medgemma:4b (Ollama library tag)
       CLINLOOP_VLM_REGULATORY default "Research use only — not a medical device"
     """
     modalities = ["CR", "DX", "DR", "CT", "MR", "US", "MG", "PT", "NM", "XA", "RF"]
@@ -369,7 +369,7 @@ class VisionLanguageModel(ImagingModel):
 
     def __init__(self):
         self.url = (os.environ.get("CLINLOOP_VLM_URL") or "").rstrip("/")
-        self.model = os.environ.get("CLINLOOP_VLM_MODEL") or "medgemma-4b-it"
+        self.model = os.environ.get("CLINLOOP_VLM_MODEL") or "medgemma:4b"
         self.api = (os.environ.get("CLINLOOP_VLM_API") or ("ollama" if ":11434" in self.url else "openai")).lower()
         self.name = f"Vision-language model ({self.model})"
         self.version = self.model

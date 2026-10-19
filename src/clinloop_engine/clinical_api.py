@@ -222,7 +222,10 @@ def connections_status():
     if cached is None:
         models = get_available_models()
         cached = {"status": "ok" if models else "unavailable",
-                  "model": models[0]["name"] if models else None}
+                  "model": models[0]["name"] if models else None,
+                  # Installed models with label and role (vision / report reader / text)
+                  "installed": [{"name": m["name"], "label": m.get("label") or m["name"],
+                                 "role": m.get("role") or "text"} for m in models]}
         literature._cache.put("health|local_llm", cached)
 
     fhir_configured = bool(os.environ.get("CLINLOOP_FHIR_BASE"))

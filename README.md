@@ -264,7 +264,7 @@ pip install pytest                 # to run the test suite
 | --- | --- |
 | REST API, worklist, FHIR ingest | `pip install -r requirements-api.txt` |
 | A GPU | **Not needed.** The rules engine runs on any CPU. An NVIDIA GPU only speeds up CT organ measurement (about 20 s to minutes per scan on a CPU, seconds on a GPU), and is used automatically when present (`CLINLOOP_CT_SEG_DEVICE=auto`). For Docker, build with a CUDA PyTorch: `--build-arg TORCH_INDEX=https://download.pytorch.org/whl/cu124` and run with `--gpus all`. `GET /api/v1/compute/status` reports what the server has |
-| Local LLM (patient-message drafts) | Install [Ollama](https://ollama.com), then `./scripts/setup_local_llm.sh` (pulls `exaone3.5:7.8b`). Without it, messages use a fixed safe template |
+| Local LLM (patient-message drafts) | Install [Ollama](https://ollama.com), then `./scripts/setup_local_llm.sh` (pulls `exaone3.5:7.8b`). Optional: `ollama pull medgemma:4b` (imaging VLM, ~6–8 GB) and `ollama pull medgemma:27b` (English report second reader, ~20 GB); research models, not medical devices (docs/IMAGING.md §6). Without it, messages use a fixed safe template |
 | BioMCP | Included in `requirements-api.txt` (`biomcp-python`); ClinLoop starts it automatically |
 | DICOM, outside-report PDFs | Included in `requirements-api.txt` (`pydicom`, `pdfplumber`) |
 | OCR of scanned reports | `apt install tesseract-ocr tesseract-ocr-kor` (the Docker image includes it) |
@@ -464,6 +464,7 @@ Configuration:
 | `CLINLOOP_BIOMCP_COMMAND` | Command used for stdio BioMCP | `biomcp run` |
 | `CLINLOOP_OLLAMA_URL` | Ollama address | `http://localhost:11434` |
 | `CLINLOOP_LLM_MODEL` | Force a specific installed model | best installed (EXAONE 3.5 first) |
+| `CLINLOOP_SECOND_READER_MODEL` | Model for the report second reader | `medgemma:27b` if installed, else the best installed |
 
 One-off sync from the command line: `python -m src.clinloop_engine.fhir_sync --once`.
 
