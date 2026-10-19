@@ -209,7 +209,7 @@ def _card(loop: Dict[str, Any], base: str, now: datetime) -> Dict[str, Any]:
          *(["", f"From: {source}"] if source else []),
          "", f"Rule {loop['rule_id']}: {loop.get('rule_name') or ''}. A reminder of a follow-up obligation, "
              "not a diagnosis. If it was done elsewhere or is not needed, record that in ClinLoop."])
-    link = f"{base}/worklist.html#loop={loop['loop_key']}" if base else None
+    link = f"{base}/worklist#loop={loop['loop_key']}" if base else None
     card = {
         "uuid": f"{loop['loop_key']}",
         "summary": summary[:140],
@@ -254,7 +254,7 @@ def patient_view(request: Request, body: Dict[str, Any] = Body(...)) -> Dict[str
                 "source": {"label": "ClinLoop AI"}}
         if base:
             more["links"] = [{"label": "Open the patient in ClinLoop", "type": "absolute",
-                              "url": f"{base}/patient.html#patient={patient_id}"}]
+                              "url": f"{base}/patient#patient={patient_id}"}]
         cards.append(more)
     store.record_audit(caller, "ehr", "cds_patient_view", None,
                        {"patient_id": patient_id, "hook_instance": body.get("hookInstance"),

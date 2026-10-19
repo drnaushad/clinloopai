@@ -9,13 +9,13 @@
 (function () {
   'use strict';
   var PAGES = [
-    { href: 'index.html', en: 'Cockpit', ko: '종합 화면' },
-    { href: 'worklist.html', en: 'Worklist', ko: '업무 목록' },
-    { href: 'patient.html', en: 'Patient graph', ko: '환자 그래프' },
-    { href: 'quality.html', en: 'Quality', ko: '품질 지표' },
-    { href: 'governance.html', en: 'Rule sign-off', ko: '규칙 승인' },
-    { href: 'pilot.html', en: 'Pilot review', ko: '시범 검토' },
-    { href: 'imaging.html', en: 'Imaging', ko: '영상' }
+    { page: 'index', href: './', en: 'Cockpit', ko: '종합 화면' },
+    { page: 'worklist', href: 'worklist', en: 'Worklist', ko: '업무 목록' },
+    { page: 'patient', href: 'patient', en: 'Patient graph', ko: '환자 그래프' },
+    { page: 'quality', href: 'quality', en: 'Quality', ko: '품질 지표' },
+    { page: 'governance', href: 'governance', en: 'Rule sign-off', ko: '규칙 승인' },
+    { page: 'pilot', href: 'pilot', en: 'Pilot review', ko: '시범 검토' },
+    { page: 'imaging', href: 'imaging', en: 'Imaging', ko: '영상' }
   ];
 
   // The Light/Dark choice made on the cockpit applies here too; without one, the page follows the device
@@ -24,10 +24,19 @@
     if (theme === 'light' || theme === 'dark') document.documentElement.setAttribute('data-theme', theme);
   } catch (e) { /* storage blocked: follow the device */ }
 
+  // Pages have clean addresses ("/worklist", not "/worklist.html"); an old .html link still works and the
+  // address bar is tidied to the clean form, keeping the query and the #fragment
   function current() {
-    var file = window.location.pathname.split('/').pop() || 'index.html';
-    return /\.html$/.test(file) ? file : file + '.html';     // "/worklist" is worklist.html
+    var file = window.location.pathname.split('/').pop().replace(/\.html$/, '');
+    return file === '' ? 'index' : file;
   }
+  (function cleanAddress() {
+    var path = window.location.pathname;
+    if (!/\.html$/.test(path) || !window.history || !window.history.replaceState) return;
+    var clean = path.replace(/index\.html$/, '').replace(/\.html$/, '');
+    try { window.history.replaceState(window.history.state, '', clean + window.location.search + window.location.hash); }
+    catch (e) { /* some file:// views refuse: keep the address as it is */ }
+  })();
 
   function render() {
     var navs = document.querySelectorAll('nav.app-nav');
@@ -41,7 +50,7 @@
         a.href = p.href;
         a.textContent = ko ? p.ko : p.en;
         a.className = 'app-nav-link';
-        if (p.href === here) a.setAttribute('aria-current', 'page');
+        if (p.page === here) a.setAttribute('aria-current', 'page');
         return a;
       }));
     });
