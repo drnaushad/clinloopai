@@ -282,6 +282,26 @@ CREATE TABLE IF NOT EXISTS second_reads (
     detail TEXT,
     updated_at TEXT NOT NULL
 );
+-- Second reader in silent mode: suggestions for the quality team only, never part of the patient record.
+-- A real miss judged urgent cannot be saved without a safety referral (fail toward a human).
+CREATE TABLE IF NOT EXISTS second_reader_suggestions (
+    id TEXT PRIMARY KEY,              -- hash of patient | report | category: one suggestion each
+    patient_id TEXT NOT NULL,
+    report_ref TEXT NOT NULL,
+    report_kind TEXT,                 -- radiology | pathology
+    report_date TEXT,
+    category TEXT NOT NULL,
+    quote TEXT NOT NULL,              -- the report's own words, checked to occur in it
+    reason TEXT,
+    model TEXT,
+    created_at TEXT NOT NULL,
+    verdict TEXT,                     -- real_miss | already_handled | not_needed | wrong_quote
+    urgent INTEGER DEFAULT 0,
+    safety_referral TEXT,
+    note TEXT,
+    reviewer TEXT,
+    reviewed_at TEXT
+);
 CREATE TABLE IF NOT EXISTS image_scan_runs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts TEXT NOT NULL,
@@ -1165,6 +1185,85 @@ class LoopStore:
                                    "COALESCE(SUM(status='failed'),0) AS failed, MAX(updated_at) AS last FROM second_reads").fetchone()
         return {"reports_read": row["reports"], "items_found": row["items"], "flags_raised": row["flags"],
                 "failed": row["failed"], "last_read": row["last"]}
+
+    # ------------------------------------------------------------------ second reader, silent mode
+    SUGGESTION_VERDICTS = ("real_miss", "already_handled", "not_needed", "wrong_quote")
+
+    def add_second_reader_suggestion(self, patient_id: str, report_ref: str, report_kind: str,
+                                     report_date: Optional[str], category: str, quote: str, reason: str,
+                                     model: str, now: Optional[datetime] = None) -> bool:
+        """File one silent-mode suggestion (once per report and category). Returns True when new."""
+        sid = hashlib.sha256(f"{patient_id}|{report_ref}|{category}".encode()).hexdigest()[:32]
+        ts = (now or utc_now()).isoformat()
+        with self._lock:
+            try:
+                cur = self._db.execute(
+                    "INSERT OR IGNORE INTO second_reader_suggestions (id, patient_id, report_ref, report_kind, "
+                    "report_date, category, quote, reason, model, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    (sid, patient_id, report_ref, report_kind, report_date, category, quote[:300], reason[:200],
+                     model[:100], ts))
+                if cur.rowcount == 1:
+                    self._audit("second-reader", "system", "second_reader_suggestion", None,
+                                {"suggestion": sid, "category": category, "model": model[:100]}, at=now)
+                self._db.commit()
+            except Exception:
+                self._db.rollback()
+                raise
+        return cur.rowcount == 1
+
+    def second_reader_suggestions(self, pending_only: bool = False, limit: int = 200) -> List[Dict]:
+        sql = "SELECT * FROM second_reader_suggestions"
+        if pending_only:
+            sql += " WHERE verdict IS NULL"
+        sql += " ORDER BY verdict IS NOT NULL, created_at DESC LIMIT ?"
+        with self._lock:
+            rows = self._db.execute(sql, (int(limit),)).fetchall()
+        return [dict(r) for r in rows]
+
+    def review_second_reader_suggestion(self, sid: str, verdict: str, actor: str, role: str,
+                                        urgent: bool = False, safety_referral: str = "", note: str = "",
+                                        now: Optional[datetime] = None) -> Dict:
+        """The quality team's judgement of one suggestion. An urgent real miss needs a safety referral:
+        the silent log must never be where an urgent open loop is found and left (fail toward a human)."""
+        if verdict not in self.SUGGESTION_VERDICTS:
+            raise WorkflowError(f"verdict must be one of {', '.join(self.SUGGESTION_VERDICTS)}")
+        urgent = bool(urgent) and verdict == "real_miss"
+        if urgent and not (safety_referral or "").strip():
+            raise WorkflowError("An urgent real miss needs a safety referral: who on the treating team was told, and how")
+        ts = (now or utc_now()).isoformat()
+        with self._lock:
+            try:
+                if not self._db.in_transaction:
+                    self._db.execute("BEGIN IMMEDIATE")
+                row = self._db.execute("SELECT verdict FROM second_reader_suggestions WHERE id=?", (sid,)).fetchone()
+                if row is None:
+                    raise WorkflowError("No such suggestion")
+                self._db.execute(
+                    "UPDATE second_reader_suggestions SET verdict=?, urgent=?, safety_referral=?, note=?, reviewer=?, "
+                    "reviewed_at=? WHERE id=?",
+                    (verdict, int(urgent), (safety_referral or "").strip()[:500] or None, (note or "").strip()[:500] or None,
+                     actor, ts, sid))
+                self._audit(actor, role, "second_reader_review", None,
+                            {"suggestion": sid, "verdict": verdict, "urgent": urgent, "previous": row["verdict"]}, at=now)
+                if urgent:
+                    self._audit(actor, role, "safety_referral", None, {"suggestion": sid, "referral": safety_referral.strip()[:500]},
+                                at=now)
+                self._db.commit()
+            except Exception:
+                self._db.rollback()
+                raise
+            out = self._db.execute("SELECT * FROM second_reader_suggestions WHERE id=?", (sid,)).fetchone()
+        return dict(out)
+
+    def second_reader_suggestion_counts(self) -> Dict[str, Dict[str, int]]:
+        """Per category: suggestions, reviewed, and each verdict (counts only)."""
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT category, COUNT(*) AS n, COALESCE(SUM(verdict IS NOT NULL),0) AS reviewed, "
+                "COALESCE(SUM(verdict='real_miss'),0) AS real_miss, COALESCE(SUM(verdict='already_handled'),0) AS already_handled, "
+                "COALESCE(SUM(verdict='not_needed'),0) AS not_needed, COALESCE(SUM(verdict='wrong_quote'),0) AS wrong_quote, "
+                "COALESCE(SUM(urgent),0) AS urgent FROM second_reader_suggestions GROUP BY category").fetchall()
+        return {r["category"]: {k: r[k] for k in r.keys() if k != "category"} for r in rows}
 
     def acquire_lease(self, name: str, owner: str, ttl_minutes: float = 60.0, now: Optional[datetime] = None) -> bool:
         """A lease across processes (API workers, the CLI, cron): only one holder until it ends or expires."""

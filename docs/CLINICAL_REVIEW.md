@@ -102,6 +102,20 @@ error (a man may be referred to vascular surgery a little early; a woman is not 
 The 42 Korean labels were checked against ACR, Fleischner, TI-RADS and SVS thresholds; the three
 relabelled rows are correct. "위급" is kept for critical values, as in the hospital critical-finding list.
 
+## 3c. Language model in the clinical edition: silent second reader (step 1, October 2026)
+
+The on-premise second reader may now run in the clinical edition, **silently**. Its suggestions reach
+only the quality team, who judge each one. Clinical decisions in this change, for the clinical lead to
+confirm:
+
+| Decision | Why |
+| --- | --- |
+| `CLINLOOP_SECOND_READER=1` is held at silent in the core profile; no caller can force live flags there | Model output must not reach care before the gate in the clinical evaluation plan §4 |
+| Four verdicts: real miss, already handled, not needed, wrong quote | "Real miss" is the number that matters: needed follow-up that no rule tracked and nobody had handled |
+| Only clinicians on the review team give verdicts; navigators may read; viewers see counts only | A verdict is a clinical judgement; the quotes are patient data |
+| An urgent real miss cannot be saved without a safety referral | Fail toward a human: the log must never be where an urgent finding is seen and left |
+| Proposed gate: ≥ 300 judged, ≥ 10 real misses, precision lower 95% bound ≥ 20%, wrong quotes ≤ 1% | To be set by the clinical lead before measurement starts |
+
 ## 4. Before clinical use
 
 1. A licensed clinician reviews this document and the code it names, and signs below.

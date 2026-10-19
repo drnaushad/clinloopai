@@ -80,10 +80,12 @@ def build() -> Dict[str, int]:
                      "/api/v1/imaging/models", "/api/v1/imaging/scan/status", "/api/v1/reports/second-read/status",
                      "/api/v1/connections/status", "/cds-services", "/api/v1/pilot/status",
                      "/api/v1/governance/monitor", "/api/v1/quality/documentation-audit", "/api/v1/quality/outcomes",
-                     "/api/v1/pilot/metrics", "/api/v1/pilot/queue", "/api/v1/pilot/safety-referrals", "/api/v1/users"):
+                     "/api/v1/pilot/metrics", "/api/v1/pilot/queue", "/api/v1/pilot/safety-referrals", "/api/v1/users",
+                     "/api/v1/quality/second-reader"):
             save(path)
         for by in ("rule", "language", "age_group", "sex"):
             save("/api/v1/metrics/open-loop-rate", {"stratify_by": by})
+        save("/api/v1/quality/second-reader/suggestions", {"pending": "true"})   # the quality team only: a viewer's 403
         loops: List[dict] = []
         for inactive in ("false", "true"):
             data = save("/api/v1/worklist", {"include_inactive": inactive}) or {}

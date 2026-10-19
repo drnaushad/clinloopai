@@ -140,6 +140,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 .rate .fill { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--accent); }
 .rate .v { font: 600 .8rem var(--font-mono); color: var(--text); min-width: 42px; text-align: right; }
 .gap { color: var(--critical); font-weight: 600; }
+.sugg { border-top: 1px solid var(--line, rgba(148,163,184,.3)); padding: 12px 0; }
+.sugg blockquote { margin: 6px 0; padding: 6px 10px; border-left: 3px solid var(--accent, #0e7490); background: rgba(14,116,144,.06); border-radius: 4px; }
+.sugg form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
+.sugg form input[type="text"] { flex: 1 1 220px; min-width: 0; }
 .bn { padding: 10px 12px; border-left: 4px solid var(--critical); margin: 8px 0; background: var(--surface); border-radius: 8px; }
 </style>
 <script src="config.js"></script>
@@ -175,6 +179,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     <section class="card pane" aria-labelledby="h-eq"><h2 id="h-eq" data-i18n="equity"></h2><p class="sub" data-i18n="eqHelp"></p><div id="eq"></div></section>
     <section class="card pane" aria-labelledby="h-own"><h2 id="h-own" data-i18n="owners"></h2><p class="sub" data-i18n="ownHelp"></p><div class="scroll" id="owners"></div></section>
     <section class="card pane" id="outcome-pane" aria-labelledby="h-out" hidden><h2 id="h-out" data-i18n="outcomes"></h2><p class="sub" data-i18n="outHelp"></p><div id="out-kpis" class="kpis"></div><div class="scroll" id="outcomes"></div></section>
+    <section class="card pane" id="sr-pane" aria-labelledby="h-sr" hidden><h2 id="h-sr" data-i18n="sr"></h2><p class="sub" data-i18n="srHelp"></p><p id="sr-mode"></p><div class="scroll" id="sr-table"></div><div id="sr-items"></div></section>
     <section class="card pane" id="audit-pane" aria-labelledby="h-audit" hidden><h2 id="h-audit" data-i18n="audit"></h2><p class="sub" data-i18n="auditHelp"></p><div class="scroll" id="audit"></div></section>
   </div>
   <footer data-i18n="footer"></footer>
@@ -199,6 +204,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       oOpened: '열린 루프', oActed: '조치됨', oFirst: '첫 조치까지 (중앙값)', oClosed: '종결 (기록 / 직원)', oDays: '종결까지 (중앙값)', oLate: '기한 후 종결', oDismissed: '기각', oOpenOver: '기한 지나 열림', oUntouched: '그중 아무도 손대지 않음', oNever: '기한이 지났는데 아무도 조치하지 않음',
       hours: (h) => h == null ? '–' : `${h}시간`, days: (d) => d == null ? '–' : `${d}일`, silentNote: '시범 운영(silent run) 중: 직원에게 알림이 가지 않으므로 이 수치는 일반 진료만의 결과입니다.',
       audit: '위급 결과 통보 기록 감사 (다음 날)', auditHelp: '하루 이상 지난 위급 검사·영상 결과마다 1시간 안에 의료진 통보가 기록되었는지 확인합니다. 병원의 위급 결과 통보 절차가 우선이며, 이 표는 그 기록을 사후에 점검합니다.',
+      total: '합계', sr: '모델 판독 보조 (무경보 측정)', srHelp: '병원 내부 언어모델이 판독문을 다시 읽고, 규칙이 추적하지 않는 후속 조치를 원문 인용과 함께 제안합니다. 임상용 에디션에서는 제안이 업무 목록·EHR·환자 기록에 들어가지 않으며, 품질팀만 보고 판정합니다. 이 판정 결과로 이후 의료진에게 보여줄지 결정합니다.',
+      srMode: { off: '꺼짐 (CLINLOOP_SECOND_READER=silent로 켭니다)', silent: '무경보 측정 중: 진료에는 아무것도 표시되지 않습니다', live: '실시간 (연구용 프로필): 제안이 R058 검토 루프를 엽니다' },
+      srCat: '분류', srN: '제안', srReviewed: '판정', srMiss: '실제 누락', srHandled: '이미 처리됨', srNotNeeded: '불필요', srWrong: '인용 오류', srPrec: '정밀도 (95% CI)',
+      srPending: '판정 대기 중인 제안', srNone: '판정 대기 중인 제안이 없습니다.', srReport: '판독', srModelReason: '모델의 이유', srUrgent: '긴급',
+      srReferral: '안전 보고: 누구에게, 어떻게 알렸는지 (긴급한 실제 누락은 필수)', srNote: '메모 (선택)', srSave: '판정 저장', srSaved: '저장했습니다.',
+      verdicts: { real_miss: '실제 누락', already_handled: '이미 처리됨', not_needed: '불필요', wrong_quote: '인용 오류' },
       auditLive: '핵심 프로필: R022·R035는 실시간 알림 대신 이 감사로 보고됩니다.', auditNone: '하루 이상 지난 위급 결과가 없습니다.',
       result: '결과', resultTime: '결과 시각', patient: '환자',
       results: { not_documented: '기록 없음', documented_late: '늦게 기록', documented_on_time: '1시간 내 기록', closed_by_staff: '직원이 근거와 함께 종결' },
@@ -219,6 +230,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       oOpened: 'Loops opened', oActed: 'Acted on', oFirst: 'To first action (median)', oClosed: 'Closed (record / staff)', oDays: 'To closure (median)', oLate: 'Closed after deadline', oDismissed: 'Dismissed', oOpenOver: 'Open past deadline', oUntouched: 'of which never acted on', oNever: 'Past deadline, never acted on',
       hours: (h) => h == null ? '–' : `${h} h`, days: (d) => d == null ? '–' : `${d} d`, silentNote: 'Silent run: nothing reaches staff, so these figures describe usual care alone.',
       audit: 'Critical-result communication audit (next day)', auditHelp: 'For each critical lab or imaging result more than a day old: was the clinician notification documented within the hour? The hospital\'s critical-result call process is the primary control; this table checks its documentation afterwards.',
+      total: 'Total', sr: 'Model second reader (silent measurement)', srHelp: "The hospital's own language model rereads reports and suggests follow-up no rule tracks, quoting the report. In the clinical edition its suggestions never reach the worklist, EHR or patient record: only the quality team sees and judges them. These judgements decide whether it may ever be shown to clinicians.",
+      srMode: { off: 'Off (turn on with CLINLOOP_SECOND_READER=silent)', silent: 'Silent measurement: nothing reaches clinical care', live: 'Live (research profile): suggestions open R058 review loops' },
+      srCat: 'Category', srN: 'Suggestions', srReviewed: 'Judged', srMiss: 'Real miss', srHandled: 'Already handled', srNotNeeded: 'Not needed', srWrong: 'Wrong quote', srPrec: 'Precision (95% CI)',
+      srPending: 'Suggestions waiting for a judgement', srNone: 'No suggestion is waiting.', srReport: 'Report', srModelReason: "Model's reason", srUrgent: 'Urgent',
+      srReferral: 'Safety referral: who was told, and how (required for an urgent real miss)', srNote: 'Note (optional)', srSave: 'Save judgement', srSaved: 'Saved.',
+      verdicts: { real_miss: 'Real miss', already_handled: 'Already handled', not_needed: 'Not needed', wrong_quote: 'Wrong quote' },
       auditLive: 'Core profile: R022 and R035 are reported here instead of as live alerts.', auditNone: 'No critical result more than a day old.',
       result: 'Result', resultTime: 'Result time', patient: 'Patient',
       results: { not_documented: 'Not documented', documented_late: 'Documented late', documented_on_time: 'Documented within the hour', closed_by_staff: 'Closed by staff with evidence' },
@@ -229,7 +246,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
                   set(k, v, s = sessionStorage) { try { s.setItem(k, v); } catch {} } };
   let lang = store.get('clinloop_lang', localStorage) || ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');
   const t = () => T[lang];
-  const state = { base: '', token: '', data: null, audit: null, outcomes: null };
+  const state = { base: '', token: '', data: null, audit: null, outcomes: null, sr: null, srItems: null };
   const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
   $('api-base').value = store.get('clinloop_api') || window.CLINLOOP_API_BASE || (isLocal ? 'http://localhost:8124' : '');
   $('token').value = store.get('clinloop_token');
@@ -244,6 +261,13 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         : d || (res.status === 401 ? 'Not signed in, or the token is not recognised' : `HTTP ${res.status}`));
     }
     return body;
+  }
+  async function apiPost(path, body) {
+    const res = await fetch(state.base + path, { method: 'POST', body: JSON.stringify(body),
+      headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' } });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof out.detail === 'string' ? out.detail : `HTTP ${res.status}`);
+    return out;
   }
   const pct = (x) => x == null ? '–' : `${Math.round(x * 100)}%`;
   const bar = (x, label) => x == null ? '<span class="sub">–</span>'
@@ -295,6 +319,26 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
           <td class="num">${r.open_past_deadline_never_acted_on ? `<span class="gap">${r.open_past_deadline} (${r.open_past_deadline_never_acted_on})</span>` : r.open_past_deadline}</td></tr>`).join('')}
         </tbody></table>`;
     }
+    const s = state.sr;
+    $('sr-pane').hidden = !s;
+    if (s) {
+      $('sr-mode').innerHTML = `<span class="chip ${s.mode === 'silent' ? 'ok' : 'neutral'}">${esc(t().srMode[s.mode] || s.mode)}</span>`;
+      const ci = (c) => c.precision == null ? '–' : `${pct(c.precision)} (${pct(c.precision_ci95[0])}–${pct(c.precision_ci95[1])})`;
+      const row = (label, c) => `<tr><td>${label}</td><td class="num">${c.n}</td><td class="num">${c.reviewed}</td><td class="num">${c.real_miss ? `<b>${c.real_miss}</b>` : 0}</td>
+        <td class="num">${c.already_handled}</td><td class="num">${c.not_needed}</td><td class="num">${c.wrong_quote}</td><td class="num">${esc(ci(c))}</td></tr>`;
+      $('sr-table').innerHTML = `<table class="tbl"><thead><tr><th>${esc(t().srCat)}</th><th class="num">${esc(t().srN)}</th><th class="num">${esc(t().srReviewed)}</th>
+        <th class="num">${esc(t().srMiss)}</th><th class="num">${esc(t().srHandled)}</th><th class="num">${esc(t().srNotNeeded)}</th><th class="num">${esc(t().srWrong)}</th><th class="num">${esc(t().srPrec)}</th></tr></thead><tbody>
+        ${Object.values(s.categories).map((c) => row(esc(c[lang] || c.en), c)).join('')}${row(`<b>${esc(t().total)}</b>`, s.total)}</tbody></table>`;
+      const items = (state.srItems || []).filter((i) => !i.verdict);
+      $('sr-items').innerHTML = state.srItems == null ? '' : `<h3 style="margin:16px 0 4px;">${esc(t().srPending)}</h3>` + (items.length ? items.map((i) => `
+        <div class="sugg"><span class="chip neutral">${esc(i.label[lang] || i.label.en)}</span> <b>${esc(i.patient_id)}</b> · ${esc(t().srReport)} ${esc((i.report_date || '').slice(0, 10))}
+          <blockquote>“${esc(i.quote)}”</blockquote><div class="sub">${esc(t().srModelReason)}: ${esc(i.reason || '–')}</div>
+          <form data-sid="${esc(i.id)}"><select name="verdict" aria-label="${esc(t().srReviewed)}">${Object.entries(t().verdicts).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select>
+            <label class="check"><input type="checkbox" name="urgent"> ${esc(t().srUrgent)}</label>
+            <input type="text" name="referral" maxlength="500" placeholder="${esc(t().srReferral)}" aria-label="${esc(t().srReferral)}">
+            <input type="text" name="note" maxlength="500" placeholder="${esc(t().srNote)}" aria-label="${esc(t().srNote)}">
+            <button type="submit" class="primary">${esc(t().srSave)}</button></form></div>`).join('') : `<p class="sub">${esc(t().srNone)}</p>`);
+    }
     const a = state.audit;
     $('audit-pane').hidden = !a;
     if (a) {
@@ -319,11 +363,26 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       // Patient-level audit: navigators and above (viewers see the hospital-wide tables only)
       state.audit = await api('/api/v1/quality/documentation-audit').catch(() => null);
       state.outcomes = await api('/api/v1/quality/outcomes').catch(() => null);
+      state.sr = await api('/api/v1/quality/second-reader').catch(() => null);
+      // The suggestions quote reports: the quality team only (others get 403 and see the counts)
+      state.srItems = await api('/api/v1/quality/second-reader/suggestions?pending=true').then((r) => r.items).catch(() => null);
       store.set('clinloop_api', state.base); store.set('clinloop_token', state.token);
       $('app').hidden = false;
       setStatus(`${(lang === 'ko' ? `${me.user}(${me.role})님으로 로그인했습니다.` : `Signed in as ${me.user} (${me.role}).`)} · ${lang === 'ko' ? '기준' : 'as of'} ${state.data.as_of.slice(0, 16).replace('T', ' ')}`);
       render();
     } catch (err) { $('app').hidden = true; setStatus(err.message, true); }
+  });
+  $('sr-items').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target, sid = f.dataset.sid;
+    try {
+      await apiPost(`/api/v1/quality/second-reader/suggestions/${encodeURIComponent(sid)}/review`, {
+        verdict: f.verdict.value, urgent: f.urgent.checked, safety_referral: f.referral.value.trim(), note: f.note.value.trim() });
+      state.sr = await api('/api/v1/quality/second-reader');
+      state.srItems = (state.srItems || []).filter((i) => i.id !== sid);
+      render();
+      setStatus(t().srSaved);
+    } catch (err) { setStatus(err.message, true); }
   });
   $('btn-lang').addEventListener('click', () => { lang = lang === 'ko' ? 'en' : 'ko'; store.set('clinloop_lang', lang, localStorage); render(); });
   render();
