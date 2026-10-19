@@ -27,9 +27,41 @@ and lists every actionable item. Each item has one of five categories, and a quo
 closes it as not needed. The model never opens or closes a real clinical obligation, and never reaches
 the patient.
 
+## Modes: silent in the clinical edition
+
+| `CLINLOOP_SECOND_READER` | Clinical edition (core profile, default) | Research profile |
+| --- | --- | --- |
+| unset / `off` | Off | Off |
+| `silent` | Silent | Silent |
+| `1` / `on` | **Silent** (held there: model output never reaches care) | Live (R058 review loops) |
+
+**Silent mode** reads the same reports with the same safeguards, but each suggestion goes to a separate
+log that only the quality team sees (Quality page, "Model second reader"). Nothing enters the patient
+record: no R058 loop, nothing on the worklist, EHR cards, escalation or patient graph. A clinician on
+the team judges each suggestion:
+
+- **Real miss:** follow-up was needed, no rule tracked it, and nobody had handled it.
+- **Already handled:** for example, ordered in clinic.
+- **Not needed.**
+- **Wrong quote.**
+
+An urgent real miss cannot be saved without a safety referral (who on the treating team was told, and
+how), so the log is never where an urgent finding is seen and left. Suggestions and judgements are
+in the hash-chained audit log, and every read of the quoted suggestions is recorded in the access log.
+
+The totals per category, with precision and its 95% interval, are the evidence for the gate in
+[`regulatory/CLINICAL_EVALUATION_PLAN.md`](regulatory/CLINICAL_EVALUATION_PLAN.md) §4. That gate
+decides whether suggestions may ever be shown to clinicians, and then only for a person to confirm.
+API endpoints:
+
+- `GET /api/v1/quality/second-reader`: counts only, any role.
+- `GET /api/v1/quality/second-reader/suggestions`: the quality team; access is recorded.
+- `POST /api/v1/quality/second-reader/suggestions/{id}/review`: clinicians on the team.
+
 ## Safeguards
 
-- **Off by default:** `CLINLOOP_SECOND_READER=1` turns it on.
+- **Off by default:** `CLINLOOP_SECOND_READER=silent` runs it for measurement; `=1` is live only in the
+  research profile.
 - **On-premise model only:** the server at `CLINLOOP_OLLAMA_URL` must resolve to a private address, or
   nothing is sent.
 - **De-identified:** identifiers, and the patient's own names, are removed from the report before the

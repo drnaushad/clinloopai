@@ -84,6 +84,9 @@ second reader of report text (R058), language-model suggestions and a free-text 
 assistant, plus a demonstration cockpit on synthetic cases. They are **outside this intended use**.
 The core profile locks all of them off (`src/clinloop_engine/profile.py`), and the governance page
 shows the active profile. Using any of them on patients would need its own regulatory assessment.
+One exception runs inside the core profile without reaching patients or clinicians: the second reader
+in silent mode (`CLINLOOP_SECOND_READER=silent`), whose suggestions only the quality team sees and
+judges, to measure what it would add (RISK_MANAGEMENT.md H-19, SR-24).
 
 ## 8. Required configuration
 

@@ -80,7 +80,9 @@ class TestMIMIC(unittest.TestCase):
 
     def test_obligations_from_a_whole_mimic_style_record(self):
         found, _ = loops(self.people["19990001"], "19990001", "2150-06-01T00:00:00")
-        expected = {"R030": "nodule on CT", "R051": "cardiology visit in the discharge summary",
+        # The 9 mm nodule is one alert: Fleischner (R003) and the radiologist's "CT in 3 months" (R030) agree
+        self.assertTrue({"R003", "R030"} & set(found), "nodule on CT")
+        expected = {"R051": "cardiology visit in the discharge summary",
                     "R048": "repeat potassium in the discharge summary", "R023": "heart-failure discharge",
                     "R015": "Staph aureus bacteraemia", "R002": "outpatient high potassium"}
         for rule, why in expected.items():

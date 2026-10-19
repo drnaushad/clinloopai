@@ -12,7 +12,8 @@ configuration that was assessed cannot be widened by one environment variable:
   * imaging models: chest X-ray model, vision-language model, plug-in models (imaging_ai.py);
   * CT organ measurement (ct_organs.py) and automatic image scanning from PACS (imaging_scanner.py);
   * research-use imaging-AI findings (ai_review.py) and receiving any imaging-AI product's results;
-  * the model-based second reader for reports (second_reader.py);
+  * the model-based second reader for reports (second_reader.py) in live mode; its silent mode runs in
+    core too, because its suggestions reach only the quality team's log, never care (SR-24);
   * language-model suggestions on clinical notes (note_reader.py);
   * the free-text language-model assistant (differential diagnosis, evidence synthesis, ad-hoc patient
     messages: api.py). Loop-based patient messages (outreach.py) stay: they never name a diagnosis and

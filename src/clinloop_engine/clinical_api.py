@@ -543,6 +543,53 @@ def quality_outcomes(user: User = Depends(require_role("viewer"))):
     return loop_outcomes(get_store())
 
 
+@router.get("/quality/second-reader", tags=["Clinical Pilot"])
+def second_reader_summary(user: User = Depends(require_role("viewer"))):
+    """
+    The model-based second reader in silent mode: how many suggestions it made per category and how the
+    quality team judged them (real miss, already handled, not needed, wrong quote). Counts only.
+    In the core (clinical) profile the reader never puts anything in front of clinicians.
+    """
+    from .second_reader import silent_summary
+    return silent_summary(get_store())
+
+
+@router.get("/quality/second-reader/suggestions", tags=["Clinical Pilot"])
+def second_reader_suggestions(pending: bool = Query(False), limit: int = Query(200, ge=1, le=1000),
+                              user: User = Depends(require_role("navigator")), access=Depends(access_recorder)):
+    """The silent suggestions with their quotes, for the quality team to judge."""
+    _review_team_only(user)
+    from .second_reader import CATEGORIES
+    items = get_store().second_reader_suggestions(pending_only=pending, limit=limit)
+    for i in items:
+        spec = CATEGORIES.get(i["category"], {})
+        i["label"] = {"en": spec.get("en", i["category"]), "ko": spec.get("ko", i["category"])}
+    access(user, "view_second_reader_suggestions", sorted({i["patient_id"] for i in items}))
+    return {"count": len(items), "items": items}
+
+
+class SuggestionReview(BaseModel):
+    verdict: str = Field(..., pattern="^(real_miss|already_handled|not_needed|wrong_quote)$")
+    urgent: bool = False
+    safety_referral: str = Field("", max_length=500)
+    note: str = Field("", max_length=500)
+
+
+@router.post("/quality/second-reader/suggestions/{sid}/review", tags=["Clinical Pilot"])
+def review_second_reader_suggestion(sid: str = Path(..., pattern="^[0-9a-f]{32}$"), req: SuggestionReview = Body(...),
+                                    user: User = Depends(require_role("clinician")), access=Depends(access_recorder)):
+    """A clinician on the quality team judges one suggestion. An urgent real miss needs a safety referral."""
+    _review_team_only(user)
+    store = get_store()
+    try:
+        row = store.review_second_reader_suggestion(sid, req.verdict, user.name, user.role, urgent=req.urgent,
+                                                    safety_referral=req.safety_referral, note=req.note)
+    except WorkflowError as e:
+        raise HTTPException(409 if "No such" not in str(e) else 404, str(e))
+    access(user, "review_second_reader_suggestion", [row["patient_id"]])
+    return row
+
+
 @router.get("/quality/documentation-audit", tags=["Clinical Pilot"])
 def documentation_audit(user: User = Depends(require_role("navigator")), access=Depends(access_recorder)):
     """

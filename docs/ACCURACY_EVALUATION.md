@@ -105,6 +105,64 @@ decision.
 category 2, report within 6 hours). One writer did not consider it critical. Each hospital edits that
 list.
 
+### Round 8 (October 2026): Korean hospital style, hard English reports, then a confirmation set
+
+Same method. Three new writers saw only the rule catalogue. Each set was scored once against the code
+as it stood, before anything was changed for it:
+
+| Set (first pass, code untouched for it) | Cases | Equivalent | No alert when none needed | Deadline in window |
+|---|---|---|---|---|
+| Korean hospital-style full reports | 80 | 87.5% | 78.6% | 100% |
+| Hard English reports (addenda, corrections, multi-finding, OCR) | 80 | 82.5% | 60.7% | 100% |
+| **Confirmation, written after the fixes (40 Korean, 40 English)** | 80 | **91.2%** | **93.1%** | 97.6% |
+| All 690 after every fix (not unbiased) | 690 | 99.7% | 99.6% | 99.3% |
+
+**The confirmation set is the honest number for this round.** It improves on the earlier untouched
+real-style sets (80% and 87.5%), but the long tail is still there. Korean-language reports remain
+weaker than English ones on first pass (87.5% against 95.0% in the confirmation set).
+
+**What the round found**, all fixed with a test:
+- **Missed critical finding:** acute PE written "pulmonary thromboembolism", "PTE" or "폐동맥 혈전색전";
+  "[CRITICAL]" as a tag.
+- **Missed follow-up:**
+  - BI-RADS 0 recall;
+  - pathology "atypical cells; malignancy cannot be excluded", "suspicious for carcinoma";
+  - thyroid Bethesda III–VI;
+  - Korean "6주 뒤 Chest PA … 요망";
+  - focal FDG uptake in the thyroid far from the word 결절;
+  - a "*** CORRECTED REPORT ***" in mid-report that raises the Lung-RADS category.
+- **A pre-existing gap, found while testing a fix:** "postoperative free air with contrast leak" was
+  never critical, because "postoperative" marked the air as expected. A described leak or perforation
+  now always makes free air critical.
+- **False alarms:**
+  - a thyroid or adrenal nodule after "Rt."/"Lt." (or "adrenal에") read as a lung nodule;
+  - guideline thresholds read as sizes ("6 mm 미만", "the 2.5 cm FNA threshold");
+  - one nodule described in FINDINGS and again in IMPRESSION counted as two, which changed the
+    Fleischner branch;
+  - "No new nodules" setting "multiple";
+  - the radiologist's "no further follow-up / 추가 검사 불필요" ignored;
+  - an addendum or correction that re-categorises or withdraws advice ignored;
+  - history and comparison lines read as current findings;
+  - expected post-operative free air;
+  - a Korean list of negated trauma findings ("기흉, 혈흉 없음").
+- **A documented call missed:** "Called to and acknowledged by Dr X".
+
+**Two of the fixes first introduced misses, caught before commit by their own tests and by the timelines:**
+- The Korean list negation hid a measured nodule ("8 mm 결절, 흉수 없음"). A measured finding is now
+  always present.
+- Skipping history lines skipped a growing nodule on a line that read "COMPARISON: … FINDINGS: …".
+  A history line now ends at the next section heading.
+
+These two are the reason every fix is checked in both directions: the false alarm it removes, and
+the real finding it must not hide.
+
+**Not defects:**
+- When a report both recommends a study and matches a guideline rule for the same finding, the
+  radiologist's recommendation is tracked (one alert per finding; the same follow-up closes it).
+- A critical finding whose call is documented in the report opens and closes at once.
+- A BI-RADS 4 biopsy described only in an addendum keeps the loop visible until the biopsy is in the
+  record, by design (fail toward a person).
+
 ## Defects found and fixed (each now has a test in `tests/test_report_accuracy.py`)
 
 ### Found by the real-style and timeline sets

@@ -179,8 +179,9 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
         budget = {"left": int(os.environ.get("CLINLOOP_SECOND_READER_MAX", "20"))}
         for pid in sorted(patients):
             history, record_warnings = patient_record(pid, store, client, pacs)
-            if second_reader.enabled():
+            if second_reader.running():
                 try:     # the second reader never blocks the sync: on any failure the rules' result stands
+                    # live: its flags join the record (R058); silent: they go to the quality log, [] comes back
                     history = history + second_reader.second_read_patient(store, pid, history, budget=budget, now=now)
                 except Exception as e:
                     logger.warning("Second reader failed for a patient: %s", type(e).__name__)

@@ -60,8 +60,18 @@ def not_negated(text: str, start: int) -> bool:
     return not in_list
 
 
+# A list of bare nouns shares its negation: "늑골 골절이나 기흉, 혈흉 없음" (no pneumothorax, no haemothorax)
+_KO_LIST_NEGATED = re.compile(r"^\s*(?:,\s*[가-힣A-Za-z]{1,8}\s*)+(?:등\s*)?(?:은|는|이|가)?\s*(?:없|음성|아님)")
+# …but a measured finding is present: "8 mm 결절, 흉수 없음" is a nodule and no effusion
+_MEASURED = re.compile(r"\d\s*(?:mm|cm|밀리|센티)", re.I)
+
+
 def affirmed(text: str, match: re.Match) -> bool:
-    return not_negated(text, match.start()) and not NEGATION_AFTER.search(text[match.end():])
+    if not not_negated(text, match.start()) or NEGATION_AFTER.search(text[match.end():]):
+        return False
+    return not (_KO_LIST_NEGATED.match(text[match.end():])
+                and not _MEASURED.search(re.split(r"[.;,\n]", text[max(0, match.start() - 30):match.start()])[-1]
+                                         + match.group(0)))
 
 
 def first_affirmed(pattern: re.Pattern, text: str) -> Optional[re.Match]:

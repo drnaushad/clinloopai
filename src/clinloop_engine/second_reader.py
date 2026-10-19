@@ -8,8 +8,17 @@ actionable item, each with an exact quote. Items the rules already track are dro
 item opens R058: a clinician reviews the report and either acts (the follow-up closes it) or closes it
 as not needed.
 
+Modes (CLINLOOP_SECOND_READER):
+  * off (default).
+  * silent: the reader runs, but its suggestions go to a separate log for the quality team only
+    (store.add_second_reader_suggestion). Nothing enters the patient record: no R058, nothing on the
+    worklist, EHR cards, escalation or patient graph. The team marks each suggestion (real miss, already
+    handled, not needed, wrong quote) to measure what the model would add before anyone sees it in care.
+  * 1 / on: live, research profile only: each untracked item opens R058 for a person to review.
+    In the core (clinical) profile "on" is held at silent: model output never reaches clinical care
+    there (profile.py, docs/regulatory/REGULATORY_ASSESSMENT.md).
+
 Safeguards:
-  * OFF unless the hospital sets CLINLOOP_SECOND_READER=1.
   * On-premise only: the model server must resolve to a private address; identifiers are removed from
     the report before it is sent (scrub_identifiers, plus the patient's own names).
   * A fixed list of categories; every item must quote the report word for word, or it is discarded.
@@ -75,10 +84,25 @@ REPORT:
 """
 
 
-def enabled() -> bool:
+def mode() -> str:
+    """off | silent | live (see the module docstring). The core profile never runs live."""
     from .profile import allows
-    return (os.environ.get("CLINLOOP_SECOND_READER", "").strip().lower() in ("1", "true", "yes", "on")
-            and allows("second_reader"))
+    value = os.environ.get("CLINLOOP_SECOND_READER", "").strip().lower()
+    if value == "silent":
+        return "silent"
+    if value in ("1", "true", "yes", "on"):
+        return "live" if allows("second_reader") else "silent"
+    return "off"
+
+
+def enabled() -> bool:
+    """True when the reader's flags open R058 loops (live mode, research profile only)."""
+    return mode() == "live"
+
+
+def running() -> bool:
+    """True when the reader reads reports at all (live or silent)."""
+    return mode() != "off"
 
 
 def _norm(text: str) -> str:
@@ -164,11 +188,18 @@ def _report_kind(r: Dict[str, Any]) -> Optional[str]:
 def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],
                         model: Optional[Callable[[str, str], Dict[str, Any]]] = None,
                         budget: Optional[Dict[str, int]] = None, now: Optional[datetime] = None,
-                        lookback_days: Optional[int] = None) -> List[Dict[str, Any]]:
+                        lookback_days: Optional[int] = None, silent: Optional[bool] = None) -> List[Dict[str, Any]]:
     """
-    Second-read this patient's recent, unread reports. Returns the flags filed (FHIR Observations); they are
-    also stored, so the next evaluation of the patient opens R058 for each.
+    Second-read this patient's recent, unread reports. Live: returns the flags filed (FHIR Observations);
+    they are also stored, so the next evaluation of the patient opens R058 for each. Silent (always in the
+    core profile; in research when CLINLOOP_SECOND_READER=silent): each untracked item goes to the quality
+    team's suggestion log and nothing is returned, so nothing enters the patient record.
     """
+    from .profile import allows
+    if silent is None:          # always silent in the clinical (core) profile, whatever the caller expects
+        silent = mode() == "silent" or not allows("second_reader")
+    elif not allows("second_reader"):
+        silent = True
     from .fhir_ingest import bundle_to_events, patient_names
     from .loop_detector import ClinLoopDetector
     from .safety_clock import normalize_timestamp, utc_now
@@ -218,6 +249,12 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],
             continue
         new = uncovered(result["items"], opened.get(r["id"], set()))
         for item in new:
+            if silent:
+                store.add_second_reader_suggestion(
+                    patient_id=patient_id, report_ref=f"DiagnosticReport/{r['id']}", report_kind=kind,
+                    report_date=r.get("effectiveDateTime") or r.get("issued"), category=item["category"],
+                    quote=item["quote"], reason=item.get("reason") or "", model=result.get("model") or "", now=now)
+                continue
             res = flag_resource(patient_id, r, item, result.get("model") or "")
             store.add_external_resource(res, "second-reader", "second-reader", "system",
                                         summary=f"{CATEGORIES[item['category']]['en']}: \"{item['quote'][:120]}\"")
@@ -251,6 +288,38 @@ def map_flag(r: Dict[str, Any], ts: Optional[str]) -> List[tuple]:
 def status(store) -> Dict[str, Any]:
     from .imaging_ai import _on_premise
     from .local_llm_engine import OLLAMA_BASE_URL
-    return {"enabled": enabled(), "model_server": OLLAMA_BASE_URL, "model_server_on_premise": _on_premise(OLLAMA_BASE_URL),
+    return {"enabled": enabled(), "mode": mode(), "model_server": OLLAMA_BASE_URL, "model_server_on_premise": _on_premise(OLLAMA_BASE_URL),
             "categories": {k: {"en": v["en"], "ko": v["ko"], "review_days": v["days"]} for k, v in CATEGORIES.items()},
             **store.second_read_counts()}
+
+
+def _wilson(k: int, n: int, z: float = 1.96) -> Optional[List[float]]:
+    if n == 0:
+        return None
+    p = k / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / (1 + z * z / n)
+    return [round(max(0.0, centre - half), 3), round(min(1.0, centre + half), 3)]
+
+
+def silent_summary(store) -> Dict[str, Any]:
+    """
+    What the silent second reader would add, from the quality team's verdicts (counts only).
+    precision = real misses / suggestions reviewed: how often a suggestion pointed at follow-up that was
+    needed and that no rule tracked and nobody had handled. It is the number that decides whether the
+    reader may ever put suggestions in front of clinicians (docs/regulatory/CLINICAL_EVALUATION_PLAN.md).
+    """
+    per = store.second_reader_suggestion_counts()
+    categories = {}
+    for cat, spec in CATEGORIES.items():
+        c = per.get(cat, {"n": 0, "reviewed": 0, "real_miss": 0, "already_handled": 0, "not_needed": 0,
+                          "wrong_quote": 0, "urgent": 0})
+        categories[cat] = {"en": spec["en"], "ko": spec["ko"], **c,
+                           "precision": round(c["real_miss"] / c["reviewed"], 3) if c["reviewed"] else None,
+                           "precision_ci95": _wilson(c["real_miss"], c["reviewed"])}
+    total = {k: sum(c[k] for c in categories.values())
+             for k in ("n", "reviewed", "real_miss", "already_handled", "not_needed", "wrong_quote", "urgent")}
+    total["precision"] = round(total["real_miss"] / total["reviewed"], 3) if total["reviewed"] else None
+    total["precision_ci95"] = _wilson(total["real_miss"], total["reviewed"])
+    return {"mode": mode(), "reaches_clinical_care": enabled(), "categories": categories, "total": total,
+            "reads": store.second_read_counts()}

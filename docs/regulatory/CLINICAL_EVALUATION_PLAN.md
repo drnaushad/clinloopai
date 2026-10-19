@@ -83,6 +83,21 @@ None of this supports C1–C4. Real-data evidence starts with Stage 1.
 
 No live patient-facing use (alerts to clinicians, messages to patients) before the Stage 2 → 3 gate.
 
+**Model second reader: silent → suggestions shown to clinicians.** A separate gate; the criteria are
+proposals for the clinical lead to set before the measurement starts, not after:
+
+| Criterion | Proposed threshold | Source |
+| --- | --- | --- |
+| Suggestions judged by the quality team | ≥ 300, across radiology and pathology | Quality page, second-reader table |
+| Real misses found (needed follow-up that no rule tracked and nobody had handled) | ≥ 10, enough to matter clinically | Same |
+| Precision (real misses ÷ judged) | Lower 95 % bound ≥ 20 % (at most about four reviews per real miss) | Same, Wilson interval |
+| Wrong quotes | ≤ 1 % of judged suggestions | Same |
+| Urgent real misses | Each one reviewed by the patient safety officer, with its safety referral | Audit log |
+| Regulatory | Regulatory assessment §5 repeated; MFDS pre-consultation held | Assessment sign-off |
+
+If it passes, suggestions appear as a separate, clearly marked list for confirmation by a clinician:
+a suggestion becomes a loop only when a person confirms it, and the model never closes one.
+
 ## 5. After release: clinical follow-up
 
 Clinical performance keeps being measured in routine use through the [post-market surveillance

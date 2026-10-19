@@ -95,7 +95,8 @@ These are locked off by `CLINLOOP_PROFILE=core` (`profile.py`, tested in `tests/
 | --- | --- | --- |
 | Chest X-ray model, vision-language model, plug-in image models, CT organ measurement, automatic PACS image scan (`imaging_ai.py`, `ct_organs.py`, `imaging_scanner.py`) | 1 (analyses images) | Software as a medical device; MFDS approval as image-analysis software |
 | Imaging-AI result comparison (R047) and triage of unread studies (R057) (`ai_review.py`, `/imaging/ai-results`) | 1 (derived from image analysis), 3 (R057 is time-critical triage) | Computer-aided triage; device |
-| Model-based second reader of reports (R058, `second_reader.py`) | 4 (language-model output the user cannot fully check) | Device assessment needed; probably device |
+| Model-based second reader of reports (R058, `second_reader.py`), live: its flags open review loops for clinicians | 4 (language-model output the user cannot fully check) | Device assessment needed; probably device |
+| The same reader in **silent mode** (allowed in the core profile since October 2026) | None of the four, because nothing reaches care: suggestions go only to the quality team's log, are judged there, and never enter the record, worklist, EHR cards or patient graph (SR-24). It is a quality-measurement tool, like the silent run | Inside the core profile as measurement. Showing suggestions to clinicians later is a change that needs this assessment repeated and an MFDS pre-consultation (gate in the clinical evaluation plan §4) |
 | Language-model note suggestions; free-text language-model assistant including "differential diagnosis" (`note_reader.llm_suggestions`, `/local-llm/generate`, `/agent/*`) | 3 and 4 (diagnostic suggestions from a model) | Device; not planned |
 | Demonstration cockpit and illustrative survival curves (`/api/v1/cases/*`) | Synthetic cases only | Not for patient use; keep out of hospital deployments |
 
