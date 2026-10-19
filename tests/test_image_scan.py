@@ -10,6 +10,18 @@ import unittest
 from datetime import datetime, timedelta
 from unittest import mock
 
+# These tests exercise research-profile features; the default profile is core (clinical).
+_RESEARCH_PROFILE = mock.patch.dict(os.environ, {"CLINLOOP_PROFILE": "research"})
+
+
+def setUpModule():
+    _RESEARCH_PROFILE.start()
+
+
+def tearDownModule():
+    _RESEARCH_PROFILE.stop()
+
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.dirname(__file__))

@@ -60,7 +60,8 @@ def build() -> Dict[str, int]:
         def save(path: str, query: Optional[Dict[str, str]] = None) -> Optional[dict]:
             r = client.get(path + ("?" + "&".join(f"{k}={quote(str(v), safe='')}" for k, v in query.items())
                                    if query else ""), headers=headers)
-            if r.status_code != 200:
+            refused = r.status_code in (401, 403)          # role-limited: the demo answers with the same refusal
+            if r.status_code != 200 and not refused:
                 print(f"  skipped {path} {query or ''}: HTTP {r.status_code}", file=sys.stderr)
                 return None
             key = request_key(path, {k: str(v) for k, v in (query or {}).items()})
@@ -69,14 +70,17 @@ def build() -> Dict[str, int]:
                 raise SystemExit(f"hash collision: {key} / {written[name]}")
             written[name] = key
             with open(os.path.join(OUT, name + ".json"), "w", encoding="utf-8") as f:
-                json.dump(r.json(), f, ensure_ascii=False, separators=(",", ":"))
-            return r.json()
+                json.dump({"__status": r.status_code, "detail": r.json().get("detail")} if refused else r.json(),
+                          f, ensure_ascii=False, separators=(",", ":"))
+            return None if refused else r.json()
 
         for path in ("/api/v1/me", "/api/v1/rules", "/api/v1/feed/status", "/api/v1/metrics/breakdowns",
                      "/api/v1/metrics/open-loop-rate", "/api/v1/governance/summary", "/api/v1/governance/rules",
                      "/api/v1/governance/critical-findings", "/api/v1/governance/rule-check",
                      "/api/v1/imaging/models", "/api/v1/imaging/scan/status", "/api/v1/reports/second-read/status",
-                     "/api/v1/connections/status", "/cds-services", "/api/v1/pilot/status"):
+                     "/api/v1/connections/status", "/cds-services", "/api/v1/pilot/status",
+                     "/api/v1/governance/monitor", "/api/v1/quality/documentation-audit", "/api/v1/quality/outcomes",
+                     "/api/v1/pilot/metrics", "/api/v1/pilot/queue", "/api/v1/pilot/safety-referrals", "/api/v1/users"):
             save(path)
         for by in ("rule", "language", "age_group", "sex"):
             save("/api/v1/metrics/open-loop-rate", {"stratify_by": by})

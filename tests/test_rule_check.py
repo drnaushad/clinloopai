@@ -20,7 +20,7 @@ class TestRuleCheck(unittest.TestCase):
         r = rule_check.check_rules()
         errors = [i for i in r["issues"] if i["level"] == "error"]
         self.assertEqual(errors, [], errors)
-        self.assertEqual(r["rules"], len(co.OBLIGATION_RULES))
+        self.assertEqual(r["rules"], len(co.OBLIGATION_RULES) - len(r["excluded_by_profile"]))
 
     def test_a_broken_rule_is_caught(self):
         bad = co.ObligationRule(rule_id="R999", name="x", description="x", trigger_event=co.EventType.LAB_RESULT,

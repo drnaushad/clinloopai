@@ -156,9 +156,9 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } .row2 { grid-template-columns: 1fr; } .kv { grid-template-columns: 1fr; } }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js"></script>
-<script src="js/appnav.js"></script>
-<link rel="stylesheet" href="css/responsive.css?v=20261020">
+<script src="js/demo.js?v=20261021"></script>
+<script src="js/appnav.js?v=20261021"></script>
+<link rel="stylesheet" href="css/responsive.css?v=20261021">
 </head>
 <body>
 <div class="wrap">
@@ -520,7 +520,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       $('services').textContent = t().services(state.models);
       $('app').hidden = false;
       await loadScan();
-      setStatus(`${state.user.user} (${state.user.role})`);
+      setStatus((lang === 'ko' ? `${state.user.user}(${state.user.role})님으로 로그인했습니다.` : `Signed in as ${state.user.user} (${state.user.role}).`));
     } catch (err) { $('app').hidden = true; setStatus(err.message, true); }
   });
   $('btn-lang').addEventListener('click', () => { lang = lang === 'ko' ? 'en' : 'ko'; store.set('clinloop_lang', lang, localStorage); applyLang(); });

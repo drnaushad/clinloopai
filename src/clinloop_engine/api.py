@@ -1,5 +1,5 @@
 """
-ClinLoop AI - FastAPI Backend Service (research prototype)
+ClinLoop AI - FastAPI Backend Service (clinical edition by default; research features need CLINLOOP_PROFILE=research)
 Exposes REST endpoints for the web cockpit. Runs on synthetic data only.
 
 Run from the repository root:
@@ -502,7 +502,7 @@ def test_api_key(req: TestKeyRequest, user: User = Depends(require_role("admin")
     return {
         'status': 'not_verified',
         'provider': provider,
-        'message': 'Connectivity testing is not implemented in this prototype; no request was sent.',
+        'message': 'Connectivity testing is not implemented for this connector; no request was sent.',
     }
 
 @app.post("/api/v1/agent/evidence-synthesis", tags=["Autonomous Evidence Synthesis Agent (RAG)"])

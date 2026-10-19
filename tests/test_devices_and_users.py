@@ -101,7 +101,7 @@ class TestEveryDevice(unittest.TestCase):
                 html = f.read()
             with self.subTest(page=page):
                 self.assertIn('<nav class="app-nav">', html)
-                self.assertIn('src="js/appnav.js"', html)
+                self.assertRegex(html, r'src="js/appnav\.js(\?v=[0-9a-z_]+)?"')
         with open(os.path.join(ROOT, "js", "appnav.js"), encoding="utf-8") as f:
             nav = f.read()
         for page in PAGES:

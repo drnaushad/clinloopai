@@ -63,8 +63,14 @@
       var key = path + (pairs.length ? '?' + pairs.map(function (p) { return p[0] + '=' + p[1]; }).join('&') : '');
       return realFetch(new URL('demo/api/' + fnv1a(key) + '.json', window.location.href).href)
         .then(function (r) {
-          return r.ok ? r : reply(404, { detail: 'Not part of the public demo snapshot. ' +
-            'Try a listed patient, or run your own server for anything else.' });
+          if (!r.ok) {
+            return reply(404, { detail: 'Not part of the public demo snapshot. ' +
+              'Try a listed patient, or run your own server for anything else.' });
+          }
+          // A role-limited endpoint is stored as its refusal ({__status, detail}) and answered the same way
+          return r.json().then(function (body) {
+            return body && body.__status ? reply(body.__status, { detail: body.detail }) : reply(200, body);
+          });
         })
         .catch(function () { return reply(503, { detail: 'Could not load the demo snapshot. Check your connection.' }); });
     };

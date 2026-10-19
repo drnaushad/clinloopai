@@ -135,7 +135,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 .graph-wrap { overflow-x: auto; margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
 svg { display: block; font-family: var(--font-body); }
 svg .lane-label { font: 600 11px var(--font-body); fill: var(--muted); }
-svg .tick { font: 10px var(--font-mono); fill: var(--dim); }
+svg .tick { font: 11px var(--font-mono); fill: var(--dim); }
 svg .grid { stroke: var(--border); }
 svg .now { stroke: var(--accent); stroke-dasharray: 4 3; }
 svg .node { cursor: pointer; stroke: var(--surface); stroke-width: 2; }
@@ -160,9 +160,9 @@ svg .ob-label { font: 700 10px var(--font-mono); }
 @media (max-width: 720px) { .row3 { grid-template-columns: 1fr; } }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js"></script>
-<script src="js/appnav.js"></script>
-<link rel="stylesheet" href="css/responsive.css?v=20261020">
+<script src="js/demo.js?v=20261021"></script>
+<script src="js/appnav.js?v=20261021"></script>
+<link rel="stylesheet" href="css/responsive.css?v=20261021">
 </head>
 <body>
 <div class="wrap">
@@ -279,6 +279,12 @@ svg .ob-label { font: 700 10px var(--font-mono); }
     document.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t()[el.dataset.i18nPh]; });
     if (state.graph) render();
   }
+  // Same wording as the worklist, so every page says who is signed in
+  function signedIn() {
+    const me = state.me;
+    if (!me) return '';
+    return lang === 'ko' ? `${me.user}(${me.role})님으로 로그인했습니다.` : `Signed in as ${me.user} (${me.role}).`;
+  }
   function setStatus(msg, isError = false) { $('status').textContent = msg; $('status').classList.toggle('error', isError); }
   async function api(path, payload) {
     const res = await fetch(state.base + path, payload ? { method: 'POST', body: JSON.stringify(payload),
@@ -298,7 +304,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
 
   // ── Layout: lanes (rows) × time (x) ──
   function layout(g) {
-    const W = Math.max(760, $('graph-wrap').clientWidth - 2), left = 170, right = 40, laneH = 54, top = 30;
+    const W = Math.max(760, $('graph-wrap').clientWidth - 2), left = 200, right = 40, laneH = 54, top = 30;
     const lanes = g.lanes.filter((l) => g.nodes.some((n) => n.lane === l.id) || g.hyperedges.some((h) => h.expected.some((e) => e.lane === l.id)));
     const laneY = Object.fromEntries(lanes.map((l, i) => [l.id, top + i * laneH + laneH / 2]));
     // Long-standing diagnoses would squeeze the timeline: the axis starts at the first other event,
@@ -348,7 +354,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
       parts.push(`<line class="grid" x1="${px}" x2="${px}" y1="${L.top}" y2="${L.H - 26}"/><text class="tick" x="${px}" y="${L.H - 10}" text-anchor="middle">${d.toISOString().slice(0, 7 + (L.t1 - L.t0 < 60 * 86400000 ? 3 : 0))}</text>`);
     });
     const nowX = L.x(+new Date(g.evaluation_time));
-    parts.push(`<line class="now" x1="${nowX}" x2="${nowX}" y1="${L.top - 14}" y2="${L.H - 26}"/><text class="tick" x="${nowX + 4}" y="${L.top - 4}" style="fill:var(--accent)">${esc(day(g.evaluation_time))}</text>`);
+    parts.push(`<line class="now" x1="${nowX}" x2="${nowX}" y1="${L.top - 14}" y2="${L.H - 26}"/><text class="tick" x="${nowX > L.W - 90 ? nowX - 4 : nowX + 4}" y="${L.top - 4}" text-anchor="${nowX > L.W - 90 ? 'end' : 'start'}" style="fill:var(--accent)">${esc(day(g.evaluation_time))}</text>`);
     g.edges.forEach((e) => {
       const a = L.pos[e.source], b = L.pos[e.target];
       if (a && b) parts.push(`<path class="rel" d="M${a.x},${a.y} L${b.x},${b.y}"/>`);
@@ -453,7 +459,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
         return;
       }
       render();
-      setStatus((state.graph.warnings || []).join(' · '));
+      setStatus((state.graph.warnings || []).join(' · ') || signedIn());
     } catch (err) { setStatus(err.message, true); }
   }
   function plansHtml(plans) {
@@ -502,7 +508,8 @@ svg .ob-label { font: 700 10px var(--font-mono); }
       const me = await api('/api/v1/me');
       store.set('clinloop_api', state.base); store.set('clinloop_token', state.token);
       $('app').hidden = false;
-      setStatus(`${me.user} (${me.role})`);
+      state.me = me;
+      setStatus(signedIn());
       if ($('patient').value) load();
     } catch (err) { $('app').hidden = true; setStatus(err.message, true); }
   });

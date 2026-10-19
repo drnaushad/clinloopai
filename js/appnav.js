@@ -18,6 +18,12 @@
     { href: 'imaging.html', en: 'Imaging', ko: '영상' }
   ];
 
+  // The Light/Dark choice made on the cockpit applies here too; without one, the page follows the device
+  try {
+    var theme = window.localStorage.getItem('clinloop_theme');
+    if (theme === 'light' || theme === 'dark') document.documentElement.setAttribute('data-theme', theme);
+  } catch (e) { /* storage blocked: follow the device */ }
+
   function current() {
     var file = window.location.pathname.split('/').pop() || 'index.html';
     return /\.html$/.test(file) ? file : file + '.html';     // "/worklist" is worklist.html
