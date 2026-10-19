@@ -163,6 +163,32 @@ the real finding it must not hide.
 - A BI-RADS 4 biopsy described only in an addendum keeps the loop visible until the biopsy is in the
   record, by design (fail toward a person).
 
+### Round 9 (October 2026): one more untouched set
+
+A new writer wrote 63 reports (10 Korean, 20 needing no follow-up) from the rule catalogue only, without
+reading the code: CT, CTA, MRI, ultrasound, radiographs, mammography, LDCT screening, PET/CT and pathology,
+with negations, addenda, stable and benign findings, OCR noise and multi-finding reports. Scored once:
+
+| | Cases | Equivalent | No alert when none needed | Deadline in window |
+|---|---|---|---|---|
+| Round 9, first pass | 63 | **93.7%** | 90.0% | 100% |
+| Round 9 after the fixes below (not unbiased) | 63 | 100% | 100% | 100% |
+| All 753 after every fix (not unbiased) | 753 | 99.7% | 99.6% | 99.3% |
+
+**What it found**, each fixed with a test:
+- **False critical alert:** "CLINICAL HISTORY: Prior pulmonary embolism 2024" before "No pulmonary embolism"
+  opened the one-hour critical rule. The history sentence is now skipped for critical findings, but only
+  that sentence: in "Clinical history: trauma. Large right pneumothorax." the finding is still read.
+- **A retracted finding still tracked:** an addendum saying the "nodule" was the nipple shadow withdrew
+  the advice, but the Fleischner rule re-derived it from the nodule. An addendum that says there is no
+  nodule now removes it. When the report has several nodules and the addendum does not say which one,
+  all stay for a person to review.
+- **Missed nodule in scanned text:** OCR's "nodu1e" became "noduie" (a '1' between letters was always
+  read as 'i'). Finding words now read '1' as 'l'; "rnonths" and "recornrnended" are repaired.
+
+**Not a defect:** a ruptured aneurysm opens the critical rule and the vascular referral (R045), as
+designed; the writer had expected the critical rule only.
+
 ## Defects found and fixed (each now has a test in `tests/test_report_accuracy.py`)
 
 ### Found by the real-style and timeline sets

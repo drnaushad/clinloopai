@@ -842,10 +842,21 @@ _EXPECTED_POSTOP_AIR = re.compile(r"post-?operative|post-?op\b|(?<!un)expected|a
 _LEAK = re.compile(r"leak\w*|perforat\w*|누출|천공", re.I)
 
 
+def _in_history_sentence(text: str, pos: int) -> bool:
+    """In the first sentence of a history or indication line: "CLINICAL HISTORY: Prior pulmonary embolism
+    2024, on apixaban." is why the study was done. Narrower than _in_history_section, because a missed
+    critical finding costs more than a false one: in "Clinical history: trauma. Large right pneumothorax."
+    the finding after the full stop is still read."""
+    line = text[text.rfind("\n", 0, pos) + 1:pos]
+    return _in_history_section(text, pos) and not re.search(r"[.;!?](?:\s|$)", line)
+
+
 def _critical_findings(text: str) -> List[Dict[str, Any]]:
     found = []
     for item, rx in load_critical_findings()["compiled"]:
         for m in rx.finditer(text):
+            if _in_history_sentence(text, m.start()):
+                continue
             before = text[max(0, m.start() - 60):m.start()]
             # Context comes from the finding's own line and sentence: "Indication: rule out PE" on the
             # line above does not make "Pulmonary embolism …" below it an old finding
@@ -892,6 +903,11 @@ def study_modality(code_text: str) -> Optional[str]:
 
 # ── Step 1: one report ───────────────────────────────────────────────────────
 
+# Report words in which OCR's '1' stands for 'l'. Elsewhere a '1' between letters is read as 'i' ('Fle1schner')
+_OCR_L_WORDS = re.compile(r"(?i)\b(?:nodu1es?|so1id|1obes?|ca1cifi\w*|fo11ow\w*|pu1monary|1esions?|1eft|1ung|"
+                          r"1ymph\w*|sma11|1ingula\w*)\b")
+
+
 def clean_report_text(text: str) -> str:
     """
     Undo what scanning and line wrapping do to a report, for reading only (the stored text is unchanged):
@@ -902,6 +918,9 @@ def clean_report_text(text: str) -> str:
     t = re.sub(r"(?<![.:;)\]\n])\n(?=[a-z])", " ", t)
     t = re.sub(r"(?<=[\dOo])(\s?)rnm\b", r"\1mm", t)           # '9 rnm', '1O rnm' → 'mm' (before the O→0 step)
     t = re.sub(r"(?<=\d)[Oo](?=\s*(?:mm|cm|rnm)\b|\d)", "0", t)
+    t = re.sub(r"(?i)\brnonth", "month", t)                     # 'rnonths' → 'months'
+    t = re.sub(r"(?i)recorn(?:rn|m)end", "recommend", t)        # 'recornrnended' → 'recommended'
+    t = _OCR_L_WORDS.sub(lambda m: m.group(0).replace("1", "l"), t)   # 'nodu1e' → 'nodule' (before the 1 → i step)
     t = re.sub(r"(?<=[A-Za-z])0(?=[a-z])", "o", t)
     t = re.sub(r"\b0(?=[a-z]{1,})", "o", t)                    # '0r' → 'or'
     t = re.sub(r"(?<=[A-Za-z])1(?=[a-z])", "i", t)             # 'Fle1schner' → 'Fleischner'
@@ -913,6 +932,11 @@ _ADDENDUM = re.compile(r"\n\s*[\[(*]*\s*(?:ADDENDUM|Addendum|CORRECTED\s+(?:REPO
                        r"(?:\s*\([^)\n]*\))?\s*[:：]?", re.I)
 _REC_WORDS = re.compile(r"recommend\w*|follow-?up|imaging|work-?up|\b(?:ct|mri|us|ultrasound|pet|biopsy|"
                         r"scan|surveillance)\b|권고|추적|검사", re.I)
+_NO_NODULE_AT_ALL = re.compile(r"\bthere (?:is|was) no (?:pulmonary |lung )?nodule|\bno (?:pulmonary |lung )?nodule "
+                               r"(?:is |was )?(?:present|seen|identified|confirmed)|폐?\s*결절은?\s*(?:없음|관찰되지\s*않)", re.I)
+_NODULE_WAS_NOT = re.compile(r"\bnot a (?:true |real )?(?:pulmonary |lung )?nodule|nodule\W{0,2}\s+(?:represents|reflects|is|was)\s+"
+                             r"(?:a |an |the )?(?:nipple|skin|artefact|artifact|vessel|vascular|atelecta\w*|scar|bone|rib|"
+                             r"summation|overlap\w*|pseudo-?nodule)|결절\s*(?:이|은)?\s*아님", re.I)
 _WITHDRAWN = re.compile(r"withdrawn|retract\w*|disregard|no (?:further )?(?:follow-?up|imaging|work-?up)(?: is)? "
                         r"(?:needed|required|necessary|recommended)|철회|취소|추적\s*(?:검사\s*)?(?:는\s*)?불필요", re.I)
 
@@ -943,8 +967,16 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
     if addendum:
         # An addendum revises the nodules it describes (matched by size), not every nodule in the report:
         # "ADDENDUM: the 4 mm LLL nodule is calcified" leaves the 12 mm nodule standing
-        for revised_nodule in _lung_nodules(addendum, code_text):
+        revised_nodules = _lung_nodules(addendum, code_text)
+        for revised_nodule in revised_nodules:
             nodules = [n for n in nodules if abs(n["size_mm"] - revised_nodule["size_mm"]) > 1.0] + [revised_nodule]
+        # "ADDENDUM: the 'nodule' represents the nipple shadow. There is no pulmonary nodule." retracts the
+        # finding itself, not only the advice. "There is no pulmonary nodule" retracts every nodule; "the
+        # nodule represents a vessel" only the report's single nodule (with several, it cannot tell which)
+        if not revised_nodules and (_NO_NODULE_AT_ALL.search(addendum) or
+                                    (len(nodules) == 1 and _NODULE_WAS_NOT.search(addendum))):
+            nodules = []
+            mapping.append("addendum: no pulmonary nodule")
     if nodules:
         dominant = max(nodules, key=lambda n: (n["size_mm"], n["type"] != "ggn"))
         dominant["multiple"] = dominant["multiple"] or len(nodules) > 1

@@ -401,6 +401,47 @@ class TestRound8BlindFindings(unittest.TestCase):
         self.assertIsNone(_communication_done("Please ensure this is called to the referring doctor."))
 
 
+class TestRound9BlindFindings(unittest.TestCase):
+    """Round 9 (October 2026): a history line raising a critical alert, an addendum retracting a nodule,
+    OCR's '1' for 'l'. Re-worded synthetic examples."""
+
+    def test_history_sentence_is_not_a_critical_finding(self):
+        self.assertEqual(critical("INDICATION: Known pulmonary embolism 2025 on rivaroxaban, new chest pain.\n"
+                                  "IMPRESSION: No pulmonary embolism. No acute aortic syndrome."), [])
+        self.assertEqual(rules("CLINICAL HISTORY: Prior PE, on warfarin.\nIMPRESSION: Negative for PE.",
+                               title="CT pulmonary angiography"), set())
+
+    def test_critical_finding_after_the_history_sentence_is_still_read(self):
+        """Fail toward a human: only the history sentence itself is skipped."""
+        self.assertIn("pneumothorax", critical("Clinical history: fall from ladder. Large right pneumothorax with mediastinal shift."))
+        self.assertIn("pneumothorax", critical("HISTORY: chest trauma. IMPRESSION: Right tension pneumothorax."))
+
+    def test_addendum_that_retracts_the_nodule_removes_it(self):
+        self.assertEqual(rules("IMPRESSION: 7 mm opacity in the left lower lobe, likely a nodule.\n"
+                               "ADDENDUM: Reviewed with the lateral view: the nodule represents the nipple shadow. "
+                               "No follow-up is needed.", title="CT chest", smoking="77176002"), set())
+        self.assertEqual(rules("IMPRESSION: 9 mm right upper lobe nodule. Recommend CT in 3 months.\n"
+                               "ADDENDUM: On thin-section review there is no pulmonary nodule; this was a vessel seen end-on. "
+                               "Recommendation withdrawn.", title="CT chest", smoking="77176002"), set())
+
+    def test_addendum_without_retraction_keeps_the_nodule(self):
+        self.assertIn("R003", rules("IMPRESSION: 7 mm right lower lobe solid nodule.\n"
+                                    "ADDENDUM: No new nodules compared with the outside study.",
+                                    title="CT chest", smoking="77176002"))
+        # Two nodules and an unspecific retraction: it cannot tell which one, so both stay for a person to review
+        self.assertIn("R003", rules("IMPRESSION: 7 mm right lower lobe nodule and 8 mm left upper lobe nodule.\n"
+                                    "ADDENDUM: The nodule represents a vessel.", title="CT chest", smoking="77176002"))
+
+    def test_ocr_one_for_l_in_finding_words(self):
+        from src.clinloop_engine.radiology import clean_report_text
+        self.assertEqual(clean_report_text("so1id nodu1e, 1eft 1obe"), "solid nodule, left lobe")
+        cleaned = clean_report_text("8 rnm s0lid nodu1e RLL. F/U chest CT in 6-12 rnonths recornrnended. Fle1schner.")
+        for word in ("8 mm", "solid nodule", "6-12 months", "recommended", "Fleischner"):
+            self.assertIn(word, cleaned)
+        self.assertIn("R003", rules("IMPRESSI0N: 7 rnm s0lid nodu1e in the RUL. F/U CT in 6-12 rnonths.",
+                                    title="CT chest", smoking="77176002"))
+
+
 class TestBlindCaseSets(unittest.TestCase):
     """The 270 blind-written cases (docs/ACCURACY_EVALUATION.md) stay above a floor: a change that loses
     findings or adds false alerts fails CI."""
