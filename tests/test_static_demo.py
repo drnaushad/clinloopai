@@ -42,6 +42,46 @@ class TestStaticDemo(unittest.TestCase):
         self.assertEqual(json.loads(out), [fnv1a(k) for k in keys])
 
     @unittest.skipUnless(os.path.exists(os.path.join(API, "index.json")), "snapshot not built")
+    def test_practice_mode_follows_the_server_rules(self):
+        """Practice mode (public site): actions are answered in the browser with the server's rules and kept
+        only in that browser. Run in Node against a small fake snapshot."""
+        if not shutil.which("node"):
+            self.skipTest("node not installed")
+        src = open(os.path.join(ROOT, "js", "demo.js"), encoding="utf-8").read()
+        layer = src[src.index("  function practiceLayer("):src.index("  // ── banner, sign-in, patient list")]
+        js = layer + r"""
+const store = {}; globalThis.window = { localStorage: { getItem: k => store[k] || null,
+  setItem: (k, v) => { store[k] = v; }, removeItem: k => { delete store[k]; } } };
+const loops = [{loop_key: 'P1|R017|x', rule_id: 'R017', workflow_state: 'new', owner: 'unassigned', rule_signoff: 'pending'}];
+const snap = (path) => Promise.resolve(path === '/api/v1/worklist' ? {status: 200, body: {loops, count: 1}}
+  : path.endsWith('/audit') ? {status: 200, body: {audit: []}} : {status: 404, body: {}});
+const reply = (status, body) => Promise.resolve({status, body});
+(async () => {
+  let P = practiceLayer(snap, reply); const out = [];
+  const go = async (m, p, b, q) => { const r = await P.handle(m, p, q || {}, b); return r ? [r.status, r.body] : null; };
+  out.push((await go('GET', '/api/v1/me'))[1].role);
+  out.push((await go('POST', '/api/v1/loops/P1|R017|x/close', {evidence: ''}))[0]);           // evidence required
+  out.push((await go('POST', '/api/v1/loops/P1|R017|x/defer', {reason_code: 'not_clinically_indicated'}))[0]);
+  out.push((await go('POST', '/api/v1/loops/P1|R017|x/acknowledge'))[1].workflow_state);
+  out.push((await go('POST', '/api/v1/loops/P1|R017|x/acknowledge'))[0]);                    // not twice
+  out.push((await go('POST', '/api/v1/loops/P1|R017|x/assign', {owner: 'someone.else'}))[0]); // staff only
+  out.push((await go('POST', '/api/v1/loops/P1|R017|x/close', {evidence: 'Colonoscopy 2026-08-01'}))[1].workflow_state);
+  out.push((await go('GET', '/api/v1/worklist', null, {include_inactive: 'false'}))[1].count);
+  out.push((await go('GET', '/api/v1/loops/P1|R017|x/audit'))[1].audit.map(a => a.action).join(','));
+  const sid = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+  out.push((await go('POST', '/api/v1/quality/second-reader/suggestions/' + sid + '/review', {verdict: 'real_miss', urgent: true}))[0]);
+  out.push((await go('POST', '/api/v1/fhir/ingest', {})) === null);                            // not practised: refused upstream
+  P = practiceLayer(snap, reply);                                                              // reload keeps changes
+  out.push((await go('GET', '/api/v1/worklist', null, {include_inactive: 'false'}))[1].count);
+  P.reset(); P = practiceLayer(snap, reply);
+  out.push((await go('GET', '/api/v1/worklist', null, {include_inactive: 'false'}))[1].count);
+  console.log(JSON.stringify(out));
+})();"""
+        out = subprocess.run(["node", "-e", js], capture_output=True, text=True, timeout=60)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertEqual(json.loads(out.stdout), ["clinician", 422, 422, "acknowledged", 409, 422, "closed_by_clinician",
+                                                  0, "acknowledge,close", 409, True, 0, 1])
+
     def test_snapshot_covers_what_the_pages_ask_for(self):
         def load(path, query=None):
             with open(os.path.join(API, fnv1a(request_key(path, query)) + ".json"), encoding="utf-8") as f:
