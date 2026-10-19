@@ -11,7 +11,7 @@
   // Every device shows the same version: a phone may keep yesterday's page in its cache. Each page
   // asks for version.json (never cached); if the live version is newer than this script, the page
   // reloads once, fetching fresh copies. Bump APP_VERSION and version.json together on each release.
-  var APP_VERSION = '2026-10-19.2';
+  var APP_VERSION = '2026-10-19.3';
   (function checkVersion() {
     if (!window.fetch || location.protocol === 'file:') return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -32,7 +32,8 @@
     { page: 'quality', href: 'quality', en: 'Quality', ko: '품질 지표' },
     { page: 'governance', href: 'governance', en: 'Rule sign-off', ko: '규칙 승인' },
     { page: 'pilot', href: 'pilot', en: 'Pilot review', ko: '시범 검토' },
-    { page: 'imaging', href: 'imaging', en: 'Imaging', ko: '영상' }
+    { page: 'imaging', href: 'imaging', en: 'Imaging', ko: '영상' },
+    { page: 'analyse', href: 'analyse', en: 'Analyse patient', ko: '환자 분석' }
   ];
 
   // The Light/Dark choice made on the cockpit applies here too; without one, the page follows the device

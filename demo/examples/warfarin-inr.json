@@ -1,0 +1,99 @@
+{
+ "resourceType": "Bundle",
+ "id": "example-warfarin-inr",
+ "type": "collection",
+ "meta": {
+  "tag": [
+   {
+    "code": "synthetic",
+    "display": "Synthetic example: not a real patient"
+   }
+  ]
+ },
+ "entry": [
+  {
+   "fullUrl": "urn:uuid:Patient-SYN-006",
+   "resource": {
+    "resourceType": "Patient",
+    "id": "SYN-006",
+    "birthDate": "1955-04-15",
+    "gender": "female",
+    "communication": [
+     {
+      "language": {
+       "coding": [
+        {
+         "system": "urn:ietf:bcp:47",
+         "code": "zh"
+        }
+       ]
+      },
+      "preferred": true
+     }
+    ]
+   }
+  },
+  {
+   "fullUrl": "urn:uuid:MedicationRequest-rx-6",
+   "resource": {
+    "resourceType": "MedicationRequest",
+    "id": "rx-6",
+    "status": "active",
+    "intent": "order",
+    "subject": {
+     "reference": "Patient/SYN-006"
+    },
+    "authoredOn": "2026-08-01T09:00:00+09:00",
+    "medicationCodeableConcept": {
+     "text": "Warfarin 5 mg tablet"
+    }
+   }
+  },
+  {
+   "fullUrl": "urn:uuid:Observation-inr-6",
+   "resource": {
+    "resourceType": "Observation",
+    "id": "inr-6",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "6301-6",
+       "display": "INR in Platelet poor plasma by Coagulation assay"
+      }
+     ],
+     "text": "INR in Platelet poor plasma by Coagulation assay"
+    },
+    "subject": {
+     "reference": "Patient/SYN-006"
+    },
+    "effectiveDateTime": "2026-08-05T09:00:00+09:00",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "H"
+       }
+      ]
+     }
+    ],
+    "valueQuantity": {
+     "value": 2.4,
+     "unit": "{INR}"
+    }
+   }
+  }
+ ]
+}

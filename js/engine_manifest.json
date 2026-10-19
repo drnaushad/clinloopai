@@ -1,0 +1,31 @@
+{
+ "pyodide": "0.26.4",
+ "packages": [
+  "numpy",
+  "networkx-3.3-py3-none-any.whl"
+ ],
+ "entry": "src.clinloop_engine.browser_analyse",
+ "files": [
+  "src/clinloop_engine/__init__.py",
+  "src/clinloop_engine/ai_review.py",
+  "src/clinloop_engine/basis.py",
+  "src/clinloop_engine/browser_analyse.py",
+  "src/clinloop_engine/clinical_ontology.py",
+  "src/clinloop_engine/config/critical_findings.json",
+  "src/clinloop_engine/ecg.py",
+  "src/clinloop_engine/fhir_ingest.py",
+  "src/clinloop_engine/fhir_integration.py",
+  "src/clinloop_engine/guideline_reports.py",
+  "src/clinloop_engine/imaging_fhir.py",
+  "src/clinloop_engine/loop_detector.py",
+  "src/clinloop_engine/motifs.py",
+  "src/clinloop_engine/note_reader.py",
+  "src/clinloop_engine/profile.py",
+  "src/clinloop_engine/radiology.py",
+  "src/clinloop_engine/report_text.py",
+  "src/clinloop_engine/risk_scorer.py",
+  "src/clinloop_engine/safety_clock.py",
+  "src/clinloop_engine/second_reader.py",
+  "src/clinloop_engine/temporal_hypergraph.py"
+ ]
+}
