@@ -73,19 +73,19 @@ services:
       # Imaging: PACS study labels (DICOMweb), imaging models, research-model findings opening loops (0/1)
       CLINLOOP_PACS_DICOMWEB: ${CLINLOOP_PACS_DICOMWEB:-}
       CLINLOOP_PACS_TOKEN: ${CLINLOOP_PACS_TOKEN:-}
-      CLINLOOP_IMAGING_MODELS: ${CLINLOOP_IMAGING_MODELS:-}
+      CLINLOOP_IMAGING_MODELS: ${CLINLOOP_IMAGING_MODELS:-vlm}
       CLINLOOP_IMAGING_MODELS_CONFIG: ${CLINLOOP_IMAGING_MODELS_CONFIG:-}
       CLINLOOP_IMAGING_RESEARCH_AI: ${CLINLOOP_IMAGING_RESEARCH_AI:-0}
       # Automatic scanning of new PACS studies with the approved products above (docs/IMAGING.md §4a)
       CLINLOOP_IMAGE_SCAN: ${CLINLOOP_IMAGE_SCAN:-0}
       # Model-based second reader of reports with the on-premise model (ollama service); flags go to a person (R058)
-      CLINLOOP_SECOND_READER: ${CLINLOOP_SECOND_READER:-0}
+      CLINLOOP_SECOND_READER: ${CLINLOOP_SECOND_READER:-silent}
       # Second reader model: MedGemma 27B when installed, else the general best model
       CLINLOOP_SECOND_READER_MODEL: ${CLINLOOP_SECOND_READER_MODEL:-medgemma:27b}
       CLINLOOP_SECOND_READER_MAX: ${CLINLOOP_SECOND_READER_MAX:-20}
       CLINLOOP_IMAGE_SCAN_MINUTES: ${CLINLOOP_IMAGE_SCAN_MINUTES:-10}
       CLINLOOP_IMAGE_SCAN_MODALITIES: ${CLINLOOP_IMAGE_SCAN_MODALITIES:-CR,DX,MG,CT,MR,US}
-      # Vision-language model (add "vlm" to CLINLOOP_IMAGING_MODELS; core profile rules still apply):
+      # Vision-language model ("vlm" is on by default; the clinical (core) profile still skips image analysis):
       # MedGemma 4B pulled into the ollama service (research model, not a medical device)
       CLINLOOP_VLM_URL: ${CLINLOOP_VLM_URL:-http://ollama:11434}
       CLINLOOP_VLM_MODEL: ${CLINLOOP_VLM_MODEL:-medgemma:4b}
