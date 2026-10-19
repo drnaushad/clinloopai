@@ -59,10 +59,11 @@ COPY src ./src
 COPY data/cases.json data/fhir_example_bundle.json data/radiology_test_bundle.json ./data/
 
 # Web UI, served by the API at / (only these files are exposed)
-COPY index.html worklist.html governance.html imaging.html patient.html quality.html pilot.html config.js manifest.json sw.js favicon.ico ./web/
+COPY index.html worklist.html governance.html imaging.html patient.html quality.html pilot.html analyse.html config.js manifest.json sw.js favicon.ico ./web/
 COPY css ./web/css
 COPY js ./web/js
 COPY icons ./web/icons
+COPY demo/examples ./web/demo/examples
 COPY data/cases.json data/fhir_example_bundle.json data/radiology_test_bundle.json ./web/data/
 
 # Unprivileged user; state on a mounted volume
