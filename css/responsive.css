@@ -50,8 +50,9 @@ th { white-space: nowrap; }
    1 the case list (its title, search and filters stay), 2 the centre view (its tabs stay), 3 the
    safety clock and audit trail. Scrolling inside a panel never moves the rest of the screen. */
 @media (min-width: 1151px) {
-  html, body { height: 100% !important; overflow: hidden !important; }
-  body { height: 100vh !important; height: 100dvh !important; display: flex; flex-direction: column; }
+  /* Only the cockpit page locks the page scroll; the other pages share this file and must scroll */
+  html:has(.cockpit-workspace), body:has(.cockpit-workspace) { height: 100% !important; overflow: hidden !important; }
+  body:has(.cockpit-workspace) { height: 100vh !important; height: 100dvh !important; display: flex; flex-direction: column; }
   .top-chrome { position: relative; flex: 0 0 auto; }
   .cockpit-workspace { flex: 1 1 auto; min-height: 0 !important; height: auto !important;
                        grid-template-rows: minmax(0, 1fr); overflow: hidden; }
