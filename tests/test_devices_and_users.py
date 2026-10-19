@@ -210,3 +210,13 @@ class TestSameVersionOnEveryDevice(unittest.TestCase):
         for page in PAGES:
             html = open(os.path.join(ROOT, page), encoding="utf-8").read()
             self.assertIn('http-equiv="Cache-Control" content="no-cache"', html, page)
+
+
+class TestDesktopPagesScroll(unittest.TestCase):
+    """Only the cockpit may lock page scrolling on wide screens; worklist and the other pages share the CSS."""
+
+    def test_scroll_lock_is_scoped_to_the_cockpit(self):
+        with open(os.path.join(os.path.dirname(__file__), "..", "css", "responsive.css"), encoding="utf-8") as f:
+            css = f.read()
+        self.assertNotIn("html, body { height: 100% !important; overflow: hidden !important; }", css)
+        self.assertIn("body:has(.cockpit-workspace)", css)
