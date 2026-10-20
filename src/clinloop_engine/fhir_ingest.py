@@ -419,6 +419,8 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
 
 
 _MALIGNANT = re.compile(r"(adenocarcinoma|carcinoma|malignan\w*|high-grade dysplasia|melanoma|lymphoma|sarcoma|암|"
+                        # Neuroendocrine neoplasms, incidental in appendectomy or bowel resections: oncology referral
+                        r"neuroendocrine (?:tumou?r|neoplasm|carcinoma)|carcinoid|신경내분비\s*(?:종양|암)|"
                         # High-grade cervical cytology/histology: colposcopy and treatment are due (ASCCP 2019)
                         r"\bHSIL\b|high[- ]grade squamous intraepithelial lesion|\bASC-H\b|\bAGC\b|"
                         r"atypical glandular cells|\bCIN\s*(?:2|3|II|III)\b|"

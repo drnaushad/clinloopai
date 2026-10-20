@@ -1,0 +1,1077 @@
+{"evidence": {"FOLLOW_UP": "In this low-risk patient no routine follow-up is recommended (Fleischner 2017)."}, "id": "report_eval:C001", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C002", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up chest CT in 3 months; PET/CT or tissue sampling are alternatives."}, "id": "report_eval:C003", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up CT in 3-6 months."}, "id": "report_eval:C005", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C006", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "No follow-up needed."}, "id": "report_eval:C007", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No further follow-up."}, "id": "report_eval:C008", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend PET/CT and pulmonology referral."}, "id": "report_eval:C009", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend CT in 6-12 months to confirm persistence."}, "id": "report_eval:C011", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Per Fleischner, no routine follow-up for a solitary GGN <6 mm."}, "id": "report_eval:C012", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up CT in 3-6 months to assess persistence."}, "id": "report_eval:C013", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C014", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Given young age this is likely benign; nevertheless a follow-up CT in 12 months is suggested."}, "id": "report_eval:C015", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend short-interval chest CT in 3 months."}, "id": "report_eval:C016", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend bronchoscopy with BAL correlation and follow-up CT after 4-6 weeks of therapy."}, "id": "report_eval:C017", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "In this high-risk patient, recommend follow-up CT at 18-24 months from initial detection."}, "id": "report_eval:C018", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C019", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C020", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C021", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend 6-month LDCT."}, "id": "report_eval:C022", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend PET/CT and pulmonology referral for tissue sampling."}, "id": "report_eval:C024", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C025", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C027", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C029", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C030", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend 3-month LDCT."}, "id": "report_eval:C033", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend PET/CT; consider tissue sampling."}, "id": "report_eval:C035", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Ultrasound-guided core biopsy is recommended."}, "id": "report_eval:C037", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C038", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up ultrasound in 6 months."}, "id": "report_eval:C040", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C042", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C043", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend biopsy."}, "id": "report_eval:C044", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "US-guided biopsy recommended."}, "id": "report_eval:C045", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "FNA recommended."}, "id": "report_eval:C046", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No FNA or follow-up required."}, "id": "report_eval:C048", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C049", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "No further FNA or imaging follow-up required."}, "id": "report_eval:C052", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend dedicated thyroid ultrasound."}, "id": "report_eval:C053", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C054", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend thyroid ultrasound."}, "id": "report_eval:C055", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C057", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C058", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C059", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C060", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C062", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend endocrine and surgical referral."}, "id": "report_eval:C063", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up required."}, "id": "report_eval:C064", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C066", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C067", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C068", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend adrenal protocol CT with washout."}, "id": "report_eval:C071", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C073", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "No follow-up."}, "id": "report_eval:C074", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up renal mass protocol MRI in 6 months."}, "id": "report_eval:C075", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C077", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C078", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Urology consultation recommended."}, "id": "report_eval:C079", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C081", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend urology referral and percutaneous biopsy given comorbidities."}, "id": "report_eval:C082", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C083", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C084", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend renal mass protocol CT."}, "id": "report_eval:C088", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend MRI/MRCP in 2 years."}, "id": "report_eval:C089", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend EUS and pancreatic surgery consultation."}, "id": "report_eval:C091", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C092", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C094", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend EUS."}, "id": "report_eval:C096", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C097", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend ultrasound surveillance in 2 years."}, "id": "report_eval:C098", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C099", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C100", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C101", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C103", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C105", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C106", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C108", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C109", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C111", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C112", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C113", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C114", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C115", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C116", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up chest radiograph in 6-8 weeks after treatment to document resolution and exclude an underlying lesion."}, "id": "report_eval:C118", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend CT chest for further evaluation."}, "id": "report_eval:C120", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C121", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C122", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Given snuffbox tenderness, an occult scaphoid fracture cannot be excluded; recommend repeat scaphoid radiographs in 10-14 days."}, "id": "report_eval:C123", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Follow-up radiographs in 2 weeks to assess alignment."}, "id": "report_eval:C124", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C125", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "No follow-up needed."}, "id": "report_eval:C126", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend MRI of the femur with and without contrast."}, "id": "report_eval:C127", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up MRI in 12 months."}, "id": "report_eval:C129", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up imaging necessary."}, "id": "report_eval:C131", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up required."}, "id": "report_eval:C133", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up MR angiography in 12 months."}, "id": "report_eval:C134", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C136", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend MRI-targeted biopsy."}, "id": "report_eval:C137", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C139", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C141", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend percutaneous biopsy for confirmation."}, "id": "report_eval:C142", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C143", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C144", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C146", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C147", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C148", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C150", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Surgical excision is recommended."}, "id": "report_eval:C152", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C153", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C154", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend thoracic surgery referral."}, "id": "report_eval:C156", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend PET/CT and consideration of resection."}, "id": "report_eval:C158", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C160", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C162", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Incidental 6 mm solid LLL nodule; recommend follow-up CT chest in 6-12 months."}, "id": "report_eval:C163", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up needed per Fleischner low-risk guidance."}, "id": "report_eval:C164", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C165", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C167", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "No follow-up imaging required (O-RADS 1)."}, "id": "report_eval:C168", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C170", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "5 cm threshold for follow-up."}, "id": "report_eval:E8-001", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-002", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Ultrasound-guided core needle biopsy is recommended."}, "id": "report_eval:E8-003", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "5 cm) and follow-up (1."}, "id": "report_eval:E8-004", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend endocrinology referral with biochemical work-up (metanephrines before any biopsy) and adrenal multidisciplinary review."}, "id": "report_eval:E8-005", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-006", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "CLINICAL HISTORY: Follow-up of right lower lobe nodule seen during admission for pneumonia."}, "id": "report_eval:E8-007", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-008", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:E8-009", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend MRI liver with contrast within 3 months for characterisation."}, "id": "report_eval:E8-010", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-011", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:E8-012", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:E8-013", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend EUS with FNA and pancreatic surgery/HPB multidisciplinary referral."}, "id": "report_eval:E8-014", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up required."}, "id": "report_eval:E8-015", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-016", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Ultrasound-guided core biopsy recommended."}, "id": "report_eval:E8-017", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-018", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Surgical consultation is recommended."}, "id": "report_eval:E8-019", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "4 mm left lower lobe nodule in a never-smoker; per Fleischner 2017 no routine follow-up is needed."}, "id": "report_eval:E8-020", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-021", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:E8-022", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend PET/CT and/or tissue sampling; referral to thoracic oncology."}, "id": "report_eval:E8-023", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend immobilisation and repeat scaphoid radiographs in 10-14 days, or MRI if earlier diagnosis is required."}, "id": "report_eval:E8-024", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "3-month LDCT recommended."}, "id": "report_eval:E8-025", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend 3-month LDCT."}, "id": "report_eval:E8-026", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend surveillance ultrasound or CT in 12 months and vascular surgery outpatient review."}, "id": "report_eval:E8-027", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-028", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Urology referral recommended."}, "id": "report_eval:E8-029", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-030", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up renal mass protocol CT or MRI in 6 months, then annually for 5 years."}, "id": "report_eval:E8-031", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend PET/CT and pulmonology referral for consideration of biopsy."}, "id": "report_eval:E8-032", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up chest radiograph in 6-8 weeks after treatment to document resolution, given patient age and smoking history."}, "id": "report_eval:E8-033", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Per Fleischner 2017 recommend CT chest at 3 months, PET/CT or tissue sampling."}, "id": "report_eval:E8-034", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommendation: 3-month LDCT; PET/CT is not routinely indicated for a solid component <8 mm."}, "id": "report_eval:E8-035", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend MRI/MRCP surveillance in 2 years (ACR 2017)."}, "id": "report_eval:E8-036", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend short-interval follow-up ultrasound of the right breast in 6 months."}, "id": "report_eval:E8-037", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up CT abdomen with contrast in 6 months to document stability."}, "id": "report_eval:E8-038", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Ultrasound-guided biopsy of the breast mass and the most abnormal axillary node is recommended; appointment to be arranged by the breast unit."}, "id": "report_eval:E8-039", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend repeat CT chest in 3-6 months to assess persistence, per Fleischner Society 2017."}, "id": "report_eval:E8-040", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "CLINICAL HISTORY: Follow-up of part-solid nodule."}, "id": "report_eval:E8-041", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-042", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:E8-043", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Per Fleischner 2017 (multiple, 6-8 mm, high risk), recommend CT chest in 3-6 months, then at 18-24 months."}, "id": "report_eval:E8-044", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend vascular surgery referral."}, "id": "report_eval:E8-045", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend recall for additional imaging evaluation with diagnostic mammography and targeted left breast ultrasound within 30 days."}, "id": "report_eval:E8-046", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "A follow-up radiograph could be considered if symptoms persist, at the discretion of the referring clinician."}, "id": "report_eval:E8-047", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-048", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "CLINICAL HISTORY: 24-month follow-up of left upper lobe nodule."}, "id": "report_eval:E8-049", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "FNA recommended."}, "id": "report_eval:E8-050", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-051", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:E8-052", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "COMMENT: Correlation with imaging and repeat sampling (or sampling of the primary lesion) is recommended."}, "id": "report_eval:E8-053", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "MRI/MRCP surveillance in 1 year is recommended."}, "id": "report_eval:E8-054", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-055", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:E8-056", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Routine screening mammography recommended."}, "id": "report_eval:E8-057", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "CLINICAL HISTORY: Follow-up of known pancreatitis; abdominal pain resolved."}, "id": "report_eval:E8-058", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up ultrasound in 6 months (SRU 2022), then at 12 and 24 months if stable."}, "id": "report_eval:E8-059", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend MRI liver for confirmation."}, "id": "report_eval:E8-060", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Given size >5 cm, recommend follow-up pelvic ultrasound in 8-12 weeks, ideally in the follicular phase (days 3-10), to confirm resolution."}, "id": "report_eval:E8-061", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Work-up is complete; no further imaging follow-up is needed."}, "id": "report_eval:E8-062", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-063", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Endocrine evaluation and follow-up imaging could be considered if clinically indicated, at the discretion of the referring clinician."}, "id": "report_eval:E8-064", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-065", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend dedicated adrenal protocol CT (unenhanced and washout) or chemical-shift MRI for characterisation, and biochemical evaluation."}, "id": "report_eval:E8-066", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-067", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend referral to a Barrett's endoscopic therapy centre."}, "id": "report_eval:E8-068", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-069", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "4 mm ground-glass nodule left upper lobe: no routine follow-up is required (Fleischner 2017, GGN <6 mm)."}, "id": "report_eval:E8-070", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend urgent outpatient vascular surgery referral."}, "id": "report_eval:E8-071", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "7 mm perifissural nodule with typical morphology of an intrapulmonary lymph node; per Fleischner 2017 no follow-up is required."}, "id": "report_eval:E8-072", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-073", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend CT chest in 3 months, or PET/CT, per Fleischner 2017 (risk unknown, managed as high risk)."}, "id": "report_eval:E8-074", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "MANAGEMENT RECOMMENDATION: Diagnostic chest CT with or without contrast, PET/CT and/or tissue sampling depending on probability of malignancy and comorbidities."}, "id": "report_eval:E8-075", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No imaging follow-up required."}, "id": "report_eval:E8-076", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-077", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend renal mass protocol MRI."}, "id": "report_eval:E8-078", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "CLINICAL HISTORY: Follow-up of interstitial changes seen on outside CXR."}, "id": "report_eval:E8-079", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:E8-080", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommendation: per Fleischner 2017 (high-risk patient), follow-up CT chest in 6-12 months."}, "id": "report_eval:K001", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend dedicated adrenal-protocol CT in 12 months."}, "id": "report_eval:K002", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend 3-month LDCT; PET/CT may be considered."}, "id": "report_eval:K003", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K004", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Ultrasound-guided core biopsy recommended."}, "id": "report_eval:K005", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Routine annual screening mammography recommended."}, "id": "report_eval:K006", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K007", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K008", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up chest radiograph 6-8 weeks after treatment to document resolution."}, "id": "report_eval:K009", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K010", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "FNA recommended."}, "id": "report_eval:K011", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No FNA or follow-up needed."}, "id": "report_eval:K012", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up aortic ultrasound in 12 months."}, "id": "report_eval:K013", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Vascular surgery referral recommended."}, "id": "report_eval:K014", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K015", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommendations: MRI/MRCP in 6 months (or EUS-FNA) for #1; aortic US in 3 years for #2."}, "id": "report_eval:K016", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend EUS and pancreatobiliary surgery referral."}, "id": "report_eval:K017", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Urology referral recommended."}, "id": "report_eval:K018", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend renal MRI in 6 months."}, "id": "report_eval:K019", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up required."}, "id": "report_eval:K020", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Low-risk patient: no routine follow-up recommended per Fleischner 2017."}, "id": "report_eval:K021", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend tissue sampling or thoracic surgery referral."}, "id": "report_eval:K022", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend PET/CT and tissue sampling."}, "id": "report_eval:K023", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up necessary."}, "id": "report_eval:K024", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend CT chest in 3 months."}, "id": "report_eval:K025", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend thyroid ultrasound."}, "id": "report_eval:K026", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "In a patient under 35, dedicated thyroid ultrasound is recommended."}, "id": "report_eval:K027", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K028", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "No follow-up imaging needed."}, "id": "report_eval:K029", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K030", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K031", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K032", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K033", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K034", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K035", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend contrast-enhanced liver MRI within 3 months."}, "id": "report_eval:K036", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No further follow-up."}, "id": "report_eval:K037", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K038", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "No follow-up imaging required in a postmenopausal patient for a simple cyst <=3 cm."}, "id": "report_eval:K039", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "MRI-targeted biopsy recommended."}, "id": "report_eval:K040", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K041", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up MRI in 6 months."}, "id": "report_eval:K042", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend CT at 3-6 months, then consider CT at 18-24 months."}, "id": "report_eval:K043", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend CT at 6-12 months to confirm persistence, then every 2 years until 5 years."}, "id": "report_eval:K044", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No further follow-up required."}, "id": "report_eval:K045", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K046", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend repeat PA radiograph with nipple markers."}, "id": "report_eval:K047", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Stereotactic biopsy is recommended."}, "id": "report_eval:K048", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up ultrasound in 6 months."}, "id": "report_eval:K049", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K050", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend colonoscopy after resolution if not recently performed."}, "id": "report_eval:K051", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up needed."}, "id": "report_eval:K052", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K053", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend surveillance US in 3 years."}, "id": "report_eval:K054", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "If clinically indicated, follow-up chest CT could be considered."}, "id": "report_eval:K055", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend endocrine and surgical referral."}, "id": "report_eval:K056", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K057", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K058", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend 6-month LDCT."}, "id": "report_eval:K059", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend PET/CT and pulmonology referral."}, "id": "report_eval:K060", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K061", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend repeat scaphoid radiographs in 10-14 days."}, "id": "report_eval:K062", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K063", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K064", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K065", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K066", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K067", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K068", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up CT chest in 6-12 months."}, "id": "report_eval:M001", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M003", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M005", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Simple renal cysts (Bosniak I) and small hepatic cysts, benign; no follow-up needed."}, "id": "report_eval:M006", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M007", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend routine screening mammography in 2 years per national program."}, "id": "report_eval:M009", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No imaging follow-up is necessary."}, "id": "report_eval:M012", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend dedicated adrenal protocol CT (unenhanced + washout) for characterization."}, "id": "report_eval:M013", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Surveillance ultrasound in 12 months is recommended (SVS)."}, "id": "report_eval:M015", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M018", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Given smoking history, recommend CT chest in 6-12 months (Fleischner 2017)."}, "id": "report_eval:M019", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommendation: Short-interval follow-up right breast ultrasound in 6 months."}, "id": "report_eval:M020", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up MRI/MRCP in 2 years (ACR white paper)."}, "id": "report_eval:M022", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No routine follow-up is required per Fleischner 2017."}, "id": "report_eval:M024", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M025", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Meets criteria for follow-up: recommend thyroid ultrasound in 1 year."}, "id": "report_eval:M026", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend thyroid ultrasound and FNA as clinically appropriate."}, "id": "report_eval:M028", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M029", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M031", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M033", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend surveillance aortic ultrasound in 3 years."}, "id": "report_eval:M035", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend short-interval CT chest in 4-6 weeks after treatment, or earlier if clinically indicated."}, "id": "report_eval:M036", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend 3-month LDCT; PET/CT may be considered as the nodule is >=8 mm."}, "id": "report_eval:M038", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "In a high-risk patient, Fleischner recommends CT at 3-6 months, then consider CT at 18-24 months."}, "id": "report_eval:M041", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up chest radiograph after treatment to document resolution."}, "id": "report_eval:M042", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend repeat multiphasic MRI in 3-6 months."}, "id": "report_eval:M044", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M047", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Follow-up renal mass protocol MRI in 6 months is recommended."}, "id": "report_eval:M048", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M050", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "CLINICAL INFORMATION: Follow-up RLL nodule."}, "id": "report_eval:M051", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M052", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend thyroid ultrasound."}, "id": "report_eval:M054", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend ultrasound-guided core biopsy of the mass and stereotactic biopsy of the calcifications."}, "id": "report_eval:M057", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up imaging required."}, "id": "report_eval:M058", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Simple right renal cyst (benign, no follow-up)."}, "id": "report_eval:M059", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend dedicated thyroid ultrasound for further evaluation."}, "id": "report_eval:M061", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommendation: Colposcopy with biopsy (ASCCP risk-based guidelines)."}, "id": "report_eval:M062", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "INDICATION: Follow-up of RLL ground-glass nodule."}, "id": "report_eval:M064", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up PA and lateral chest radiograph in 4-6 weeks to document resolution."}, "id": "report_eval:M066", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "In a low-risk patient, no routine follow-up is recommended (Fleischner 2017)."}, "id": "report_eval:M067", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Indication: Follow-up nodule found on carotid Doppler."}, "id": "report_eval:M068", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend colonoscopy after resolution of acute symptoms if not up to date, to exclude underlying neoplasm."}, "id": "report_eval:M070", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Targeted biopsy recommended."}, "id": "report_eval:M071", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M074", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M075", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up CT in 6-12 months to confirm persistence, then CT every 2 years until 5 years if persistent (Fleischner 2017)."}, "id": "report_eval:M077", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M079", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend renal mass protocol MRI."}, "id": "report_eval:M081", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M082", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M083", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M084", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Urology referral recommended."}, "id": "report_eval:M086", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Per Fleischner 2017, follow-up CT in 3 months is recommended (alternatively PET/CT)."}, "id": "report_eval:M087", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M089", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M091", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend CT chest with contrast for further evaluation."}, "id": "report_eval:M092", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M095", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend MRI/MRCP in 1 year."}, "id": "report_eval:M096", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "INDICATION: Follow-up RML nodule."}, "id": "report_eval:M098", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend tissue sampling."}, "id": "report_eval:M099", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Per Fleischner Society 2017 guidelines for a single 6-8 mm solid nodule in a high-risk patient, recommend non-contrast CT chest in 6-12 months, then consider CT at 18-24 months."}, "id": "report_eval:N001", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: 3-month low-dose CT; PET/CT may be used if there is a >= 8 mm solid component."}, "id": "report_eval:N004", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Continue annual screening with LDCT in 12 months."}, "id": "report_eval:N006", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N008", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "In a low-risk patient, no routine follow-up is required per Fleischner Society 2017 guidelines."}, "id": "report_eval:N009", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No imaging follow-up is needed."}, "id": "report_eval:N011", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: FDG PET/CT or adrenal chemical-shift MRI for characterization; tissue sampling if indeterminate."}, "id": "report_eval:N012", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Renal mass protocol MRI for further characterization."}, "id": "report_eval:N014", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Follow-up renal mass protocol CT in 6 months, then annually for 5 years if stable."}, "id": "report_eval:N015", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Endoscopic ultrasound with FNA and pancreatic surgery consultation."}, "id": "report_eval:N017", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Dedicated thyroid ultrasound for the incidental thyroid nodule (ACR incidental thyroid nodule guidance, >=1."}, "id": "report_eval:N018", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Follow-up thyroid ultrasound in 1 year."}, "id": "report_eval:N021", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Ultrasound surveillance of the AAA in 2 years (SVS guideline interval for 3."}, "id": "report_eval:N022", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N024", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Routine annual screening mammography."}, "id": "report_eval:N025", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Short-interval follow-up left breast ultrasound in 6 months."}, "id": "report_eval:N027", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Stereotactic biopsy is recommended."}, "id": "report_eval:N028", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N030", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: MRI-targeted biopsy of the left PZ lesion."}, "id": "report_eval:N031", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up imaging is needed for a simple cyst <=5 cm in a premenopausal patient."}, "id": "report_eval:N033", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N034", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N036", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "CLINICAL HISTORY: Follow-up of left upper lobe nodule."}, "id": "report_eval:N037", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "CLINICAL HISTORY: 24-month follow-up of pulmonary nodule."}, "id": "report_eval:N038", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Per Fleischner Society 2017 (multiple solid nodules 6-8 mm, high risk), follow-up CT chest at 3-6 months, then at 18-24 months."}, "id": "report_eval:N040", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: CT chest in 6-12 months to confirm persistence, then every 2 years until 5 years (Fleischner 2017, single GGN >=6 mm)."}, "id": "report_eval:N041", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N042", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "A follow-up MRI could be considered if clinically indicated or if symptoms change."}, "id": "report_eval:N045", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Renal mass protocol MRI within 3 months for characterization of the 1."}, "id": "report_eval:N046", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N048", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Thyroid ultrasound."}, "id": "report_eval:N050", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Thyroid ultrasound (with FNA as indicated) for the FDG-avid thyroid nodule."}, "id": "report_eval:N051", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N053", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: MRI/MRCP in 1 year (ACR 2017, cyst 1."}, "id": "report_eval:N056", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N058", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "HISTORY: Follow-up of fifth metacarpal fracture, 4 weeks post injury."}, "id": "report_eval:N060", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Annual screening mammography."}, "id": "report_eval:N062", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up imaging required at this size."}, "id": "report_eval:N063", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Short-interval CT chest in 3 months."}, "id": "report_eval:N065", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Surveillance ultrasound in 5 years (SVS, 2."}, "id": "report_eval:N067", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Annual CT or MR angiography of the thoracic aorta; consider cardiothoracic surgery consultation."}, "id": "report_eval:N068", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N071", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N073", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Comment: Correlation with cultures is recommended."}, "id": "report_eval:N074", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N076", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N077", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N079", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-041", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-042", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "In a low-risk patient, no routine follow-up is recommended (Fleischner 2017)."}, "id": "report_eval:X8-043", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "HISTORY: Follow-up of pulmonary nodule."}, "id": "report_eval:X8-044", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend diagnostic chest CT with or without contrast, PET/CT and/or tissue sampling depending on probability of malignancy."}, "id": "report_eval:X8-045", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "PET/CT and pulmonology referral recommended."}, "id": "report_eval:X8-046", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-047", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend 6-month LDCT."}, "id": "report_eval:X8-048", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend biochemical evaluation and endocrine surgery referral."}, "id": "report_eval:X8-049", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-050", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-051", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Urology referral recommended."}, "id": "report_eval:X8-052", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-053", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "No follow-up required."}, "id": "report_eval:X8-054", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Per ACR, recommend follow-up MRI/MRCP in 6 months or EUS with FNA."}, "id": "report_eval:X8-055", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-056", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "HISTORY: Diverticulitis follow-up."}, "id": "report_eval:X8-057", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Meets size threshold for repair; vascular surgery referral recommended."}, "id": "report_eval:X8-058", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend continued surveillance imaging in 6 months."}, "id": "report_eval:X8-059", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-060", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Ultrasound-guided core biopsy of the mass and the right axillary node recommended."}, "id": "report_eval:X8-061", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Ultrasound-guided core biopsy recommended."}, "id": "report_eval:X8-062", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-063", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-064", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-065", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-066", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-067", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Endoscopic eradication therapy evaluation is recommended."}, "id": "report_eval:X8-068", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-069", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-070", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-071", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up CT chest in 3 months to document resolution."}, "id": "report_eval:X8-072", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No follow-up imaging is needed for these."}, "id": "report_eval:X8-073", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-074", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-075", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-076", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-077", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-078", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend thyroid ultrasound."}, "id": "report_eval:X8-079", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "FNA recommended."}, "id": "report_eval:X8-080", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend non-contrast CT chest in 6-12 months per Fleischner Society 2017 guidelines."}, "id": "report_eval:Y9E-001", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "4 cm indeterminate left adrenal nodule, recommend adrenal protocol CT in 3 months."}, "id": "report_eval:Y9E-002", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:Y9E-003", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend CTA head to evaluate for aneurysm."}, "id": "report_eval:Y9E-004", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Vascular surgery referral recommended."}, "id": "report_eval:Y9E-005", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "INDICATION: Follow-up of left lower lobe pneumonia."}, "id": "report_eval:Y9E-006", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Urology referral recommended."}, "id": "report_eval:Y9E-007", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend MRI/MRCP in 1 year."}, "id": "report_eval:Y9E-008", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend renal CT or MRI in 6 months."}, "id": "report_eval:Y9E-009", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No routine follow-up recommended in a low-risk patient (Fleischner 2017)."}, "id": "report_eval:Y9E-010", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "INDICATION: Follow-up of pulmonary nodule."}, "id": "report_eval:Y9E-011", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "INDICATION: Follow-up of left upper lobe nodule."}, "id": "report_eval:Y9E-012", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "In a low-risk patient, no routine follow-up is recommended."}, "id": "report_eval:Y9E-013", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "INDICATION: Follow-up of ground-glass nodule."}, "id": "report_eval:Y9E-014", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "INDICATION: Follow-up of right lower lobe nodule."}, "id": "report_eval:Y9E-015", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "INDICATION: Follow-up of part-solid nodule."}, "id": "report_eval:Y9E-016", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend renal mass protocol MRI."}, "id": "report_eval:Y9E-017", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend adrenal protocol CT in 12 months."}, "id": "report_eval:Y9E-018", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Clinical correlation recommended."}, "id": "report_eval:Y9E-019", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend dedicated CT chest."}, "id": "report_eval:Y9E-020", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "No incidental findings requiring follow-up."}, "id": "report_eval:Y9E-021", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:Y9E-022", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:Y9E-023", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "No follow-up imaging required."}, "id": "report_eval:Y9E-024", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Multiple tiny pulmonary nodules; no routine follow-up needed in a low-risk patient."}, "id": "report_eval:Y9E-025", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "If not already performed, thyroid ultrasound is recommended."}, "id": "report_eval:Y9E-026", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "If the patient is at high risk, an optional CT at 12 months may be considered; no follow-up is needed for a low-risk patient."}, "id": "report_eval:Y9E-027", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend 6-month LDCT."}, "id": "report_eval:Y9E-028", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:Y9E-029", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend diagnostic chest CT with or without contrast, PET/CT, and/or tissue sampling."}, "id": "report_eval:Y9E-030", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:Y9E-031", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:Y9E-032", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:Y9E-033", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:Y9E-034", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:Y9E-035", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend correlation with oncologic staging imaging."}, "id": "report_eval:Y9E-036", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend EUS and pancreatic surgery referral."}, "id": "report_eval:Y9E-037", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Ultrasound-guided core needle biopsy is recommended."}, "id": "report_eval:Y9E-038", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "5 cm) or follow-up (>=1."}, "id": "report_eval:Y9E-039", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "INDICATION: Follow-up of renal lesions seen on outside ultrasound."}, "id": "report_eval:Y9E-040", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N001", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N002", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N003", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N004", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N005", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N006", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N007", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N008", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N009", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N010", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N011", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N012", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N013", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N014", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N015", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N016", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N017", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N018", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N019", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N020", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N021", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N022", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N023", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N024", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N025", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N026", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N027", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N028", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N029", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N030", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N031", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N032", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N033", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N034", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N035", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N036", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N037", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N038", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N039", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N040", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N041", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N042", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N043", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N044", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N045", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N046", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N047", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N048", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N049", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N050", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N051", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N052", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N053", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N054", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N055", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N056", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N057", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N058", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N059", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N060", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Repeat screening colonoscopy in 10 years."}, "id": "blind_reports_2:N061", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Repeat colonoscopy within 1 year with extended bowel preparation."}, "id": "blind_reports_2:N062", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Await pathology."}, "id": "blind_reports_2:N063", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N064", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Surveillance colonoscopy in 6 months to check the resection scar."}, "id": "blind_reports_2:N065", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Pathology follow-up."}, "id": "blind_reports_2:N066", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N067", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N068", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N069", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N070", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N071", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N072", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Next colonoscopy in 3-5 years."}, "id": "blind_reports_2:N073", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N074", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N075", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N076", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N077", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N078", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N079", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N080", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N081", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N082", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 1년 이내 장정결 보강 후 대장내시경 재검"}, "id": "blind_reports_2:N083", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N084", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 10년 후 검진"}, "id": "blind_reports_2:N085", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N086", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N087", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Repeat colonoscopy soon with split-dose extended prep."}, "id": "blind_reports_2:N088", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Site check colonoscopy in 6 months."}, "id": "blind_reports_2:N089", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Repeat colonoscopy within 1 year due to suboptimal preparation."}, "id": "blind_reports_2:N090", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Repeat in 6 months."}, "id": "blind_reports_2:N091", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N092", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N093", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N094", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N095", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N096", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N097", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N098", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N099", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N100", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N101", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N102", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N103", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N104", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N105", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N106", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N107", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N108", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Indication: Follow-up AS."}, "id": "blind_reports_2:N109", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N110", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N111", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Consider dobutamine stress echo."}, "id": "blind_reports_2:N112", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N113", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N114", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Indication: Post-TAVR follow-up."}, "id": "blind_reports_2:N115", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Indication: Routine follow-up of mechanical valve."}, "id": "blind_reports_2:N116", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N117", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N118", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N119", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N120", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N121", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N122", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N123", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N124", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N125", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N126", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N127", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N128", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N129", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N130", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N131", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N132", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N133", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Indication: Follow-up."}, "id": "blind_reports_2:N134", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N135", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N136", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N137", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N138", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Indication: Known HFrEF follow-up."}, "id": "blind_reports_2:N139", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Indication: DCM follow-up."}, "id": "blind_reports_2:N140", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_2:N141", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N142", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N143", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N144", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N145", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N146", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N147", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N148", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N149", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N150", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N151", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N152", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N153", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N154", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N155", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N156", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_2:N157", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C001", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C002", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C003", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C004", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C005", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C006", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C007", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C008", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C009", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C010", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C011", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C012", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C013", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C014", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C015", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C016", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C017", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C018", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C019", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C020", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C021", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C022", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C023", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C024", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C025", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C026", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C027", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C028", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C029", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C030", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C031", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C032", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C033", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C034", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C035", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C036", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C037", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C038", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C039", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C040", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommendation: repeat colonoscopy with better prep, f/u pathology"}, "id": "blind_reports_3:C041", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 장정결 보완 후 재검 필요"}, "id": "blind_reports_3:C042", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_3:C043", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C044", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C045", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C046", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C047", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C048", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C049", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C050", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C051", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C052", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C053", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "대장내시경 (추적검사)"}, "id": "blind_reports_3:C054", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_3:C055", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend repeat colonoscopy in 1 year or sooner w/ better prep"}, "id": "blind_reports_3:C056", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_3:C057", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C058", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C059", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C060", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C061", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C062", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C063", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C064", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C065", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C066", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C067", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C068", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C069", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C070", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C071", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C072", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C073", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C074", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C075", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C076", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C077", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C078", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend f/u echo 1-2 yrs."}, "id": "blind_reports_3:C079", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "blind_reports_3:C080", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C081", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C082", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C083", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C084", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C085", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C086", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C087", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C088", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C089", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C090", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C091", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C092", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C093", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C094", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C095", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C096", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C097", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C098", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C099", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "blind_reports_3:C100", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up non-contrast CT chest in 6-12 months per Fleischner 2017."}, "id": "timelines:T01", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "In a high-risk patient, recommend PET/CT or tissue sampling per Fleischner 2017."}, "id": "timelines:T02", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend non-contrast chest CT in 3 months per Fleischner guidelines."}, "id": "timelines:T03", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up CT chest in 3 months to assess persistence."}, "id": "timelines:T04", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "6-12개월 후 흉부 CT 추적검사를 권고함."}, "id": "timelines:T05", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend 3-month LDCT; PET/CT may be considered."}, "id": "timelines:T06", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "timelines:T07", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Further diagnostic work-up (PET/CT and/or tissue sampling) recommended."}, "id": "timelines:T08", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Further work-up with PET/CT and/or tissue sampling recommended."}, "id": "timelines:T09", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend 6-month LDCT."}, "id": "timelines:T10", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend 6-month LDCT."}, "id": "timelines:T11", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "4 mm solid nodule in the left lower lobe; in a low-risk patient no routine follow-up is required per Fleischner 2017."}, "id": "timelines:T12", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Ultrasound-guided core needle biopsy recommended."}, "id": "timelines:T13", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Stereotactic biopsy recommended."}, "id": "timelines:T14", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Tissue sampling recommended."}, "id": "timelines:T15", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "timelines:T16", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Biopsy recommended."}, "id": "timelines:T17", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend short-interval follow-up breast ultrasound in 6 months."}, "id": "timelines:T18", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend adrenal protocol CT in 12 months."}, "id": "timelines:T19", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "timelines:T20", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Urology referral recommended."}, "id": "timelines:T21", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend urology referral."}, "id": "timelines:T22", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up renal MRI in 6 months."}, "id": "timelines:T23", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "1년 후 MRI/MRCP 추적검사를 권고함."}, "id": "timelines:T24", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Worrisome features; EUS and pancreas specialist evaluation recommended."}, "id": "timelines:T25", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend EUS / pancreatic surgery evaluation."}, "id": "timelines:T26", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend thyroid ultrasound."}, "id": "timelines:T27", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Incidental 8 mm hypodense left thyroid nodule without suspicious features; no further evaluation recommended per ACR."}, "id": "timelines:T28", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend FNA."}, "id": "timelines:T29", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend surveillance ultrasound in 12 months."}, "id": "timelines:T30", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Vascular surgery referral recommended."}, "id": "timelines:T31", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "timelines:T32", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "timelines:T33", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "timelines:T34", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "timelines:T35", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "timelines:T36", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "timelines:T37", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Interval growth is concerning for malignancy; recommend PET/CT or tissue sampling."}, "id": "timelines:T38", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up chest radiograph in 6-8 weeks to document resolution."}, "id": "timelines:T39", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Recommend follow-up chest radiograph in 6 weeks to document resolution."}, "id": "timelines:T40", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: CT chest in 6-12 months per Fleischner 2017."}, "id": "timelines:U01", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Follow-up CT chest in 3 months."}, "id": "timelines:U02", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: 3-month low-dose CT."}, "id": "timelines:U03", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: US-guided core biopsy."}, "id": "timelines:U04", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Tissue sampling."}, "id": "timelines:U05", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Vascular surgery referral."}, "id": "timelines:U06", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Urology referral."}, "id": "timelines:U07", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Adrenal protocol CT in 12 months."}, "id": "timelines:U08", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Thyroid ultrasound."}, "id": "timelines:U09", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: MRI/MRCP in 1 year."}, "id": "timelines:U10", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: 6-month LDCT."}, "id": "timelines:U11", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Repeat chest radiograph in 6 weeks to document resolution."}, "id": "timelines:U12", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: PET/CT and pulmonology referral."}, "id": "timelines:U13", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "timelines:U14", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "timelines:U15", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: US-guided FNA."}, "id": "timelines:U16", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Follow-up renal mass protocol CT in 6 months."}, "id": "timelines:U17", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: MRI-targeted prostate biopsy."}, "id": "timelines:U18", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Ultrasound surveillance in 12 months."}, "id": "timelines:U19", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RECOMMENDATION: Repeat multiphasic MRI in 3-6 months."}, "id": "timelines:U20", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "12개월 후 추적 CT 권고."}, "id": "report_eval:C004", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C010", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "3개월 후 저선량 CT 권고."}, "id": "report_eval:C023", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C026", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "6개월 추적 LDCT: 이전 Lung-RADS 3 결절 (우중엽 7 mm) 변화 없음."}, "id": "report_eval:C028", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "PET-CT 및 조직검사 권고."}, "id": "report_eval:C031", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C032", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C034", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "6개월 후 저선량 CT 권고."}, "id": "report_eval:C036", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "조직검사 권고."}, "id": "report_eval:C039", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "정위 생검 권고."}, "id": "report_eval:C041", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "5 cm) 미달로 1년 후 초음파 추적 권고."}, "id": "report_eval:C047", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "1년 후 추적 초음파 권고."}, "id": "report_eval:C050", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "세침흡인검사 권고."}, "id": "report_eval:C051", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C056", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "비특이적 소견으로 부신 프로토콜 CT 권고."}, "id": "report_eval:C061", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C065", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "간세포암 치료 후 추적."}, "id": "report_eval:C069", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C070", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "내분비내과 및 외과 협진 권고."}, "id": "report_eval:C072", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "혈관근지방종 가능성 높으나 신세포암 배제 위해 조영증강 CT 권고."}, "id": "report_eval:C076", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C080", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "추적 불필요."}, "id": "report_eval:C085", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "비뇨의학과 진료 권고."}, "id": "report_eval:C086", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "6개월 후 추적 검사 권고."}, "id": "report_eval:C087", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "6개월 후 MRCP 추적 권고."}, "id": "report_eval:C090", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C093", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "췌장 전문의 진료 및 EUS 권고."}, "id": "report_eval:C095", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "6개월 후 추적 권고."}, "id": "report_eval:C102", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C104", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C107", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C110", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C117", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "치료 후 6주 뒤 흉부 X선 추적 검사 권고."}, "id": "report_eval:C119", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "추적 흉부 X선 권고."}, "id": "report_eval:C128", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C130", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "6개월 후 뇌하수체 MRI 추적 권고."}, "id": "report_eval:C132", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "8-12주 후 추적 초음파 권고."}, "id": "report_eval:C135", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C138", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "3개월 후 dynamic liver MRI 권고."}, "id": "report_eval:C140", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C145", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C149", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C151", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C155", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "호흡기내과 의뢰 및 PET-CT 권고."}, "id": "report_eval:C157", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "Fleischner 기준에 따라 6-12개월 후 흉부 CT 추적 권고."}, "id": "report_eval:C159", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:C161", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C166", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:C169", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "Fleischner 가이드라인(고위험군)에 따라 6-12개월 후 추적 CT 권고함."}, "id": "report_eval:K069", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "6개월 후 LDCT 추적검사 권고."}, "id": "report_eval:K070", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K071", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K072", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "3개월 후 LDCT 권고."}, "id": "report_eval:K073", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "FNA 권고."}, "id": "report_eval:K074", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "추적검사 불필요."}, "id": "report_eval:K075", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "2년 후 MRCP 추적 권고."}, "id": "report_eval:K076", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "12개월 후 adrenal protocol CT 추적 권고."}, "id": "report_eval:K077", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K078", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K079", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K080", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K081", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K082", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "초음파 유도하 조직검사 권고."}, "id": "report_eval:K083", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K084", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "우하엽에 4 mm 크기의 solid nodule, 저위험군으로 추적검사 필요하지 않음."}, "id": "report_eval:K085", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "악성 가능성 배제할 수 없어 조직검사 또는 PET-CT 권고."}, "id": "report_eval:K086", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "혈관외과 의뢰 권고."}, "id": "report_eval:K087", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "2년 후 초음파 추적 권고."}, "id": "report_eval:K088", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K089", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "3개월 후 뇌 MRI 추적 권고."}, "id": "report_eval:K090", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "0 cm 크기의 저음영 결절, 갑상선 초음파로 추가 평가 권고."}, "id": "report_eval:K091", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "추적 불필요."}, "id": "report_eval:K092", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "3개월 이내 간 MRI 시행 권고."}, "id": "report_eval:K093", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K094", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K095", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K096", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K097", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K098", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K099", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K100", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:K8-001", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 3개월 후 추적 CT 또는 PET-CT, 조직검사 고려 바람."}, "id": "report_eval:K8-002", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: Fleischner 기준 저위험군 6 mm 미만 결절로 추적 검사 불필요."}, "id": "report_eval:K8-003", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 6-12개월 후 추적 CT 요망 (Fleischner 2017)."}, "id": "report_eval:K8-004", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:K8-005", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "검사명: Chest CT, non-enhanced (follow-up)"}, "id": "report_eval:K8-006", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 3-6개월 후 추적 CT 권함."}, "id": "report_eval:K8-007", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-008", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "추적 불필요."}, "id": "report_eval:K8-009", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "추가 추적 검사 불필요."}, "id": "report_eval:K8-010", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-011", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 12개월 후 정기 LDCT 검진."}, "id": "report_eval:K8-012", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 6개월 후 LDCT 요망."}, "id": "report_eval:K8-013", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: PET-CT 및 조직검사 (흉부외과/호흡기내과 의뢰) 요망."}, "id": "report_eval:K8-014", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-015", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-016", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 3개월 후 LDCT."}, "id": "report_eval:K8-017", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 좌측 stereotactic (vacuum-assisted) biopsy 권함."}, "id": "report_eval:K8-018", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-019", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-020", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-021", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 6개월 후 우측 유방 추적 초음파 권함."}, "id": "report_eval:K8-022", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: US-guided core needle biopsy 권함."}, "id": "report_eval:K8-023", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: Rt."}, "id": "report_eval:K8-024", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 1년 후 추적 갑상선 초음파 요망."}, "id": "report_eval:K8-025", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "5 cm TSTC lesion, 양성 가능성 높음 — 임상적으로 필요하면 추적 관찰 고려."}, "id": "report_eval:K8-026", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "FNA 및 추적 검사 불필요."}, "id": "report_eval:K8-027", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "GB polyp 4 mm, stable — 추적 불필요 (SRU 2022 기준 ≤5 mm, extremely low risk)."}, "id": "report_eval:K8-028", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-029", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-030", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-031", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-032", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 1년 후 adrenal protocol CT 또는 MRI로 추적 권함."}, "id": "report_eval:K8-033", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "8 cm, -5 HU) — benign, 영상 추적 불필요."}, "id": "report_eval:K8-034", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: PET-CT 또는 adrenal protocol 평가 필요."}, "id": "report_eval:K8-035", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 생화학적 호르몬 검사 및 내분비내과/외과 협진 권함."}, "id": "report_eval:K8-036", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: adrenal protocol CT (washout) 또는 chemical-shift MRI로 특성화 권함."}, "id": "report_eval:K8-037", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-038", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-039", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 비뇨의학과 의뢰 바람."}, "id": "report_eval:K8-040", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 비뇨의학과 진료 요망."}, "id": "report_eval:K8-041", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 6개월 후 renal protocol CT 또는 MRI 추적 권함."}, "id": "report_eval:K8-042", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "추적 불필요."}, "id": "report_eval:K8-043", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-044", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 2년 후 MRI/MRCP 추적 권함."}, "id": "report_eval:K8-045", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-046", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: EUS 및 췌장 전문의 진료 요망."}, "id": "report_eval:K8-047", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-048", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 1개월 이내 liver dynamic MRI (gadoxetic acid) 시행 권함."}, "id": "report_eval:K8-049", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 조직검사(US-guided liver biopsy) 권함."}, "id": "report_eval:K8-050", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-051", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-052", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 혈관외과 의뢰 요망."}, "id": "report_eval:K8-053", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-054", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-055", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-056", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-057", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-058", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-059", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-060", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-061", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 치료 후 6주 후 추적 흉부 X선으로 소실 확인 권함."}, "id": "report_eval:K8-062", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-063", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-064", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-065", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-066", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-067", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-068", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "※ 필요시 임상 판단에 따라 추적 MRI 고려할 수 있음."}, "id": "report_eval:K8-069", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "3 cm nodule, ≥1년 이상 안정적 — benign으로 판단, 추가 영상 추적 불필요."}, "id": "report_eval:K8-070", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-071", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 3개월 후 추적 흉부 CT 권함."}, "id": "report_eval:K8-072", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권 고 : 3개월 후 추적 CT 또는 PET-CT 고려 요망."}, "id": "report_eval:K8-073", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 12개월 후 부신 CT 또는 MRI 추적 권함."}, "id": "report_eval:K8-074", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 6-8주 후 (월경 후) 추적 골반 초음파로 소실 확인 권함."}, "id": "report_eval:K8-075", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:K8-076", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:K8-077", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: US-guided FNA 권함."}, "id": "report_eval:K8-078", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 기관지내시경 BAL 고려 및 항진균 치료 반응 평가를 위해 2주 후 추적 흉부 CT 권함."}, "id": "report_eval:K8-079", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 3개월 후 LDCT 요망."}, "id": "report_eval:K8-080", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:M002", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M004", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M008", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M010", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M011", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M014", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M016", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M017", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M021", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M023", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M027", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M030", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M032", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M034", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M037", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M039", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M040", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M043", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M045", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M046", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M049", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M053", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M055", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M056", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M060", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M063", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M065", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M069", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M072", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M073", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M076", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M078", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M080", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M085", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M088", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M090", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M093", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M094", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M097", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:M100", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: PET-CT 및 조직검사(PCNB) 권함."}, "id": "report_eval:N002", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 6개월 후 LDCT f/u 권함."}, "id": "report_eval:N003", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: Contrast-enhanced chest CT 또는 PET-CT 및 조직검사 고려 요망."}, "id": "report_eval:N005", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 항생제 치료 후 6주 뒤 f/u CXR 권함 (resolution 확인 및 underlying lesion 배제 위해)."}, "id": "report_eval:N007", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: Rt adrenal nodule 감별 위해 adrenal protocol CT (unenhanced + washout) 권함."}, "id": "report_eval:N010", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N013", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 2년 후 MRI/MRCP f/u 권함 (ACR 2017 기준 <1."}, "id": "report_eval:N016", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: US-guided FNA 권함."}, "id": "report_eval:N019", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N020", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 수술 기준(5."}, "id": "report_eval:N023", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: US-guided core needle biopsy 권함."}, "id": "report_eval:N026", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 3-6개월 후 multiphasic MRI f/u 권함."}, "id": "report_eval:N029", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: O-RADS MRI 시행 권함."}, "id": "report_eval:N032", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N035", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N039", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N043", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N044", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "이전 권고 (6개월 후 f/u CT) 취소하며, 추가 f/u 불필요로 정정함."}, "id": "report_eval:N047", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N049", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: Adrenal metastasis 확인 위해 조직검사 고려 요망."}, "id": "report_eval:N052", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N054", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N055", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: EUS 및 췌장외과 협진 권함."}, "id": "report_eval:N057", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N059", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: 2주 후 f/u X-ray 권함 (displacement 여부 확인)."}, "id": "report_eval:N061", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "RUL 4 mm solid nodule — low-risk 환자로 Fleischner 2017 기준 f/u 불필요 (no routine follow-up)."}, "id": "report_eval:N064", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: Rt breast mass에 대해 US-guided CNB 권함."}, "id": "report_eval:N066", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 내분비내과 협진 및 adrenalectomy 고려, hormonal w/u 요망."}, "id": "report_eval:N069", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:N070", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N072", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N075", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N078", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:N080", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-001", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-002", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-003", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-004", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-005", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-006", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-007", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-008", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-009", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-010", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "임상정보: AAA 추적관찰"}, "id": "report_eval:X8-011", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-012", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-013", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-014", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-015", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-016", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-017", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-018", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-019", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-020", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-021", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-022", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-023", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-024", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-025", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-026", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-027", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-028", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-029", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-030", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-031", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "임상정보: part-solid nodule 추적"}, "id": "report_eval:X8-032", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "임상정보: 폐결절 추적관찰"}, "id": "report_eval:X8-033", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-034", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-035", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-036", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-037", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:X8-038", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:X8-039", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:X8-040", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 폐결절에 대해 Fleischner guideline에 따라 6-12개월 후 chest CT 추적검사 권함."}, "id": "report_eval:Y9K-001", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 저위험군의 경우 추적관찰 필요 없음."}, "id": "report_eval:Y9K-002", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "검사명: Chest CT, follow-up"}, "id": "report_eval:Y9K-003", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: PET/CT 및 조직검사 등 추가 평가 요망."}, "id": "report_eval:Y9K-004", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 3개월 후 저선량 흉부 CT 추적검사 권함."}, "id": "report_eval:Y9K-005", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 12개월 후 연례 저선량 CT 검진."}, "id": "report_eval:Y9K-006", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 12개월 후 연례 검진 지속."}, "id": "report_eval:Y9K-007", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:Y9K-008", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: Adrenal protocol CT 또는 chemical shift MRI 권함."}, "id": "report_eval:Y9K-009", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 부신 결절에 대해 추적관찰 필요 없음."}, "id": "report_eval:Y9K-010", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고:"}, "id": "report_eval:Y9K-011", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:Y9K-012", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: Hematoma 흡수 후 2-4주 후 brain MRI (enhanced) 권함."}, "id": "report_eval:Y9K-013", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:Y9K-014", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:Y9K-015", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:Y9K-016", "obligations": {}, "rules": []}
+{"evidence": {}, "id": "report_eval:Y9K-017", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "권고: US-guided core needle biopsy 권함."}, "id": "report_eval:Y9K-018", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 1년 후 정기 검진."}, "id": "report_eval:Y9K-019", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: Liver MRI (dynamic) 권함."}, "id": "report_eval:Y9K-020", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 이전의 3개월 후 LDCT 권고를 철회하고, PET/CT 및 조직검사 등 진단적 검사 권함."}, "id": "report_eval:Y9K-021", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 비뇨의학과 진료 권함."}, "id": "report_eval:Y9K-022", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 1년 후 MRI/MRCP 추적검사 권함."}, "id": "report_eval:Y9K-023", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: EUS 및 췌담도 외과 협진 요망."}, "id": "report_eval:Y9K-024", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "추적관찰 필요 없음."}, "id": "report_eval:Y9K-025", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {}, "id": "report_eval:Y9K-026", "obligations": {}, "rules": []}
+{"evidence": {"FOLLOW_UP": "breast cancer s/p mastectomy (2024), 정기 추적"}, "id": "report_eval:Y9K-027", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 추적관찰 필요 없음."}, "id": "report_eval:Y9K-028", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 추적관찰 필요 없음."}, "id": "report_eval:Y9K-029", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}
+{"evidence": {"FOLLOW_UP": "권고: 6개월 후 간 초음파 추적검사 권함."}, "id": "report_eval:Y9K-030", "obligations": {"FOLLOW_UP": {"overdue": null, "status": "open"}}, "rules": ["FOLLOW_UP"]}

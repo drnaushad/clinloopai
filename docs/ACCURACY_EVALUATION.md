@@ -163,6 +163,74 @@ the real finding it must not hide.
 - A BI-RADS 4 biopsy described only in an addendum keeps the loop visible until the biopsy is in the
   record, by design (fail toward a person).
 
+### Round 9 (October 2026): the hardest report patterns, English and Korean-English
+
+**Patterns targeted** (gaps left after round 8): addenda and "CORRECTED REPORT"s that add, upgrade or retract
+a finding; several findings in one report with different follow-up (lung + adrenal + thyroid, AAA + kidney,
+pancreatic cyst + benign adenoma); comparison with priors (stable ≥2 years, growth with the prior size only on
+the COMPARISON line, new, resolved); hedging and negation scope; 3-axis, cm/mm and "subcentimeter / 1 cm 미만"
+sizes; conditional advice ("if high risk", "if not already performed", "고위험군인 경우"); pathology (positive
+margins, high-grade dysplasia, incidental carcinoma and carcinoid); outside and list-style reports.
+
+**Method.** Two blind writers (separate model sessions with no access to the code or repository) saw only the
+rule catalogue and a pattern brief: 40 English cases (`r9en`) and 30 Korean / Korean-English cases (`r9ko`),
+42% needing no follow-up. New this round: an `expected_review` label (should the loop go to a person for a
+clinical reason, such as a Fleischner exclusion?). The run scores it as a content reason for review; the
+generic "too little data" abstention is a harness artefact (one report, no history) and is not counted.
+Labels were checked before scoring by the lead, not by a separate blind adjudicator (no subagent tool could
+receive the 70 cases); one label changed then (Y9E-004: the recommended head CTA is tracked, R030). Each set was
+then scored **once** against the code as it stood.
+
+| Set (n) | When | Equivalent | Exact | Rule sensitivity | Rule PPV | No alert when none needed | Review flag | Deadline in window |
+|---|---|---|---|---|---|---|---|---|
+| English (40) | pre-fix, labels as written | 90.0% | 75.0% | 72.4% | 70.0% | 87.5% (14/16) | 100% | 88.2% |
+| English (40) | pre-fix, 2 labels corrected (below) | 92.5% | 77.5% | 73.3% | 73.3% | 93.3% (14/15) | 100% | 88.9% |
+| English (40) | after fixes | 100% | 85.0% | 80.0% | 80.0% | 100% (15/15) | 100% | 90.0% |
+| Korean / mixed (30) | pre-fix, labels as written | 96.7% | 80.0% | 79.2% | 79.2% | 91.7% (11/12) | 96.7% | 93.3% |
+| Korean / mixed (30) | pre-fix, label corrected | 100% | 83.3% | 80.0% | 83.3% | 100% (11/11) | 96.7% | 93.8% |
+| Korean / mixed (30) | after fixes | 100% | 86.7% | 84.0% | 84.0% | 100% (11/11) | 100% | 93.8% |
+| All 760 after every fix (not unbiased) | | 99.7% | 84.3% | 80.3% | 92.6% | 99.6% | | 98.7% |
+
+**How to read it.** The first-pass numbers are the honest ones. The "equivalent" score hides one real miss: in
+Y9K-011 the thyroid nodule was missed but the lung nodule's imaging alert made the case count as equivalent
+(same alert group). Rule sensitivity and PPV are low by design of the scoring, not by error: when a guideline
+rule and the radiologist's recommendation ask for the same study, the app raises one alert (often R030–R032)
+where the writer listed the guideline rule. The remaining deadline misses are labels that give the window of
+one rule while the run checks another (e.g. Y9E-009 window is for R040, the run checks R044 at 5 years).
+
+**Discordances on first pass, classified:**
+
+| Case | Expected → got | Class | Outcome |
+|---|---|---|---|
+| Y9E-015 | R046 → R003 | Engine defect: prior size only on the COMPARISON line, growth missed | Fixed |
+| Y9E-033 | R009 → none | Engine defect: incidental appendiceal neuroendocrine tumour not abnormal | Fixed |
+| Y9E-002 | none → R037 | Engine defect: correction note quoting the retracted preliminary reading re-opened the adrenal finding | Fixed |
+| Y9K-011 | R003+R037+R043 → R003+R037 | Engine defect (hidden by "equivalent"): "Thyroid Lt. lobe" split at "Lt." | Fixed |
+| Y9K-027 | review → no review | Engine defect: Fleischner exclusion (known cancer) lost when the radiologist's tighter CT interval was tracked as R030 | Fixed |
+| Y9E-003, Y9K-012 | none → R035 (closed) | Label error: our writer brief said to omit a critical finding whose call is documented; the harness convention since round 8 lists R035 (opened and closed at once) | Labels corrected |
+
+**Defects fixed** (drafts for clinician review, see `CLINICAL_REVIEW.md` §3e; tests in
+`TestRound9BlindFindings`):
+- `src/clinloop_engine/radiology.py:449-457` (with the capture at `:355-362` and `_COMPARISON_LINE` at `:534`):
+  a nodule size on the COMPARISON line is the earlier size of the same-lobe nodule; ≥2 mm larger now is growth
+  (R046). Read only toward more work-up, never toward "stable".
+- `src/clinloop_engine/fhir_ingest.py:423`: neuroendocrine tumour / carcinoid / 신경내분비종양 is abnormal pathology (R009).
+- `src/clinloop_engine/radiology.py:138,182`: "Rt."/"Lt."/"Bil." do not end a sentence or break a finding.
+- `src/clinloop_engine/radiology.py:545`, `:628-636` and `:994-1000`: a correction note quoting the superseded reading does not
+  revise or re-open a finding the report describes elsewhere (never applied when the quote is the only mention).
+- `src/clinloop_engine/radiology.py:1451-1452`: the Fleischner-exclusion review note stays on the tracked CT (R030).
+
+Two earlier cases changed with the last fix, both toward review (N065 known breast cancer, K8-079 transplant
+recipient): their tracked CT now carries the exclusion. No other case in the earlier 690 changed; the timelines
+are unchanged (0 false closures).
+
+**Left unfixed:** the two round-8 failures (N043, E8-017) remain as documented. None from round 9.
+
+**Caveats.** Synthetic reports written by models from a catalogue, not hospital reports; 70 cases is small (one
+case is 1.4–2.5 points); each set was scored once and is no longer unbiased after the fixes; label adjudication
+was by the lead rather than an independent blind adjudicator; the brief error on R035 shows labels themselves
+need clinician review.
+
 ## Defects found and fixed (each now has a test in `tests/test_report_accuracy.py`)
 
 ### Found by the real-style and timeline sets

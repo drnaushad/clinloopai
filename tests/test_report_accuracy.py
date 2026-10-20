@@ -401,6 +401,62 @@ class TestRound8BlindFindings(unittest.TestCase):
         self.assertIsNone(_communication_done("Please ensure this is called to the referring doctor."))
 
 
+class TestRound9BlindFindings(unittest.TestCase):
+    """Defects found by the round-9 blind sets (hard English and Korean-English reports, October 2026);
+    each first-pass miss or false alarm, reduced to the wording that caused it, checked in both directions."""
+
+    def test_prior_size_on_the_comparison_line_is_growth(self):                 # missed work-up
+        chest = dict(title="CT chest without contrast", smoking="77176002")
+        grew = ("COMPARISON: CT chest 2025-04-10, at which time the solid right lower lobe nodule measured 6 mm.\n"
+                "FINDINGS:\nLungs: Solid right lower lobe nodule measures 9 mm, smooth margins.\n"
+                "IMPRESSION:\n1. 9 mm solid right lower lobe nodule.")
+        self.assertEqual(rules(grew, **chest), {"R046"})
+        # The same size, or a nodule in another lobe, is not growth: the Fleischner interval stands
+        self.assertEqual(rules(grew.replace("measured 6 mm", "measured 9 mm"), **chest), {"R003"})
+        self.assertEqual(rules(grew.replace("solid right lower lobe nodule measured", "left upper lobe nodule measured"),
+                               **chest), {"R003"})
+
+    def test_incidental_neuroendocrine_tumour_is_abnormal_pathology(self):    # missed referral
+        path = dict(title="Surgical pathology: appendix", category="PAT", sex="female")
+        self.assertEqual(rules("FINAL DIAGNOSIS:\nAppendix, appendectomy:\n- Acute suppurative appendicitis.\n"
+                               "- INCIDENTAL well-differentiated neuroendocrine tumor (carcinoid), grade 1, 1.2 cm.", **path),
+                         {"R009"})
+        self.assertEqual(rules("진단: 충수, 충수절제술: 급성 충수염. 신경내분비종양, 1.0 cm.", **path), {"R009"})
+        self.assertEqual(rules("FINAL DIAGNOSIS:\nAppendix: acute appendicitis. No neuroendocrine tumor identified.", **path),
+                         set())
+
+    def test_thyroid_lt_lobe_abbreviation_keeps_the_organ(self):                # missed thyroid ultrasound
+        got = rules("판독소견:\n1) Rt. lower lobe lateral basal segment에 9 mm solid nodule.\n"
+                    "2) Thyroid Lt. lobe에 2.0 cm 크기의 저음영 결절.\n", title="Chest CT, enhanced", smoking="77176002")
+        self.assertIn("R043", got)
+        self.assertIn("R003", got)                    # the lung nodule is still a lung nodule
+        self.assertNotIn("R043", rules("판독소견:\nThyroid Lt. lobe에 결절 없음.", title="Chest CT, enhanced"))
+
+    def test_correction_note_quoting_the_preliminary_reading_is_not_a_finding(self):   # false alarm
+        text = ("FINDINGS:\nAdrenals: The left adrenal nodule measures 2.4 cm and measures -6 HU, a lipid-rich adenoma.\n"
+                "IMPRESSION:\nLeft adrenal adenoma (2.4 cm, -6 HU). Benign; no further imaging required.\n\n"
+                "CORRECTION NOTE: The preliminary impression described a '2.4 cm indeterminate left adrenal nodule, "
+                "recommend adrenal protocol CT in 3 months.' That recommendation is RETRACTED.")
+        self.assertEqual(rules(text, sex="female"), set())
+        # A correction that reports a finding the body never described still opens it (never the only trace)
+        self.assertIn("R037", rules("FINDINGS:\nAdrenals: normal.\n\nCORRECTION NOTE: The original report omitted a "
+                                    "1.6 cm indeterminate left adrenal nodule (33 HU).", sex="female"))
+
+    def test_fleischner_exclusion_stays_with_the_tracked_ct(self):            # review reason lost
+        when = datetime(2026, 9, 1)
+        res = [{"resourceType": "Patient", "id": "A", "gender": "female", "birthDate": "1970-03-01"},
+               {"resourceType": "DiagnosticReport", "id": "r", "status": "final", "category": [{"coding": [{"code": "RAD"}]}],
+                "code": {"text": "Chest CT"}, "subject": {"reference": "Patient/A"},
+                "effectiveDateTime": "2026-09-01T09:00:00Z",
+                "conclusion": "임상정보: history of breast cancer s/p mastectomy.\n판독소견:\nRt. middle lobe에 새로 생긴 7 mm "
+                              "solid nodule.\n권고: 폐결절은 3개월 후 chest CT 추적 권함."}]
+        events, _ = bundle_to_events(res)
+        dets = ClinLoopDetector(evaluation_time=when + timedelta(days=1)).process_patient("t", "A", events.get("A", []))
+        ct = [d for d in dets if d.rule_id in ("R003", "R030")]
+        self.assertTrue(ct)
+        self.assertTrue(any("Fleischner 2017 does not apply" in x for d in ct for x in d.explanation))
+
+
 class TestBlindCaseSets(unittest.TestCase):
     """The 270 blind-written cases (docs/ACCURACY_EVALUATION.md) stay above a floor: a change that loses
     findings or adds false alerts fails CI."""

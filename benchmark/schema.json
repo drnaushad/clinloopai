@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/drnaushad/clinloopai/benchmark/schema.json",
+  "title": "ClinLoop-Bench record (v1.0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "task", "language", "split", "synthetic", "source", "input", "eval_time", "gold", "rationale", "tags"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z_0-9]+:[A-Za-z0-9_-]+$", "description": "<source>:<original id>; stable across versions"},
+    "version": {"const": "1.0"},
+    "task": {"enum": ["T1", "T2", "T3"], "description": "T1 English report -> obligations; T2 timeline/FHIR -> loop status; T3 Korean/mixed report -> obligations"},
+    "language": {"enum": ["en", "ko", "mixed"]},
+    "split": {"enum": ["dev", "test"], "description": "Seeded SHA-256 of '42:<id>'; <30 of 100 buckets -> dev"},
+    "synthetic": {"const": true},
+    "source": {
+      "type": "object", "additionalProperties": false, "required": ["file", "round", "original_id"],
+      "properties": {"file": {"type": "string"}, "round": {"type": "string"}, "original_id": {"type": "string"}}
+    },
+    "input": {
+      "type": "object", "required": ["fhir_bundle"],
+      "properties": {
+        "text": {"type": "string"},
+        "title": {"type": "string"},
+        "report_type": {"type": ["string", "null"]},
+        "report_date": {"type": "string", "format": "date"},
+        "patient": {"type": "object"},
+        "events": {"type": "array", "items": {"type": "object"}},
+        "index_event_id": {"type": ["string", "null"], "description": "T2 timelines: only obligations triggered by this report are scored"},
+        "rule_focus": {"type": ["string", "null"]},
+        "fhir_bundle": {
+          "type": "object", "required": ["resourceType", "type", "entry"],
+          "properties": {"resourceType": {"const": "Bundle"}, "type": {"const": "collection"},
+                         "entry": {"type": "array", "items": {"type": "object", "required": ["resource"]}}}
+        }
+      }
+    },
+    "eval_time": {"type": "string", "description": "ISO 8601 time at which loop status is judged"},
+    "gold": {
+      "type": "object", "additionalProperties": false,
+      "required": ["rules", "window_days", "scope_rules", "evidence_spans", "obligations"],
+      "properties": {
+        "rules": {"type": "array", "items": {"type": "string", "pattern": "^R[0-9]{3}$"}, "uniqueItems": true},
+        "window_days": {"type": ["array", "null"], "items": {"type": "number"}},
+        "scope_rules": {"type": "array", "items": {"type": "string", "pattern": "^R[0-9]{3}$"}, "minItems": 1},
+        "evidence_spans": {"type": ["object", "null"], "additionalProperties": {"type": ["string", "array"]}},
+        "obligations": {
+          "type": ["object", "null"],
+          "additionalProperties": {
+            "type": "object", "additionalProperties": false, "required": ["status", "overdue", "deadline_days", "source_label"],
+            "properties": {
+              "status": {"enum": ["open", "closed", "needs_human_review"]},
+              "overdue": {"type": ["boolean", "null"]},
+              "deadline_days": {"type": ["number", "null"]},
+              "source_label": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "rationale": {"type": "string"},
+    "tags": {"type": "array", "items": {"type": "string"}}
+  }
+}

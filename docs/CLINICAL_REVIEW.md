@@ -131,6 +131,19 @@ for the clinical lead to confirm:
 | A thyroid nodule already TI-RADS 1–2 (or K-TIRADS 2) on ultrasound needs no further ultrasound | ACR 2015 incidental-thyroid guidance assumes an uncharacterised nodule |
 | A Korean list of bare nouns shares its negation ("기흉, 혈흉 없음"); a measured finding is always present ("8 mm 결절, 흉수 없음") | Korean report grammar; fail toward a person for anything measured |
 
+## 3e. Report reading, blind round 9 (October 2026)
+
+Full results are in [`ACCURACY_EVALUATION.md`](ACCURACY_EVALUATION.md) (round 9). Drafts for the clinical lead
+to confirm, each with a test in `tests/test_report_accuracy.py` (`TestRound9BlindFindings`):
+
+| Change | Clinical basis |
+| --- | --- |
+| A nodule size given only on the COMPARISON line ("at which time the RLL nodule measured 6 mm") is the earlier size of the same-lobe nodule: ≥2 mm larger now opens the growing-nodule work-up (R046). Only growth is read from that line, never stability | Fleischner 2017: growth of a solid nodule warrants work-up; reading only toward more work-up fails toward a person |
+| Neuroendocrine tumour / carcinoid in a pathology diagnosis (e.g. incidental in an appendectomy) is an abnormal result (R009) | NETs need oncology review (size, margin, lymphovascular invasion decide further surgery) |
+| "Rt." / "Lt." / "Bil." do not end a sentence ("Thyroid Lt. lobe에 2.0 cm 결절" keeps the thyroid) | Korean-English side abbreviation |
+| A correction note that quotes the superseded preliminary reading ("The preliminary impression described a '2.4 cm indeterminate adrenal nodule'… RETRACTED") does not re-open that finding when the report describes it elsewhere | The corrected report is the final interpretation. Never applied when the quote is the only mention |
+| A Fleischner exclusion (known cancer, age <35, immunocompromise) stays attached when the radiologist's tighter CT interval is tracked instead of R003 | The exclusion is about the patient, not about which rule tracks the CT |
+
 ## 4. Before clinical use
 
 1. A licensed clinician reviews this document and the code it names, and signs below.
