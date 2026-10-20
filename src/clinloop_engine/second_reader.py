@@ -251,7 +251,7 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],
             continue
         digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
         done = store.second_read(f"{patient_id}|{r['id']}")
-        if done and done["text_hash"] == digest:
+        if done and done["text_hash"] == digest and done["status"] != "failed":
             continue
         reports.append((r, kind, text, digest))
     if not reports:

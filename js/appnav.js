@@ -11,7 +11,7 @@
   // Every device shows the same version: a phone may keep yesterday's page in its cache. Each page
   // asks for version.json (never cached); if the live version is newer than this script, the page
   // reloads once, fetching fresh copies. Bump APP_VERSION and version.json together on each release.
-  var APP_VERSION = '2026-10-19.3';
+  var APP_VERSION = '2026-10-20.1';
   (function checkVersion() {
     if (!window.fetch || location.protocol === 'file:') return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' })

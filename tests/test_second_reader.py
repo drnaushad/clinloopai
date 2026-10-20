@@ -145,6 +145,18 @@ class TestSecondReadPatient(unittest.TestCase):
         self.assertEqual(flags, [])
         self.assertEqual(self.store.second_read("P|r1")["status"], "failed")
 
+    def test_failed_read_is_retried_without_report_text_changing(self):
+        resources = [PATIENT, report(UNUSUAL)]
+        failing = FakeModel([], error="timeout")
+        sr.second_read_patient(self.store, "P", resources, model=failing, now=NOW)
+        self.assertEqual(self.store.second_read("P|r1")["status"], "failed")
+        recovered = FakeModel([])
+        sr.second_read_patient(self.store, "P", resources, model=recovered, now=NOW)
+        self.assertEqual(len(recovered.prompts), 1)
+        self.assertNotEqual(self.store.second_read("P|r1")["status"], "failed")
+        sr.second_read_patient(self.store, "P", resources, model=recovered, now=NOW)
+        self.assertEqual(len(recovered.prompts), 1)
+
     def test_critical_and_pathology_review_deadlines(self):
         rep = report("Findings: small left frontal extra-axial blood collection, new compared with yesterday.", title="CT head")
         model = FakeModel([{"category": "critical_finding", "quote": "small left frontal extra-axial blood collection"}])
