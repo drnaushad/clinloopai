@@ -34,7 +34,7 @@ import os
 import sys
 from datetime import datetime, timedelta
 from typing import Dict, Iterable, List, Optional, Set, Tuple
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urljoin, urlparse
 
 import requests
 
@@ -60,6 +60,24 @@ class FHIRSyncError(RuntimeError):
     pass
 
 
+def search_bundle(body: Dict, resource_type: str) -> Dict:
+    """Reject a successful HTTP status carrying an error or a non-search payload."""
+    if not isinstance(body, dict) or body.get("resourceType") != "Bundle" or body.get("type") != "searchset":
+        raise FHIRSyncError("FHIR search did not return a searchset Bundle")
+    if not isinstance(body.get("entry", []), list):
+        raise FHIRSyncError("FHIR search entries are malformed")
+    for entry in body.get("entry", []):
+        resource = entry.get("resource") if isinstance(entry, dict) else None
+        if not isinstance(resource, dict):
+            raise FHIRSyncError("FHIR search entry has no resource")
+        if resource.get("resourceType") == "OperationOutcome":
+            if any(i.get("severity") in {"error", "fatal"} for i in resource.get("issue", [])):
+                raise FHIRSyncError("FHIR search returned an error outcome")
+        elif resource.get("resourceType") != resource_type:
+            raise FHIRSyncError("FHIR search returned an unexpected resource type")
+    return body
+
+
 class FHIRClient:
     """Minimal read-only FHIR R4 REST client with Bundle paging."""
 
@@ -77,14 +95,14 @@ class FHIRClient:
 
     def _get(self, url: str) -> requests.Response:
         try:
-            resp = self.session.get(url, timeout=self.timeout)
+            resp = self.session.get(url, timeout=self.timeout, allow_redirects=False)
         except SMARTAuthError as e:
             raise FHIRSyncError(f"FHIR login failed: {e}") from None
         invalidate = getattr(self.session.auth, "invalidate", None)
         if resp.status_code == 401 and invalidate:      # token revoked or expired early: log in again, once
             invalidate()
             try:
-                resp = self.session.get(url, timeout=self.timeout)
+                resp = self.session.get(url, timeout=self.timeout, allow_redirects=False)
             except SMARTAuthError as e:
                 raise FHIRSyncError(f"FHIR login failed: {e}") from None
         return resp
@@ -95,13 +113,20 @@ class FHIRClient:
             resp = self._get(url)
             if resp.status_code != 200:
                 raise FHIRSyncError(f"GET {resource_type} failed: HTTP {resp.status_code}")
-            bundle = resp.json()
+            try:
+                bundle = search_bundle(resp.json(), resource_type)
+            except ValueError:
+                raise FHIRSyncError("FHIR search returned unreadable JSON") from None
             for entry in bundle.get("entry", []):
-                if entry.get("resource"):
+                if entry.get("resource", {}).get("resourceType") != "OperationOutcome":
                     yield entry["resource"]
             url = next((l["url"] for l in bundle.get("link", []) if l.get("relation") == "next"), None)
             if not url:
                 return
+            url = urljoin(self.base + "/", url)
+            target, origin = urlparse(url), urlparse(self.base)
+            if (target.scheme, target.netloc) != (origin.scheme, origin.netloc):
+                raise FHIRSyncError("FHIR paging link left the configured origin")
         raise FHIRSyncError(f"Paging for {resource_type} exceeded {MAX_PAGES} pages")
 
     def changed_patients(self, since: str) -> Tuple[Set[str], Optional[str]]:
@@ -235,13 +260,16 @@ def check_connection(client: FHIRClient, now: Optional[datetime] = None) -> Dict
         report["problems"].append(f"FHIR version {report['fhir_version']}: ClinLoop reads R4 (4.0.x)")
     bulk = hasattr(client, "export_url")
     if bulk:
-        ops = {str(op.get("name", "")).lstrip("$") for rest in cap.get("rest", [])
-               for op in rest.get("operation", []) + [o for r in rest.get("resource", []) for o in r.get("operation", [])]} \
-            if meta.status_code == 200 else set()
+        group = bool(getattr(client, "group_id", None))
+        operations = [op for rest in cap.get("rest", [])
+                      for op in ([o for r in rest.get("resource", []) if r.get("type") == "Group"
+                                  for o in r.get("operation", [])] if group else rest.get("operation", []))]
+        names = {str(op.get("name", "")).lstrip("$").lower() for op in operations}
+        supported = bool(names & ({"export", "group-export"} if group else {"export", "system-export"}))
         report["mode"] = "bulk export"
-        report["export"] = {"url": client.export_url, "declared": "export" in ops if ops else None}
-        if ops and "export" not in ops:
-            report["problems"].append("The CapabilityStatement declares no $export operation")
+        report["export"] = {"url": client.export_url, "declared": supported}
+        if not supported:
+            report["problems"].append("The CapabilityStatement declares no matching $export operation")
     auth = client.session.auth
     if isinstance(auth, SMARTBackendAuth):
         try:
@@ -266,6 +294,7 @@ def check_connection(client: FHIRClient, now: Optional[datetime] = None) -> Dict
             resp = client._get(url)
             entry["status"] = resp.status_code
             if resp.status_code == 200:
+                search_bundle(resp.json(), rtype)
                 entry["readable"] = True
             else:
                 entry["readable"] = False
@@ -275,7 +304,7 @@ def check_connection(client: FHIRClient, now: Optional[datetime] = None) -> Dict
                 entry["hint"] = hint
                 if rtype not in OPTIONAL_TYPES:
                     report["problems"].append(f"{rtype}: HTTP {resp.status_code} ({hint})")
-        except (FHIRSyncError, requests.RequestException) as e:
+        except (FHIRSyncError, requests.RequestException, ValueError) as e:
             entry.update(readable=False, error=type(e).__name__)
             if rtype not in OPTIONAL_TYPES:
                 report["problems"].append(f"{rtype}: {type(e).__name__}")

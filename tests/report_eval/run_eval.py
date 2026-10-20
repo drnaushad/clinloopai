@@ -85,7 +85,7 @@ def main():
     tp, fp, fn = Counter(), Counter(), Counter()
     exact = equiv = 0
     none_cases = none_ok = pos_cases = pos_any = 0
-    window_ok = window_n = 0
+    window_ok = strict_window_ok = window_n = 0
     failures = []
     for c in cases:
         exp = set(c.get("expected_rules") or []) & REPORT_RULES
@@ -111,6 +111,7 @@ def main():
         if w and exp & got:
             main_rule = sorted(exp & got)[0]
             window_n += 1
+            strict_window_ok += int(w[0] <= days.get(main_rule, -1) <= w[1])
             window_ok += int(w[0] * 0.8 <= days.get(main_rule, -1) <= w[1] * 1.25 + 7)
         if not equivalent(exp, got):
             failures.append((c["id"], c["language"], sorted(exp), sorted(got), c["text"][:160], c.get("patient")))
@@ -118,13 +119,15 @@ def main():
     TP, FP, FN = sum(tp.values()), sum(fp.values()), sum(fn.values())
     print(f"set={which} cases={n}")
     print(f"exact match (report level): {exact}/{n} = {exact / n:.1%}")
-    print(f"clinically equivalent (same finding, same kind of follow-up): {equiv}/{n} = {equiv / n:.1%}")
+    print(f"broad action-group agreement (not clinical equivalence): {equiv}/{n} = {equiv / n:.1%}")
     print(f"obligation sensitivity (rule level): {TP}/{TP + FN} = {TP / max(1, TP + FN):.1%}")
     print(f"obligation PPV (rule level): {TP}/{TP + FP} = {TP / max(1, TP + FP):.1%}")
     print(f"reports needing follow-up with ≥1 correct obligation: {pos_any}/{pos_cases} = {pos_any / max(1, pos_cases):.1%}")
     print(f"reports needing nothing with no alert (specificity): {none_ok}/{none_cases} = {none_ok / max(1, none_cases):.1%}")
     if window_n:
-        print(f"deadline within the expected window: {window_ok}/{window_n} = {window_ok / window_n:.1%}")
+        print(f"deadline within strict reference bounds: {strict_window_ok}/{window_n} = {strict_window_ok / window_n:.1%}")
+        print(f"deadline within widened harness tolerance: {window_ok}/{window_n} = {window_ok / window_n:.1%}")
+        print("Deadline denominator excludes reports without an exact matching rule; missed obligations are not scored for timing.")
     print("per rule (tp/fn/fp):", {r: (tp[r], fn[r], fp[r]) for r in sorted(set(tp) | set(fn) | set(fp))})
     if show:
         for f in failures:

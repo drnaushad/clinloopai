@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Validation evidence — ClinLoop AI</title>
+<link rel="icon" href="icons/logo.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:light dark;font-family:system-ui,sans-serif;line-height:1.6;background:#f3f6fa;color:#182433}
+body{max-width:1060px;margin:auto;padding:24px}h1{line-height:1.2}h2{font-size:1.25rem}
+.app-nav{display:flex;flex-wrap:wrap;gap:14px}.app-nav a,a{color:#086b94}
+section{background:white;border:1px solid #d9e2ec;border-radius:14px;padding:20px;margin:20px 0}
+.notice{border-left:5px solid #b66b00;background:#fff4dd;padding:16px;border-radius:8px}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px;border-bottom:1px solid #d9e2ec;vertical-align:top}
+.meta{color:#526277;font-size:.9rem}.status{font-weight:600}li{margin:8px 0}
+@media(prefers-color-scheme:dark){:root{background:#101a29;color:#e6edf5}section{background:#172538;border-color:#35475c}.notice{background:#392c17}a,.app-nav a{color:#73d4fb}.meta{color:#b5c2d3}th,td{border-color:#35475c}}
+</style>
+</head>
+<body>
+<nav class="app-nav" aria-label="ClinLoop pages"></nav>
+<h1>What ClinLoop has tested</h1>
+<p>Connection evidence, synthetic EHR processing and a local real-report pilot. These are different tests and answer different questions.</p>
+<p class="notice"><strong>Clinical accuracy has not been established.</strong> Real-report scoring awaits independent clinician reference labels. No patient records or reviewer sheets are published here.</p>
+<p id="checked" class="meta">Loading recorded evidence…</p>
+<section><h2>Report accuracy check: synthetic rules only</h2><p class="notice">These previously used development cases test the rules engine. They do not measure the local language models or accuracy on real patients.</p><p id="report-audit">No current audit recorded.</p><div class="table-wrap"><table><thead><tr><th>Measure</th><th>Result</th></tr></thead><tbody id="accuracy"></tbody></table></div><p id="deadline-scope" class="meta"></p><p id="review-status" class="meta"></p></section>
+<section><h2>All requested report datasets</h2><p id="full-openi"></p><p class="meta">Access approval has not yet been obtained for the additional datasets. No restricted data was downloaded. No image-model accuracy is established by report-text processing.</p><div class="table-wrap"><table><thead><tr><th>Dataset</th><th>Current local status</th><th>Needed to measure accuracy</th></tr></thead><tbody>
+<tr><td><a href="https://openi.nlm.nih.gov/faq">IU OpenI</a></td><td>Rules: all eligible distinct texts; three-model pilot: 100 reports</td><td>Two independent clinician reviews, adjudication and an independent test cohort</td></tr>
+<tr><td><a href="https://physionet.org/content/mimic-iv-note/2.2/">MIMIC-IV-Note</a></td><td>Not found in checked folders; not evaluated</td><td>Approved local copy, clinician follow-up references and patient-level splits</td></tr>
+<tr><td><a href="https://physionet.org/content/mimic-cxr/2.1.0/">MIMIC-CXR</a></td><td>Not found in checked folders; not evaluated</td><td>Approved image/report pairs and a finding-level image evaluation</td></tr>
+<tr><td><a href="https://physionet.org/content/radgraph/1.0.0/">RadGraph</a></td><td>Not found in checked folders; not evaluated</td><td>Approved reference annotations and a compatible entity/relation extraction evaluation</td></tr>
+<tr><td><a href="https://n2c2.dbmi.hms.harvard.edu/data-sets">n2c2 / i2b2</a></td><td>Not found in checked folders; not evaluated</td><td>Approved task-specific corpus and assertion/temporal evaluation</td></tr>
+<tr><td><a href="https://bimcv.cipf.es/bimcv-projects/padchest-gr/">PadChest-GR</a></td><td>Not found in checked folders; not evaluated</td><td>Approved English/Spanish images and finding/localization evaluation</td></tr>
+<tr><td><a href="https://github.com/BIMCV-CSUSP/BIMCV-COVID-19">BIMCV-COVID19+</a></td><td>Not found in checked folders; not evaluated</td><td>Approved local copy, annotation/label provenance and image/report evaluation</td></tr>
+<tr><td><a href="https://aimi.stanford.edu/datasets/chexpert-chest-x-rays">Stanford CheXpert</a></td><td>Not found in checked folders; not evaluated</td><td>Approved release with the required report texts/labels; preserve its official split</td></tr>
+</tbody></table></div></section>
+<section><h2>Test EMR connections</h2><div class="table-wrap"><table><thead><tr><th>Server</th><th>Recorded check</th><th>Evidence</th></tr></thead><tbody id="connections"></tbody></table></div><p class="meta">Sandbox connectivity demonstrates interoperability with that sandbox, not deployment in a hospital or clinical validation.</p></section>
+<section><h2>Synthetic EHR processing</h2><p id="synthea"></p><p id="warnings" class="meta"></p></section>
+<section><h2>Open MIMIC-IV demo</h2><p id="mimic"></p><p class="meta">This is the open demo, not the full credentialed MIMIC dataset. Review packets are not reference labels.</p></section>
+<section><h2>OpenI: same 100 reports, four systems</h2><p>Usable outputs and reports flagged are workload and processing counts. They are not sensitivity or false-positive rates. More flags do not mean better accuracy.</p><div class="table-wrap"><table><thead><tr><th>System</th><th>Processed</th><th>Usable outputs</th><th>Reports flagged</th></tr></thead><tbody id="openi"></tbody></table></div><p id="scope" class="meta"></p></section>
+<section><h2>What remains</h2><p id="access"></p><ul id="limits"></ul><p><a href="reports">Compare local models on synthetic reports</a></p></section>
+<section><h2>Sources and protocol</h2><p><a href="https://hapi.fhir.org/">HAPI test server</a> · <a href="https://launch.smarthealthit.org/">SMART launcher</a> · <a href="https://fhir.epic.com/">Epic sandbox</a> · <a href="https://openi.nlm.nih.gov/faq">OpenI</a></p><p><a href="https://github.com/drnaushad/clinloopai/blob/main/docs/PUBLIC_DATASETS.md">Dataset and evaluation protocol</a></p></section>
+<script>
+(async function(){
+  const byId=id=>document.getElementById(id);
+  function row(parent,values){const tr=document.createElement('tr');for(const value of values){const td=document.createElement('td');td.textContent=value;tr.append(td)}byId(parent).append(tr)}
+  try{
+    const response=await fetch('data/validation_status.json',{cache:'no-store'});if(!response.ok)throw new Error('unavailable');
+    const d=await response.json();byId('checked').textContent='Evidence updated: '+new Date(d.checked_at).toLocaleString();
+    const audit=d.report_accuracy_check;
+    if(audit){
+      const c=audit.synthetic_rules;
+      const fraction=(n,total)=>total?n+'/'+total+' ('+(100*n/total).toFixed(1)+'%)':'Not estimable';
+      row('accuracy',['Exact rule-set agreement per report',fraction(c.exact_matches,c.reports)]);
+      row('accuracy',['Recall of exact expected obligation rule IDs',fraction(c.true_positive_obligations,c.true_positive_obligations+c.false_negative_obligations)]);
+      row('accuracy',['Precision of exact obligation rule IDs',fraction(c.true_positive_obligations,c.true_positive_obligations+c.false_positive_obligations)]);
+      row('accuracy',['Reports with no expected obligation receiving no alert',fraction(c.true_negative_reports,c.negative_reports)]);
+      row('accuracy',['Deadlines within strict reference bounds',fraction(c.deadlines_within_strict_reference_window,c.deadline_eligible_reports)]);
+      byId('report-audit').textContent=c.reports+' synthetic cases; '+c.exact_mismatches+' exact rule-set mismatches. '+c.mismatches_with_harness_group_equivalence+' mismatches share broad action groups in the old harness; that does not establish clinical equivalence.';
+      byId('deadline-scope').textContent=audit.deadline_scope+'.';
+      byId('review-status').textContent=audit.reference_reviews_complete+' of 200 independent OpenI reference reviews completed. Real-report accuracy remains unavailable.';
+      const f=audit.openi_all_distinct;
+      byId('full-openi').textContent='OpenI: '+f.records.toLocaleString()+' distinct eligible report texts processed by the rules engine; '+f.available.toLocaleString()+' usable outputs; '+f.flagged+' reports flagged. Processing success and flags are not correctness labels. '+audit.folders_checked.toLocaleString()+' local folders checked for dataset candidates; this was a bounded filename scan.';
+    }
+    row('connections',['HAPI FHIR R4',d.hapi.round_trip_passed?'Synthetic round trip passed':'Not verified',d.hapi.synthetic_patients+' synthetic patients; '+d.hapi.resources_read+' resources; '+d.hapi.events+' events']);
+    row('connections',['SMART Health IT',d.smart.authentication_and_search_passed?'Signed-key login and searches passed':'Not verified',d.smart.readable_resource_types+' readable resource types']);
+    row('connections',['Epic sandbox',d.epic.bulk_export_passed?'Isolated export and processing passed':d.epic.authentication_and_capability_passed?'Authentication passed; completed export not confirmed':'Not verified',d.epic.patients_processed+' patients; '+d.epic.events+' events in isolated test']);
+    byId('synthea').textContent=d.synthea.patients.toLocaleString()+' synthetic patients and '+d.synthea.resources.toLocaleString()+' FHIR resources produced '+d.synthea.events.toLocaleString()+' mapped events.';
+    byId('warnings').textContent=d.synthea.mapping_warnings.toLocaleString()+' mapping warnings were recorded. '+d.synthea.warnings_missing_lab_metadata.toLocaleString()+' audited warnings concerned missing lab interpretation flags and reference ranges; absent metadata must not be treated as normal.';
+    byId('mimic').textContent=d.mimic_demo.patients+' demo patients; '+d.mimic_demo.review_cases+' cases prepared for blinded review. '+d.mimic_demo.reference_status+'.';
+    for(const system of d.openi.systems)row('openi',[system.system,system.processed,system.usable,system.flagged]);
+    byId('scope').textContent=d.openi.scope+'. '+d.openi.reference_status+'.';byId('access').textContent=d.credentialed_data;
+    for(const text of d.limitations){const li=document.createElement('li');li.textContent=text;byId('limits').append(li)}
+  }catch(_){byId('checked').textContent='Recorded evidence is temporarily unavailable. No validation result can be inferred.'}
+})();
+</script>
+<script src="js/appnav.js?v=2026-10-20.4"></script>
+</body></html>

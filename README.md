@@ -8,9 +8,12 @@
 > - **The whole app:** [worklist](https://clinloopai.app/worklist), [patient graph](https://clinloopai.app/patient),
 >   [quality](https://clinloopai.app/quality), [rule sign-off](https://clinloopai.app/governance) and
 >   [imaging](https://clinloopai.app/imaging).
+> - **Recorded evaluation:** [validation evidence](https://clinloopai.app/validation) separates
+>   synthetic checks, local dataset processing and pending clinical reference reviews.
 > - **The data:** synthetic patients only, read-only.
-> - **No server:** the website serves a pre-computed snapshot from a global CDN, so any number of people can
->   use it at once. To act on loops (acknowledge, close, upload), run your own server
+> - **Public website:** the clinical pages serve a pre-computed synthetic snapshot from a global CDN.
+>   The live report reader uses a separate, rate-limited gateway to local models for fixed synthetic
+>   examples only; its current HTTPS tunnel is temporary. To act on loops (acknowledge, close, upload), run your own server
 >   ([public demo](#try-the-full-app-public-demo) or a hospital install).
 > - **Devices:** every page was checked at the screen sizes of iPhone SE, iPhone 14 Pro Max, Galaxy S9+,
 >   Pixel 7, iPad (portrait and landscape) and laptop or desktop screens 1024–1920 pixels wide, with no

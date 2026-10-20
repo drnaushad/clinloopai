@@ -227,3 +227,28 @@ These are workload/robustness counts, not sensitivity, specificity or false-posi
 flag-count disagreement requires blinded adjudication; it is not evidence that the model with more
 flags is better. Five unusable EXAONE responses remain abstentions. No clinician accuracy results
 have been computed, and no prior AI-generated OpenI labels were used as reference labels.
+
+### Extended local check and public evidence (20 October 2026)
+
+The rules engine processed all 3,157 distinct eligible OpenI texts without an unavailable output;
+95 reports were flagged. This is a processing/workload result, not an accuracy score. The three-model
+comparison remains the 100-report pilot above. Both independent review sheets still have zero
+completed clinician labels (0 of 200 required reviews); real-report scoring remains blocked.
+
+On the 753 previously used synthetic report cases in `tests/report_eval/cases.json`, exact report-level
+rule agreement was 635/753 (84.3%). Exact-rule sensitivity was 466/582 (80.1%) and precision was 466/503
+(92.6%). Strict deadline agreement was 363/456 (79.6%) among cases with bounds and at least one exactly
+matching rule. Missed obligations are excluded from that timing denominator. The harness now labels
+its widened timing tolerance separately and no longer calls broad action-group agreement clinical
+equivalence. These are development regression results, not independent clinical or LLM validation.
+
+The [public evidence page](https://clinloopai.app/validation) publishes allowlisted aggregate counts
+from `data/validation_status.json`. All eight requested dataset families have explicit tested/pending
+status. A bounded filename scan checked 1,206 local folders without finding the additional dataset
+copies; the user confirmed that access approval has not yet been obtained. No restricted dataset was
+downloaded for this check. File absence in this scan is not a claim about every filesystem on the server.
+
+HAPI's isolated synthetic round trip passed with 7 patients, 20 resources and 16 events. SMART Health IT
+signed-key authentication and searches passed for 12 resource types. Epic authentication and capability
+checks passed, but its isolated bulk export timed out: completed Epic ingestion remains unconfirmed.
+Sandbox interoperability, processing success and clinical validity are separate claims.
