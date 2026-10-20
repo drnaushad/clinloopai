@@ -442,6 +442,28 @@ class TestRound9BlindFindings(unittest.TestCase):
                                     title="CT chest", smoking="77176002"))
 
 
+class TestRealChestRadiographNegation(unittest.TestCase):
+    """Found on 3,927 real de-identified chest radiograph reports (Open-i, NLM): negated lists read as
+    critical findings, and a missed hydropneumothorax. Re-worded examples; both directions checked."""
+
+    def test_negated_lists_are_not_critical(self):
+        for text in ("The lungs are clear of focal airspace disease, pneumothorax, or pleural effusion.",
+                     "Lungs grossly clear without focal opacity, pleural effusion, pneumothorax. Bones intact.",
+                     "Negative for focal consolidation, pleural effusion, pneumothorax. No fracture.",
+                     "No evidence of focal airspace consolidation large pleural effusion or pneumothorax."):
+            self.assertEqual(critical(text), [], text)
+
+    def test_present_pneumothorax_after_a_list_is_still_critical(self):
+        for text in ("No consolidation, large right pneumothorax.",
+                     "No effusion, consolidation, right pneumothorax measuring 2 cm.",
+                     "No consolidation, pleural effusion, pneumothorax with mediastinal shift is present.",
+                     "Lungs clear of consolidation. Small right pneumothorax."):
+            self.assertIn("pneumothorax", critical(text), text)
+
+    def test_hydropneumothorax_is_critical(self):
+        self.assertIn("pneumothorax", critical("Large left hydropneumothorax with collapse of the left lung."))
+
+
 class TestBlindCaseSets(unittest.TestCase):
     """The 270 blind-written cases (docs/ACCURACY_EVALUATION.md) stay above a floor: a change that loses
     findings or adds false alerts fails CI."""

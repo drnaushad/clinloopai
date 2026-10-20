@@ -189,6 +189,44 @@ with negations, addenda, stable and benign findings, OCR noise and multi-finding
 **Not a defect:** a ruptured aneurysm opens the critical rule and the vascular referral (R045), as
 designed; the writer had expected the critical rule only.
 
+### Real reports: 3,927 chest radiographs (Open-i, October 2026)
+
+The first check on real report text rather than written cases: 3,927 de-identified chest radiograph
+reports from Indiana University (Open-i, US National Library of Medicine). They were run offline
+through the real pipeline, and every critical-finding alert (R035) was reviewed. The reviewer was an
+AI assistant, so a clinician must confirm the labels in `tests/report_eval/openi/`.
+
+| R035 alerts | Correct | False alarm | Uncertain | Radiologist's own "critical result" |
+|---|---|---|---|---|
+| `main`, before | 19 | **84** | 2 | 15 |
+| After the fixes below | 19 (+2 newly caught) | **18** | 2 | 15 |
+
+**What the real reports exposed:**
+- **Negated lists read as findings** caused 67 of the 84 false alarms:
+  - "clear of focal airspace disease, pneumothorax, or pleural effusion" ("clear of" was not a negation);
+  - "No evidence of … or pneumothorax" (read as "no", so the finding counted as too far away);
+  - "Negative for consolidation, pleural effusion, pneumothorax." (a comma list with no "or").
+
+  The comma-list reading needs at least three items and a bare last item, so "No consolidation, large
+  right pneumothorax" still alerts.
+- **A missed critical finding:** "large left hydropneumothorax with complete collapse" raised nothing,
+  because the pattern did not match inside the word. The default critical-finding list now includes
+  it, which changes the list's hash: hospitals approve the list again.
+- **Indication and history lines** ("rule out pneumothorax", "history of pulmonary embolism") account
+  for most of the remaining false alarms. The round-9 history-sentence fix removes some of them.
+- Known or stable pneumothoraxes ("unchanged", "persistent") remain alerts when the first match is in
+  the indication. This errs toward a person reviewing it.
+
+None of the 19 correct alerts was lost. The fixes were designed from these same reports, so these
+after-fix numbers are not an unbiased estimate.
+
+**Open clinical questions (need a clinician decision, not changed):**
+- **Fleischner 2017 covers nodules found on CT.** On radiographs the app applies its intervals anyway:
+  a new 8 mm nodule on a chest X-ray gets a 12-month CT, where usual practice is a prompt CT to
+  characterise it.
+- **A radiograph nodule "unchanged from 7 years ago"** still opens a follow-up: the stability wording is
+  not recognised.
+
 ## Defects found and fixed (each now has a test in `tests/test_report_accuracy.py`)
 
 ### Found by the real-style and timeline sets

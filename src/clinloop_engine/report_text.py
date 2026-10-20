@@ -16,9 +16,14 @@ import re
 from typing import Optional
 
 NEGATION_TRIGGER = re.compile(
-    r"\b(no|negative for|without|free of|absence of|no evidence of|not)\b",
+    # Longest first: "no evidence of" must not be read as "no" (the distance check counts from the trigger)
+    r"\b(no evidence of|negative for|free of|clear of|absence of|without|no|not)\b",
     re.IGNORECASE,
 )
+# A size, side or severity makes the last item of a comma list its own statement:
+# "no consolidation, large right pneumothorax" reports a pneumothorax
+_QUALIFIED = re.compile(r"\b(?:large|small|moderate|tiny|trace|right|left|bilateral|apical|basal|tension|new|"
+                        r"increas\w*|persistent)\b|\d", re.IGNORECASE)
 # Negation after the finding: "pneumothorax has resolved", "carcinoma is not identified", "결절 없음"
 NEGATION_AFTER = re.compile(
     r"^[^.;]{0,25}?(\b(?:is|are|was|were)\s+(?:not|no\s+longer)\s+(?:seen|identified|present|demonstrated|"
@@ -57,6 +62,15 @@ def not_negated(text: str, start: int) -> bool:
         in_list = all(len(i.split()) <= 4 for i in items) and re.search(r"\b(?:or|nor)\b", rest) \
             and not re.search(r"\b(?:is|are|was|were|with|measur\w*|seen|noted)\b|\d\s*(?:mm|cm)\b", head, re.I) \
             and not re.search(r"\d\s*(?:mm|cm)\b", items[-1] if items else "", re.I)
+    if not in_list:
+        # The bare last item of a comma list with no "or": "negative for consolidation, pleural effusion,
+        # pneumothorax." At least three items, and nothing after the finding in its sentence
+        sentence_rest = re.split(r"[.;\n]", text[start:start + 120], maxsplit=1)[0]
+        items = gap.split(",")
+        in_list = gap.rstrip().endswith(",") and len(items) >= 3 \
+            and all(len(i.split()) <= 4 for i in items[1:-1]) \
+            and "," not in sentence_rest and len(sentence_rest.split()) <= 3 \
+            and not _QUALIFIED.search(sentence_rest)
     return not in_list
 
 
