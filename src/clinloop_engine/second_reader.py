@@ -94,7 +94,17 @@ _NOT_ACTIONABLE = re.compile(
     r"\b(?:could|may|can|might)\s+be\s+considered|\boptional\b|필요\s*시|고려\s*가능|"
     r"\bcontinue\s+(?:annual|routine|yearly)\s+(?:screening|surveillance)|\b(?:annual|routine)\s+screening\b", re.I)
 # ... unless the same quote also gives definite advice: "No follow-up was done; recommend CT in 3 months"
-_DEFINITE_ADVICE = re.compile(r"\brecommend(?:ed|s)?\b(?![^.;]*\b(?:not|no)\b)|\bshould\s+(?:have|undergo)\b|권함|권고|요망", re.I)
+_ADVICE = re.compile(r"\brecommend(?:ed|s)?\b|\bshould\s+(?:have|undergo)\b|권함|권고|요망", re.I)
+
+
+def _definite_advice(quote: str) -> bool:
+    """Advice not negated in its own clause: "recommend CT" yes, "no routine follow-up is recommended" no."""
+    for m in _ADVICE.finditer(quote):
+        before = re.split(r"[.;]", quote[:m.start()])[-1]
+        after = re.split(r"[.;]", quote[m.end():])[0]
+        if not re.search(r"\b(?:no|not)\b|불필요", before + " " + after, re.I):
+            return True
+    return False
 
 
 def mode() -> str:
@@ -160,7 +170,7 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],
         if len(quote) < 4 or _norm(quote) not in haystack:
             dropped += 1                      # no exact quote, no flag: nothing invented reaches a clinician
             continue
-        if it["category"] != "critical_finding" and _NOT_ACTIONABLE.search(quote) and not _DEFINITE_ADVICE.search(quote):
+        if it["category"] != "critical_finding" and _NOT_ACTIONABLE.search(quote) and not _definite_advice(quote):
             not_actionable += 1                # the quote itself says "not needed", "if indicated" or routine screening
             continue
         if it["category"] in seen:

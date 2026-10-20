@@ -143,7 +143,7 @@ follow-up.
 | Set | Rule misses caught | Normal reports flagged |
 |---|---|---|
 | Development (100 real-style + 80 confirmation), as answered | 15/17 | 21/64 (33%) |
-| Same, with the not-actionable check below (not unbiased: designed from these reports) | 15/17 | 8/64 (12.5%) |
+| Same, with the not-actionable check below (not unbiased: designed from these reports) | 15/17 | 7/64 (11%) |
 | Held-out round 9 (63 reports), as answered | 0/1 | 2/20 |
 | Held-out round 9, with the check | 0/1 | 1/20 |
 

@@ -34,7 +34,7 @@
   },
   "development_180_with_check": {
    "rule_misses_caught": "15/17",
-   "normal_flagged": "8/64",
+   "normal_flagged": "7/64",
    "note": "the check was designed from these reports; not unbiased"
   },
   "r9_heldout_before_check": {
