@@ -24,16 +24,22 @@ class TestReportValidation(unittest.TestCase):
 
     def test_disagreements_are_listed(self):
         rows = [{"report_id": "X1", "study": "CT chest", "report_date": "2026-01-10",
-                 "conclusion": "9 mm solid nodule in the right lower lobe.", "expected_rules": ""},
+                 "conclusion": "9 mm solid nodule in the right lower lobe.", "expected_rules": "NONE", "label_status": "complete"},
                 {"report_id": "X2", "study": "CT chest", "report_date": "2026-01-10",
-                 "conclusion": "No nodule.", "expected_rules": "R003"}]
+                 "conclusion": "No nodule.", "expected_rules": "R003", "label_status": "complete"}]
         result = score(rows)
         self.assertEqual(result["per_rule"]["R003"], {**result["per_rule"]["R003"], "tp": 0, "fp": 1, "fn": 1})
         self.assertEqual([d["report_id"] for d in result["discordant"]], ["X1", "X2"])
 
     def test_unknown_rule_is_an_error(self):
         with self.assertRaises(ValueError):
-            score([{"report_id": "X", "study": "CT", "conclusion": "", "expected_rules": "R999"}])
+            score([{"report_id": "X", "study": "CT", "conclusion": "", "expected_rules": "R999", "label_status": "complete"}])
+
+    def test_blank_and_unreviewed_labels_cannot_become_negatives(self):
+        with self.assertRaises(ValueError):
+            score([{"expected_rules": ""}])
+        with self.assertRaises(ValueError):
+            score([{"expected_rules": "", "label_status": "complete"}])
 
     def test_wilson_interval(self):
         p, lo, hi = wilson(9, 10)
@@ -58,6 +64,15 @@ class TestReportValidation(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             sheet, out = os.path.join(d, "sheet.csv"), os.path.join(d, "result.json")
             main(["template", "--fhir", os.path.join(ROOT, "data", "radiology_test_bundle.json"), "--out", sheet])
+            with self.assertRaises(ValueError):
+                main(["score", "--sheet", sheet, "--out", out])
+            # Deliberately completed synthetic negatives exercise the file format, not accuracy.
+            with open(sheet, newline="") as f:
+                reader = csv.DictReader(f); fields = reader.fieldnames; rows = list(reader)
+            for row in rows:
+                row.update(expected_rules="NONE", label_status="complete")
+            with open(sheet, "w", newline="") as f:
+                writer = csv.DictWriter(f, fields); writer.writeheader(); writer.writerows(rows)
             main(["score", "--sheet", sheet, "--out", out])
             with open(out, encoding="utf-8") as f:
                 self.assertIn("overall", json.load(f))

@@ -10,10 +10,10 @@ and lists every disagreement for adjudication.
 Workflow:
   1. template  One row per radiology report in a FHIR export, with the text
                de-identified, patient context columns (age, sex, smoking,
-               cancer) and an empty `expected_rules` column. No prediction is
+               cancer) and an empty `expected_rules` column and incomplete `label_status`. No prediction is
                included, so labelling is blind.
   2. label     A radiologist fills `expected_rules` with rule IDs separated by
-               ';' (empty = the report creates no obligation).
+               ';' (`NONE` explicitly means no obligation), and marks label_status complete.
   3. score     ClinLoop reads every report and the labels are compared.
 
 Usage:
@@ -46,7 +46,7 @@ from src.clinloop_engine.fhir_ingest import bundle_to_events  # noqa: E402
 from src.clinloop_engine.loop_detector import ClinLoopDetector  # noqa: E402
 
 SHEET_FIELDS = ["report_id", "study", "report_date", "conclusion", "age", "sex", "smoking", "cancer",
-                "expected_rules", "notes"]
+                "expected_rules", "label_status", "notes"]
 SMOKING_SNOMED = {"current": "449868002", "former": "8517006", "never": "266919005"}
 RULE_IDS = {r.rule_id for r in OBLIGATION_RULES}
 
@@ -79,13 +79,15 @@ def template_rows(bundle: Dict, deidentify: bool = True) -> List[Dict]:
             text, _ = scrub(text)
         rows.append({"report_id": f"RPT-{i + 1:04d}", "study": (r.get("code") or {}).get("text", ""),
                      "report_date": when[:10], "conclusion": text, "age": age, "sex": p.get("gender", ""),
-                     "smoking": "", "cancer": "", "expected_rules": "", "notes": ""})
+                     "smoking": "", "cancer": "", "expected_rules": "", "label_status": "", "notes": ""})
     return rows
 
 
 # ── 3. Scoring ───────────────────────────────────────────────────────────────
 
 def _parse_rules(value: str) -> Set[str]:
+    if str(value or "").strip().upper() == "NONE":
+        return set()
     rules = {x.strip().upper() for x in (value or "").replace(",", ";").split(";") if x.strip()}
     unknown = rules - RULE_IDS
     if unknown:
@@ -93,7 +95,7 @@ def _parse_rules(value: str) -> Set[str]:
     return rules
 
 
-def predict(row: Dict) -> Tuple[Set[str], List[str]]:
+def predict_details(row: Dict) -> Dict:
     """Rules ClinLoop creates for one report (whatever their follow-up status), and its reading notes."""
     when = (row.get("report_date") or "2026-01-01")[:10] + "T09:00:00Z"
     resources = [{"resourceType": "DiagnosticReport", "id": "r", "status": "final",
@@ -119,12 +121,21 @@ def predict(row: Dict) -> Tuple[Set[str], List[str]]:
                           "recordedDate": "2000-01-01"})
     events, _ = bundle_to_events(resources)
     if "P" not in events:
-        return set(), []
+        return {"rules": set(), "notes": [], "deadline_days": {}}
     evaluation = datetime.fromisoformat(when.replace("Z", "")).replace(hour=12)
     dets = ClinLoopDetector(evaluation_time=evaluation).process_patient("validation", "P", events["P"])
     report = next((e for e in events["P"] if e["event_type"] == "radiology_report"), None)
     notes = report["details"].get("mapping", [])[1:] if report else []
-    return {d.rule_id for d in dets}, notes
+    return {"rules": {d.rule_id for d in dets}, "notes": notes,
+            "deadline_days": {d.rule_id: (datetime.fromisoformat(d.deadline) -
+                                         datetime.fromisoformat(d.trigger_time)).total_seconds() / 86400
+                              for d in dets}}
+
+
+def predict(row: Dict) -> Tuple[Set[str], List[str]]:
+    """Compatibility wrapper for the rule reader; detailed deadlines are available separately."""
+    result = predict_details(row)
+    return result["rules"], result["notes"]
 
 
 def wilson(successes: int, n: int, z: float = 1.96) -> Tuple[Optional[float], Optional[float], Optional[float]]:
@@ -141,7 +152,11 @@ def score(rows: Sequence[Dict]) -> Dict:
     per_rule: Dict[str, Dict[str, int]] = defaultdict(lambda: {"tp": 0, "fp": 0, "fn": 0})
     discordant = []
     exact = 0
-    labelled = [r for r in rows if r.get("expected_rules") is not None]
+    labelled = [r for r in rows if str(r.get("label_status") or "").strip().lower() == "complete"]
+    if not labelled:
+        raise ValueError("No completed reference labels. Blank labels are not negatives; use explicit NONE.")
+    if any(not str(r.get("expected_rules") or "").strip() for r in labelled):
+        raise ValueError("Completed references require rule IDs or explicit NONE")
     for row in labelled:
         expected = _parse_rules(row.get("expected_rules", ""))
         predicted, notes = predict(row)
@@ -165,7 +180,8 @@ def score(rows: Sequence[Dict]) -> Dict:
     fp = sum(c["fp"] for c in per_rule.values())
     fn = sum(c["fn"] for c in per_rule.values())
     sens, ppv = wilson(tp, tp + fn), wilson(tp, tp + fp)
-    return {"reports": len(labelled), "exact_agreement": exact,
+    return {"reports": len(labelled), "eligible_reports": len(rows),
+            "excluded_incomplete": len(rows) - len(labelled), "exact_agreement": exact,
             "overall": {"tp": tp, "fp": fp, "fn": fn, "sensitivity": sens[0], "sensitivity_95ci": sens[1:],
                         "ppv": ppv[0], "ppv_95ci": ppv[1:]},
             "per_rule": rules_out, "discordant": discordant}
@@ -178,8 +194,7 @@ def _print_summary(result: Dict) -> None:
     print(f"{'rule':6} {'TP':>4} {'FP':>4} {'FN':>4}  sensitivity   PPV")
     for rule, c in result["per_rule"].items():
         print(f"{rule:6} {c['tp']:>4} {c['fp']:>4} {c['fn']:>4}  {str(c['sensitivity']):>11}  {str(c['ppv']):>5}")
-    for d in result["discordant"]:
-        print(f"\n✗ {d['report_id']} [{d['study']}] expected {d['expected']} ClinLoop {d['clinloop']}\n  {d['conclusion']}")
+    print(f"Discordant reports: {len(result['discordant'])}; details remain in the local result file")
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -206,7 +221,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             w = csv.DictWriter(f, fieldnames=SHEET_FIELDS)
             w.writeheader()
             w.writerows(rows)
-        print(f"Wrote {len(rows)} reports to {args.out}. Fill expected_rules (e.g. R003;R035), blind to ClinLoop.")
+        print(f"Wrote {len(rows)} reports to {args.out}. Fill expected_rules (R003;R035 or NONE) and label_status=complete, blind to ClinLoop.")
         return 0
 
     with open(args.sheet, encoding="utf-8-sig") as f:      # an Excel "CSV UTF-8" save starts with a BOM

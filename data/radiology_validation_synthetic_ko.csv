@@ -1,43 +1,43 @@
-report_id,study,report_date,conclusion,age,sex,smoking,cancer,expected_rules,notes
-KO-001,흉부 CT (조영증강),2026-03-02,"우측 제6늑골 비전위 골절. 우상엽에 우연히 발견된 1.4 cm 침상형 고형 결절, 악성 의심. PET/CT 또는 조직검사 권고.",71,male,former,,R003,synthetic Korean
-KO-002,흉부 CT,2026-05-10,좌하엽에 6 mm 고형 결절. 고위험군의 경우 6-12개월 후 추적 CT 권고 (Fleischner 2017).,64,female,current,,R003,synthetic Korean
-KO-003,흉부 X선 PA/측면,2026-06-01,우측 폐문부에 2.5 cm 종괴. 추가 평가를 위해 조영증강 흉부 CT 권고.,58,male,,,R030,synthetic Korean
-KO-004,저선량 흉부 CT (폐암 검진),2026-04-15,Lung-RADS 4A. 우상엽 7 mm 고형 결절. 3개월 후 LDCT 권고.,66,male,current,,R019,synthetic Korean
-KO-005,복부 및 골반 CT (조영증강),2026-02-20,좌측 부신에 우연히 발견된 18 mm 결절. 불확정. 12개월 후 부신 CT 권고.,55,female,,,R030,synthetic Korean
-KO-006,양측 진단 유방촬영술,2026-05-02,BI-RADS 4B. 우측 유방 상외측에 군집성 미세석회화. 정위적 조직검사 권고.,52,female,,,R018,synthetic Korean
-KO-007,갑상선 초음파,2026-03-10,"우엽에 1.6 cm 고형 저에코 결절, ACR TI-RADS TR4. 세침흡인검사 권고.",47,female,,,R036,synthetic Korean
-KO-008,뇌 CT (응급실),2026-08-01,급성 두개내 이상 소견 없음. 추적 영상검사 필요 없음.,80,male,,,,synthetic Korean
-KO-009,흉부 CT (조영증강),2026-01-15,폐결절이나 종괴 없음. 종격동 림프절 비대 없음.,61,female,,,,synthetic Korean
-KO-010,복부 CT (조영증강),2026-03-01,간 6분절에 8 mm 불확정 병변. 3-6개월 후 추적 MRI 권고.,59,male,,,R031,synthetic Korean
-KO-011,흉부 X선 PA,2026-07-20,우하엽 경화 소견으로 폐렴에 합당함. 호전 확인을 위해 6주 후 흉부 X선 추적 권고.,68,male,,,R033,synthetic Korean
-KO-012,흉부 CT 혈관조영 (응급실),2026-10-07,우측 주폐동맥 및 하엽 폐동맥에 급성 폐색전증. RV/LV 비 1.2. 위급 결과로 담당의에게 통보함.,74,female,,,R035,synthetic Korean
-KO-013,복부 CT (조영증강),2026-07-01,좌측 부신에 우연히 발견된 1.5 cm 결절. 불확정.,63,male,,,R037,synthetic Korean
-KO-014,복부 CT (조영증강),2026-06-10,"좌신 하극에 2.4 cm 조영증강되는 고형 종괴, 신세포암 의심.",57,male,,,R039,synthetic Korean
-KO-015,복부 CT (조영증강),2026-05-15,췌장 체부에 고형 성분 없는 2.8 cm 낭성 병변.,69,female,,,R041,synthetic Korean
-KO-016,복부 MRI 및 MRCP,2026-08-01,췌장 두부에 조영증강되는 벽결절을 동반한 3.4 cm 낭종.,72,male,,,R042,synthetic Korean
-KO-017,경부 CT (조영증강),2026-06-20,좌측 갑상선엽에 1.8 cm 저음영 결절.,60,female,,,R043,synthetic Korean
-KO-018,복부대동맥 초음파,2025-12-10,"신동맥하 복부대동맥류, 최대 직경 4.6 cm.",76,male,former,,R044,synthetic Korean
-KO-019,복부 및 골반 CT,2026-09-01,파열 없는 방추형 신동맥하 대동맥류 5.3 cm.,79,male,,,R044,"synthetic Korean; man 5.3 cm: below the 5.5 cm repair threshold for men (SVS 2018), so surveillance"
-KO-020,저선량 흉부 CT (추적),2026-07-20,우상엽 7 mm 결절 변화 없음. Lung-RADS 3.,67,female,former,,R034,synthetic Korean
-KO-021,흉부 CT,2026-02-11,RUL에 12 mm solid nodule 있음. 3개월 후 f/u CT 권고.,62,male,current,,R003,mixed Korean-English
-KO-022,흉부 CT,2026-04-03,"r/o lung cancer. 좌상엽 2.1 cm spiculated mass, 악성 가능성 높음. PET-CT 및 조직검사 권고.",70,male,current,,R036,"mixed Korean-English; a 2.1 cm 'mass' with explicit biopsy advice is tracked as tissue sampling within 30 days (R036), stricter than Fleischner"
-KO-023,흉부 CT,2026-03-15,양측 폐에 2-3 mm 크기의 다수의 미세결절. 석회화된 육아종으로 양성 소견. 추적 불필요.,45,female,never,,,synthetic Korean
-KO-024,흉부 CT,2026-05-20,우중엽 결절은 이전과 비교하여 2년간 변화 없음. 양성으로 판단. 추적 불필요.,58,male,former,,,synthetic Korean
-KO-025,복부 초음파,2026-04-22,간에 1.2 cm 혈관종. 전형적 소견으로 추적 불필요.,41,female,,,,synthetic Korean
-KO-026,복부 CT,2026-06-05,우측 신장에 2 cm 단순 낭종 (Bosniak I). 추적 불필요.,66,male,,,,synthetic Korean
-KO-027,복부 CT,2026-07-14,좌신에 1.9 cm Bosniak IIF 낭성 병변. 추적 CT 또는 MRI 권고.,61,female,,,R030,"synthetic Korean; the radiologist's explicit recommendation is tracked (R030) with the Bosniak interval, as in the English set"
-KO-028,복부 CT,2026-05-02,우측 부신에 4.6 cm 종괴.,59,male,,,R038,synthetic Korean
-KO-029,흉부 CT,2026-08-12,"좌하엽 9 mm 고형 결절, 6개월 전 6 mm에서 증가. 추가 검사 권고.",68,male,current,,R046,synthetic Korean
-KO-030,유방 초음파,2026-04-28,BI-RADS 3. 좌측 유방 8 mm 섬유선종 추정. 6개월 후 추적 초음파 권고.,39,female,,,R032,synthetic Korean
-KO-031,유방촬영술,2026-03-30,BI-RADS 5. 우측 유방 2.2 cm 불규칙 종괴. 조직검사 필요.,58,female,,,R018,synthetic Korean
-KO-032,저선량 흉부 CT (폐암 검진),2026-05-06,Lung-RADS 4B. 좌상엽 16 mm 고형 결절. PET-CT 또는 조직검사 권고.,63,male,current,,R020,synthetic Korean
-KO-033,뇌 MRI,2026-06-18,"r/o 뇌경색. 급성 뇌경색 소견 없음. 2 mm 미세출혈, 임상적 의의 낮음.",72,female,,,,synthetic Korean
-KO-034,흉부 X선,2026-01-09,특이 소견 없음.,35,male,,,,synthetic Korean
-KO-035,복부 CT,2026-02-26,s/p 담낭절제술. 간내 담관 경미한 확장. 2-3개월 후 MRCP 권고.,64,female,,,R031,mixed Korean-English
-KO-036,흉부 CT,2026-09-14,긴장성 기흉. 즉시 담당의에게 연락함.,23,male,,,R035,synthetic Korean
-KO-037,복부 CT,2026-03-11,췌장 미부에 1.2 cm 낭종. 1년 후 MRI 추적 권고.,55,female,,,R031,synthetic Korean
-KO-038,흉부 CT,2026-07-07,"좌하엽 폐결절 의심되나 혈관 단면으로 생각됨, 결절 없음.",50,male,never,,,synthetic Korean
-KO-039,골반 초음파,2026-08-21,우측 난소에 4.5 cm 복합 낭종. 6주 후 추적 초음파 권고.,44,female,,,R032,synthetic Korean
-KO-040,경부 초음파,2026-02-02,갑상선 좌엽 9 mm 결절 TI-RADS TR3. 추적 불필요.,52,female,,,,synthetic Korean
-KO-041,복부 CT,2026-09-02,"신동맥하 복부대동맥류, 최대 직경 5.2 cm.",74,,,,R045,synthetic Korean; sex not recorded: lower (women's) repair threshold applies
-KO-042,복부 CT,2026-09-03,양신에 다수의 단순 낭종. 추적 불필요.,68,male,,,,"synthetic Korean; simple cysts, no follow-up"
+report_id,study,report_date,conclusion,age,sex,smoking,cancer,expected_rules,notes,label_status
+KO-001,흉부 CT (조영증강),2026-03-02,"우측 제6늑골 비전위 골절. 우상엽에 우연히 발견된 1.4 cm 침상형 고형 결절, 악성 의심. PET/CT 또는 조직검사 권고.",71,male,former,,R003,synthetic Korean,complete
+KO-002,흉부 CT,2026-05-10,좌하엽에 6 mm 고형 결절. 고위험군의 경우 6-12개월 후 추적 CT 권고 (Fleischner 2017).,64,female,current,,R003,synthetic Korean,complete
+KO-003,흉부 X선 PA/측면,2026-06-01,우측 폐문부에 2.5 cm 종괴. 추가 평가를 위해 조영증강 흉부 CT 권고.,58,male,,,R030,synthetic Korean,complete
+KO-004,저선량 흉부 CT (폐암 검진),2026-04-15,Lung-RADS 4A. 우상엽 7 mm 고형 결절. 3개월 후 LDCT 권고.,66,male,current,,R019,synthetic Korean,complete
+KO-005,복부 및 골반 CT (조영증강),2026-02-20,좌측 부신에 우연히 발견된 18 mm 결절. 불확정. 12개월 후 부신 CT 권고.,55,female,,,R030,synthetic Korean,complete
+KO-006,양측 진단 유방촬영술,2026-05-02,BI-RADS 4B. 우측 유방 상외측에 군집성 미세석회화. 정위적 조직검사 권고.,52,female,,,R018,synthetic Korean,complete
+KO-007,갑상선 초음파,2026-03-10,"우엽에 1.6 cm 고형 저에코 결절, ACR TI-RADS TR4. 세침흡인검사 권고.",47,female,,,R036,synthetic Korean,complete
+KO-008,뇌 CT (응급실),2026-08-01,급성 두개내 이상 소견 없음. 추적 영상검사 필요 없음.,80,male,,,NONE,synthetic Korean,complete
+KO-009,흉부 CT (조영증강),2026-01-15,폐결절이나 종괴 없음. 종격동 림프절 비대 없음.,61,female,,,NONE,synthetic Korean,complete
+KO-010,복부 CT (조영증강),2026-03-01,간 6분절에 8 mm 불확정 병변. 3-6개월 후 추적 MRI 권고.,59,male,,,R031,synthetic Korean,complete
+KO-011,흉부 X선 PA,2026-07-20,우하엽 경화 소견으로 폐렴에 합당함. 호전 확인을 위해 6주 후 흉부 X선 추적 권고.,68,male,,,R033,synthetic Korean,complete
+KO-012,흉부 CT 혈관조영 (응급실),2026-10-07,우측 주폐동맥 및 하엽 폐동맥에 급성 폐색전증. RV/LV 비 1.2. 위급 결과로 담당의에게 통보함.,74,female,,,R035,synthetic Korean,complete
+KO-013,복부 CT (조영증강),2026-07-01,좌측 부신에 우연히 발견된 1.5 cm 결절. 불확정.,63,male,,,R037,synthetic Korean,complete
+KO-014,복부 CT (조영증강),2026-06-10,"좌신 하극에 2.4 cm 조영증강되는 고형 종괴, 신세포암 의심.",57,male,,,R039,synthetic Korean,complete
+KO-015,복부 CT (조영증강),2026-05-15,췌장 체부에 고형 성분 없는 2.8 cm 낭성 병변.,69,female,,,R041,synthetic Korean,complete
+KO-016,복부 MRI 및 MRCP,2026-08-01,췌장 두부에 조영증강되는 벽결절을 동반한 3.4 cm 낭종.,72,male,,,R042,synthetic Korean,complete
+KO-017,경부 CT (조영증강),2026-06-20,좌측 갑상선엽에 1.8 cm 저음영 결절.,60,female,,,R043,synthetic Korean,complete
+KO-018,복부대동맥 초음파,2025-12-10,"신동맥하 복부대동맥류, 최대 직경 4.6 cm.",76,male,former,,R044,synthetic Korean,complete
+KO-019,복부 및 골반 CT,2026-09-01,파열 없는 방추형 신동맥하 대동맥류 5.3 cm.,79,male,,,R044,"synthetic Korean; man 5.3 cm: below the 5.5 cm repair threshold for men (SVS 2018), so surveillance",complete
+KO-020,저선량 흉부 CT (추적),2026-07-20,우상엽 7 mm 결절 변화 없음. Lung-RADS 3.,67,female,former,,R034,synthetic Korean,complete
+KO-021,흉부 CT,2026-02-11,RUL에 12 mm solid nodule 있음. 3개월 후 f/u CT 권고.,62,male,current,,R003,mixed Korean-English,complete
+KO-022,흉부 CT,2026-04-03,"r/o lung cancer. 좌상엽 2.1 cm spiculated mass, 악성 가능성 높음. PET-CT 및 조직검사 권고.",70,male,current,,R036,"mixed Korean-English; a 2.1 cm 'mass' with explicit biopsy advice is tracked as tissue sampling within 30 days (R036), stricter than Fleischner",complete
+KO-023,흉부 CT,2026-03-15,양측 폐에 2-3 mm 크기의 다수의 미세결절. 석회화된 육아종으로 양성 소견. 추적 불필요.,45,female,never,,NONE,synthetic Korean,complete
+KO-024,흉부 CT,2026-05-20,우중엽 결절은 이전과 비교하여 2년간 변화 없음. 양성으로 판단. 추적 불필요.,58,male,former,,NONE,synthetic Korean,complete
+KO-025,복부 초음파,2026-04-22,간에 1.2 cm 혈관종. 전형적 소견으로 추적 불필요.,41,female,,,NONE,synthetic Korean,complete
+KO-026,복부 CT,2026-06-05,우측 신장에 2 cm 단순 낭종 (Bosniak I). 추적 불필요.,66,male,,,NONE,synthetic Korean,complete
+KO-027,복부 CT,2026-07-14,좌신에 1.9 cm Bosniak IIF 낭성 병변. 추적 CT 또는 MRI 권고.,61,female,,,R030,"synthetic Korean; the radiologist's explicit recommendation is tracked (R030) with the Bosniak interval, as in the English set",complete
+KO-028,복부 CT,2026-05-02,우측 부신에 4.6 cm 종괴.,59,male,,,R038,synthetic Korean,complete
+KO-029,흉부 CT,2026-08-12,"좌하엽 9 mm 고형 결절, 6개월 전 6 mm에서 증가. 추가 검사 권고.",68,male,current,,R046,synthetic Korean,complete
+KO-030,유방 초음파,2026-04-28,BI-RADS 3. 좌측 유방 8 mm 섬유선종 추정. 6개월 후 추적 초음파 권고.,39,female,,,R032,synthetic Korean,complete
+KO-031,유방촬영술,2026-03-30,BI-RADS 5. 우측 유방 2.2 cm 불규칙 종괴. 조직검사 필요.,58,female,,,R018,synthetic Korean,complete
+KO-032,저선량 흉부 CT (폐암 검진),2026-05-06,Lung-RADS 4B. 좌상엽 16 mm 고형 결절. PET-CT 또는 조직검사 권고.,63,male,current,,R020,synthetic Korean,complete
+KO-033,뇌 MRI,2026-06-18,"r/o 뇌경색. 급성 뇌경색 소견 없음. 2 mm 미세출혈, 임상적 의의 낮음.",72,female,,,NONE,synthetic Korean,complete
+KO-034,흉부 X선,2026-01-09,특이 소견 없음.,35,male,,,NONE,synthetic Korean,complete
+KO-035,복부 CT,2026-02-26,s/p 담낭절제술. 간내 담관 경미한 확장. 2-3개월 후 MRCP 권고.,64,female,,,R031,mixed Korean-English,complete
+KO-036,흉부 CT,2026-09-14,긴장성 기흉. 즉시 담당의에게 연락함.,23,male,,,R035,synthetic Korean,complete
+KO-037,복부 CT,2026-03-11,췌장 미부에 1.2 cm 낭종. 1년 후 MRI 추적 권고.,55,female,,,R031,synthetic Korean,complete
+KO-038,흉부 CT,2026-07-07,"좌하엽 폐결절 의심되나 혈관 단면으로 생각됨, 결절 없음.",50,male,never,,NONE,synthetic Korean,complete
+KO-039,골반 초음파,2026-08-21,우측 난소에 4.5 cm 복합 낭종. 6주 후 추적 초음파 권고.,44,female,,,R032,synthetic Korean,complete
+KO-040,경부 초음파,2026-02-02,갑상선 좌엽 9 mm 결절 TI-RADS TR3. 추적 불필요.,52,female,,,NONE,synthetic Korean,complete
+KO-041,복부 CT,2026-09-02,"신동맥하 복부대동맥류, 최대 직경 5.2 cm.",74,,,,R045,synthetic Korean; sex not recorded: lower (women's) repair threshold applies,complete
+KO-042,복부 CT,2026-09-03,양신에 다수의 단순 낭종. 추적 불필요.,68,male,,,NONE,"synthetic Korean; simple cysts, no follow-up",complete

@@ -68,6 +68,13 @@ class TestChartReview(unittest.TestCase):
         self.assertEqual(result["estimates"], {"sensitivity": 1.0, "specificity": 1.0, "ppv": 1.0, "npv": 1.0})
         self.assertAlmostEqual(result["cohens_kappa"], 1.0)
 
+    def test_scope_does_not_claim_detection_sensitivity(self):
+        packet = _packet(self.sample, lambda r: ("yes", "yes", ""))
+        result = cr.analyze(packet, _key_rows(self.sample), reps=20)
+        self.assertIsNone(result["end_to_end_sensitivity"])
+        self.assertTrue(result["cannot_measure_undetected_obligations"])
+        self.assertEqual(sum(result["sampled_by_stratum"].values()), len(self.sample))
+
     def test_missed_loop_lowers_sensitivity(self):
         # One loop ClinLoop called closed was actually not done in time
         neg = next(r["review_id"] for r in self.sample if not r["predicted_positive"])

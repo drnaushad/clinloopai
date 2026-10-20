@@ -1,0 +1,79 @@
+{
+  "checked_on": "2026-10-20",
+  "policy": "Only code, synthetic fixtures and aggregate counts may be committed. Credentialed data stays on the approved local machine.",
+  "datasets": [
+    {
+      "id": "openi",
+      "name": "IU OpenI",
+      "official_source": "https://openi.nlm.nih.gov/faq",
+      "access_status": "local_open_copy_available",
+      "evaluation_scope": "Report extraction; follow-up labels must be independently created"
+    },
+    {
+      "id": "mimic_iv_note",
+      "name": "MIMIC-IV-Note 2.2",
+      "official_source": "https://physionet.org/content/mimic-iv-note/2.2/",
+      "access_status": "approved_local_copy_required",
+      "evaluation_scope": "Radiology recommendations and discharge plans; expert labels required"
+    },
+    {
+      "id": "mimic_cxr",
+      "name": "MIMIC-CXR 2.1.0",
+      "official_source": "https://physionet.org/content/mimic-cxr/2.1.0/",
+      "access_status": "approved_local_copy_required",
+      "evaluation_scope": "Image/report comparison; no automatic follow-up completion gold"
+    },
+    {
+      "id": "radgraph",
+      "name": "RadGraph 1.0.0",
+      "official_source": "https://physionet.org/content/radgraph/1.0.0/",
+      "access_status": "approved_local_copy_required",
+      "evaluation_scope": "Entity/relation extraction; use human-labelled splits, not model-generated graphs"
+    },
+    {
+      "id": "n2c2",
+      "name": "n2c2/i2b2",
+      "official_source": "https://n2c2.dbmi.hms.harvard.edu/data-sets",
+      "access_status": "registration_and_task_dua_required",
+      "evaluation_scope": "Task-specific entities, assertion and temporal annotations; not follow-up gold"
+    },
+    {
+      "id": "padchest_gr",
+      "name": "PadChest-GR",
+      "official_source": "https://bimcv.cipf.es/bimcv-projects/padchest-gr/",
+      "access_status": "access_request_required",
+      "evaluation_scope": "Bilingual finding sentences and image localization, not care completion"
+    },
+    {
+      "id": "bimcv_covid19",
+      "name": "BIMCV-COVID19+",
+      "official_source": "https://github.com/BIMCV-CSUSP/BIMCV-COVID-19",
+      "access_status": "release_terms_and_access_review_required",
+      "evaluation_scope": "Additional image/report domain testing; annotation task must match endpoint"
+    },
+    {
+      "id": "chexpert",
+      "name": "CheXpert",
+      "official_source": "https://aimi.stanford.edu/datasets/chexpert-chest-x-rays",
+      "access_status": "release_files_and_terms_review_required",
+      "evaluation_scope": "Verify report text availability in the chosen release; labels are not follow-up gold"
+    },
+    {
+      "id": "imaging_followup_lrec2026",
+      "name": "Imaging follow-up corpus",
+      "official_source": "https://aclanthology.org/2026.lrec-1.594/",
+      "access_status": "underlying_corpus_access_not_verified",
+      "evaluation_scope": "Paper describes 6393 reports from 586 patients; no verified public corpus link"
+    }
+  ],
+  "clinical_accuracy_status": "not established by dataset availability, successful processing, or AI-generated labels",
+  "external_test_requirements": [
+    "independent clinician references",
+    "patient-group separation",
+    "cross-dataset overlap audit",
+    "frozen code and model digests",
+    "model pretraining overlap assessment",
+    "paired systems on identical inputs",
+    "failure/abstention denominators"
+  ]
+}

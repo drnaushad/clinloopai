@@ -225,6 +225,14 @@ def analyze(packet_rows: Sequence[Dict], key_rows: Sequence[Dict], reps: int = 2
     estimates = _weighted_metrics(merged)
     return {
         "n_reviewed": len(merged),
+        "sampling_scope": "status classification conditional on engine-detected obligations",
+        "end_to_end_sensitivity": None,
+        "cannot_measure_undetected_obligations": True,
+        "bootstrap_scope": "loops within strata; not patient-clustered",
+        "sampled_by_stratum": dict(Counter(k["stratum"] for k in key_rows)),
+        "retained_by_stratum": dict(Counter(m["stratum"] for m in merged)),
+        "strata_without_retained_reviews": sorted({k["stratum"] for k in key_rows} -
+                                                   {m["stratum"] for m in merged}),
         "excluded": excluded,
         "estimates": estimates,
         "ci95": bootstrap_ci(merged, reps=reps) if merged else {},
@@ -232,7 +240,9 @@ def analyze(packet_rows: Sequence[Dict], key_rows: Sequence[Dict], reps: int = 2
         "by_rule": {rule: {"n": len(rs), **_weighted_metrics(rs)}
                     for rule, rs in sorted(_group(merged, "rule_id").items())},
         "note": ("Estimates are weighted by inverse sampling fraction per (rule × predicted class) stratum. "
-                 "Report with TRIPOD+AI."),
+                 "These are conditional status metrics, not sensitivity to all warranted obligations. "
+                 "Missing outcomes are not confirmed failures. Patient clustering and independently enumerated "
+                 "obligations are required for end-to-end validation. Report with TRIPOD+AI."),
     }
 
 

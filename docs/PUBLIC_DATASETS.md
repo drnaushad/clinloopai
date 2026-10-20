@@ -148,3 +148,82 @@ T4), or the lab that monitors that drug.
 - **Missing records:** there are no notes, and ICD-9-era procedures are missing.
 
 These are properties of this research copy. A hospital's own feed records them.
+
+## Reproducible local report pilot (20 October 2026)
+
+The machine-readable access/task register is [`data/evaluation_sources.json`](../data/evaluation_sources.json).
+It records official sources and access gates; it does not claim that credentialed datasets have been obtained.
+RadGraph's human-labelled train/dev/test files differ from its automatically generated graphs. n2c2 labels
+are task-specific. Neither is automatically a reference for completed follow-up care.
+
+`src/validation/dataset_evaluation.py` prepares an independent, blinded sample from local OpenI XML:
+
+```bash
+python -m src.validation.dataset_evaluation prepare-openi \
+  --xml /home/alam/clinloop-data/openi/ecgen-radiology \
+  --out /home/alam/clinloop-data/evaluation/new-study --sample 100 --seed 42
+python -m src.validation.dataset_evaluation predict \
+  --out /home/alam/clinloop-data/evaluation/new-study
+python -m src.validation.dataset_evaluation score \
+  --out /home/alam/clinloop-data/evaluation/new-study
+```
+
+The outputs stay outside the repository. Separate `reviewer_1.csv` and `reviewer_2.csv` contain no
+predictions. Two distinct clinicians fill `reviewer_id`, `reviewer_role=clinician`, `label_status=complete`,
+and `expected_rules` (rule IDs or explicit `NONE`). They judge **any follow-up within the report-reader's
+prespecified rule scope**, not whether the patient actually received care. Conflicting rule sets or
+single-rule deadline intervals need a third clinician's completed row in `adjudication.csv`. Blank or
+unresolved reviews block scoring; do not turn uncertainty into `NONE`. Roles are declared by reviewers;
+the study coordinator must verify qualifications and independence.
+
+The runner evaluates rules, MedGemma 27B, MedGemma 4B and EXAONE on the same reports. The scorer compares
+report-level triage for each model alone and each rules-plus-model combination. This coarse comparison
+is not finding-level extraction accuracy. It reports precision, recall, F1, false alerts per 100 reports,
+missed positive reports, coverage and conservative recall including model abstentions as misses.
+Missing model answers never silently count as normal. Rules-only deadline accuracy is available for
+single-rule references with explicit bounds; the existing model schema has no structured deadlines,
+so model deadline accuracy is explicitly unscored.
+
+The CLI requires local-loopback Ollama, exact installed models, frozen model digests, prompt/code hashes,
+and unchanged sampled inputs. It can resume matching runs without repeating completed calls. It emits
+counts only. Existing `report_validation` sheets now also require `label_status=complete` and explicit
+`NONE` for negatives; untouched templates are not accuracy labels.
+
+**Limits of this pilot:** OpenI was already used during rule development. Patient grouping is not
+established by these report XML files. Exact text deduplication changes the sampled prevalence; this
+is a distinct-text exploratory pilot, not a population estimate or an untouched patient-independent
+external validation. Confidence intervals requiring independent patients are not computed. Prior AI
+OpenI labels are excluded from the reference process. Model pretraining overlap also requires review,
+especially for MIMIC-derived benchmarks. RadGraph/n2c2, credentialed MIMIC, multimodal localization,
+Korean patient-message quality and longitudinal outcome validation remain separate tasks with their
+own reference labels and access requirements. Dataset access does not itself establish whether a local
+IRB determination or institutional approval is required.
+
+The longitudinal `chart_review` output now explicitly labels its sampling frame as **conditional on
+engine-detected obligations**, exposes sampled/retained stratum counts and fully excluded strata,
+and sets `end_to_end_sensitivity` to null. Its existing loop-bootstrap intervals are not patient-clustered.
+An independent review of eligible records, including records with no engine alert, is necessary to find
+obligations the engine never opened. Conditional status performance must not be advertised as overall
+follow-up detection sensitivity.
+
+The OpenI pilot input is specifically **FINDINGS + IMPRESSION**, plus the known study type, not the full
+medical record. Comparison/history sections and demographics are not inferred. Both reviewers see the
+same available text; insufficient context must remain unresolved. The study cannot establish performance
+when full longitudinal context or patient-specific risk is required.
+
+### Observed pilot processing results (not accuracy)
+
+Seed 42 selected 100 distinct texts from 3,955 XML files: 3,927 nonempty reports, 770 exact duplicates
+excluded, 3,157 distinct eligible texts. Source, prompt and model hashes are preserved locally.
+
+| System | Processed | Usable output | Reports flagged |
+|---|---:|---:|---:|
+| Rules | 100 | 100 | 5 |
+| MedGemma 27B | 100 | 100 | 22 |
+| MedGemma 4B | 100 | 100 | 89 |
+| EXAONE 3.5 7.8B | 100 | 95 | 3 |
+
+These are workload/robustness counts, not sensitivity, specificity or false-positive rates. The large
+flag-count disagreement requires blinded adjudication; it is not evidence that the model with more
+flags is better. Five unusable EXAONE responses remain abstentions. No clinician accuracy results
+have been computed, and no prior AI-generated OpenI labels were used as reference labels.
