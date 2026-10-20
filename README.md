@@ -10,6 +10,9 @@
 >   [imaging](https://clinloopai.app/imaging).
 > - **Recorded evaluation:** [validation evidence](https://clinloopai.app/validation) separates
 >   synthetic checks, local dataset processing and pending clinical reference reviews.
+> - **International deployment:** [prepare a settings-only plan](https://clinloopai.app/deployment)
+>   for a country, report language, time zone and report types. The planner lists missing validation
+>   and institutional reviews; it does not activate clinical features or establish approval.
 > - **The data:** synthetic patients only, read-only.
 > - **Public website:** the clinical pages serve a pre-computed synthetic snapshot from a global CDN.
 >   The live report reader uses a separate, rate-limited gateway to local models for fixed synthetic

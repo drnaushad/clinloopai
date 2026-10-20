@@ -1,0 +1,24 @@
+{
+  "version": "2026-10-20.1",
+  "purpose": "International deployment planning; no clinical authorization or runtime configuration changes",
+  "clinical_validation": "not_established",
+  "report_modules": [
+    {"id": "laboratory", "name": "Laboratory reports", "available": "Structured result ingestion and follow-up rules", "needs": "Verify local assay names, original units, laboratory reference ranges and patient context; validate the selected rules locally."},
+    {"id": "radiology_text", "name": "Radiology report text", "available": "Report rules, English/Korean synthetic checks and a local OpenI text pilot", "needs": "Independent clinician labels, patient-separated evaluation and validation in each report language; preserve negation, uncertainty and amendments."},
+    {"id": "pathology_text", "name": "Pathology report text", "available": "Rule-based follow-up examples; clinical performance unestablished", "needs": "Specialist-reviewed terminology, specimen context, report amendments and local reference labels."},
+    {"id": "clinical_notes", "name": "Clinical notes and referrals", "available": "Structured workflows and research extraction tools", "needs": "Validate temporal context, medication and referral reconciliation, negation and missing records for the chosen use."},
+    {"id": "medical_images", "name": "Medical images", "available": "Research adapters and model connections", "needs": "Separate validation for each modality, task, model version and population, plus the applicable regulatory assessment."}
+  ],
+  "required_reviews": [
+    "Clinical lead: define intended use, users, population, report types and exclusions.",
+    "Local clinical specialists: review guideline applicability and sign off versioned rules.",
+    "Privacy and security team: approve private hosting, access controls, encryption, audit, retention and recovery.",
+    "Institutional and regulatory reviewers: determine the requirements in the deployment country before patient care.",
+    "Independent clinicians: establish reference labels and assess patient-separated performance, missed cases and false closures.",
+    "Hospital pilot team: complete a prospective silent run, workflow review and predefined acceptance criteria."
+  ],
+  "sources": [
+    {"title": "IMDRF: Software as a Medical Device — Clinical Evaluation", "url": "https://www.imdrf.org/documents/software-medical-device-samd-clinical-evaluation"},
+    {"title": "WHO: Regulatory considerations on artificial intelligence for health", "url": "https://www.who.int/publications/i/item/9789240078871"}
+  ]
+}

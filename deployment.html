@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>International deployment — ClinLoop AI</title>
+<link rel="icon" href="icons/logo.svg" type="image/svg+xml"><link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png"><link rel="stylesheet" href="css/responsive.css">
+<style>
+:root{font-family:system-ui,sans-serif;color-scheme:light dark;line-height:1.6;background:#f2f6fa;color:#172a3b}*{box-sizing:border-box}body{max-width:1100px;margin:auto;padding:24px}a{color:#086b94}.app-nav{display:flex;flex-wrap:wrap;gap:12px}h1{line-height:1.15}h2{font-size:1.25rem}.brand-mark{width:42px;vertical-align:middle;margin-right:12px}section{background:#fff;border:1px solid #d8e2eb;border-radius:14px;padding:20px;margin:20px 0}.notice{border-left:4px solid #ad7100;background:#fff4d9;padding:15px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}label{display:block;font-weight:600}input,select,button{font:inherit;max-width:100%;min-height:44px;border:1px solid #8194a6;border-radius:7px;padding:9px;background:#fff;color:#172a3b}label>input,select{display:block;width:100%;margin-top:5px}fieldset{border:1px solid #d8e2eb;border-radius:8px;margin:18px 0;padding:14px}fieldset label{display:flex;align-items:center;gap:10px;margin:6px 0}input[type=checkbox]{width:20px;min-height:24px;flex-shrink:0}button{cursor:pointer;margin:8px 8px 0 0;background:#086b94;color:white}button:disabled{opacity:.55;cursor:default}:focus-visible{outline:3px solid #2192c4;outline-offset:3px}.meta{color:#52677b;font-size:.9rem}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%}td,th{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid #d8e2eb}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}li{margin:8px 0}[hidden]{display:none!important}@media(max-width:650px){body{padding:15px}.grid{grid-template-columns:1fr}td,th{padding:8px;font-size:.9rem}}@media(prefers-color-scheme:dark){:root{background:#101c2a;color:#e7edf5}section{background:#17283b;border-color:#39516a}a{color:#80d9fa}.notice{background:#3b2e18}.meta{color:#b4c6d8}input,select{background:#102033;color:#e7edf5}td,th,fieldset{border-color:#39516a}}
+</style>
+</head>
+<body>
+<nav class="app-nav" aria-label="ClinLoop pages"></nav>
+<h1><img class="brand-mark" src="icons/logo.svg" alt="ClinLoop">Plan ClinLoop for your setting</h1>
+<p>Prepare a deployment plan for any country or region, report language and selected report types. Use a separate plan for each language and clinical setting.</p>
+<p class="notice"><strong>Planning tool — clinical use remains pending.</strong> This page prepares a settings-only plan in your browser. It does not change the running system, translate reports, apply local guidelines or authorize patient care. Do not enter patient information.</p>
+<section>
+<h2>1. Choose the setting</h2>
+<form id="setup">
+<div class="grid">
+<label>Country or region<input id="country" name="country" list="countries" maxlength="80" required placeholder="Country where the hospital operates"></label>
+<datalist id="countries"><option value="India"><option value="South Korea"><option value="United States"><option value="United Kingdom"><option value="Egypt"><option value="Saudi Arabia"><option value="Brazil"><option value="Japan"><option value="Spain"><option value="South Africa"></datalist>
+<label>Report language tag<input id="language" name="language" list="languages" maxlength="60" required placeholder="For example en, ko, hi or ar"></label>
+<datalist id="languages"><option value="en"><option value="ko"><option value="hi"><option value="ar"><option value="es"><option value="fr"><option value="pt-BR"><option value="zh-Hans"><option value="ja"><option value="bn"></datalist>
+<label>Institution time zone<input id="timezone" name="timezone" list="timezones" maxlength="100" required placeholder="For example Asia/Kolkata"></label>
+<datalist id="timezones"><option value="Asia/Kolkata"><option value="Asia/Seoul"><option value="America/New_York"><option value="Europe/London"><option value="Africa/Cairo"><option value="UTC"></datalist>
+<label>Source-date convention<select id="dates" name="dates" required><option value="">Confirm with the institution</option><option value="iso8601">ISO 8601, with explicit date/time zone</option><option value="day_first_confirmed">Day first, confirmed before import</option><option value="month_first_confirmed">Month first, confirmed before import</option></select></label>
+</div>
+<p class="meta">Country and language entries are planning labels. Source dates, original units and laboratory reference ranges must be verified before import. Selecting a language does not establish clinical language support.</p>
+<fieldset><legend>Report types to assess</legend><div id="modules">Loading available modules…</div></fieldset>
+<button id="generate" type="submit" disabled>Build deployment plan</button><button id="download" type="button" disabled>Download plan</button>
+<p id="message" role="status" aria-live="polite">Loading planning requirements…</p>
+</form>
+</section>
+<section id="result" hidden><h2>2. Review what remains</h2><p id="setting"></p><p><strong>No clinical authorization is established by this plan.</strong></p><ul id="warnings"></ul><h3>Required institutional reviews</h3><ol id="reviews"></ol><details><summary>View the settings-only plan</summary><pre id="plan"></pre></details></section>
+<section><h2>Report capabilities and evidence needed</h2><div class="table-wrap"><table><thead><tr><th>Report type</th><th>Existing capability</th><th>Required validation</th></tr></thead><tbody id="capabilities"></tbody></table></div><p class="meta">No module listed here has established clinical performance for all countries, languages or patient groups. <a href="validation">View the actual evaluation results.</a></p></section>
+<section><h2>From plan to clinician use</h2><p>Agree the intended use with a clinical lead, assess local requirements, verify the private installation, review the applicable rules, complete independent local evaluation, and run a prospective silent pilot before a limited release. Reassess material model, prompt and clinical-rule changes.</p><p id="sources"></p></section>
+<script src="js/deployment-plan.js?v=2026-10-20.5"></script>
+<script src="js/deployment-page.js?v=2026-10-20.5"></script>
+<script src="js/appnav.js?v=2026-10-20.5"></script>
+</body></html>
