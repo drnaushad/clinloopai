@@ -1,0 +1,274 @@
+{
+ "note": "Synthetic reports written for software testing. Not real patients. Model items are suggestions for a clinician, never decisions.",
+ "model": {
+  "name": "medgemma:27b",
+  "digest": "sha256:58238ae38f99827496301de22016b2f94157552971f5a38db226f13802c2437e",
+  "quantization": "Q4_K_M",
+  "prompt_version": "sr-b042876ec2e5",
+  "temperature": 0.0
+ },
+ "cases": [
+  {
+   "id": "M008",
+   "title": "Brain CT non-contrast",
+   "date": "2026-01-22",
+   "language": "ko",
+   "report_type": "radiology",
+   "patient": {
+    "age": 82,
+    "sex": "male",
+    "smoking": "never",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "Brain CT (non-enhanced)\n\nHx) 낙상 후 의식저하. anticoagulation (apixaban) 복용 중.\n\nFindings)\nLt frontoparietal convexity를 따라 crescent-shaped high density lesion 있음, max thickness 약 9 mm. c/w acute SDH.\nRightward midline shift 4 mm.\nLt lateral ventricle mild effacement.\nBasal cistern 유지됨.\nSkull fracture 없음.\nPeriventricular WM low density (chronic small vessel ischemic change).\n\nConclusion)\n1. Lt convexity acute SDH (9 mm), midline shift 4 mm.\n2. Chronic small vessel ischemic change.\n\n=> 응급의학과 이OO 선생님께 2026-01-22 03:15 구두 보고함.",
+   "teaches": "Acute subdural haematoma: the critical-finding rule and MedGemma agree.",
+   "saved_reading": {
+    "available": true,
+    "items": [
+     {
+      "category": "critical_finding",
+      "quote": "Lt convexity acute SDH (9 mm), midline shift 4 mm.",
+      "reason": "Acute subdural hematoma with mass effect and midline shift."
+     }
+    ],
+    "dropped": 0,
+    "not_actionable": 0,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
+   "id": "M093",
+   "title": "Chest CTA (aorta)",
+   "date": "2026-06-18",
+   "language": "ko",
+   "report_type": "radiology",
+   "patient": {
+    "age": 72,
+    "sex": "female",
+    "smoking": "never",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "Chest CT angiography\n\nHx) Chest pain, r/o PE / AD.\n\nPulmonary artery: filling defect 없음, no PE.\nAorta: Ascending aorta 4.4 cm 로 dilatation. Dissection, intramural hematoma 없음.\n  Arch 3.2 cm, descending 2.8 cm.\nLung: 양측 basal subsegmental atelectasis.\nHeart: mild cardiomegaly.\n\nImp)\n1. No PE. No aortic dissection.\n2. Ascending aortic aneurysm, 4.4 cm. 1년 후 f/u CTA 권함.",
+   "teaches": "Ascending aortic aneurysm with Korean-English advice: rule and MedGemma agree.",
+   "saved_reading": {
+    "available": true,
+    "items": [
+     {
+      "category": "imaging_followup",
+      "quote": "Ascending aortic aneurysm, 4.4 cm. 1년 후 f/u CTA 권함.",
+      "reason": "Aortic aneurysm > 4cm requires follow-up imaging."
+     }
+    ],
+    "dropped": 0,
+    "not_actionable": 0,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
+   "id": "N057",
+   "title": "췌장 MRI f/u",
+   "date": "2026-06-29",
+   "language": "ko",
+   "report_type": "radiology",
+   "patient": {
+    "age": 71,
+    "sex": "female",
+    "smoking": "never",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "Pancreas MRI/MRCP f/u\n임상: BD-IPMN f/u\n비교: 2025-06-24 MRI (2.2 cm), 2024-06-20 MRI (1.9 cm)\n\n판독소견:\nPancreas head/uncinate의 multilocular cyst, 현재 2.9 cm (이전 2.2 cm) — 1년간 7 mm 증가.\nMPD 8 mm로 확장 (이전 4 mm).\nEnhancing mural nodule 없음.\nPancreatic parenchymal atrophy 없음.\n\n결론:\nBD-IPMN (or mixed-type), interval growth 및 MPD 8 mm 확장 → worrisome features.\n\n권고: EUS 및 췌장외과 협진 권함.",
+   "teaches": "Pancreatic cyst with worrisome features: EUS work-up, rule and MedGemma agree.",
+   "saved_reading": {
+    "available": true,
+    "items": [
+     {
+      "category": "specialist_referral",
+      "quote": "EUS 및 췌장외과 협진 권함.",
+      "reason": "Report recommends EUS and pancreatic surgery consultation."
+     }
+    ],
+    "dropped": 0,
+    "not_actionable": 0,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
+   "id": "M015",
+   "title": "CT Abdomen/Pelvis with contrast",
+   "date": "2026-02-04",
+   "language": "en",
+   "report_type": "radiology",
+   "patient": {
+    "age": 72,
+    "sex": "male",
+    "smoking": "former",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "CT ABDOMEN AND PELVIS WITH CONTRAST\nHistory: Hematuria. Former smoker.\nComparison: None.\n\nFindings:\nLiver, spleen, pancreas, adrenals: unremarkable.\nKidneys: No mass, no stone. Mild bilateral cortical thinning.\nUreters/bladder: Mild diffuse bladder wall thickening, likely related to underdistension / BPH.\nAorta: Fusiform infrarenal abdominal aortic aneurysm measuring 4.2 x 4.0 cm (outer wall to outer wall), with mural thrombus. No periaortic stranding. Iliac arteries 1.4 cm.\nBowel: Sigmoid diverticulosis without diverticulitis.\nNodes: None enlarged.\nBones: Degenerative changes.\n\nImpression:\n1. 4.2 cm infrarenal AAA. Surveillance ultrasound in 12 months is recommended (SVS).\n2. No renal mass or urolithiasis. Cystoscopy per urology for hematuria w/u.\n3. Sigmoid diverticulosis.",
+   "teaches": "MedGemma adds the urology cystoscopy for haematuria, which no rule tracks.",
+   "saved_reading": {
+    "available": true,
+    "items": [
+     {
+      "category": "imaging_followup",
+      "quote": "Surveillance ultrasound in 12 months is recommended (SVS).",
+      "reason": "Report recommends follow-up imaging for the AAA."
+     },
+     {
+      "category": "specialist_referral",
+      "quote": "Cystoscopy per urology for hematuria w/u.",
+      "reason": "Report recommends cystoscopy by urology for hematuria workup."
+     }
+    ],
+    "dropped": 0,
+    "not_actionable": 0,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
+   "id": "M065",
+   "title": "Pelvis MRI (enhanced)",
+   "date": "2026-04-15",
+   "language": "ko",
+   "report_type": "radiology",
+   "patient": {
+    "age": 44,
+    "sex": "female",
+    "smoking": "never",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "Pelvis MRI (with Gd, DWI)\n\nHx) US 상 Rt adnexal complex cyst.\n\nRt ovary에 4.5 x 3.8 cm sized multilocular cystic lesion, 내부에 1.0 cm sized enhancing solid component 있음. Time-intensity curve: intermediate risk (type 2).\nDWI 상 solid portion에 mild diffusion restriction.\nLt ovary: 정상, follicle 수개.\nUterus: 2 cm intramural myoma.\nAscites, peritoneal implant 없음.\n\nImp)\n1. Rt ovarian multilocular cystic lesion with solid component, O-RADS MRI 4 (intermediate risk).\n   부인과 진료 권함. 수술 계획 없으면 6-8주 후 f/u MRI 권함.\n2. Uterine myoma.",
+   "teaches": "Korean report: MedGemma adds the gynaecology referral (부인과 진료 권함).",
+   "saved_reading": {
+    "available": true,
+    "items": [
+     {
+      "category": "specialist_referral",
+      "quote": "부인과 진료 권함.",
+      "reason": "O-RADS MRI 4 (intermediate risk) ovarian lesion."
+     },
+     {
+      "category": "imaging_followup",
+      "quote": "수술 계획 없으면 6-8주 후 f/u MRI 권함.",
+      "reason": "O-RADS MRI 4 (intermediate risk) ovarian lesion, no surgery planned."
+     }
+    ],
+    "dropped": 0,
+    "not_actionable": 0,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
+   "id": "M014",
+   "title": "Abdominal Ultrasound",
+   "date": "2026-02-03",
+   "language": "ko",
+   "report_type": "radiology",
+   "patient": {
+    "age": 44,
+    "sex": "male",
+    "smoking": "current",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "Abdomen US\n\nLiver: Parenchymal echogenicity 증가, mild to moderate fatty liver. Focal lesion 없음.\nGB: 4 mm sized nonshadowing echogenic polyp, fundus. Wall thickening 없음.\nCBD: 4 mm, 정상.\nPancreas: 보이는 범위 내 특이 소견 없음.\nSpleen: 10.2 cm.\nBoth kidneys: 정상 크기, hydronephrosis 없음.\n\nImp)\n1. Fatty liver, mild-moderate.\n2. GB polyp 4 mm - 크기 작아 f/u 불필요 (SRU 2022 consensus 기준).",
+   "teaches": "Normal report: 'f/u 불필요'. MedGemma quoted it; the check removes it.",
+   "saved_reading": {
+    "available": true,
+    "items": [],
+    "dropped": 0,
+    "not_actionable": 1,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
+   "id": "N070",
+   "title": "요추 MRI",
+   "date": "2026-08-07",
+   "language": "ko",
+   "report_type": "radiology",
+   "patient": {
+    "age": 62,
+    "sex": "male",
+    "smoking": "unknown",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "L-spine MRI (non-enhanced)\n임상: LBP with Rt leg radiating pain.\n\n판독소견:\nL4-5: central to Rt subarticular disc protrusion → Rt L5 nerve root compression.\nL5-S1: mild disc bulging, neural foraminal stenosis 없음.\nVertebral body marrow signal 정상.\nIncidental: Lt kidney lower pole 2.5 cm T2 homogeneous hyperintense, thin wall lesion → simple cyst (Bosniak I) 가능성 높음. f/u 불필요.\n\n결론:\n1. L4-5 disc protrusion with Rt L5 root compression.\n2. Lt renal simple cyst (incidental).",
+   "teaches": "Normal report: simple renal cyst, explicit 'f/u 불필요'.",
+   "saved_reading": {
+    "available": true,
+    "items": [],
+    "dropped": 0,
+    "not_actionable": 1,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
+   "id": "N044",
+   "title": "뇌 CT",
+   "date": "2026-05-08",
+   "language": "ko",
+   "report_type": "radiology",
+   "patient": {
+    "age": 34,
+    "sex": "male",
+    "smoking": "unknown",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "Brain CT (non-enhanced)\n임상: 교통사고 후 두통, 의식 명료.\n\n판독소견:\nIntracranial hemorrhage 없음. Midline shift 없음.\nVentricles, sulci 정상. Gray-white differentiation 유지.\nSkull fracture 없음. 좌측 frontal scalp hematoma 소량.\nParanasal sinus: 양측 maxillary sinus mucosal thickening, mild.\n\n결론:\n1. No acute intracranial abnormality.\n2. Lt frontal scalp hematoma.\n3. Mild chronic sinusitis 의심.",
+   "teaches": "A false flag, shown on purpose: MedGemma raises a scalp haematoma on a normal trauma CT.",
+   "saved_reading": {
+    "available": true,
+    "items": [
+     {
+      "category": "specialist_referral",
+      "quote": "Lt frontal scalp hematoma.",
+      "reason": "Scalp hematoma may require evaluation/management."
+     }
+    ],
+    "dropped": 0,
+    "not_actionable": 0,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
+   "id": "M084",
+   "title": "Outside CT Chest (scanned report)",
+   "date": "2026-05-12",
+   "language": "en",
+   "report_type": "radiology",
+   "patient": {
+    "age": 69,
+    "sex": "male",
+    "smoking": "current",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "*** OUTSIDE IMAGING REPORT - SCANNED DOCUMENT ***\nOO Medical Imaging Clinic          Page 1 of 1\nEXAM: CT CHEST W/O CONTRAST     DATE: 2026-05-02\n\nCLINICAL HX: chronic c0ugh, smoker\nFINDINGS:\nLUNGS: There is a 1O mm s0lid nodule in the left upper\nlobe (im 63) with lobulated contour. No other n0dules.\nModerate centrilobular emphy-\nsema. No consolidati0n.\nMEDIASTINUM: No LAP. Heart n0rmal size.\nPLEURA: No effusion.\nUPPER ABD: Unremarkable.\n\nIMPRESSION:\n1. 1O mm LUL solid nodule, indeterminate.\n   Rec: f/u CT in 3 months or PET-CT, per Fleisch-\n   ner guideline.\n2. Emphysema.\n--- electronically signed ---",
+   "teaches": "OCR-damaged '1O mm s0lid' nodule: the rule reads it, MedGemma misses it.",
+   "saved_reading": {
+    "available": true,
+    "items": [],
+    "dropped": 1,
+    "not_actionable": 0,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  }
+ ]
+}

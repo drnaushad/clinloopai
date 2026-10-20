@@ -1,0 +1,64 @@
+{
+ "evaluation": "MedGemma 27B as report second reader (synthetic reports; software verification, not clinical validation)",
+ "date": "2026-10-20",
+ "app_base_commit": "1b4edae0293e1b4e9a332233c9f678ab0a0975e6",
+ "model": {
+  "name": "medgemma:27b",
+  "digest": "sha256:58238ae38f99827496301de22016b2f94157552971f5a38db226f13802c2437e",
+  "parameter_size": "27.4B",
+  "quantization": "Q4_K_M",
+  "backend": "ollama 0.33.3",
+  "gpu": "NVIDIA RTX A4500 20 GB"
+ },
+ "prompt_version": "sr-b042876ec2e5",
+ "inference": {
+  "temperature": 0.0,
+  "max_tokens": 600
+ },
+ "reports": {
+  "real": 100,
+  "confirm2": 80,
+  "r9_heldout": 63
+ },
+ "responses": {
+  "real": 100,
+  "confirm2": 80,
+  "r9_heldout": 63,
+  "empty": 0
+ },
+ "denominators_note": "All 243 reports got an answer. 157 = actionable items extracted from the 180 development reports (153 verified by exact quote + 4 dropped), not responses. 'Normal' = reports whose blind label expects no follow-up (37 + 27 = 64 development, 20 held-out).",
+ "results": {
+  "development_180_before_check": {
+   "rule_misses_caught": "15/17",
+   "normal_flagged": "21/64"
+  },
+  "development_180_with_check": {
+   "rule_misses_caught": "15/17",
+   "normal_flagged": "7/64",
+   "note": "the check was designed from these reports; not unbiased"
+  },
+  "r9_heldout_before_check": {
+   "rule_misses_caught": "0/1",
+   "normal_flagged": "2/20"
+  },
+  "r9_heldout_with_check": {
+   "rule_misses_caught": "0/1",
+   "normal_flagged": "1/20",
+   "note": "only one rule miss in this set: says little about sensitivity"
+  }
+ },
+ "rules_first": "rules_first_r9_heldout.json = the rules on main before the round-9 fixes",
+ "files": {
+  "prompt.txt": "a3a54b9fc8fd0e9c21c46f54bd2971c6a5304740e4f9d51a0ba74f9392e8bf38",
+  "cases_real.json": "7bb725e32503578822662b0f50cfa431363f41919834ee6410df28bd6fe22dc9",
+  "cases_confirm2.json": "35696e335985aaa6853654aaead714097f3abaaa12b1082cc47e5f1318ba6d1c",
+  "cases_r9_heldout.json": "0b209b7cdd7a2934992ae839403eb552f5fc69e04a787863149b9417a4cb8f66",
+  "rules_first_real.json": "46dfbdc9f54ff051cfd58a909119ac2e3fc903947e1d7b5b4e93f34a108c4f41",
+  "rules_first_confirm2.json": "29dce17c931032b7176ecccf5285a52f80a056472977a0514ada4be67590aa04",
+  "rules_first_r9_heldout.json": "8bdf018ddeb6ebde41b1a21fca9393fa2c15e1dbd23519aadb2204b442dcc0cf",
+  "medgemma27b_real.json": "d6e1bd2b3f9ace9f77d24a7920b2c8cd12420ab3fee3097e29727375fdfb5e76",
+  "medgemma27b_confirm2.json": "615ed0ac73ce4a07321e23064e8441524c18fb0c3a882c5e05017728d254428c",
+  "medgemma27b_r9_heldout.json": "10d6177c6abdd0b0a0358d183daf831a060e8913ea373c14be8977f3e9dc1ecd"
+ },
+ "reproduce": "python tests/report_eval/run_second_reader_eval.py tests/report_eval/second_reader/cases_real.json tests/report_eval/second_reader/rules_first_real.json tests/report_eval/second_reader/medgemma27b_real.json --show"
+}

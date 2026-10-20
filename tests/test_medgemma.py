@@ -48,9 +48,12 @@ class SecondReaderModel(unittest.TestCase):
         with _clean_env(), _tags("exaone3.5:7.8b", "medgemma:27b"):
             self.assertEqual(local_llm_engine.get_second_reader_model(), "medgemma:27b")
 
-    def test_falls_back_to_best_without_medgemma(self):
+    def test_no_substitute_without_medgemma(self):
+        """The configured reader or nothing: never another model under MedGemma's evaluation."""
         with _clean_env(), _tags("exaone3.5:7.8b", "qwen2.5:7b"):
-            self.assertEqual(local_llm_engine.get_second_reader_model(), "exaone3.5:7.8b")
+            self.assertIsNone(local_llm_engine.get_second_reader_model())
+        with _clean_env(CLINLOOP_SECOND_READER_MODEL="medgemma:27b-q8"), _tags("medgemma:27b", "exaone3.5:7.8b"):
+            self.assertIsNone(local_llm_engine.get_second_reader_model())
 
     def test_env_override_when_installed(self):
         with _clean_env(CLINLOOP_SECOND_READER_MODEL="qwen2.5:7b"), _tags("exaone3.5:7.8b", "qwen2.5:7b", "medgemma:27b"):

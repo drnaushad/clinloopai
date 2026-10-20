@@ -16,7 +16,7 @@ from src.clinloop_engine.local_llm_engine import (
     generate_clinical_text,
 )
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
@@ -382,6 +382,61 @@ def get_local_llm_engine_status():
         status.pop(key, None)
     return status
 
+
+@app.get("/api/v1/models/registry", tags=["Local LLM Engine (On-Premise Ollama)"])
+def get_model_registry():
+    """The three model roles (text, second reader, vision): configured model, whether exactly that model
+    is installed (digest, declared capabilities), allowed use and fallback (none). Public like the
+    status above; no addresses."""
+    from src.clinloop_engine.model_registry import registry
+    return registry()
+
+
+# ── Public demo: rules and MedGemma 27B on fixed synthetic reports (demo mode only; see demo_reader.py) ──
+
+def _demo_case(case_id: str):
+    from src.clinloop_engine import demo_reader
+    if not demo.enabled():
+        raise HTTPException(status_code=404, detail="Not found")
+    c = demo_reader.case(case_id)
+    if c is None:
+        raise HTTPException(status_code=404, detail="No such synthetic report")
+    return demo_reader, c
+
+
+@app.get("/api/v1/demo/reports", tags=["Public demo"])
+def demo_reports():
+    from src.clinloop_engine import demo_reader
+    if not demo.enabled():
+        raise HTTPException(status_code=404, detail="Not found")
+    cat = demo_reader.catalog()
+    return {"note": cat["note"], "model": cat["model"],
+            "cases": [{k: c[k] for k in ("id", "title", "language", "teaches")} for c in cat["cases"]]}
+
+
+@app.get("/api/v1/demo/reports/{case_id}", tags=["Public demo"])
+def demo_report(case_id: str):
+    reader, c = _demo_case(case_id)
+    rules = reader.rules_for(c)
+    saved = dict(c["saved_reading"], items=reader.compare(rules, c["saved_reading"]["items"]))
+    return {"id": c["id"], "title": c["title"], "date": c["date"], "language": c["language"], "patient": c["patient"],
+            "text": c["text"], "teaches": c["teaches"], "rules": rules, "model_reading": saved,
+            "model": reader.catalog()["model"]}
+
+
+@app.post("/api/v1/demo/reports/{case_id}/live", tags=["Public demo"])
+def demo_report_live(case_id: str, request: Request):
+    reader, c = _demo_case(case_id)
+    visitor = request.headers.get("cf-connecting-ip") or (request.client.host if request.client else "")
+    try:
+        out = reader.live_read(c, visitor)
+    except reader.Busy as e:
+        raise HTTPException(status_code=429, detail=str(e))
+    if out.get("available"):
+        out["items"] = reader.compare(reader.rules_for(c), out["items"])
+    out["live_left_this_hour"] = reader.quota_left(visitor)
+    return out
+
 @app.post("/api/v1/local-llm/generate", tags=["Local LLM Engine (On-Premise Ollama)"])
 def generate_with_local_llm(req: LocalLLMRequest, user: User = Depends(require_role("clinician"))):
     """
@@ -613,7 +668,7 @@ if _WEB_ROOT and os.path.isdir(_WEB_ROOT):
         return page
 
     # Clean addresses ("/worklist"); "/worklist.html" keeps working through the static mount below
-    for _page in ("worklist", "patient", "quality", "governance", "imaging", "pilot", "analyse"):
+    for _page in ("worklist", "patient", "quality", "governance", "imaging", "pilot", "analyse", "reports"):
         if os.path.isfile(os.path.join(_WEB_ROOT, f"{_page}.html")):
             app.add_api_route(f"/{_page}", _page_route(_page), methods=["GET"], include_in_schema=False)
     app.mount("/", StaticFiles(directory=_WEB_ROOT, html=True), name="web")

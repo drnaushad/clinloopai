@@ -84,6 +84,29 @@ REPORT:
 """
 
 
+# The prompt already says not to list these; MedGemma 27B still quoted them in 14 of the 21 normal reports it
+# flagged (docs/SECOND_READER.md). Checked on the item's own exact quote, never for a critical finding.
+_NOT_ACTIONABLE = re.compile(
+    r"\b(?:no|not)\s+(?:routine\s+|further\s+|additional\s+|specific\s+)*(?:follow-?up|f/u|imaging|evaluation|"
+    r"work-?up|surveillance)\b|\bnot\s+(?:needed|required|necessary|indicated)\b"
+    r"|불필요|필요\s*(?:하지\s*)?없|"
+    r"if\s+clinically\s+indicated|as\s+clinically\s+indicated|if\s+(?:symptoms?|clinically)\b|"
+    r"\b(?:could|may|can|might)\s+be\s+considered|\boptional\b|필요\s*시|고려\s*가능|"
+    r"\bcontinue\s+(?:annual|routine|yearly)\s+(?:screening|surveillance)|\b(?:annual|routine)\s+screening\b", re.I)
+# ... unless the same quote also gives definite advice: "No follow-up was done; recommend CT in 3 months"
+_ADVICE = re.compile(r"\brecommend(?:ed|s)?\b|\bshould\s+(?:have|undergo)\b|권함|권고|요망", re.I)
+
+
+def _definite_advice(quote: str) -> bool:
+    """Advice not negated in its own clause: "recommend CT" yes, "no routine follow-up is recommended" no."""
+    for m in _ADVICE.finditer(quote):
+        before = re.split(r"[.;]", quote[:m.start()])[-1]
+        after = re.split(r"[.;]", quote[m.end():])[0]
+        if not re.search(r"\b(?:no|not)\b|불필요", before + " " + after, re.I):
+            return True
+    return False
+
+
 def mode() -> str:
     """off | silent | live (see the module docstring). The core profile never runs live."""
     from .profile import allows
@@ -116,9 +139,13 @@ def local_model() -> Optional[Callable[[str, str], Dict[str, Any]]]:
     if not _on_premise(OLLAMA_BASE_URL):
         logger.error("Second reader: the model server (CLINLOOP_OLLAMA_URL) is not on a private address: not used")
         return None
+    reader = get_second_reader_model()
+    if reader is None:      # never generate_clinical_text(model=None): that would pick another model
+        logger.error("Second reader: the configured model is not installed: not used")
+        return None
 
     def call(prompt: str, system: str) -> Dict[str, Any]:
-        return generate_clinical_text(prompt, model=get_second_reader_model(), temperature=0.0, max_tokens=600, system_prompt=system)
+        return generate_clinical_text(prompt, model=reader, temperature=0.0, max_tokens=600, system_prompt=system)
     return call
 
 
@@ -134,7 +161,7 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],
     parsed = _json_object(out["text"])
     if not isinstance(parsed.get("items"), list):
         return {"available": False, "reason": "answer was not the expected JSON", "items": [], "model": out.get("model")}
-    haystack, items, seen, dropped = _norm(clean), [], set(), 0
+    haystack, items, seen, dropped, not_actionable = _norm(clean), [], set(), 0, 0
     for it in parsed["items"]:
         if not isinstance(it, dict) or it.get("category") not in CATEGORIES:
             dropped += 1
@@ -143,11 +170,15 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],
         if len(quote) < 4 or _norm(quote) not in haystack:
             dropped += 1                      # no exact quote, no flag: nothing invented reaches a clinician
             continue
+        if it["category"] != "critical_finding" and _NOT_ACTIONABLE.search(quote) and not _definite_advice(quote):
+            not_actionable += 1                # the quote itself says "not needed", "if indicated" or routine screening
+            continue
         if it["category"] in seen:
             continue
         seen.add(it["category"])
         items.append({"category": it["category"], "quote": quote[:300], "reason": str(it.get("reason") or "")[:200]})
-    return {"available": True, "model": out.get("model"), "items": items, "dropped": dropped}
+    return {"available": True, "model": out.get("model"), "items": items, "dropped": dropped,
+            "not_actionable": not_actionable}
 
 
 def uncovered(items: List[Dict[str, Any]], opened: Set[str]) -> List[Dict[str, Any]]:
