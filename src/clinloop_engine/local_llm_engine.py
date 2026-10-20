@@ -151,14 +151,12 @@ def get_available_models() -> list:
 
 
 def get_second_reader_model() -> Optional[str]:
-    """Model for the report second reader: CLINLOOP_SECOND_READER_MODEL, else MedGemma 27B,
-    when installed; otherwise the general best model."""
-    models = get_available_models()
-    names = [m["name"] for m in models]
-    for want in (os.environ.get("CLINLOOP_SECOND_READER_MODEL"), SECOND_READER_DEFAULT):
-        if want and want in names:
-            return want
-    return names[0] if names else None
+    """Model for the report second reader: CLINLOOP_SECOND_READER_MODEL (default MedGemma 27B), only
+    when installed. No substitute: a reader evaluated as MedGemma must not quietly become another
+    model, so without it the second reader does not run (model_registry reports it unavailable)."""
+    want = os.environ.get("CLINLOOP_SECOND_READER_MODEL") or SECOND_READER_DEFAULT
+    names = [m["name"] for m in get_available_models()]
+    return want if want in names else None
 
 
 def get_best_model() -> Optional[str]:

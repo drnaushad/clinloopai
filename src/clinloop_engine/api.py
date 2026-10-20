@@ -382,6 +382,15 @@ def get_local_llm_engine_status():
         status.pop(key, None)
     return status
 
+
+@app.get("/api/v1/models/registry", tags=["Local LLM Engine (On-Premise Ollama)"])
+def get_model_registry():
+    """The three model roles (text, second reader, vision): configured model, whether exactly that model
+    is installed (digest, declared capabilities), allowed use and fallback (none). Public like the
+    status above; no addresses."""
+    from src.clinloop_engine.model_registry import registry
+    return registry()
+
 @app.post("/api/v1/local-llm/generate", tags=["Local LLM Engine (On-Premise Ollama)"])
 def generate_with_local_llm(req: LocalLLMRequest, user: User = Depends(require_role("clinician"))):
     """

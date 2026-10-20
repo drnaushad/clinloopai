@@ -128,3 +128,40 @@ python tests/report_eval/run_second_reader_eval.py tests/report_eval/second_read
   and invent more. Verified quotes make invented items harmless, but they cannot recover missed ones.
 - **Before going live:** run the hospital's model on its own de-identified reports in shadow mode,
   measure both numbers again against two specialists, and set the workload the clinicians accept.
+
+## MedGemma 27B itself (October 2026, synthetic reports)
+
+The figures above came from a stand-in model. This section is the real default reader, `medgemma:27b`
+(Q4_K_M, digest `58238ae3…`) on Ollama, with the production prompt (`sr-b042876ec2e5`) at temperature 0
+on an RTX A4500. Inputs, raw answers, rules output and hashes are in
+`tests/report_eval/second_reader/` (`medgemma27b_*.json`, `medgemma27b_manifest.json`).
+
+**Denominators.** All 243 reports got an answer (about 3 s each). The 180 development reports produced
+157 actionable items: 153 verified by exact quote, 4 dropped. "Normal" means the blind label expects no
+follow-up.
+
+| Set | Rule misses caught | Normal reports flagged |
+|---|---|---|
+| Development (100 real-style + 80 confirmation), as answered | 15/17 | 21/64 (33%) |
+| Same, with the not-actionable check below (not unbiased: designed from these reports) | 15/17 | 8/64 (12.5%) |
+| Held-out round 9 (63 reports), as answered | 0/1 | 2/20 |
+| Held-out round 9, with the check | 0/1 | 1/20 |
+
+**Why normal reports were flagged (21):**
+- 7 quoted the report's own "no follow-up needed" ("f/u 불필요");
+- 4 quoted conditional advice ("필요시", "as clinically indicated", "could be considered");
+- 3 quoted routine annual screening;
+- 4 were real clinical actions outside the rule catalogue (colonoscopy, tumour board, culture correlation);
+- 3 were findings with no action stated.
+
+The prompt already excludes the first three groups. The model quoted them anyway, so `read_report` now
+drops an item whose own exact quote says so, unless the same quote gives definite advice ("recommend
+CT …", "권함"). A critical finding is never dropped.
+
+**Misses.** Both development misses were OCR-damaged nodule reports ("1O mm s0lid", "9 rnm s0lid"),
+the same text the rules missed. The held-out set had a single rule miss, so it says little about
+sensitivity.
+
+**Limits.** These are synthetic reports labelled by their writers. This is software verification, not
+clinical validation. The flag rate on a hospital's own reports must be measured in silent mode before
+anyone uses live mode.
