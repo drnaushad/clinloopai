@@ -7,6 +7,9 @@ from src.clinloop_engine import public_model_gateway as g
 
 class TestPublicModelGateway(unittest.TestCase):
     def setUp(self):
+        available = patch.object(g, 'installed_model_names', return_value=set(g.PUBLIC_MODELS))
+        available.start()
+        self.addCleanup(available.stop)
         g._recent.clear()
         self.client = TestClient(g.app)
         self.case_id = g.reader.catalog()["cases"][0]["id"]
@@ -36,3 +39,27 @@ class TestPublicModelGateway(unittest.TestCase):
             r = self.client.post(self.path)
             self.assertEqual(r.status_code, 503)
             self.assertNotIn('secret', r.text)
+
+    def test_all_models_are_listed_without_clinical_validation_claim(self):
+        body = self.client.get('/api/v1/demo/models').json()
+        self.assertEqual(len(body['models']), 8)
+        self.assertFalse(body['validated_for_clinical_use'])
+
+    def test_selected_model_is_passed_without_substitution(self):
+        with patch.object(g, 'model_adapter', return_value='selected-adapter') as adapter, patch.object(g.reader, 'live_read', return_value={'available':True,'items':[]}) as read:
+            self.assertEqual(self.client.post(self.path+'?model=exaone3.5%3A7.8b').status_code, 200)
+            adapter.assert_called_once_with('exaone3.5:7.8b')
+            self.assertEqual(read.call_args.kwargs['model'], 'selected-adapter')
+
+    def test_arbitrary_or_missing_model_does_not_use_gpu_budget(self):
+        self.assertEqual(self.client.post(self.path+'?model=unknown').status_code, 400)
+        with patch.object(g, 'installed_model_names', return_value=set()):
+            self.assertEqual(self.client.post(self.path+'?model=medgemma:4b').status_code, 503)
+        self.assertEqual(len(g._recent), 0)
+
+    def test_adapter_uses_requested_model_and_shared_verification_prompt(self):
+        with patch('src.clinloop_engine.local_llm_engine.generate_clinical_text', return_value={'text':'{}','model':'exaone3.5:7.8b'}) as generate:
+            call = g.model_adapter('exaone3.5:7.8b')
+            call('Synthetic report prompt', 'Quoted evidence only')
+            self.assertEqual(generate.call_args.kwargs['model'], 'exaone3.5:7.8b')
+            self.assertEqual(generate.call_args.kwargs['system_prompt'], 'Quoted evidence only')

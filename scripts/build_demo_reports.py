@@ -27,6 +27,10 @@ SR = os.path.join(ROOT, "tests", "report_eval", "second_reader")
 #   model_misses a rule opens an obligation and the model raises nothing
 #   nothing      neither raises anything (the check removed a quoted "not needed", if any)
 PICKS = [
+    ("M005", "agree", "Synthetic colon biopsy: compare the saved MedGemma reading with pathology follow-up rules."),
+    ("M016", "nothing", "Synthetic gastric biopsy: the saved reading and rules raise no tracked obligation."),
+    ("M029", "agree", "Synthetic breast biopsy: compare pathology follow-up suggestions with the rules."),
+    ("N071", "nothing", "Synthetic colon polyp pathology: compare a saved reading on a case with no tracked obligation."),
     ("M008", "agree", "Acute subdural haematoma: the critical-finding rule and MedGemma agree."),
     ("M093", "agree", "Ascending aortic aneurysm with Korean-English advice: rule and MedGemma agree."),
     ("N057", "agree", "Pancreatic cyst with worrisome features: EUS work-up, rule and MedGemma agree."),

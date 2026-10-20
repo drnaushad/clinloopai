@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/svg+xml" href="icons/logo.svg">
 <meta name="theme-color" content="#0e7490">
-<title>Rules vs MedGemma</title>
+<title>Local model report reader — ClinLoop</title>
 <meta name="description" content="Public ClinLoop demo: deterministic follow-up rules and the MedGemma 27B second reader side by side on synthetic reports.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -36,6 +36,7 @@ h2 { font: 700 17px/1.3 var(--font-head); margin: 0 0 10px; }
 main { max-width: 1180px; margin: 0 auto; padding: 8px 16px 40px; display: grid; gap: 16px; grid-template-columns: 290px 1fr; }
 @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; min-width: 0; }
+#modelchoice { width: 100%; max-width: 100%; padding: 8px; margin-top: 6px; font: inherit; }
 .cases button { display: block; width: 100%; text-align: left; border: 1px solid var(--border); background: transparent; color: var(--text);
   border-radius: 10px; padding: 10px 12px; margin: 0 0 8px; font: inherit; cursor: pointer; }
 .cases button[aria-current="true"] { border-color: var(--accent); background: var(--accent-soft); }
@@ -62,8 +63,8 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--m
 <body>
 <header>
   <nav class="app-nav" aria-label="ClinLoop pages"></nav>
-  <h1>Rules vs MedGemma 27B</h1>
-  <p class="lede">Each synthetic report is read twice. ClinLoop's deterministic rules open follow-up obligations with deadlines. MedGemma 27B runs on our local GPU. View a saved reading or request a live re-read when the demo service is available. Anything it finds that no rule tracks goes to a clinician as a suggestion, never a decision.</p>
+  <h1>Compare local report readers</h1>
+  <p class="lede">Each synthetic report is read twice. ClinLoop's deterministic rules open follow-up obligations with deadlines. Choose MedGemma, EXAONE, or another installed local model for a research comparison. Different models may disagree or miss findings. View a saved reading or request a live re-read when the demo service is available. Anything it finds that no rule tracks goes to a clinician as a suggestion, never a decision.</p>
   <p class="banner" id="note">Synthetic reports only. Not for clinical use.</p>
 </header>
 <main>
@@ -75,7 +76,9 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--m
       <div><h2>Report</h2><pre class="report" id="report"></pre></div>
       <div>
         <h2>Rules</h2><div id="rules"></div>
-        <h2 style="margin-top:16px">MedGemma 27B second reader</h2><div id="model"></div>
+        <h2 style="margin-top:16px" id="modelheading">Saved MedGemma 27B reading</h2>
+        <p><label for="modelchoice">Live model</label> <select id="modelchoice" disabled><option value="medgemma:27b">MedGemma 27B</option></select></p>
+        <p class="meta">Input: the selected synthetic report text. Image uploads and unrestricted prompts are not enabled. Model suggestions require human review.</p><div id="model"></div>
         <p><button class="live" id="live" hidden>Re-read live on the GPU</button><span class="status" id="status"></span></p>
         <p class="meta" id="modelmeta"></p>
       </div>
@@ -109,7 +112,18 @@ async function connectLiveModel() {
     const url = new URL(config.base_url);
     if (url.protocol !== "https:" || url.username || url.password) return;
     const health = await fetch(url.origin + "/health", {signal: AbortSignal.timeout(8000), credentials: "omit"});
-    if (health.ok) liveBackend = url.origin;
+    if (health.ok) {
+      const registry = await fetch(url.origin + "/api/v1/demo/models", {credentials: "omit"});
+      if (!registry.ok) return;
+      const data = await registry.json();
+      const choice = $("modelchoice"); choice.replaceChildren();
+      for (const model of data.models.filter(m => m.installed)) {
+        const option = el("option", null, model.name + " — " + model.role);
+        option.value = model.name; choice.append(option);
+      }
+      if (!choice.options.length) return;
+      choice.disabled = false; liveBackend = url.origin;
+    }
   } catch (_) { /* Live service is optional; never block the saved readings. */ }
 }
 
@@ -132,9 +146,10 @@ function showReport(text, items) {
 }
 
 function showModel(reading, model) {
+  $("modelheading").textContent = (reading.source ? "Saved: " : "Live: ") + (reading.model || model.name);
   const box = $("model"); box.replaceChildren();
   if (!reading.available) { box.append(el("p", "empty", reading.reason || "No model reading.")); return; }
-  if (!reading.items.length) box.append(el("p", "empty", "No action items after verification."));
+  if (!reading.items.length) box.append(el("p", "empty", "No verified model items. This does not rule out a required follow-up; review the report and rules."));
   for (const it of reading.items) {
     const d = el("div", "item");
     d.append(el("span", "tag " + (it.agreement.startsWith("model only") ? "t-model" : "t-agree"), it.agreement),
@@ -147,7 +162,7 @@ function showModel(reading, model) {
   if (reading.not_actionable) extra.push(`${reading.not_actionable} quoted item(s) removed: the quote itself said not needed, conditional or routine screening`);
   if (reading.dropped) extra.push(`${reading.dropped} item(s) discarded: no exact quote`);
   if (extra.length) box.append(el("p", "meta", extra.join(". ") + "."));
-  $("modelmeta").textContent = `${reading.source || "live reading"} · ${reading.model || model.name} · ${model.quantization} · prompt ${model.prompt_version} · ${reading.read_at || ""}${reading.seconds ? " · " + reading.seconds + " s" : ""}`;
+  $("modelmeta").textContent = `${reading.source || "live reading"} · ${reading.model || model.name} · ${(!reading.model || reading.model === model.name) ? model.quantization : ""} · prompt ${model.prompt_version} · ${reading.read_at || ""}${reading.seconds ? " · " + reading.seconds + " s" : ""}`;
 }
 
 async function openCase(id) {
@@ -174,16 +189,20 @@ async function openCase(id) {
 
 $("live").addEventListener("click", async () => {
   if (!current || !liveBackend) return;
-  $("live").disabled = true; $("status").textContent = "MedGemma 27B is reading (a few seconds; longer if the model must load)…";
+  const requestedCase = current;
+  const selectedModel = $("modelchoice").value;
+  $("live").disabled = true; $("modelchoice").disabled = true;
+  $("status").textContent = selectedModel + " is reading. Large models may take longer or time out…";
   try {
-    const r = await fetch(`${liveBackend}/api/v1/demo/reports/${encodeURIComponent(current.id)}/live`, { method: "POST", credentials: "omit" });
+    const r = await fetch(`${liveBackend}/api/v1/demo/reports/${encodeURIComponent(requestedCase.id)}/live?model=${encodeURIComponent(selectedModel)}`, { method: "POST", credentials: "omit" });
     const body = await r.json();
+    if (!current || current.id !== requestedCase.id) return;
     if (!r.ok) { $("status").textContent = body.detail || "Busy. Please try later."; return; }
     showReport(current.text, body.items || []);
     showModel(body, current.model);
     $("status").textContent = `Live reading done. ${body.live_left_this_hour} live re-read(s) left this hour.`;
   } catch (e) { $("status").textContent = "The server did not answer."; }
-  finally { $("live").disabled = false; }
+  finally { $("live").disabled = false; $("modelchoice").disabled = false; }
 });
 
 (async () => {
@@ -202,6 +221,6 @@ $("live").addEventListener("click", async () => {
   if (d.cases.length) openCase(d.cases[0].id);
 })();
 </script>
-<script src="js/appnav.js?v=2026-10-20.2"></script>
+<script src="js/appnav.js?v=2026-10-20.3"></script>
 </body>
 </html>

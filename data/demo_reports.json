@@ -9,6 +9,114 @@
  },
  "cases": [
   {
+   "id": "M005",
+   "title": "Colonoscopic biopsy - sigmoid",
+   "date": "2026-01-15",
+   "language": "en",
+   "report_type": "pathology",
+   "patient": {
+    "age": 67,
+    "sex": "male",
+    "smoking": "former",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "SURGICAL PATHOLOGY REPORT\n\nSPECIMEN: Colon, sigmoid (25 cm from AV), endoscopic biopsy x4\nCLINICAL INFORMATION: 2.5 cm ulcerofungating mass at sigmoid colon. r/o malignancy.\n\nGROSS: Received in formalin labelled with the patient's name and \"sigmoid\", four tan-pink soft tissue fragments, 0.2-0.4 cm. Entirely submitted in one cassette.\n\nMICROSCOPIC: Sections show colonic mucosa infiltrated by irregular, cribriform glands lined by atypical columnar cells with enlarged hyperchromatic nuclei and dirty necrosis, invading into the lamina propria and muscularis mucosae.\n\nDIAGNOSIS:\nColon, sigmoid, endoscopic biopsy:\n  ADENOCARCINOMA, moderately differentiated.\n\nCOMMENT: MMR immunohistochemistry has been ordered and will be reported in an addendum.",
+   "teaches": "Synthetic colon biopsy: compare the saved MedGemma reading with pathology follow-up rules.",
+   "saved_reading": {
+    "available": true,
+    "items": [
+     {
+      "category": "abnormal_pathology",
+      "quote": "ADENOCARCINOMA, moderately differentiated.",
+      "reason": "Diagnosis of malignancy (adenocarcinoma) is reported."
+     }
+    ],
+    "dropped": 0,
+    "not_actionable": 0,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
+   "id": "M016",
+   "title": "Gastric endoscopic biopsy",
+   "date": "2026-02-05",
+   "language": "ko",
+   "report_type": "pathology",
+   "patient": {
+    "age": 55,
+    "sex": "female",
+    "smoking": "never",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "병리 진단 보고서\n\n검체: Stomach, antrum, endoscopic biopsy (2 pieces)\n임상 정보: 건강검진 EGD, antrum erosion.\n\n육안 소견: 0.2 cm 크기 tan soft tissue 2개, 전량 포매.\n\n진단:\nStomach, antrum, endoscopic biopsy:\n  Chronic gastritis, mild, with focal erosion.\n  - Helicobacter pylori: not identified (Giemsa stain).\n  - Intestinal metaplasia: absent.\n  - Dysplasia / malignancy: not identified.",
+   "teaches": "Synthetic gastric biopsy: the saved reading and rules raise no tracked obligation.",
+   "saved_reading": {
+    "available": true,
+    "items": [],
+    "dropped": 0,
+    "not_actionable": 0,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
+   "id": "M029",
+   "title": "Breast core needle biopsy",
+   "date": "2026-02-24",
+   "language": "en",
+   "report_type": "pathology",
+   "patient": {
+    "age": 62,
+    "sex": "female",
+    "smoking": "never",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "SURGICAL PATHOLOGY\n\nSpecimen: Left breast, 2 o'clock 3 cmFN, US-guided core needle biopsy (14G x 5)\nClinical: BI-RADS 4C mass, 1.4 cm.\n\nGross: Five cores, 1.0-1.6 cm, entirely submitted.\n\nDiagnosis:\nBreast, left, 2 o'clock, core needle biopsy:\n  INVASIVE CARCINOMA OF NO SPECIAL TYPE (ductal), Nottingham histologic grade 2 (tubules 3, nuclei 2, mitoses 1).\n  - Ductal carcinoma in situ, cribriform type, intermediate nuclear grade, present.\n  - Lymphovascular invasion: not identified.\n\nImmunohistochemistry: ER positive (90%, strong), PR positive (40%, moderate), HER2 1+ (negative), Ki-67 15%.\n\nRadiologic-pathologic concordance: concordant.",
+   "teaches": "Synthetic breast biopsy: compare pathology follow-up suggestions with the rules.",
+   "saved_reading": {
+    "available": true,
+    "items": [
+     {
+      "category": "abnormal_pathology",
+      "quote": "INVASIVE CARCINOMA OF NO SPECIAL TYPE (ductal)",
+      "reason": "Diagnosis of invasive breast cancer."
+     }
+    ],
+    "dropped": 0,
+    "not_actionable": 0,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
+   "id": "N071",
+   "title": "Surgical Pathology - Colon polyp",
+   "date": "2026-03-12",
+   "language": "en",
+   "report_type": "pathology",
+   "patient": {
+    "age": 54,
+    "sex": "male",
+    "smoking": "never",
+    "known_malignancy": false,
+    "immunocompromised": false
+   },
+   "text": "SURGICAL PATHOLOGY REPORT\nSPECIMEN: Sigmoid colon polyp, cold snare polypectomy.\nCLINICAL HISTORY: Screening colonoscopy, 6 mm sessile polyp; r/o adenoma vs hyperplastic polyp.\nGROSS: Received in formalin, a single tan polypoid fragment 0.6 x 0.4 x 0.3 cm, entirely submitted.\nMICROSCOPIC: Serrated crypts confined to the upper portion of the mucosa with normal basal proliferative zone. No dysplasia. No sessile serrated features.\nDIAGNOSIS:\nSigmoid colon, polypectomy: HYPERPLASTIC POLYP. Negative for dysplasia and malignancy.",
+   "teaches": "Synthetic colon polyp pathology: compare a saved reading on a case with no tracked obligation.",
+   "saved_reading": {
+    "available": true,
+    "items": [],
+    "dropped": 0,
+    "not_actionable": 0,
+    "read_at": "2026-10-20",
+    "source": "saved MedGemma 27B answer"
+   }
+  },
+  {
    "id": "M008",
    "title": "Brain CT non-contrast",
    "date": "2026-01-22",
