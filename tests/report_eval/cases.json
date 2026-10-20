@@ -19149,5 +19149,1679 @@
    "ultrasound",
    "fna"
   ]
+ },
+ {
+  "id": "R9-001",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen and pelvis with contrast",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 58,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "FINDINGS:\nLung bases: 7 mm solid nodule in the right lower lobe (series 3, image 12). No pleural effusion.\nLiver, spleen, pancreas, adrenals and kidneys unremarkable.\n\nIMPRESSION:\n1. No acute abdominal process.\n2. Incidental 7 mm right lower lobe nodule; see Fleischner recommendation below.\nRECOMMENDATION: CT chest in 6-12 months.",
+  "expected_rules": [
+   "R003"
+  ],
+  "expected_window_days": [
+   180,
+   365
+  ],
+  "rationale": "Fleischner 2017 single solid 6-8 mm, high risk: CT 6-12 mo.",
+  "tags": [
+   "lung-nodule",
+   "findings-section",
+   "incidental"
+  ]
+ },
+ {
+  "id": "R9-002",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT chest without contrast",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 66,
+   "sex": "female",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION:\nSolitary 11 mm solid nodule, left upper lobe, spiculated margin. Consider PET/CT or tissue sampling; alternatively CT in 3 months.",
+  "expected_rules": [
+   "R003"
+  ],
+  "expected_window_days": [
+   60,
+   120
+  ],
+  "rationale": "Fleischner >8 mm solid: CT 3 mo, PET/CT or tissue sampling.",
+  "tags": [
+   "lung-nodule",
+   "large"
+  ]
+ },
+ {
+  "id": "R9-003",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT chest",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 52,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "FINDINGS: 5 mm calcified granuloma in the right middle lobe. No other nodules.\nIMPRESSION: Benign calcified granuloma. No follow-up needed.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Calcified granuloma is benign.",
+  "tags": [
+   "benign",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-004",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT chest",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 70,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "COMPARISON: CT chest 2024-08-30.\nFINDINGS: 6 mm solid nodule in the left lower lobe is unchanged in size since 2024-08-30 (over 2 years).\nIMPRESSION: Stable 6 mm LLL nodule for more than 2 years, consistent with a benign process. No further follow-up is required.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Solid nodule stable >=2 years: no further follow-up (Fleischner).",
+  "tags": [
+   "stable",
+   "comparison",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-005",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT chest",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 64,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "COMPARISON: 2026-03-10.\nFINDINGS: The right upper lobe solid nodule now measures 10 mm, previously 6 mm.\nIMPRESSION: Interval growth of right upper lobe nodule (6 -> 10 mm), suspicious for malignancy. Recommend PET/CT and pulmonology referral.",
+  "expected_rules": [
+   "R046"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "Growing solid nodule: work-up.",
+  "tags": [
+   "growth",
+   "comparison"
+  ]
+ },
+ {
+  "id": "R9-006",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT chest",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 61,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 9 mm pure ground-glass nodule in the right upper lobe. Recommend CT at 6-12 months to confirm persistence, then every 2 years until 5 years.",
+  "expected_rules": [
+   "R003"
+  ],
+  "expected_window_days": [
+   180,
+   365
+  ],
+  "rationale": "Fleischner GGN >=6 mm: CT 6-12 mo.",
+  "tags": [
+   "ggn"
+  ]
+ },
+ {
+  "id": "R9-007",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT chest",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 59,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Part-solid nodule in the left upper lobe, 14 mm total with an 8 mm solid component, persistent since CT 4 months ago. Highly suspicious. Recommend PET/CT and tissue sampling.",
+  "expected_rules": [
+   "R046"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "Persistent part-solid with solid component >=6 mm: work-up.",
+  "tags": [
+   "part-solid",
+   "persistent"
+  ]
+ },
+ {
+  "id": "R9-008",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 47,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "Lung bases: tiny 3 mm nodule in the right lower lobe.\nIMPRESSION: No acute finding. 3 mm RLL nodule; in a low-risk patient no routine follow-up is recommended.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Solid <6 mm, low risk: no routine follow-up.",
+  "tags": [
+   "small",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-009",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Chest CT (OCR from scanned outside report)",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 63,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSI0N: 8 rnm s0lid nodu1e in the RLL. F/U chest CT in 6-12 rnonths recornrnended.",
+  "expected_rules": [
+   "R003"
+  ],
+  "expected_window_days": [
+   180,
+   365
+  ],
+  "rationale": "OCR noise; solid 8 mm high risk: CT 6-12 mo.",
+  "tags": [
+   "ocr",
+   "lung-nodule"
+  ]
+ },
+ {
+  "id": "R9-010",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT chest",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 55,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Right lower lobe 8 mm opacity, likely nodule.\n\nADDENDUM (2026-09-15 14:20): On review of the prior chest radiograph and the soft-tissue window, the \"nodule\" represents the nipple shadow / skin tag. There is no pulmonary nodule. The recommendation for follow-up CT is withdrawn.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Addendum withdraws the finding and the recommendation.",
+  "tags": [
+   "addendum",
+   "withdrawn",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-011",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Low-dose CT lung cancer screening",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 62,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Lung-RADS v2022 category 2 (benign appearance): 4 mm solid nodule RUL. Continue annual screening LDCT in 12 months.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Lung-RADS 2: annual screening, not a tracked rule.",
+  "tags": [
+   "lung-rads",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-012",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "LDCT screening",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 68,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "FINDINGS: New 5 mm solid nodule in the left lower lobe.\nIMPRESSION: Lung-RADS 3 (probably benign). Recommend 6-month LDCT.",
+  "expected_rules": [
+   "R034"
+  ],
+  "expected_window_days": [
+   150,
+   200
+  ],
+  "rationale": "Lung-RADS 3: 6-month LDCT.",
+  "tags": [
+   "lung-rads"
+  ]
+ },
+ {
+  "id": "R9-013",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "LDCT screening",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 71,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION:\nLung-RADS category: 4A.\nFinding: 10 mm solid nodule, right upper lobe.\nManagement: 3-month LDCT; PET/CT may be considered.",
+  "expected_rules": [
+   "R019"
+  ],
+  "expected_window_days": [
+   80,
+   100
+  ],
+  "rationale": "Lung-RADS 4A: 3-month LDCT.",
+  "tags": [
+   "lung-rads",
+   "category-separate-line"
+  ]
+ },
+ {
+  "id": "R9-014",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "LDCT screening",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 66,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 18 mm solid nodule in the right upper lobe with spiculation. Lung-RADS 4X. Recommend diagnostic chest CT with contrast and/or PET/CT, and tissue sampling; referral to thoracic oncology.",
+  "expected_rules": [
+   "R020"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "Lung-RADS 4X: work-up.",
+  "tags": [
+   "lung-rads"
+  ]
+ },
+ {
+  "id": "R9-015",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "저선량 폐암검진 CT",
+  "date": "2026-09-15",
+  "language": "ko",
+  "patient": {
+   "age": 64,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "판독소견:\n우상엽에 9 mm 크기의 고형 결절이 새로 관찰됨.\n\n결론:\nLung-RADS 4A. 3개월 후 저선량 CT 추적검사 권함.",
+  "expected_rules": [
+   "R019"
+  ],
+  "expected_window_days": [
+   80,
+   100
+  ],
+  "rationale": "Lung-RADS 4A in Korean: 3-month LDCT.",
+  "tags": [
+   "korean",
+   "lung-rads"
+  ]
+ },
+ {
+  "id": "R9-016",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT pulmonary angiography",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 45,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Acute pulmonary emboli in the right lower lobe segmental and subsegmental arteries. No right heart strain. Findings discussed with Dr. Kim by telephone at 10:05.",
+  "expected_rules": [
+   "R035"
+  ],
+  "expected_window_days": [
+   0,
+   0.05
+  ],
+  "rationale": "Acute PE is a critical finding.",
+  "tags": [
+   "critical",
+   "pe"
+  ]
+ },
+ {
+  "id": "R9-017",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT pulmonary angiography",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 72,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "CLINICAL HISTORY: Prior pulmonary embolism 2024, on apixaban. Dyspnoea.\nIMPRESSION: No pulmonary embolism. Mild bibasilar atelectasis.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Negated PE; history only.",
+  "tags": [
+   "negation",
+   "history",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-018",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT head without contrast",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 80,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Chronic left convexity subdural hematoma, 6 mm, unchanged from 2026-08-01. No acute hemorrhage. No midline shift.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Stable chronic SDH, no acute hemorrhage: not a new critical result.",
+  "tags": [
+   "chronic",
+   "stable",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-019",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT head without contrast",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 77,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Acute right parietal intraparenchymal hemorrhage, 2.5 x 2.0 cm, with surrounding edema. 3 mm leftward midline shift.",
+  "expected_rules": [
+   "R035"
+  ],
+  "expected_window_days": [
+   0,
+   0.05
+  ],
+  "rationale": "Acute ICH: critical.",
+  "tags": [
+   "critical",
+   "ich"
+  ]
+ },
+ {
+  "id": "R9-020",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Chest radiograph portable",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 56,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "Post right internal jugular central line placement.\nIMPRESSION: New small right apical pneumothorax. Line tip at the cavoatrial junction.",
+  "expected_rules": [
+   "R035"
+  ],
+  "expected_window_days": [
+   0,
+   0.05
+  ],
+  "rationale": "New iatrogenic pneumothorax: critical.",
+  "tags": [
+   "critical",
+   "pneumothorax"
+  ]
+ },
+ {
+  "id": "R9-021",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Chest radiograph portable",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 34,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "Right chest tube in place.\nIMPRESSION: Small residual right apical pneumothorax, decreased from yesterday. Chest tube unchanged.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Known, decreasing pneumothorax with tube in place: not a new critical finding.",
+  "tags": [
+   "known",
+   "improving",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-022",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen and pelvis",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 61,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "Post laparoscopic cholecystectomy yesterday.\nIMPRESSION: Small volume pneumoperitoneum, expected postoperative. No fluid collection. No contrast extravasation.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Expected postoperative free air without leak.",
+  "tags": [
+   "postoperative",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-023",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT aorta angiography",
+  "date": "2026-09-15",
+  "language": "ko",
+  "patient": {
+   "age": 59,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "결론:\n급성 대동맥 박리, Stanford A형. 상행대동맥에서 하행대동맥까지 내막 피판 관찰됨.\n담당의에게 즉시 유선 보고함.",
+  "expected_rules": [
+   "R035"
+  ],
+  "expected_window_days": [
+   0,
+   0.05
+  ],
+  "rationale": "Acute aortic dissection (Korean): critical.",
+  "tags": [
+   "korean",
+   "critical"
+  ]
+ },
+ {
+  "id": "R9-024",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "흉부 CT 혈관조영술",
+  "date": "2026-09-15",
+  "language": "ko",
+  "patient": {
+   "age": 50,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "결론: 폐색전증 소견 없음. 우하엽 경미한 무기폐.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Negated PE in Korean.",
+  "tags": [
+   "korean",
+   "negation",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-025",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 83,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Ruptured infrarenal abdominal aortic aneurysm, 7.1 cm, with large left retroperitoneal hematoma. Vascular surgery paged.",
+  "expected_rules": [
+   "R035",
+   "R045"
+  ],
+  "expected_window_days": [
+   0,
+   0.05
+  ],
+  "rationale": "Ruptured AAA: critical. By design the vascular referral (R045) also opens.",
+  "tags": [
+   "critical",
+   "aaa"
+  ]
+ },
+ {
+  "id": "R9-026",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT neck with contrast",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 52,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Incidental 1.8 cm hypodense nodule in the right thyroid lobe. Recommend thyroid ultrasound.",
+  "expected_rules": [
+   "R043"
+  ],
+  "expected_window_days": [
+   0,
+   90
+  ],
+  "rationale": "Incidental thyroid nodule >=1.5 cm on CT: US.",
+  "tags": [
+   "thyroid",
+   "incidental"
+  ]
+ },
+ {
+  "id": "R9-027",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT chest",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 57,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "FINDINGS: 1.1 cm left thyroid nodule. Lungs clear.\nIMPRESSION: No acute cardiopulmonary process. Small thyroid nodule, no further evaluation needed per ACR incidental thyroid guidance (age >=35, <1.5 cm, no suspicious features).",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "<1.5 cm at age >=35 without suspicious features: no US.",
+  "tags": [
+   "thyroid",
+   "below-threshold",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-028",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT neck",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 29,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 1.2 cm nodule in the left thyroid lobe. Recommend dedicated thyroid ultrasound.",
+  "expected_rules": [
+   "R043"
+  ],
+  "expected_window_days": [
+   0,
+   90
+  ],
+  "rationale": "Under 35: >=1 cm threshold.",
+  "tags": [
+   "thyroid",
+   "young"
+  ]
+ },
+ {
+  "id": "R9-029",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "PET/CT",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 64,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": true,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Known right lung adenocarcinoma, FDG avid (SUVmax 11.2). Incidental focal FDG uptake in the left thyroid lobe (SUVmax 6.4) without CT correlate. Thyroid ultrasound recommended.",
+  "expected_rules": [
+   "R043"
+  ],
+  "expected_window_days": [
+   0,
+   90
+  ],
+  "rationale": "Focal FDG-avid thyroid: US.",
+  "tags": [
+   "thyroid",
+   "pet"
+  ]
+ },
+ {
+  "id": "R9-030",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Thyroid ultrasound",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 45,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "Right lobe: 1.7 cm solid hypoechoic nodule, wider-than-tall, smooth margins, no echogenic foci. ACR TI-RADS 4 (TR4).\nIMPRESSION: TR4 nodule 1.7 cm meets criteria for FNA.",
+  "expected_rules": [
+   "R036"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "TR4 >=1.5 cm: FNA.",
+  "tags": [
+   "thyroid",
+   "tirads"
+  ]
+ },
+ {
+  "id": "R9-031",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Thyroid ultrasound",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 39,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "Left lobe: 0.8 cm spongiform nodule. ACR TI-RADS 1 (TR1).\nIMPRESSION: Benign-appearing spongiform nodule. No FNA or follow-up needed.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "TR1: no FNA, no follow-up.",
+  "tags": [
+   "thyroid",
+   "tirads",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-032",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "갑상선 초음파",
+  "date": "2026-09-15",
+  "language": "ko",
+  "patient": {
+   "age": 48,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "우엽에 1.3 cm 크기의 고형 저에코 결절, 미세석회화 동반, 경계 불규칙. K-TIRADS 5.\n결론: 세침흡인검사(FNA) 권함.",
+  "expected_rules": [
+   "R036"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "K-TIRADS 5 >=1 cm: FNA (Korean).",
+  "tags": [
+   "korean",
+   "thyroid"
+  ]
+ },
+ {
+  "id": "R9-033",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen with contrast",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 60,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 1.6 cm indeterminate left adrenal nodule (enhancing to 48 HU on portal venous phase only). Recommend adrenal protocol CT or chemical-shift MRI in 12 months.",
+  "expected_rules": [
+   "R037"
+  ],
+  "expected_window_days": [
+   330,
+   400
+  ],
+  "rationale": "Adrenal 1-2 cm indeterminate: 12 months.",
+  "tags": [
+   "adrenal"
+  ]
+ },
+ {
+  "id": "R9-034",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen without contrast",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 55,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 2.1 cm right adrenal nodule measuring -4 HU on unenhanced CT, consistent with a lipid-rich adenoma. No further imaging follow-up needed.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "<=10 HU: benign adenoma.",
+  "tags": [
+   "adrenal",
+   "benign",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-035",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 67,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 4.6 cm heterogeneous right adrenal mass. Malignancy cannot be excluded. Recommend endocrine surgery referral and biochemical evaluation.",
+  "expected_rules": [
+   "R038"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "Adrenal >=4 cm: specialist work-up.",
+  "tags": [
+   "adrenal",
+   "large"
+  ]
+ },
+ {
+  "id": "R9-036",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT chest abdomen pelvis (staging)",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 63,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": true,
+   "immunocompromised": false
+  },
+  "text": "History: breast cancer.\nIMPRESSION: New 1.4 cm left adrenal nodule, indeterminate, in this patient with breast cancer; metastasis not excluded. Recommend PET/CT or adrenal biopsy.",
+  "expected_rules": [
+   "R038"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "Adrenal >=1 cm with known cancer: work-up.",
+  "tags": [
+   "adrenal",
+   "known-cancer"
+  ]
+ },
+ {
+  "id": "R9-037",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "복부 CT",
+  "date": "2026-09-15",
+  "language": "ko",
+  "patient": {
+   "age": 58,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "결론: 좌측 부신에 1.5 cm 결절, 비조영 CT에서 28 HU로 지방성 선종 기준 미달. 12개월 후 부신 프로토콜 CT 추적 권함.",
+  "expected_rules": [
+   "R037"
+  ],
+  "expected_window_days": [
+   330,
+   400
+  ],
+  "rationale": "Indeterminate 1.5 cm adrenal (Korean): 12 months.",
+  "tags": [
+   "korean",
+   "adrenal"
+  ]
+ },
+ {
+  "id": "R9-038",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen with contrast",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 62,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 3.1 cm solid enhancing mass, interpolar left kidney (pre 32 HU, nephrographic 110 HU), suspicious for renal cell carcinoma. Urology referral recommended.",
+  "expected_rules": [
+   "R039"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "Solid enhancing renal mass: urology.",
+  "tags": [
+   "renal"
+  ]
+ },
+ {
+  "id": "R9-039",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 66,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 2.4 cm Bosniak IIF cystic lesion in the right kidney with minimally thickened septa. Recommend CT or MRI follow-up at 6 months.",
+  "expected_rules": [
+   "R040"
+  ],
+  "expected_window_days": [
+   150,
+   230
+  ],
+  "rationale": "Bosniak IIF: 6 months.",
+  "tags": [
+   "renal",
+   "bosniak"
+  ]
+ },
+ {
+  "id": "R9-040",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 71,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Multiple simple renal cysts bilaterally, largest 4.2 cm (Bosniak I). No follow-up needed.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Simple cysts: no follow-up.",
+  "tags": [
+   "renal",
+   "benign",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-041",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 44,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 1.9 cm right renal lesion containing macroscopic fat (-45 HU), consistent with angiomyolipoma. No further workup.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "AML with macroscopic fat: benign.",
+  "tags": [
+   "renal",
+   "aml",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-042",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "복부 CT",
+  "date": "2026-09-15",
+  "language": "ko",
+  "patient": {
+   "age": 69,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "결론: 좌측 신장 하극에 2.8 cm 크기의 조영증강되는 고형 종괴, 신세포암 가능성 높음. 비뇨의학과 진료 권함.",
+  "expected_rules": [
+   "R039"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "Solid enhancing renal mass (Korean): urology.",
+  "tags": [
+   "korean",
+   "renal"
+  ]
+ },
+ {
+  "id": "R9-043",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "MRI abdomen",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 65,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 1.2 cm unilocular cystic lesion in the pancreatic body without main duct dilatation or mural nodule, likely side-branch IPMN. Recommend MRI/MRCP in 2 years.",
+  "expected_rules": [
+   "R041"
+  ],
+  "expected_window_days": [
+   600,
+   800
+  ],
+  "rationale": "Pancreatic cyst <1.5 cm: 2 years.",
+  "tags": [
+   "pancreas"
+  ]
+ },
+ {
+  "id": "R9-044",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 70,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 2.8 cm cystic lesion in the pancreatic head with an enhancing 6 mm mural nodule and main pancreatic duct dilated to 8 mm. Worrisome features. Recommend EUS and pancreatic surgery consultation.",
+  "expected_rules": [
+   "R042"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "Worrisome features: EUS/specialist.",
+  "tags": [
+   "pancreas",
+   "worrisome"
+  ]
+ },
+ {
+  "id": "R9-045",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "복부 MRI",
+  "date": "2026-09-15",
+  "language": "ko",
+  "patient": {
+   "age": 62,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "결론: 췌장 미부에 1.8 cm 크기의 낭성 병변, 주췌관 확장이나 벽결절 없음. 1년 후 MRI/MRCP 추적 권함.",
+  "expected_rules": [
+   "R041"
+  ],
+  "expected_window_days": [
+   330,
+   400
+  ],
+  "rationale": "Pancreatic cyst 1.5-2.5 cm: 1 year (Korean).",
+  "tags": [
+   "korean",
+   "pancreas"
+  ]
+ },
+ {
+  "id": "R9-046",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 74,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Infrarenal abdominal aortic aneurysm, maximal diameter 4.2 cm, no periaortic stranding. Incidental simple left renal cyst.",
+  "expected_rules": [
+   "R044"
+  ],
+  "expected_window_days": [
+   300,
+   400
+  ],
+  "rationale": "AAA 4.0-4.4 cm: 1 year.",
+  "tags": [
+   "aaa",
+   "multi-finding"
+  ]
+ },
+ {
+  "id": "R9-047",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 78,
+   "sex": "female",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Infrarenal AAA measuring 5.2 cm. Recommend vascular surgery referral.",
+  "expected_rules": [
+   "R045"
+  ],
+  "expected_window_days": [
+   0,
+   14
+  ],
+  "rationale": "AAA >=5.0 cm in a woman: vascular surgery.",
+  "tags": [
+   "aaa",
+   "female-threshold"
+  ]
+ },
+ {
+  "id": "R9-048",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Ultrasound aorta",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 69,
+   "sex": "male",
+   "smoking": "current",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Ectatic infrarenal aorta measuring 2.7 cm. Surveillance ultrasound in 5 years.",
+  "expected_rules": [
+   "R044"
+  ],
+  "expected_window_days": [
+   1500,
+   2000
+  ],
+  "rationale": "2.5-2.9 cm: 5 years.",
+  "tags": [
+   "aaa",
+   "ectasia"
+  ]
+ },
+ {
+  "id": "R9-049",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Diagnostic mammogram and ultrasound",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 54,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 1.4 cm irregular spiculated mass at 10 o'clock left breast. BI-RADS 5: highly suggestive of malignancy. Ultrasound-guided core biopsy recommended.",
+  "expected_rules": [
+   "R018"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "BI-RADS 5: tissue diagnosis.",
+  "tags": [
+   "breast"
+  ]
+ },
+ {
+  "id": "R9-050",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Screening mammogram",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 48,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Scattered fibroglandular densities. Benign calcifications. BI-RADS 2: benign. Routine annual screening.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "BI-RADS 2: routine.",
+  "tags": [
+   "breast",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-051",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "유방 초음파",
+  "date": "2026-09-15",
+  "language": "ko",
+  "patient": {
+   "age": 46,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "결론: 우측 유방 2시 방향 1.1 cm 불규칙한 저에코 종괴. BI-RADS 카테고리 4B. 초음파 유도하 조직검사 권함.",
+  "expected_rules": [
+   "R018"
+  ],
+  "expected_window_days": [
+   0,
+   30
+  ],
+  "rationale": "BI-RADS 4B (Korean): biopsy.",
+  "tags": [
+   "korean",
+   "breast"
+  ]
+ },
+ {
+  "id": "R9-052",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Chest radiograph PA/lateral",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 62,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Right lower lobe consolidation consistent with pneumonia. Recommend follow-up chest radiograph in 6-8 weeks after treatment to document resolution.",
+  "expected_rules": [
+   "R033"
+  ],
+  "expected_window_days": [
+   42,
+   56
+  ],
+  "rationale": "Follow-up CXR after pneumonia in a former smoker.",
+  "tags": [
+   "recommended-imaging",
+   "cxr"
+  ]
+ },
+ {
+  "id": "R9-053",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "CT abdomen",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 53,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 1.6 cm indeterminate hypoenhancing lesion in hepatic segment 7, too small to characterize further on this single-phase study. Recommend contrast-enhanced liver MRI within 3 months.",
+  "expected_rules": [
+   "R031"
+  ],
+  "expected_window_days": [
+   60,
+   100
+  ],
+  "rationale": "Radiologist-recommended MRI, 3 months.",
+  "tags": [
+   "recommended-imaging",
+   "liver"
+  ]
+ },
+ {
+  "id": "R9-054",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Pelvic ultrasound",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 34,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 3.0 cm simple-appearing left ovarian cyst in a premenopausal woman, O-RADS US 2. No follow-up imaging needed.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Simple cyst <5 cm premenopausal: no follow-up.",
+  "tags": [
+   "ovary",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-055",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "간 초음파",
+  "date": "2026-09-15",
+  "language": "ko",
+  "patient": {
+   "age": 57,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "결론: 간 S6에 1.4 cm 크기의 경계가 불분명한 저에코 결절. 3개월 후 역동적 간 MRI 권함.",
+  "expected_rules": [
+   "R031"
+  ],
+  "expected_window_days": [
+   60,
+   100
+  ],
+  "rationale": "Recommended liver MRI in 3 months (Korean).",
+  "tags": [
+   "korean",
+   "recommended-imaging"
+  ]
+ },
+ {
+  "id": "R9-056",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Liver ultrasound",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 60,
+   "sex": "male",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: Hepatic steatosis. 1.0 cm hemangioma in segment 6, typical appearance, stable since 2023. No follow-up needed.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Stable typical hemangioma.",
+  "tags": [
+   "benign",
+   "stable",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-057",
+  "set": "r9",
+  "report_type": "radiology",
+  "title": "Brain MRI",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 41,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "IMPRESSION: 9 mm enhancing extra-axial lesion along the left frontal convexity with dural tail, most consistent with a meningioma. No mass effect. Recommend follow-up MRI brain in 12 months.",
+  "expected_rules": [
+   "R031"
+  ],
+  "expected_window_days": [
+   330,
+   400
+  ],
+  "rationale": "Recommended MRI in 12 months.",
+  "tags": [
+   "recommended-imaging",
+   "brain"
+  ]
+ },
+ {
+  "id": "R9-058",
+  "set": "r9",
+  "report_type": "pathology",
+  "title": "Surgical pathology: breast core biopsy",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 54,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "DIAGNOSIS: Left breast, 10 o'clock, ultrasound-guided core biopsy: Invasive ductal carcinoma, Nottingham grade 2. ER positive, PR positive, HER2 equivocal (2+); FISH pending.",
+  "expected_rules": [
+   "R009"
+  ],
+  "expected_window_days": [
+   0,
+   7
+  ],
+  "rationale": "Malignant pathology: notify and refer.",
+  "tags": [
+   "pathology",
+   "malignant"
+  ]
+ },
+ {
+  "id": "R9-059",
+  "set": "r9",
+  "report_type": "pathology",
+  "title": "Surgical pathology: breast core biopsy",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 31,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "DIAGNOSIS: Right breast, core biopsy: Fibroadenoma. Negative for atypia and malignancy. Concordant with imaging.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Benign concordant pathology.",
+  "tags": [
+   "pathology",
+   "benign",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-060",
+  "set": "r9",
+  "report_type": "pathology",
+  "title": "Cervical biopsy",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 36,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "DIAGNOSIS: Cervix, 12 o'clock biopsy: High-grade squamous intraepithelial lesion (HSIL; CIN 3). Negative for invasive carcinoma.",
+  "expected_rules": [
+   "R009"
+  ],
+  "expected_window_days": [
+   0,
+   7
+  ],
+  "rationale": "HSIL/CIN3 needs treatment referral.",
+  "tags": [
+   "pathology",
+   "premalignant"
+  ]
+ },
+ {
+  "id": "R9-061",
+  "set": "r9",
+  "report_type": "pathology",
+  "title": "위 내시경 조직검사",
+  "date": "2026-09-15",
+  "language": "ko",
+  "patient": {
+   "age": 66,
+   "sex": "male",
+   "smoking": "former",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "진단: 위 전정부, 내시경 생검: 선암 (adenocarcinoma), 중등도 분화.",
+  "expected_rules": [
+   "R009"
+  ],
+  "expected_window_days": [
+   0,
+   7
+  ],
+  "rationale": "Gastric adenocarcinoma (Korean).",
+  "tags": [
+   "korean",
+   "pathology",
+   "malignant"
+  ]
+ },
+ {
+  "id": "R9-062",
+  "set": "r9",
+  "report_type": "pathology",
+  "title": "Gastric biopsy",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 44,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "DIAGNOSIS: Stomach, antrum, biopsy: Mild chronic inactive gastritis. Helicobacter pylori immunostain negative. No intestinal metaplasia, dysplasia or malignancy.",
+  "expected_rules": [],
+  "expected_window_days": null,
+  "rationale": "Mild chronic gastritis, no dysplasia: no obligation.",
+  "tags": [
+   "pathology",
+   "benign",
+   "no-rule"
+  ]
+ },
+ {
+  "id": "R9-063",
+  "set": "r9",
+  "report_type": "pathology",
+  "title": "Breast core biopsy",
+  "date": "2026-09-15",
+  "language": "en",
+  "patient": {
+   "age": 51,
+   "sex": "female",
+   "smoking": "never",
+   "known_malignancy": false,
+   "immunocompromised": false
+  },
+  "text": "DIAGNOSIS: Left breast, stereotactic core biopsy of calcifications: Atypical ductal hyperplasia. Recommend surgical excision.",
+  "expected_rules": [
+   "R009"
+  ],
+  "expected_window_days": [
+   0,
+   7
+  ],
+  "rationale": "ADH on core biopsy: surgical referral.",
+  "tags": [
+   "pathology",
+   "atypia"
+  ]
  }
 ]

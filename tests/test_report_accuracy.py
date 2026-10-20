@@ -401,6 +401,99 @@ class TestRound8BlindFindings(unittest.TestCase):
         self.assertIsNone(_communication_done("Please ensure this is called to the referring doctor."))
 
 
+class TestRound9BlindFindings(unittest.TestCase):
+    """Round 9 (October 2026): a history line raising a critical alert, an addendum retracting a nodule,
+    OCR's '1' for 'l'. Re-worded synthetic examples."""
+
+    def test_history_sentence_is_not_a_critical_finding(self):
+        self.assertEqual(critical("INDICATION: Known pulmonary embolism 2025 on rivaroxaban, new chest pain.\n"
+                                  "IMPRESSION: No pulmonary embolism. No acute aortic syndrome."), [])
+        self.assertEqual(rules("CLINICAL HISTORY: Prior PE, on warfarin.\nIMPRESSION: Negative for PE.",
+                               title="CT pulmonary angiography"), set())
+
+    def test_critical_finding_after_the_history_sentence_is_still_read(self):
+        """Fail toward a human: only the history sentence itself is skipped."""
+        self.assertIn("pneumothorax", critical("Clinical history: fall from ladder. Large right pneumothorax with mediastinal shift."))
+        self.assertIn("pneumothorax", critical("HISTORY: chest trauma. IMPRESSION: Right tension pneumothorax."))
+
+    def test_addendum_that_retracts_the_nodule_removes_it(self):
+        self.assertEqual(rules("IMPRESSION: 7 mm opacity in the left lower lobe, likely a nodule.\n"
+                               "ADDENDUM: Reviewed with the lateral view: the nodule represents the nipple shadow. "
+                               "No follow-up is needed.", title="CT chest", smoking="77176002"), set())
+        self.assertEqual(rules("IMPRESSION: 9 mm right upper lobe nodule. Recommend CT in 3 months.\n"
+                               "ADDENDUM: On thin-section review there is no pulmonary nodule; this was a vessel seen end-on. "
+                               "Recommendation withdrawn.", title="CT chest", smoking="77176002"), set())
+
+    def test_addendum_without_retraction_keeps_the_nodule(self):
+        self.assertIn("R003", rules("IMPRESSION: 7 mm right lower lobe solid nodule.\n"
+                                    "ADDENDUM: No new nodules compared with the outside study.",
+                                    title="CT chest", smoking="77176002"))
+        # Two nodules and an unspecific retraction: it cannot tell which one, so both stay for a person to review
+        self.assertIn("R003", rules("IMPRESSION: 7 mm right lower lobe nodule and 8 mm left upper lobe nodule.\n"
+                                    "ADDENDUM: The nodule represents a vessel.", title="CT chest", smoking="77176002"))
+
+    def test_ocr_one_for_l_in_finding_words(self):
+        from src.clinloop_engine.radiology import clean_report_text
+        self.assertEqual(clean_report_text("so1id nodu1e, 1eft 1obe"), "solid nodule, left lobe")
+        cleaned = clean_report_text("8 rnm s0lid nodu1e RLL. F/U chest CT in 6-12 rnonths recornrnended. Fle1schner.")
+        for word in ("8 mm", "solid nodule", "6-12 months", "recommended", "Fleischner"):
+            self.assertIn(word, cleaned)
+        self.assertIn("R003", rules("IMPRESSI0N: 7 rnm s0lid nodu1e in the RUL. F/U CT in 6-12 rnonths.",
+                                    title="CT chest", smoking="77176002"))
+
+
+class TestRealChestRadiographNegation(unittest.TestCase):
+    """Found on 3,927 real de-identified chest radiograph reports (Open-i, NLM): negated lists read as
+    critical findings, and a missed hydropneumothorax. Re-worded examples; both directions checked."""
+
+    def test_negated_lists_are_not_critical(self):
+        for text in ("The lungs are clear of focal airspace disease, pneumothorax, or pleural effusion.",
+                     "Lungs grossly clear without focal opacity, pleural effusion, pneumothorax. Bones intact.",
+                     "Negative for focal consolidation, pleural effusion, pneumothorax. No fracture.",
+                     "No evidence of focal airspace consolidation large pleural effusion or pneumothorax."):
+            self.assertEqual(critical(text), [], text)
+
+    def test_present_pneumothorax_after_a_list_is_still_critical(self):
+        for text in ("No consolidation, large right pneumothorax.",
+                     "No effusion, consolidation, right pneumothorax measuring 2 cm.",
+                     "No consolidation, pleural effusion, pneumothorax with mediastinal shift is present.",
+                     "Lungs clear of consolidation. Small right pneumothorax."):
+            self.assertIn("pneumothorax", critical(text), text)
+
+    def test_hydropneumothorax_is_critical(self):
+        self.assertIn("pneumothorax", critical("Large left hydropneumothorax with collapse of the left lung."))
+
+
+class TestRadiographNodules(unittest.TestCase):
+    """DRAFT pending clinician review. A nodule on a radiograph is characterised by CT first (Fleischner 2017
+    covers CT-detected nodules); a solid nodule stable for two years or more needs nothing."""
+
+    def _days(self, text, title):
+        when = datetime(2026, 9, 1)
+        res = [{"resourceType": "Patient", "id": "A", "gender": "male", "birthDate": "1960-03-01"},
+               {"resourceType": "DiagnosticReport", "id": "r", "status": "final", "category": [{"coding": [{"code": "RAD"}]}],
+                "code": {"text": title}, "subject": {"reference": "Patient/A"},
+                "effectiveDateTime": "2026-09-01T09:00:00Z", "conclusion": text}]
+        events, _ = bundle_to_events(res)
+        dets = ClinLoopDetector(evaluation_time=when + timedelta(days=1)).process_patient("t", "A", events.get("A", []))
+        return {d.rule_id: round((datetime.fromisoformat(d.deadline) - datetime.fromisoformat(d.trigger_time)).days)
+                for d in dets if d.rule_id in REPORT_RULES}
+
+    def test_radiograph_nodule_gets_ct_within_30_days(self):
+        self.assertEqual(self._days("Right upper lobe nodule measuring 8 mm.", "Chest radiograph PA and lateral"), {"R003": 30})
+
+    def test_ct_nodule_still_follows_fleischner(self):
+        self.assertGreater(self._days("Right upper lobe nodule measuring 8 mm.", "CT chest without contrast")["R003"], 30)
+
+    def test_stable_years_ago_wording(self):
+        self.assertEqual(self._days("11 mm right lower lobe nodule, unchanged from the examination 6 years ago.",
+                                    "Chest radiograph"), {})
+        self.assertEqual(self._days("9 mm left upper lobe nodule, unchanged from 1 year ago.", "Chest radiograph"), {"R003": 30})
+
+    def test_calcified_radiograph_nodule_needs_nothing(self):
+        self.assertEqual(self._days("6 mm calcified granuloma in the right lower lobe.", "Chest radiograph"), {})
+
+
 class TestBlindCaseSets(unittest.TestCase):
     """The 270 blind-written cases (docs/ACCURACY_EVALUATION.md) stay above a floor: a change that loses
     findings or adds false alerts fails CI."""

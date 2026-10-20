@@ -30,7 +30,7 @@
                   "(?:뇌동맥|경동맥|기저동맥|척추동맥|M1|M2)[^.]{0,20}?급성\\s*폐색"]},
     {"id": "pneumothorax", "category": 1, "window_minutes": 60,
      "label": {"en": "Pneumothorax (new)", "ko": "기흉"},
-     "patterns": ["(?:tension )?pneumothorax", "기흉"]},
+     "patterns": ["(?:tension )?(?:hydro)?pneumothorax", "기흉"]},
     {"id": "free_air", "category": 1, "window_minutes": 60,
      "label": {"en": "Free intraperitoneal air", "ko": "복강내 유리 공기"},
      "patterns": ["pneumoperitoneum", "free (?:intraperitoneal )?air", "기복증", "복강내\\s*유리\\s*공기"]},
