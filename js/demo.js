@@ -369,54 +369,24 @@
 
   // ── banner, sign-in, patient list ─────────────────────────────────────────
   function run() {
-    var ko = (document.documentElement.lang || '').indexOf('ko') === 0;
-    var banner = document.createElement('div');
-    banner.setAttribute('role', 'note');
-    banner.id = 'clinloop-demo-banner';
-    banner.style.cssText = 'background:#7c2d12;color:#fff7ed;padding:8px 16px;font:600 13px/1.4 system-ui,sans-serif;' +
-      'text-align:center;position:relative;z-index:1000;overflow-wrap:anywhere;';
-    var practice = demo.static && window.CLINLOOP_PRACTICE;
-    var text = document.createElement('span');
-    text.textContent = practice && practice.on()
-      ? (ko ? '연습 모드: 합성(가상) 환자로 모든 기능을 직접 해 볼 수 있습니다. 변경 내용은 이 브라우저에만 저장되며 어디에도 전송되지 않습니다. 실제 환자 정보를 입력하지 마십시오.'
-            : 'Practice mode: try every step on synthetic patients. Changes stay in this browser and are never sent anywhere. Do not enter real patient information.')
-      : ko
-        ? (demo.static ? '공개 데모: 합성(가상) 환자만 · 읽기 전용 스냅샷 · 실제 환자 정보를 입력하지 마십시오'
-                       : '공개 데모: 합성(가상) 환자만 · 읽기 전용 · 재시작 시 초기화 · 실제 환자 정보를 입력하지 마십시오')
+    if (!demo.static) {
+      var ko = (document.documentElement.lang || '').indexOf('ko') === 0;
+      var banner = document.createElement('div');
+      banner.setAttribute('role', 'note');
+      banner.id = 'clinloop-demo-banner';
+      banner.style.cssText = 'background:#7c2d12;color:#fff7ed;padding:8px 16px;font:600 13px/1.4 system-ui,sans-serif;' +
+        'text-align:center;position:relative;z-index:1000;overflow-wrap:anywhere;';
+      banner.textContent = ko
+        ? '공개 데모: 합성(가상) 환자만 · 읽기 전용 · 재시작 시 초기화 · 실제 환자 정보를 입력하지 마십시오'
         : demo.note;
-    banner.appendChild(text);
-    if (practice) {
-      var ctl = document.createElement('span');
-      ctl.style.cssText = 'display:inline-flex;gap:8px;margin-left:10px;flex-wrap:wrap;vertical-align:middle;';
-      function btn(label, onClick) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.textContent = label;
-        b.style.cssText = 'font:600 12px/1 system-ui,sans-serif;padding:6px 10px;min-height:28px;border-radius:6px;cursor:pointer;' +
-          'border:1px solid #fed7aa;background:#fff7ed;color:#7c2d12;';
-        b.addEventListener('click', onClick);
-        ctl.appendChild(b);
-      }
-      if (practice.on()) {
-        btn(ko ? '처음 상태로 되돌리기' : 'Reset practice', function () {
-          if (window.confirm(ko ? '연습 중 변경한 내용을 모두 지웁니다.' : 'Clear every change made in practice mode?')) {
-            practice.reset(); window.location.reload();
-          }
-        });
-        btn(ko ? '읽기 전용으로 보기' : 'View read-only', function () { practice.setOn(false); window.location.reload(); });
-      } else {
-        btn(ko ? '연습 모드 켜기' : 'Turn on practice mode', function () { practice.setOn(true); window.location.reload(); });
-      }
-      banner.appendChild(ctl);
+      document.body.insertBefore(banner, document.body.firstChild);
     }
-    document.body.insertBefore(banner, document.body.firstChild);
 
     if (demo.static) {
       window.fetch(window.CLINLOOP_API_BASE.replace(STATIC_PATH, '') + '/demo/api/index.json')
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (index) {
           if (!index) return;
-          text.textContent += ko ? ' · 생성 ' + index.built_at.slice(0, 10) : ' Snapshot of ' + index.built_at.slice(0, 10) + '.';
           var input = document.getElementById('patient');
           if (input && index.patients) {          // patient page: offer the demo patients
             var list = document.createElement('datalist');

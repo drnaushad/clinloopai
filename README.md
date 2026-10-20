@@ -570,8 +570,8 @@ The same rules as the server apply. For example, an urgent real miss needs a saf
 cannot be acknowledged twice, and closing needs evidence. Each action appears in the loop's audit
 trail.
 
-Changes are kept **only in this browser** (local storage) until "Reset practice" in the banner. They
-are never sent anywhere. "View read-only" turns practice off.
+Changes are kept **only in this browser** (local storage) and are never sent anywhere.
+The public website does not display the practice banner, snapshot date, reset button or read-only toggle.
 
 Data import, imaging upload, pilot sampling and approving the critical-finding list need a real server
 and say so.
