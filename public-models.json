@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "base_url": "https://electricity-familiar-tower-amsterdam.trycloudflare.com",
+  "model": "medgemma:27b",
+  "scope": "fixed synthetic reports only",
+  "temporary_tunnel": true
+}

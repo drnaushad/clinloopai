@@ -83,6 +83,9 @@ def build() -> Dict[str, int]:
                      "/api/v1/pilot/metrics", "/api/v1/pilot/queue", "/api/v1/pilot/safety-referrals", "/api/v1/users",
                      "/api/v1/quality/second-reader"):
             save(path)
+        reports = save("/api/v1/demo/reports") or {}
+        for report in reports.get("cases", []):
+            save("/api/v1/demo/reports/" + report["id"])
         for by in ("rule", "language", "age_group", "sex"):
             save("/api/v1/metrics/open-loop-rate", {"stratify_by": by})
         save("/api/v1/quality/second-reader/suggestions", {"pending": "true"})   # the quality team only: a viewer's 403

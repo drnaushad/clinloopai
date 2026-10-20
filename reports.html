@@ -26,6 +26,8 @@
   --shadow: none; } }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--font-body); }
+.app-nav { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.app-nav a { color: var(--accent); font-size: 14px; }
 header { padding: 20px 16px 8px; max-width: 1180px; margin: 0 auto; }
 h1 { font: 700 26px/1.2 var(--font-head); margin: 0 0 6px; }
 h2 { font: 700 17px/1.3 var(--font-head); margin: 0 0 10px; }
@@ -59,8 +61,9 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--m
 </head>
 <body>
 <header>
+  <nav class="app-nav" aria-label="ClinLoop pages"></nav>
   <h1>Rules vs MedGemma 27B</h1>
-  <p class="lede">Each synthetic report is read twice. ClinLoop's deterministic rules open follow-up obligations with deadlines. MedGemma 27B, running on this server's GPU, re-reads the report as a second reader. Anything it finds that no rule tracks goes to a clinician as a suggestion, never a decision.</p>
+  <p class="lede">Each synthetic report is read twice. ClinLoop's deterministic rules open follow-up obligations with deadlines. MedGemma 27B runs on our local GPU. View a saved reading or request a live re-read when the demo service is available. Anything it finds that no rule tracks goes to a clinician as a suggestion, never a decision.</p>
   <p class="banner" id="note">Synthetic reports only. Not for clinical use.</p>
 </header>
 <main>
@@ -84,6 +87,31 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--m
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 let current = null;
+let liveBackend = null;
+
+async function getReport(path) {
+  // The same catalogue is available from a demo API or the static snapshot.
+  try {
+    const r = await fetch(path);
+    if (r.ok && (r.headers.get("content-type") || "").includes("application/json")) return r;
+  } catch (_) { /* saved synthetic readings remain available without a backend */ }
+  let hash = 0x811c9dc5;
+  for (const b of new TextEncoder().encode("/" + path)) hash = Math.imul(hash ^ b, 0x01000193) >>> 0;
+  return fetch("demo/api/" + hash.toString(16).padStart(8, "0") + ".json");
+}
+
+async function connectLiveModel() {
+  try {
+    const r = await fetch("public-models.json", {cache: "no-store"});
+    if (!r.ok) return;
+    const config = await r.json();
+    if (!config.enabled) return;
+    const url = new URL(config.base_url);
+    if (url.protocol !== "https:" || url.username || url.password) return;
+    const health = await fetch(url.origin + "/health", {signal: AbortSignal.timeout(8000), credentials: "omit"});
+    if (health.ok) liveBackend = url.origin;
+  } catch (_) { /* Live service is optional; never block the saved readings. */ }
+}
 
 function showReport(text, items) {
   // Highlight each verified quote in the report; built with text nodes only
@@ -125,7 +153,7 @@ function showModel(reading, model) {
 async function openCase(id) {
   document.querySelectorAll(".cases button").forEach(b => b.setAttribute("aria-current", b.dataset.id === id));
   $("status").textContent = "";
-  const r = await fetch(`api/v1/demo/reports/${encodeURIComponent(id)}`);
+  const r = await getReport(`api/v1/demo/reports/${encodeURIComponent(id)}`);
   if (!r.ok) { $("title").textContent = "Report unavailable"; return; }
   const c = current = await r.json();
   $("title").textContent = c.title;
@@ -141,14 +169,14 @@ async function openCase(id) {
   }
   showReport(c.text, c.model_reading.items);
   showModel(c.model_reading, c.model);
-  $("live").hidden = false;
+  $("live").hidden = !liveBackend;
 }
 
 $("live").addEventListener("click", async () => {
-  if (!current) return;
+  if (!current || !liveBackend) return;
   $("live").disabled = true; $("status").textContent = "MedGemma 27B is reading (a few seconds; longer if the model must load)…";
   try {
-    const r = await fetch(`api/v1/demo/reports/${encodeURIComponent(current.id)}/live`, { method: "POST" });
+    const r = await fetch(`${liveBackend}/api/v1/demo/reports/${encodeURIComponent(current.id)}/live`, { method: "POST", credentials: "omit" });
     const body = await r.json();
     if (!r.ok) { $("status").textContent = body.detail || "Busy. Please try later."; return; }
     showReport(current.text, body.items || []);
@@ -159,7 +187,8 @@ $("live").addEventListener("click", async () => {
 });
 
 (async () => {
-  const r = await fetch("api/v1/demo/reports");
+  await connectLiveModel();
+  const r = await getReport("api/v1/demo/reports");
   if (!r.ok) { $("list").textContent = "The demo is not running on this server."; return; }
   const d = await r.json();
   $("note").textContent = d.note;
@@ -173,5 +202,6 @@ $("live").addEventListener("click", async () => {
   if (d.cases.length) openCase(d.cases[0].id);
 })();
 </script>
+<script src="js/appnav.js?v=2026-10-20.2"></script>
 </body>
 </html>

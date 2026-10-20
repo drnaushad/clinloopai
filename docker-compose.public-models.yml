@@ -1,0 +1,33 @@
+# Separate public demo: no .env, clinical volume or hospital links are passed in.
+# Quick Tunnel hostname is temporary; use a named tunnel for a permanent service.
+services:
+  public-models:
+    image: ${CLINLOOP_PUBLIC_IMAGE:-ghcr.io/drnaushad/clinloopai:latest}
+    command: ["uvicorn", "src.clinloop_engine.public_model_gateway:app", "--host", "0.0.0.0", "--port", "8125", "--workers", "1", "--no-access-log"]
+    environment:
+      CLINLOOP_OLLAMA_URL: http://host.docker.internal:11434
+      CLINLOOP_SECOND_READER_MODEL: medgemma:27b
+      CLINLOOP_PUBLIC_READS_PER_HOUR: "12"
+      CLINLOOP_DEMO_LIVE_PER_HOUR: "3"
+      CLINLOOP_DEMO_QUEUE: "1"
+    volumes:
+      - ./src:/app/src:ro
+      - ./data/demo_reports.json:/app/data/demo_reports.json:ro
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    read_only: true
+    tmpfs: ["/tmp"]
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8125/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+  tunnel:
+    image: cloudflare/cloudflared@sha256:a15a3b50b8dabd57ac2090e9484c0247dba9dfa1f0df4d298d4317f9d69eb2d5
+    command: ["tunnel", "--no-autoupdate", "--protocol", "http2", "--url", "http://public-models:8125"]
+    depends_on: [public-models]
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
