@@ -18,7 +18,7 @@ sys.path.insert(0, ROOT)
 
 from src.clinloop_engine.loop_store import LoopStore  # noqa: E402
 
-PAGES = ["index.html", "worklist.html", "patient.html", "quality.html", "governance.html", "imaging.html", "pilot.html", "analyse.html"]
+PAGES = ["index.html", "worklist.html", "patient.html", "quality.html", "governance.html", "imaging.html", "pilot.html", "analyse.html", "reports.html"]
 
 
 class TestEveryDevice(unittest.TestCase):

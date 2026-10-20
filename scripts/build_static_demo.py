@@ -85,7 +85,10 @@ def build() -> Dict[str, int]:
             save(path)
         for by in ("rule", "language", "age_group", "sex"):
             save("/api/v1/metrics/open-loop-rate", {"stratify_by": by})
-        save("/api/v1/quality/second-reader/suggestions", {"pending": "true"})   # the quality team only: a viewer's 403
+        save("/api/v1/quality/second-reader/suggestions", {"pending": "true"})
+        # Rules vs AI page: the synthetic reports with the rules' result and MedGemma's saved reading
+        for case in (save("/api/v1/demo/reports") or {}).get("cases", []):
+            save(f"/api/v1/demo/reports/{case['id']}")   # the quality team only: a viewer's 403
         loops: List[dict] = []
         for inactive in ("false", "true"):
             data = save("/api/v1/worklist", {"include_inactive": inactive}) or {}
