@@ -17,3 +17,7 @@ nibabel>=5.2         # CT volumes (DICOM series → NIfTI) for organ measurement
 # torchxrayvision>=1.3
 # Optional CT organ segmentation (research use): build with WITH_CT_SEGMENTATION=1
 # TotalSegmentator>=2.4
+# Optional cloud models, research profile only and off unless enabled (cloud_llm.py)
+anthropic>=1.0
+openai>=1.40
+google-genai>=1.0

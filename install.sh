@@ -7,6 +7,7 @@
 #   CLINLOOP_DIR=/opt/clinloop    install directory          (default: ~/clinloop)
 #   CLINLOOP_LLM=0                skip the bundled Ollama LLM (e.g. Ollama already runs on this host)
 #   CLINLOOP_VERSION=1.2.0        pin an image version       (default: latest)
+#   CLINLOOP_MODELS="exaone3.5:7.8b medgemma:4b"   models to pull (default: these two, plus medgemma:27b on a GPU >= 20 GB)
 #
 # Re-running is safe: secrets in an existing .env are kept; images are updated.
 set -euo pipefail
@@ -27,6 +28,15 @@ random_hex() {  # $1 = number of bytes
   else head -c "$1" /dev/urandom | od -An -tx1 | tr -d ' \n'; fi
 }
 
+# GPU: the largest NVIDIA GPU's memory decides whether MedGemma 27B is pulled (override with CLINLOOP_MODELS)
+GPU_MB=0
+if command -v nvidia-smi >/dev/null 2>&1; then
+  GPU_MB=$( (nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null || true) | tr -d ' ' | grep -E '^[0-9]+$' | sort -n | tail -1 || true)
+  GPU_MB=${GPU_MB:-0}
+fi
+BIG_GPU=""
+[ "${GPU_MB:-0}" -ge 20000 ] 2>/dev/null && BIG_GPU=1
+
 mkdir -p "$DIR"
 cd "$DIR"
 say "Installing into $DIR"
@@ -45,6 +55,9 @@ if [ ! -f .env ]; then
     echo "CLINLOOP_LLM_MODEL=exaone3.5:7.8b"
     if [ "$WITH_LLM" = "1" ]; then
       echo "COMPOSE_PROFILES=llm"
+      # Local models: EXAONE 3.5 (messages, Korean/English) and MedGemma 4B (images) always;
+      # MedGemma 27B (report second reader, ~17 GB) only when a GPU with >= 20 GB memory is present
+      echo "CLINLOOP_PULL_MODELS=${CLINLOOP_MODELS:-exaone3.5:7.8b medgemma:4b${BIG_GPU:+ medgemma:27b}}"
     else
       echo "# Using an Ollama already running on this host:"
       echo "CLINLOOP_OLLAMA_URL=http://host.docker.internal:11434"
@@ -66,6 +79,24 @@ if [ ! -f .env ]; then
 else
   say "Keeping existing .env"
   NEW_INSTALL=0
+fi
+
+# Only with the NVIDIA Container Toolkit installed: without it, a GPU request would stop the stack from starting
+if [ "$WITH_LLM" = "1" ] && [ "${GPU_MB:-0}" -gt 0 ] && docker info 2>/dev/null | grep -qi nvidia \
+   && [ ! -f docker-compose.override.yml ]; then
+  say "NVIDIA GPU found (${GPU_MB} MB): running the bundled models on it"
+  {
+    echo "# Written by install.sh: the bundled Ollama uses the NVIDIA GPU (needs the NVIDIA Container Toolkit)"
+    echo "services:"
+    echo "  ollama:"
+    echo "    deploy:"
+    echo "      resources:"
+    echo "        reservations:"
+    echo "          devices:"
+    echo "            - driver: nvidia"
+    echo "              count: all"
+    echo "              capabilities: [gpu]"
+  } > docker-compose.override.yml
 fi
 
 say "Pulling images (first run downloads several GB if the LLM is enabled)"

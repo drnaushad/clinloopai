@@ -1,12 +1,9 @@
-# Exact versions for Python 3.12 (CI and the Docker image install with -c requirements.lock).
-# Regenerate after changing requirements*.txt, then run the tests:
-#   printf -- "-r requirements-api.txt\npytest\nreportlab\n" > /tmp/in.txt
-#   uv pip compile /tmp/in.txt --python-version 3.12 --universal --no-header --no-annotate -o requirements.lock
 absl-py==2.5.1
 alphagenome==0.10.0
 anndata==0.13.4
 annotated-doc==0.0.5
 annotated-types==0.8.0
+anthropic==1.15.0
 anyio==4.15.1
 array-api-compat==1.15.0
 attrs==26.1.0
@@ -21,21 +18,29 @@ contourpy==1.4.0
 cryptography==50.0.2
 cycler==0.12.1
 diskcache==5.6.3
+distro==1.9.0
+docstring-parser==0.18.0
 donfig==0.8.1.post1
 fastapi==0.143.3
 fonttools==4.67.0
 fsspec==2026.9.0
+google-auth==2.62.0
 google-crc32c==1.9.0
+google-genai==2.31.0
 grpcio==1.84.0
 h11==0.16.0
 h5py==3.16.0
 httpcore==1.0.9
+httpcore2==2.15.1 ; sys_platform != 'emscripten'
 httpx==0.28.1
 httpx-sse==0.4.3
+httpx2==2.15.1
+httpx2-jsfetch==1.0 ; sys_platform == 'emscripten'
 idna==3.20
 immutabledict==4.3.1
 iniconfig==2.3.1
 jaxtyping==0.3.11
+jiter==0.17.0
 joblib==1.6.0
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
@@ -53,6 +58,7 @@ networkx==3.7
 nibabel==5.4.2
 numcodecs==0.17.0
 numpy==2.5.4
+openai==3.35.1
 opentelemetry-api==1.45.1
 packaging==26.3
 pandas==3.0.6
@@ -64,6 +70,8 @@ pluggy==1.7.0
 protobuf==7.36.2
 psutil==7.2.2
 pyarrow==26.0.0
+pyasn1==0.6.4
+pyasn1-modules==0.4.2
 pycparser==3.11 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
 pydantic==2.14.1
 pydantic-core==2.50.1
@@ -93,10 +101,13 @@ seaborn==0.13.2
 session-info2==0.4.2
 shellingham==1.5.4
 six==1.17.0
+sniffio==1.3.1
 sse-starlette==3.5.0
 starlette==1.8.0
+tenacity==9.1.4
 threadpoolctl==3.7.0
 tqdm==4.70.1
+truststore==0.10.5 ; sys_platform != 'emscripten'
 typeguard==4.6.0
 typer==0.27.3
 typing-extensions==4.16.0
@@ -105,5 +116,6 @@ tzdata==2026.5 ; sys_platform == 'emscripten' or sys_platform == 'win32'
 urllib3==2.8.0
 uvicorn==0.54.0
 wadler-lindig==0.1.7
+websockets==16.1.1
 zarr==3.4.1
 zstandard==0.25.0

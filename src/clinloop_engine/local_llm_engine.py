@@ -155,12 +155,19 @@ def get_second_reader_model() -> Optional[str]:
     when installed. No substitute: a reader evaluated as MedGemma must not quietly become another
     model, so without it the second reader does not run (model_registry reports it unavailable)."""
     want = os.environ.get("CLINLOOP_SECOND_READER_MODEL") or SECOND_READER_DEFAULT
+    from .cloud_llm import is_cloud, status
+    if is_cloud(want):
+        return want if status(want[6:]) == "available" else None
     names = [m["name"] for m in get_available_models()]
     return want if want in names else None
 
 
 def get_best_model() -> Optional[str]:
-    """Return the best available local model name."""
+    """Return the best available local model name (or the configured cloud model, when it is available)."""
+    from .cloud_llm import is_cloud, status
+    forced = os.environ.get("CLINLOOP_LLM_MODEL")
+    if is_cloud(forced) and status(forced[6:]) == "available":
+        return forced
     models = get_available_models()
     return models[0]["name"] if models else None
 
@@ -178,6 +185,10 @@ def generate_clinical_text(
     """
     if model is None:
         model = get_best_model()
+    from .cloud_llm import generate as cloud_generate, is_cloud
+    if is_cloud(model):       # opt-in research option; refuses itself unless enabled (cloud_llm.status)
+        return cloud_generate(model, prompt, system_prompt or "You are a careful clinical writing assistant. "
+                              "You receive de-identified clinical context only.", max_tokens)
     if model is None:
         return {
             "error": "No local LLM available",

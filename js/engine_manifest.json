@@ -11,6 +11,7 @@
   "src/clinloop_engine/basis.py",
   "src/clinloop_engine/browser_analyse.py",
   "src/clinloop_engine/clinical_ontology.py",
+  "src/clinloop_engine/cloud_llm.py",
   "src/clinloop_engine/config/critical_findings.json",
   "src/clinloop_engine/ecg.py",
   "src/clinloop_engine/fhir_ingest.py",

@@ -215,7 +215,15 @@ This installs into `~/clinloop`. It creates a private `.env` with a new admin to
 key, pulls the published images, and starts:
 - the ClinLoop API, worklist and cockpit;
 - BioMCP;
-- a local LLM (Ollama with EXAONE 3.5).
+- local models on Ollama, nothing sent outside the hospital:
+  - EXAONE 3.5 (patient messages, Korean/English);
+  - MedGemma 4B (images, research);
+  - MedGemma 27B (report second reader), when an NVIDIA GPU with at least 20 GB is found.
+
+  The bundled models run on the GPU when the NVIDIA Container Toolkit is installed.
+
+Cloud models (Claude, GPT, Gemini) are an opt-in research option, off by default: see
+[`docs/LOCAL_MODELS.md`](docs/LOCAL_MODELS.md).
 
 When it finishes, open **http://localhost:8124/worklist** and sign in with the printed admin
 token. Re-running the command updates to the latest image and keeps the existing `.env`.
@@ -225,6 +233,7 @@ token. Re-running the command updates to the latest image and keeps the existing
 | Install directory | `CLINLOOP_DIR=/opt/clinloop` |
 | Skip the bundled LLM (Ollama already runs on this host) | `CLINLOOP_LLM=0` |
 | Pin a released version | `CLINLOOP_VERSION=1.0.0` |
+| Choose the local models to download | `CLINLOOP_MODELS="exaone3.5:7.8b medgemma:4b medgemma:27b"` |
 
 Pass options like this: `curl -fsSL …/install.sh | CLINLOOP_LLM=0 bash`.
 

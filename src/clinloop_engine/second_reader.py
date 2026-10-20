@@ -136,10 +136,11 @@ def local_model() -> Optional[Callable[[str, str], Dict[str, Any]]]:
     """The hospital's on-premise model, or None when it is not on a private address."""
     from .imaging_ai import _on_premise
     from .local_llm_engine import OLLAMA_BASE_URL, generate_clinical_text, get_second_reader_model
-    if not _on_premise(OLLAMA_BASE_URL):
+    from .cloud_llm import is_cloud
+    reader = get_second_reader_model()
+    if not is_cloud(reader) and not _on_premise(OLLAMA_BASE_URL):
         logger.error("Second reader: the model server (CLINLOOP_OLLAMA_URL) is not on a private address: not used")
         return None
-    reader = get_second_reader_model()
     if reader is None:      # never generate_clinical_text(model=None): that would pick another model
         logger.error("Second reader: the configured model is not installed: not used")
         return None

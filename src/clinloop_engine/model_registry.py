@@ -78,7 +78,10 @@ def registry(base: Optional[str] = None) -> Dict[str, Any]:
                                  "default": role["default"], "allowed_use": role["allowed_use"],
                                  "timeout_s": role["timeout_s"], "fallback": "none: the feature does not run",
                                  "backend": "ollama (on-premise)"}
-        if installed is None:
+        from .cloud_llm import is_cloud, status as cloud_status
+        if is_cloud(name):
+            entry.update(status=cloud_status(name[6:]), backend="cloud (research only, de-identified)")
+        elif installed is None:
             entry.update(status="model server unreachable")
         elif name not in installed:
             entry.update(status="not installed")
@@ -95,4 +98,6 @@ def registry(base: Optional[str] = None) -> Dict[str, Any]:
             entry["prompt_version"] = prompt_version()
             entry["inference"] = {"temperature": 0.0, "max_tokens": 600}
         roles.append(entry)
-    return {"roles": roles, "all_available": all(r["status"] == "available" for r in roles)}
+    from .cloud_llm import describe
+    return {"roles": roles, "all_available": all(r["status"] == "available" for r in roles),
+            "cloud_options": describe()}

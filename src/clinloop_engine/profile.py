@@ -55,6 +55,7 @@ RESEARCH_FEATURES: Dict[str, str] = {
     "second_reader": "CLINLOOP_SECOND_READER",
     "note_llm_suggestions": "suggest_with_llm on clinical-note extraction",
     "llm_assistant": "POST /api/v1/local-llm/generate, /agent/evidence-synthesis, /agent/patient-outreach/generate",
+    "cloud_llm": "CLINLOOP_CLOUD_LLM (Claude, GPT, Gemini: de-identified research data only; cloud_llm.py)",
 }
 
 

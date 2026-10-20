@@ -37,6 +37,13 @@
       "version": "0.8.0"
     },
     {
+      "bom-ref": "pkg:pypi/anthropic@1.15.0",
+      "name": "anthropic",
+      "purl": "pkg:pypi/anthropic@1.15.0",
+      "type": "library",
+      "version": "1.15.0"
+    },
+    {
       "bom-ref": "pkg:pypi/anyio@4.15.1",
       "name": "anyio",
       "purl": "pkg:pypi/anyio@4.15.1",
@@ -147,6 +154,20 @@
       "version": "5.6.3"
     },
     {
+      "bom-ref": "pkg:pypi/distro@1.9.0",
+      "name": "distro",
+      "purl": "pkg:pypi/distro@1.9.0",
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/docstring-parser@0.18.0",
+      "name": "docstring-parser",
+      "purl": "pkg:pypi/docstring-parser@0.18.0",
+      "type": "library",
+      "version": "0.18.0"
+    },
+    {
       "bom-ref": "pkg:pypi/donfig@0.8.1.post1",
       "name": "donfig",
       "purl": "pkg:pypi/donfig@0.8.1.post1",
@@ -175,11 +196,25 @@
       "version": "2026.9.0"
     },
     {
+      "bom-ref": "pkg:pypi/google-auth@2.62.0",
+      "name": "google-auth",
+      "purl": "pkg:pypi/google-auth@2.62.0",
+      "type": "library",
+      "version": "2.62.0"
+    },
+    {
       "bom-ref": "pkg:pypi/google-crc32c@1.9.0",
       "name": "google-crc32c",
       "purl": "pkg:pypi/google-crc32c@1.9.0",
       "type": "library",
       "version": "1.9.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/google-genai@2.31.0",
+      "name": "google-genai",
+      "purl": "pkg:pypi/google-genai@2.31.0",
+      "type": "library",
+      "version": "2.31.0"
     },
     {
       "bom-ref": "pkg:pypi/grpcio@1.84.0",
@@ -210,6 +245,19 @@
       "version": "1.0.9"
     },
     {
+      "bom-ref": "pkg:pypi/httpcore2@2.15.1",
+      "name": "httpcore2",
+      "properties": [
+        {
+          "name": "python:environment-marker",
+          "value": "sys_platform != 'emscripten'"
+        }
+      ],
+      "purl": "pkg:pypi/httpcore2@2.15.1",
+      "type": "library",
+      "version": "2.15.1"
+    },
+    {
       "bom-ref": "pkg:pypi/httpx@0.28.1",
       "name": "httpx",
       "purl": "pkg:pypi/httpx@0.28.1",
@@ -222,6 +270,26 @@
       "purl": "pkg:pypi/httpx-sse@0.4.3",
       "type": "library",
       "version": "0.4.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/httpx2@2.15.1",
+      "name": "httpx2",
+      "purl": "pkg:pypi/httpx2@2.15.1",
+      "type": "library",
+      "version": "2.15.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/httpx2-jsfetch@1.0",
+      "name": "httpx2-jsfetch",
+      "properties": [
+        {
+          "name": "python:environment-marker",
+          "value": "sys_platform == 'emscripten'"
+        }
+      ],
+      "purl": "pkg:pypi/httpx2-jsfetch@1.0",
+      "type": "library",
+      "version": "1.0"
     },
     {
       "bom-ref": "pkg:pypi/idna@3.20",
@@ -250,6 +318,13 @@
       "purl": "pkg:pypi/jaxtyping@0.3.11",
       "type": "library",
       "version": "0.3.11"
+    },
+    {
+      "bom-ref": "pkg:pypi/jiter@0.17.0",
+      "name": "jiter",
+      "purl": "pkg:pypi/jiter@0.17.0",
+      "type": "library",
+      "version": "0.17.0"
     },
     {
       "bom-ref": "pkg:pypi/joblib@1.6.0",
@@ -371,6 +446,13 @@
       "version": "2.5.4"
     },
     {
+      "bom-ref": "pkg:pypi/openai@3.35.1",
+      "name": "openai",
+      "purl": "pkg:pypi/openai@3.35.1",
+      "type": "library",
+      "version": "3.35.1"
+    },
+    {
       "bom-ref": "pkg:pypi/opentelemetry-api@1.45.1",
       "name": "opentelemetry-api",
       "purl": "pkg:pypi/opentelemetry-api@1.45.1",
@@ -446,6 +528,20 @@
       "purl": "pkg:pypi/pyarrow@26.0.0",
       "type": "library",
       "version": "26.0.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pyasn1@0.6.4",
+      "name": "pyasn1",
+      "purl": "pkg:pypi/pyasn1@0.6.4",
+      "type": "library",
+      "version": "0.6.4"
+    },
+    {
+      "bom-ref": "pkg:pypi/pyasn1-modules@0.4.2",
+      "name": "pyasn1-modules",
+      "purl": "pkg:pypi/pyasn1-modules@0.4.2",
+      "type": "library",
+      "version": "0.4.2"
     },
     {
       "bom-ref": "pkg:pypi/pycparser@3.11",
@@ -663,6 +759,13 @@
       "version": "1.17.0"
     },
     {
+      "bom-ref": "pkg:pypi/sniffio@1.3.1",
+      "name": "sniffio",
+      "purl": "pkg:pypi/sniffio@1.3.1",
+      "type": "library",
+      "version": "1.3.1"
+    },
+    {
       "bom-ref": "pkg:pypi/sse-starlette@3.5.0",
       "name": "sse-starlette",
       "purl": "pkg:pypi/sse-starlette@3.5.0",
@@ -677,6 +780,13 @@
       "version": "1.8.0"
     },
     {
+      "bom-ref": "pkg:pypi/tenacity@9.1.4",
+      "name": "tenacity",
+      "purl": "pkg:pypi/tenacity@9.1.4",
+      "type": "library",
+      "version": "9.1.4"
+    },
+    {
       "bom-ref": "pkg:pypi/threadpoolctl@3.7.0",
       "name": "threadpoolctl",
       "purl": "pkg:pypi/threadpoolctl@3.7.0",
@@ -689,6 +799,19 @@
       "purl": "pkg:pypi/tqdm@4.70.1",
       "type": "library",
       "version": "4.70.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/truststore@0.10.5",
+      "name": "truststore",
+      "properties": [
+        {
+          "name": "python:environment-marker",
+          "value": "sys_platform != 'emscripten'"
+        }
+      ],
+      "purl": "pkg:pypi/truststore@0.10.5",
+      "type": "library",
+      "version": "0.10.5"
     },
     {
       "bom-ref": "pkg:pypi/typeguard@4.6.0",
@@ -753,6 +876,13 @@
       "version": "0.1.7"
     },
     {
+      "bom-ref": "pkg:pypi/websockets@16.1.1",
+      "name": "websockets",
+      "purl": "pkg:pypi/websockets@16.1.1",
+      "type": "library",
+      "version": "16.1.1"
+    },
+    {
       "bom-ref": "pkg:pypi/zarr@3.4.1",
       "name": "zarr",
       "purl": "pkg:pypi/zarr@3.4.1",
@@ -775,6 +905,7 @@
         "pkg:pypi/anndata@0.13.4",
         "pkg:pypi/annotated-doc@0.0.5",
         "pkg:pypi/annotated-types@0.8.0",
+        "pkg:pypi/anthropic@1.15.0",
         "pkg:pypi/anyio@4.15.1",
         "pkg:pypi/array-api-compat@1.15.0",
         "pkg:pypi/attrs@26.1.0",
@@ -789,21 +920,29 @@
         "pkg:pypi/cryptography@50.0.2",
         "pkg:pypi/cycler@0.12.1",
         "pkg:pypi/diskcache@5.6.3",
+        "pkg:pypi/distro@1.9.0",
+        "pkg:pypi/docstring-parser@0.18.0",
         "pkg:pypi/donfig@0.8.1.post1",
         "pkg:pypi/fastapi@0.143.3",
         "pkg:pypi/fonttools@4.67.0",
         "pkg:pypi/fsspec@2026.9.0",
+        "pkg:pypi/google-auth@2.62.0",
         "pkg:pypi/google-crc32c@1.9.0",
+        "pkg:pypi/google-genai@2.31.0",
         "pkg:pypi/grpcio@1.84.0",
         "pkg:pypi/h11@0.16.0",
         "pkg:pypi/h5py@3.16.0",
         "pkg:pypi/httpcore@1.0.9",
+        "pkg:pypi/httpcore2@2.15.1",
         "pkg:pypi/httpx@0.28.1",
         "pkg:pypi/httpx-sse@0.4.3",
+        "pkg:pypi/httpx2@2.15.1",
+        "pkg:pypi/httpx2-jsfetch@1.0",
         "pkg:pypi/idna@3.20",
         "pkg:pypi/immutabledict@4.3.1",
         "pkg:pypi/iniconfig@2.3.1",
         "pkg:pypi/jaxtyping@0.3.11",
+        "pkg:pypi/jiter@0.17.0",
         "pkg:pypi/joblib@1.6.0",
         "pkg:pypi/jsonschema@4.26.0",
         "pkg:pypi/jsonschema-specifications@2025.9.1",
@@ -821,6 +960,7 @@
         "pkg:pypi/nibabel@5.4.2",
         "pkg:pypi/numcodecs@0.17.0",
         "pkg:pypi/numpy@2.5.4",
+        "pkg:pypi/openai@3.35.1",
         "pkg:pypi/opentelemetry-api@1.45.1",
         "pkg:pypi/packaging@26.3",
         "pkg:pypi/pandas@3.0.6",
@@ -832,6 +972,8 @@
         "pkg:pypi/protobuf@7.36.2",
         "pkg:pypi/psutil@7.2.2",
         "pkg:pypi/pyarrow@26.0.0",
+        "pkg:pypi/pyasn1@0.6.4",
+        "pkg:pypi/pyasn1-modules@0.4.2",
         "pkg:pypi/pycparser@3.11",
         "pkg:pypi/pydantic@2.14.1",
         "pkg:pypi/pydantic-core@2.50.1",
@@ -861,10 +1003,13 @@
         "pkg:pypi/session-info2@0.4.2",
         "pkg:pypi/shellingham@1.5.4",
         "pkg:pypi/six@1.17.0",
+        "pkg:pypi/sniffio@1.3.1",
         "pkg:pypi/sse-starlette@3.5.0",
         "pkg:pypi/starlette@1.8.0",
+        "pkg:pypi/tenacity@9.1.4",
         "pkg:pypi/threadpoolctl@3.7.0",
         "pkg:pypi/tqdm@4.70.1",
+        "pkg:pypi/truststore@0.10.5",
         "pkg:pypi/typeguard@4.6.0",
         "pkg:pypi/typer@0.27.3",
         "pkg:pypi/typing-extensions@4.16.0",
@@ -873,6 +1018,7 @@
         "pkg:pypi/urllib3@2.8.0",
         "pkg:pypi/uvicorn@0.54.0",
         "pkg:pypi/wadler-lindig@0.1.7",
+        "pkg:pypi/websockets@16.1.1",
         "pkg:pypi/zarr@3.4.1",
         "pkg:pypi/zstandard@0.25.0"
       ],
@@ -893,7 +1039,7 @@
       },
       {
         "name": "source:sha256",
-        "value": "60150d84591b1ba5fc4c84a54a36f90968df8c849032009a7b31b169f98b1ef6"
+        "value": "de7fcf104063aefc077b29ff501985c915a44c52aa3ab239ae497b3d058eb7ee"
       },
       {
         "name": "runtime",

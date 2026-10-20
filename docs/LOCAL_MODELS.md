@@ -34,3 +34,44 @@ Single NVIDIA RTX A4500 (20 GB), Ollama 0.33.3, Q4_K_M models, short prompt, 80 
   that GPU.
 - **Public use needs admission control.** Any public demo needs its own bounded queue and per-visitor
   quota, so it can never starve the hospital's own work.
+
+## Cloud models (Claude, GPT, Gemini): research only, opt-in
+
+On-premise models stay the default, and the clinical (core) profile never sends text to a cloud model.
+For research on synthetic or de-identified data, an administrator can add cloud models as options.
+Sending real patient data needs the institution's approval and a data-processing agreement with the
+provider.
+
+```
+CLINLOOP_PROFILE=research
+CLINLOOP_CLOUD_LLM=anthropic,openai,gemini     # the providers to allow
+ANTHROPIC_API_KEY=...                          # Claude: model claude-opus-5-5 unless CLINLOOP_ANTHROPIC_MODEL is set
+OPENAI_API_KEY=...    CLINLOOP_OPENAI_MODEL=<model name from your OpenAI account>
+GEMINI_API_KEY=...    CLINLOOP_GEMINI_MODEL=<model name from your Google AI account>
+```
+
+Use a cloud model by naming it `cloud:<provider>`:
+
+| Use | Setting |
+|---|---|
+| Report second reader | `CLINLOOP_SECOND_READER_MODEL=cloud:anthropic` |
+| Patient-message drafts | `CLINLOOP_LLM_MODEL=cloud:anthropic` |
+| One-off text | `POST /api/v1/local-llm/generate` with `"task": "custom", "model": "cloud:openai"` |
+
+What the code enforces (`cloud_llm.py`):
+- **Gating:** each provider is off unless it is listed, has a key and is in the research profile, and
+  `GET /api/v1/models/registry` shows why.
+- **Before and after sending:** identifiers are removed before anything is sent, and outputs are
+  labelled as cloud output.
+- **Logging:** each call is logged with provider, model and character counts, never the text.
+- **Same guardrails as local models:** exact-quote checks on second-reader items, clinician approval of
+  every message, and no follow-up decision by any model.
+- **No substitution:** a configured cloud model that is unavailable does not fall back to another model.
+
+To compare a cloud model with MedGemma 27B on the same synthetic reports and production prompt:
+
+```
+python scripts/second_reader_benchmark.py cloud:anthropic
+python tests/report_eval/run_second_reader_eval.py tests/report_eval/second_reader/cases_real.json \
+    tests/report_eval/second_reader/rules_first_real.json tests/report_eval/second_reader/cloud_anthropic_real.json
+```
