@@ -267,7 +267,9 @@ _NEW = re.compile(r"\bnew\b|신규|새로", re.I)
 _STABLE_FOR = re.compile(r"(?:stable|unchanged)[^.;]{0,30}?\bfor\s+(\d+(?:\.\d+)?)\s*(year|month)s?"
                          r"|(?:more than |over |≥\s*)?(\d+(?:\.\d+)?)\s*(year|month)s?\s+of\s+stability"
                          r"|stable\s*(?:>|≥|over|more than)\s*(\d+(?:\.\d+)?)\s*(year|month)s?"
-                         r"|(\d+(?:\.\d+)?)\s*(년|개월)\s*간?[^.\n]{0,30}?변화\s*(?:가\s*)?없", re.I)
+                         r"|(\d+(?:\.\d+)?)\s*(년|개월)\s*간?[^.\n]{0,30}?변화\s*(?:가\s*)?없"
+                         # "unchanged appearance from previous examination 7 years ago"
+                         r"|(?:stable|unchanged)[^.;]{0,60}?\b(\d+(?:\.\d+)?)\s*(year|month)s?\s+ago\b", re.I)
 _SINCE_YEAR = re.compile(r"\bsince\s+(?:\w+\s+)?((?:19|20)\d{2})\b|((?:19|20)\d{2})년\s*이후", re.I)
 _COMPARED_DATE = re.compile(r"compar\w*\s+(?:to|with)[^.;]{0,40}?((?:19|20)\d{2})-(\d{2})(?:-(\d{2}))?", re.I)
 # "unchanged since CT of 03/2024"
@@ -390,7 +392,7 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
             stable_since = None
             sf = _STABLE_FOR.search(s)
             if sf:
-                num, unit = next((sf.group(i), sf.group(i + 1)) for i in (1, 3, 5, 7) if sf.group(i))
+                num, unit = next((sf.group(i), sf.group(i + 1)) for i in (1, 3, 5, 7, 9) if sf.group(i))
                 stable_since = ("for", float(num) * (12 if unit.lower() in ("year", "년") else 1))
             else:
                 sy = _SINCE_YEAR.search(s) or _SINCE_YEAR.search(text)
@@ -1108,6 +1110,41 @@ def nodule_risk(n: Dict[str, Any], ctx: Dict[str, Any]) -> Tuple[str, str]:
     return "high", "risk unknown (no smoking status): managed as high risk"
 
 
+def radiograph_nodule(n: Dict[str, Any], ctx: Dict[str, Any], when: datetime) -> Dict[str, Any]:
+    """
+    A lung nodule seen on a radiograph. Fleischner 2017 covers nodules found on CT; a radiograph nodule is
+    first characterised by chest CT (ACR Appropriateness Criteria, radiographically detected solitary
+    pulmonary nodule), so it opens a chest CT within 30 days, not a Fleischner interval.
+    DRAFT pending clinician review: the 30-day target is a proposal.
+    """
+    size = round(n["size_mm"])
+    label = f"radiograph nodule {size} mm"
+    review = None
+    exclusions = [x for x, on in (("patient under 35", ctx.get("age") is not None and ctx["age"] < 35),
+                                  ("known malignancy", ctx.get("malignancy")),
+                                  ("immunocompromised", ctx.get("immunocompromised"))) if on]
+    notes: List[str] = []
+    if exclusions:
+        review = f"{', '.join(exclusions)}: confirm the plan for this radiograph nodule with the treating team."
+        notes.append(f"{', '.join(exclusions)} → human review")
+    if n.get("benign"):
+        notes.append(f"{label}: benign features (calcified / granuloma) → no follow-up")
+        return {"action": "none", "days": None, "notes": notes, "review": None}
+    if n.get("change") == "growing":
+        notes.append(f"{label}: growth → work-up (CT, PET/CT, tissue sampling or referral) within 30 days")
+        return {"action": "workup", "days": 30.0, "notes": notes, "review": review}
+    since = n.get("stable_since")
+    months = None
+    if since:
+        months = since[1] if since[0] == "for" else _months(since[1], when)
+    if n.get("type", "solid") == "solid" and months is not None and months >= 24:
+        notes.append(f"{label}: stable ≥2 years ({months:.0f} months) → benign behaviour, no follow-up")
+        return {"action": "none", "days": None, "notes": notes, "review": None}
+    notes.append(f"{label}: seen on a radiograph → chest CT to characterise within 30 days "
+                 f"(Fleischner 2017 applies to CT-detected nodules)")
+    return {"action": "followup", "days": 30.0, "notes": notes, "review": review}
+
+
 def fleischner(n: Dict[str, Any], ctx: Dict[str, Any], prior: List[Dict[str, Any]], when: datetime) -> Dict[str, Any]:
     """
     Fleischner Society 2017 decision for one lung nodule.
@@ -1426,7 +1463,9 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
         if n and d.get("lung_rads"):
             mapping.append("screening LDCT: Lung-RADS governs follow-up, Fleischner not applied")
         elif n:
-            decision = fleischner(n, ctx, nodule_history, when)
+            # A radiograph nodule is characterised by CT first; Fleischner 2017 covers CT-detected nodules
+            decision = radiograph_nodule(n, ctx, when) if rad.get("modality") == "xray" \
+                else fleischner(n, ctx, nodule_history, when)
             mapping.extend(decision["notes"])
             nodule_history.append({"time": when, "size_mm": n["size_mm"], "type": n["type"]})
             if decision["action"] == "workup":

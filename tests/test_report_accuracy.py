@@ -464,6 +464,36 @@ class TestRealChestRadiographNegation(unittest.TestCase):
         self.assertIn("pneumothorax", critical("Large left hydropneumothorax with collapse of the left lung."))
 
 
+class TestRadiographNodules(unittest.TestCase):
+    """DRAFT pending clinician review. A nodule on a radiograph is characterised by CT first (Fleischner 2017
+    covers CT-detected nodules); a solid nodule stable for two years or more needs nothing."""
+
+    def _days(self, text, title):
+        when = datetime(2026, 9, 1)
+        res = [{"resourceType": "Patient", "id": "A", "gender": "male", "birthDate": "1960-03-01"},
+               {"resourceType": "DiagnosticReport", "id": "r", "status": "final", "category": [{"coding": [{"code": "RAD"}]}],
+                "code": {"text": title}, "subject": {"reference": "Patient/A"},
+                "effectiveDateTime": "2026-09-01T09:00:00Z", "conclusion": text}]
+        events, _ = bundle_to_events(res)
+        dets = ClinLoopDetector(evaluation_time=when + timedelta(days=1)).process_patient("t", "A", events.get("A", []))
+        return {d.rule_id: round((datetime.fromisoformat(d.deadline) - datetime.fromisoformat(d.trigger_time)).days)
+                for d in dets if d.rule_id in REPORT_RULES}
+
+    def test_radiograph_nodule_gets_ct_within_30_days(self):
+        self.assertEqual(self._days("Right upper lobe nodule measuring 8 mm.", "Chest radiograph PA and lateral"), {"R003": 30})
+
+    def test_ct_nodule_still_follows_fleischner(self):
+        self.assertGreater(self._days("Right upper lobe nodule measuring 8 mm.", "CT chest without contrast")["R003"], 30)
+
+    def test_stable_years_ago_wording(self):
+        self.assertEqual(self._days("11 mm right lower lobe nodule, unchanged from the examination 6 years ago.",
+                                    "Chest radiograph"), {})
+        self.assertEqual(self._days("9 mm left upper lobe nodule, unchanged from 1 year ago.", "Chest radiograph"), {"R003": 30})
+
+    def test_calcified_radiograph_nodule_needs_nothing(self):
+        self.assertEqual(self._days("6 mm calcified granuloma in the right lower lobe.", "Chest radiograph"), {})
+
+
 class TestBlindCaseSets(unittest.TestCase):
     """The 270 blind-written cases (docs/ACCURACY_EVALUATION.md) stay above a floor: a change that loses
     findings or adds false alerts fails CI."""
