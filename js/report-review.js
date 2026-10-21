@@ -31,7 +31,11 @@
           typeof f.deadline_quote !== 'string' || f.deadline_quote.length > 200 ||
           (f.deadline_quote && !f.follow_up_quote.includes(f.deadline_quote)))
         throw new Error('A finding or deadline could not be traced to the source. No analysis accepted; human review required.');
-      return {...f, source_start: text.indexOf(f.quote), source_end: text.indexOf(f.quote) + f.quote.length};
+      const start=text.indexOf(f.quote),end=start+f.quote.length;
+      let occurrences=0,at=0;
+      while((at=text.indexOf(f.quote,at))!==-1){occurrences++;at+=f.quote.length;}
+      return {...f, source_start:start, source_end:end, source_occurrences:occurrences,
+        source_context:text.slice(Math.max(0,start-200),Math.min(text.length,end+200))};
     });
     return {findings, missing_context: data.missing_context.slice(), human_review_required: true};
   }
@@ -43,6 +47,7 @@
     constructor(fetcher) {this.fetcher=fetcher; this.address=''; this.token=''; this.epoch=0; this.controllers=new Set(); this.model='';this.provider='';this.legacy=false;}
     clear() {this.epoch++; this.controllers.forEach(c=>c.abort());this.controllers.clear();this.address='';this.token='';this.model='';this.provider='';this.legacy=false;}
     async request(path, body, epoch) {
+      if(epoch!==this.epoch||!this.address||!this.token)throw new Error('Session cleared.');
       const c = new AbortController(); this.controllers.add(c); const timer=setTimeout(()=>c.abort(),180000);
       try {
         const r=await this.fetcher(this.address+path,{method:body?'POST':'GET',credentials:'omit',redirect:'error',

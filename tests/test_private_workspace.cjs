@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const {Workspace, localAddress} = require('../js/private-workspace.js');
 const MODEL = 'synthetic-test:1b';
 const tags = {models: [{name: MODEL}]};
-const info = {details: {family: 'test'}, model_info: {'general.architecture': 'test'}, capabilities: ['completion']};
+const info = {details: {family: 'test'}, model_info: {'general.architecture': 'test', 'test.context_length': 16384}, capabilities: ['completion']};
 const reply = {model: MODEL, done: true, done_reason: 'stop', response: 'Synthetic answer.'};
 const ok = value => ({status: 200, json: async () => value});
 function setup(overrides = {}) {
@@ -215,4 +215,17 @@ test('page has no shared scripts, analytics, storage or public model connection 
   assert(!html.includes('config.js'));
   assert(!html.includes('public-models.json'));
   assert(!/<script[^>]+src="https?:/.test(html));
+});
+
+test('an error or unknown stop reason cannot be accepted as a complete local response', async()=>{
+  for(const response of [{...reply,error:'private synthetic marker'},{...reply,done_reason:'load'},{...reply,done_reason:undefined},{...reply,response:'<think>hidden reasoning</think> answer'}]){
+    const {workspace,events}=setup({'/api/generate':()=>ok(response)});await workspace.connect('http://localhost:11434',true);
+    await assert.rejects(workspace.run(MODEL,'SYNTHETIC report'));assert(!events.some(e=>e.type==='answer'));
+  }
+});
+test('structured review refuses an unverified or inadequate context window before sending the report', async()=>{
+  for(const info of [{details:{},model_info:{'general.architecture':'test'},capabilities:['completion']},{details:{},model_info:{'test.context_length':512},capabilities:['completion']}]){
+    const {workspace,calls}=setup({'/api/show':()=>ok(info)});await workspace.connect('http://localhost:11434',true);
+    await assert.rejects(workspace.run(MODEL,'SYNTHETIC report',{schema:{type:'object'},system:'Extract source only.'}));assert(!calls.some(c=>c.url.endsWith('/api/generate')));
+  }
 });

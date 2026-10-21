@@ -90,14 +90,23 @@
             details.details.remote_host || details.details.remote_model ||
             !object(details.model_info) || !Object.keys(details.model_info).length || !Array.isArray(details.capabilities) ||
             !details.capabilities.includes('completion')) throw new Error('Model locality could not be established.');
+        let contextWindow=8192;
+        if(review){
+          const lengths=Object.entries(details.model_info).filter(([key,value])=>key.endsWith('.context_length')&&Number.isSafeInteger(value)&&value>0).map(([,value])=>value);
+          if(!lengths.length)throw new Error('Model context capacity is not declared.');
+          contextWindow=Math.min(16384,...lengths);
+          // UTF-8 bytes give a conservative input budget; reserve room for schema, template and output.
+          const budget=new TextEncoder().encode(text+review.system+JSON.stringify(review.schema)).length+2048+512;
+          if(budget>contextWindow)throw new Error('Complete report does not fit the verified model context.');
+        }
         const data = await this.request('/api/generate', {
           model, prompt: text, stream: false,
           system: review ? review.system : 'Research test on synthetic text only. Do not diagnose or prescribe. Distinguish quoted facts from uncertainty. Your answer is unverified and requires human review.',
           ...(review ? {format: review.schema} : {}),
-          options: {temperature: 0, num_predict: 768, num_ctx: 8192}, keep_alive: 0
+          options: {temperature: 0, num_predict: review?2048:768, num_ctx: contextWindow}, keep_alive: 0
         }, epoch);
-        if (!data || data.model !== model || data.done !== true || data.done_reason === 'length' ||
-            typeof data.response !== 'string' || !data.response.trim() || data.response.length > MAX_REPLY) {
+        if (!data || data.error || data.model !== model || data.done !== true || data.done_reason !== 'stop' ||
+            typeof data.response !== 'string' || !data.response.trim() || data.response.length > MAX_REPLY || /<\/?think\b/i.test(data.response)) {
           throw new Error('Incomplete or unexpected model response.');
         }
         this.changed({type: 'answer', text: data.response, model});

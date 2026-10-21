@@ -22,12 +22,56 @@ import os
 import re
 import time
 import logging
+import ipaddress
+import socket
+from urllib.parse import urlsplit
 import requests
 from typing import Any, Dict, Optional, Tuple
 
 logger = logging.getLogger("clinloop.local_llm")
 
 OLLAMA_BASE_URL = os.environ.get("CLINLOOP_OLLAMA_URL", "http://localhost:11434").rstrip("/")
+
+def _private_base(value: str) -> str:
+    """Require a private-network endpoint without credentials or URL-carried data."""
+    url = urlsplit(value)
+    if (url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password
+            or url.query or url.fragment or url.path not in {"", "/"}):
+        raise ValueError("Invalid local model endpoint")
+    addresses = {item[4][0].split("%")[0] for item in socket.getaddrinfo(url.hostname, url.port)}
+    if not addresses or not all((ip := ipaddress.ip_address(a)).is_private and not (
+            ip.is_link_local or ip.is_unspecified or ip.is_multicast) for a in addresses):
+        raise ValueError("Local model endpoint required")
+    return value.rstrip("/")
+
+
+def _ollama_json(method: str, path: str, payload=None, timeout=10, base=None) -> Dict[str, Any]:
+    """Bounded local transport. Never inherit proxies, follow redirects or log bodies."""
+    endpoint = _private_base(base or OLLAMA_BASE_URL)
+    with requests.Session() as session:
+        session.trust_env = False
+        with session.request(method, endpoint + path, json=payload, timeout=timeout,
+                             allow_redirects=False, stream=True) as response:
+            if response.status_code != 200:
+                raise ValueError("Local model request failed")
+            raw = bytearray()
+            for chunk in response.iter_content(8192):
+                raw.extend(chunk)
+                if len(raw) > 512000:
+                    raise ValueError("Local response too large")
+    value = json.loads(raw)
+    if not isinstance(value, dict) or value.get("error"):
+        raise ValueError("Invalid local response")
+    return value
+
+
+def _local_model(value: Dict[str, Any]) -> bool:
+    name = value.get("name")
+    details = value.get("details") or {}
+    return (isinstance(name, str) and bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}", name))
+            and "cloud" not in name.lower() and not value.get("remote_host") and not value.get("remote_model")
+            and isinstance(details, dict) and not details.get("remote_host") and not details.get("remote_model"))
+
 
 # Reasoning models (e.g. DeepSeek-R1) emit their chain of thought in <think>
 # tags; it must never reach a clinician or a patient.
@@ -65,12 +109,11 @@ PREFERRED_MODELS = [
         "vram_gb": 5,
     },
     {
-        # Google MedGemma 27B (text-only instruct release in Ollama, ~17 GB at Q4).
+        # Google MedGemma 27B: assigned report-text role; inspect the installed checkpoint for capabilities.
         # Research model (Health AI Developer Foundations terms), not a medical device.
-        # Strong on English medical text; weaker Korean than EXAONE, so it ranks after
-        # EXAONE for patient messages but is the default second reader of reports.
+        # Preference order is configuration, not measured clinical or language accuracy.
         "name": "medgemma:27b",
-        "label": "MedGemma 27B (English medical text; Korean weaker than EXAONE)",
+        "label": "MedGemma 27B (medical research; verify installed capabilities)",
         "context_window": 128000,
         "strengths": ["English-medical-text", "report-reading"],
         "vram_gb": 20,
@@ -78,14 +121,14 @@ PREFERRED_MODELS = [
     },
     {
         "name": "deepseek-r1:70b",
-        "label": "DeepSeek-R1 70B (Best Clinical Reasoning)",
+        "label": "DeepSeek-R1 70B (general reasoning; unvalidated for clinical use)",
         "context_window": 128000,
         "strengths": ["chain-of-thought", "medical-ethics", "multilingual-Korean"],
         "vram_gb": 42,
     },
     {
         "name": "deepseek-r1:32b",
-        "label": "DeepSeek-R1 32B (Fast Clinical Reasoning)",
+        "label": "DeepSeek-R1 32B (general reasoning; unvalidated for clinical use)",
         "context_window": 128000,
         "strengths": ["chain-of-thought", "differential-diagnosis", "Korean"],
         "vram_gb": 19,
@@ -131,10 +174,8 @@ SECOND_READER_DEFAULT = "medgemma:27b"
 def get_available_models() -> list:
     """Installed Ollama models, best first: configured model, preferred list, then any other."""
     try:
-        resp = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
-        if resp.status_code != 200:
-            return []
-        installed = [m["name"] for m in resp.json().get("models", []) if m.get("name")]
+        tags = _ollama_json("GET", "/api/tags", timeout=5)
+        installed = [m["name"] for m in tags.get("models", []) if isinstance(m, dict) and _local_model(m)]
         known = {m["name"]: m for m in PREFERRED_MODELS}
         ordered = [n for n in (m["name"] for m in PREFERRED_MODELS) if n in installed]
         ordered += [n for n in installed if n not in ordered]
@@ -143,10 +184,10 @@ def get_available_models() -> list:
             ordered = [forced] + [n for n in ordered if n != forced]
         available = [known.get(n, {"name": n, "label": n, "context_window": None,
                                    "strengths": [], "vram_gb": None}) for n in ordered]
-        logger.info(f"Local LLMs available: {ordered}")
+        logger.info("Local model inventory: %d eligible models", len(ordered))
         return available
     except Exception as e:
-        logger.warning(f"Ollama unreachable: {e}")
+        logger.warning("Local model inventory unavailable (%s)", type(e).__name__)
         return []
 
 
@@ -162,6 +203,9 @@ def get_second_reader_model() -> Optional[str]:
 def get_best_model() -> Optional[str]:
     """Return the best available local model name."""
     models = get_available_models()
+    forced = os.environ.get("CLINLOOP_LLM_MODEL")
+    if forced:
+        return forced if any(m["name"] == forced for m in models) else None
     return models[0]["name"] if models else None
 
 
@@ -183,7 +227,7 @@ def generate_clinical_text(
             "error": "No local LLM available",
             "text": "",
             "on_premise": True,
-            "phi_egress": "0% — generation failed gracefully",
+            "phi_egress": "not measured; no generation performed",
         }
 
     sys = system_prompt or (
@@ -208,23 +252,40 @@ def generate_clinical_text(
 
     t0 = time.perf_counter()
     try:
-        resp = requests.post(
-            f"{OLLAMA_BASE_URL}/api/generate",
-            json=payload,
-            timeout=120,
-        )
-        resp.raise_for_status()
-        data = resp.json()
+        if not _local_model({"name": model}) or not isinstance(prompt, str) or not prompt.strip() or len(prompt.encode("utf-8")) > 20000:
+            raise ValueError("Invalid local generation input")
+        details = _ollama_json("POST", "/api/show", {"model": model}, timeout=10)
+        if (not _local_model({"name": model, **details}) or not isinstance(details.get("model_info"), dict)
+                or not details["model_info"] or not isinstance(details.get("capabilities"), list)
+                or "completion" not in details["capabilities"]):
+            raise ValueError("Model locality or capability not verified")
+        lengths = [v for k, v in details["model_info"].items()
+                   if k.endswith(".context_length") and type(v) is int and v > 0]
+        if not lengths or type(max_tokens) is not int or not 1 <= max_tokens <= 4096:
+            raise ValueError("Model context capacity or output budget not verified")
+        context_window = min(16384, *lengths)
+        if len((prompt + sys).encode("utf-8")) + max_tokens + 512 > context_window:
+            raise ValueError("Complete model input does not fit the verified context")
+        payload["options"]["num_ctx"] = context_window
+        data = _ollama_json("POST", "/api/generate", payload, timeout=120)
+        if (data.get("model") != model or data.get("done") is not True or data.get("done_reason") != "stop"
+                or not isinstance(data.get("response"), str) or len(data["response"]) > 30000
+                or data["response"].lower().count("<think>") != data["response"].lower().count("</think>")):
+            raise ValueError("Incomplete or unexpected local output")
+        answer = _strip_reasoning(data["response"])
+        if not answer:
+            raise ValueError("Empty local output")
         latency_ms = (time.perf_counter() - t0) * 1000
 
         return {
-            "text": _strip_reasoning(data.get("response", "")),
+            "text": answer,
             "model": model,
             "latency_ms": round(latency_ms, 1),
             "tokens_generated": data.get("eval_count", 0),
             "on_premise": True,
-            "phi_egress": "0% — fully air-gapped generation",
-            "done": data.get("done", True),
+            "phi_egress": "not measured; local destination and model metadata checked",
+            "done": True,
+            "done_reason": "stop",
         }
     except requests.exceptions.Timeout:
         return {
@@ -232,15 +293,15 @@ def generate_clinical_text(
             "text": "",
             "model": model,
             "on_premise": True,
-            "phi_egress": "0%",
+            "phi_egress": "not measured",
         }
     except Exception as e:
         return {
-            "error": str(e),
+            "error": "Local model request failed or could not be verified.",
             "text": "",
             "model": model,
             "on_premise": True,
-            "phi_egress": "0%",
+            "phi_egress": "not measured",
         }
 
 
@@ -299,17 +360,19 @@ def generate_ethics_review(de_identified_context: str) -> Dict[str, Any]:
 def get_engine_status() -> Dict[str, Any]:
     """Return the status of the local LLM engine for the API telemetry endpoint."""
     models = get_available_models()
-    best = models[0] if models else None
+    forced = os.environ.get("CLINLOOP_LLM_MODEL")
+    best = next((m for m in models if m["name"] == forced), None) if forced else (models[0] if models else None)
     return {
         "engine": "Ollama Local LLM Engine",
-        "status": "running" if models else "unavailable",
-        "base_url": OLLAMA_BASE_URL,
+        "status": "running" if best else "unavailable",
+        "base_url": "configured private-network endpoint",
         "best_model": best["name"] if best else None,
         "best_model_label": best["label"] if best else "None",
         "all_available_models": [m["name"] for m in models],
         "on_premise": True,
-        "phi_egress": "0% — all inference air-gapped",
-        "vram_used_gb": best["vram_gb"] if best else 0,
+        "phi_egress": "not measured; local-only transport required",
+        "vram_used_gb": None,
+        "estimated_model_vram_gb": best["vram_gb"] if best else None,
     }
 
 

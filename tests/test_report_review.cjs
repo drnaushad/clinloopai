@@ -53,20 +53,20 @@ test('research aborts and clears its access code; late output cannot restore a s
 test('local structured review sends original text only to an inspected local model',async()=>{
   const calls=[],schema=JSON.parse(fs.readFileSync(require.resolve('../data/report_review_schema.json'),'utf8'));
   const w=new Workspace(async(url,options)=>{calls.push({url,options});const p=new URL(url).pathname;
-    return ok(p==='/api/tags'?{models:[{name:'synthetic:1b'}]}:p==='/api/show'?{details:{family:'test'},model_info:{'general.architecture':'test'},capabilities:['completion']}:
+    return ok(p==='/api/tags'?{models:[{name:'synthetic:1b'}]}:p==='/api/show'?{details:{family:'test'},model_info:{'general.architecture':'test','test.context_length':16384},capabilities:['completion']}:
       {model:'synthetic:1b',done:true,done_reason:'stop',response:JSON.stringify(REVIEW)});});
   await w.connect('http://localhost:11434',true);const raw=await w.run('synthetic:1b',TEXT,{schema,system:SYSTEM});validate(JSON.parse(raw),TEXT);
   assert.equal(calls.length,3);for(const c of calls)assert.equal(new URL(c.url).origin,'http://localhost:11434');
   const body=JSON.parse(calls.at(-1).options.body);assert.deepEqual(body.format,schema);assert.equal(body.prompt,TEXT);assert.equal(body.options.temperature,0);
 });
-function page({localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>validate(REVIEW,TEXT)}={}){
+function page({localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>validate(REVIEW,TEXT),schemaFetch=async()=>ok({type:'object'})}={}){
   const ids=['mode','provider','provider-destination','provider-consent','local-options','research-options','connect','disconnect','status','model','report','report-file','analyze','local-address','research-address','gateway-code','local-confirm','research-confirm','report-type','complete-confirm','result','sample','clear'];
   const el={},events={},windowEvents={},calls=[];
   for(const id of ids)el[id]={value:'',checked:false,children:[],files:[],addEventListener:(n,f)=>{events[id+':'+n]=f;},replaceChildren(...xs){this.children=xs;},append(...xs){this.children.push(...xs);}};
   el.mode.value='local';el.provider.value='openai';el['local-address'].value='http://127.0.0.1:11434';el['research-address'].value='http://127.0.0.1:18127';el['report-type'].value='radiology-text';
   const api=require('../js/report-review.js');
   const context={document:{getElementById:id=>el[id],createElement:()=>({children:[],append(...xs){this.children.push(...xs);}}),addEventListener(){}},
-    Option:function(text,value){this.text=text;this.value=value;},fetch:async()=>ok({type:'object'}),setInterval(){},Date,TextDecoder,
+    Option:function(text,value){this.text=text;this.value=value;},fetch:schemaFetch,setInterval(){},Date,TextDecoder,
     window:{fetch:async()=>ok({type:'object'}),addEventListener:(n,f)=>{windowEvents[n]=f;},
       ClinLoopPrivate:{Workspace:class{clear(v){calls.push(['localClear',v]);}async connect(){calls.push(['localConnect']);return['synthetic'];}async run(){calls.push(['localRun']);return localRun();}}},
       ClinLoopReportReview:{...api,Research:class{clear(){calls.push(['researchClear']);}async connect(){calls.push(['researchConnect']);return'synthetic-api';}async run(){calls.push(['researchRun']);return researchRun();}}}}};
@@ -133,4 +133,40 @@ test('changing provider clears report and access code and updates named consent'
 test('existing OpenAI-only gateways remain usable without an unknown provider field',async()=>{
   const {r,calls}=research();await r.connect('http://localhost:18127',CODE,true,'openai');await r.run(TEXT,'radiology-text',true);
   assert.equal(r.legacy,true);assert.equal(r.provider,'openai');assert(!('provider' in JSON.parse(calls[1].options.body)));
+});
+
+test('disconnect while schema loads cannot reconnect a cleared session',async()=>{
+  let release;const pending=new Promise(r=>release=r);const p=page({schemaFetch:()=>pending});
+  const task=p.events['connect:click']();p.events['disconnect:click']();release(ok({type:'object'}));await task;
+  assert(!p.calls.some(c=>c[0]==='localConnect'||c[0]==='researchConnect'));assert(p.el.analyze.disabled);
+});
+test('changing pathway while schema loads cannot initiate a different connection',async()=>{
+  let release;const p=page({schemaFetch:()=>new Promise(r=>release=r)});
+  const task=p.events['connect:click']();p.el.mode.value='research';p.events['mode:change']();release(ok({type:'object'}));await task;
+  assert(!p.calls.some(c=>c[0]==='researchConnect'));assert(p.el.analyze.disabled);
+});
+test('pending file load clears old results and prevents analysis until the complete file is loaded',async()=>{
+  let release;const p=page();await p.events['connect:click']();p.el.report.value=TEXT;p.el.result.textContent='OLD RESULT';p.el['complete-confirm'].checked=true;
+  p.el['report-file'].files=[{name:'synthetic.txt',size:TEXT.length,arrayBuffer:()=>new Promise(r=>release=r)}];
+  const task=p.events['report-file:change']();assert.equal(p.el.report.value,'');assert(p.el.analyze.disabled);assert(!p.el.result.textContent.includes('OLD RESULT'));
+  await p.events['analyze:click']();assert(!p.calls.some(c=>c[0]==='localRun'));
+  release(new TextEncoder().encode(TEXT).buffer);await task;assert.equal(p.el.report.value,TEXT);assert(!p.el.analyze.disabled);assert.equal(p.el['complete-confirm'].checked,false);
+});
+test('a source edit during inference cannot display an answer for the earlier report',async()=>{
+  let release;const p=page({localRun:()=>new Promise(r=>release=r)});await p.events['connect:click']();p.el.report.value=TEXT;p.el['complete-confirm'].checked=true;
+  const task=p.events['analyze:click']();p.el.report.value='SYNTHETIC revised source.';p.events['report:input']();release(JSON.stringify(REVIEW));await task;
+  assert.equal(p.el.result.textContent,'Source changed. Review again.');assert(!p.el.status.textContent.includes('matching passed'));
+});
+test('changing the selected model invalidates the previous result',()=>{
+  const p=page();p.el.result.textContent='OLD MODEL RESULT';p.events['model:change']();assert.equal(p.el.result.textContent,'Source changed. Review again.');
+});
+test('source context exposes nearby negation and repeated-quote ambiguity without reclassifying the model',()=>{
+  const text='SYNTHETIC: No pleural effusion. Previously pleural effusion resolved.';
+  const r=validate({findings:[{quote:'pleural effusion',assertion:'present',follow_up_quote:'',deadline_quote:''}],missing_context:[]},text);
+  assert(r.findings[0].source_context.includes('No pleural effusion'));
+  assert.equal(r.findings[0].source_occurrences,2);assert.equal(r.findings[0].assertion,'present');
+});
+
+test('editing a reviewed report clears the old success status as well as its findings',()=>{
+ const p=page();p.el.status.textContent='Source matching passed.';p.events['report:input']();assert(!p.el.status.textContent.includes('matching passed'));assert(p.el.status.textContent.includes('Review again'));
 });

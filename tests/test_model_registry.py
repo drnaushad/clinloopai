@@ -10,7 +10,7 @@ from unittest import mock
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT)
 
-from src.clinloop_engine import model_registry, second_reader  # noqa: E402
+from src.clinloop_engine import model_registry, second_reader, local_llm_engine  # noqa: E402
 
 
 def _server(installed, caps):
@@ -26,7 +26,9 @@ def _server(installed, caps):
         r.raise_for_status = mock.Mock()
         r.json.return_value = {"capabilities": caps.get(json["model"], ["completion"])}
         return r
-    return mock.patch.multiple(model_registry.requests, get=get, post=post)
+    def transport(method, path, payload=None, timeout=None, base=None):
+        return get(path).json() if method == "GET" else post(path, json=payload).json()
+    return mock.patch.object(local_llm_engine, "_ollama_json", side_effect=transport)
 
 
 ENV = {k: "" for k in ("CLINLOOP_LLM_MODEL", "CLINLOOP_SECOND_READER_MODEL", "CLINLOOP_VLM_MODEL")}
@@ -62,7 +64,7 @@ class TestRegistry(unittest.TestCase):
     def test_unreachable_server(self):
         def down(*a, **k):
             raise model_registry.requests.ConnectionError()
-        with mock.patch.object(model_registry.requests, "get", down):
+        with mock.patch.object(local_llm_engine, "_ollama_json", down):
             reg = model_registry.registry("http://127.0.0.1:1")
         self.assertTrue(all(r["status"] == "model server unreachable" for r in reg["roles"]))
 

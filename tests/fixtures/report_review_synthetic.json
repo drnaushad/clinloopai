@@ -1,0 +1,163 @@
+{
+  "synthetic_only": true,
+  "seed": 42,
+  "purpose": "Software regression and synthetic fixture expectation agreement; not clinician-adjudicated real-patient accuracy.",
+  "cases": [
+    {
+      "id": "lab-units",
+      "report_type": "laboratory",
+      "text": "SYNTHETIC — fictional test report.\nPotassium 4.2 mmol/L; laboratory reference interval 3.5-5.1 mmol/L.",
+      "expected": [
+        {
+          "quote": "Potassium 4.2 mmol/L; laboratory reference interval 3.5-5.1 mmol/L.",
+          "assertion": "present",
+          "follow_up_quote": "",
+          "deadline_quote": ""
+        }
+      ]
+    },
+    {
+      "id": "lab-uncertain",
+      "report_type": "laboratory",
+      "text": "SYNTHETIC — fictional test report.\nPotassium result may be affected by specimen hemolysis.",
+      "expected": [
+        {
+          "quote": "Potassium result may be affected by specimen hemolysis.",
+          "assertion": "uncertain",
+          "follow_up_quote": "",
+          "deadline_quote": ""
+        }
+      ]
+    },
+    {
+      "id": "rad-negative",
+      "report_type": "radiology-text",
+      "text": "SYNTHETIC — fictional test report.\nNo pleural effusion is identified.",
+      "expected": [
+        {
+          "quote": "No pleural effusion is identified.",
+          "assertion": "negated",
+          "follow_up_quote": "",
+          "deadline_quote": ""
+        }
+      ]
+    },
+    {
+      "id": "rad-plan",
+      "report_type": "radiology-text",
+      "text": "SYNTHETIC — fictional test report.\nA 6 mm lung nodule is present. Repeat chest CT in 6 months.",
+      "expected": [
+        {
+          "quote": "A 6 mm lung nodule is present.",
+          "assertion": "present",
+          "follow_up_quote": "Repeat chest CT in 6 months.",
+          "deadline_quote": "6 months"
+        }
+      ]
+    },
+    {
+      "id": "path-negative",
+      "report_type": "pathology-text",
+      "text": "SYNTHETIC — fictional test report.\nNo carcinoma is identified in this specimen.",
+      "expected": [
+        {
+          "quote": "No carcinoma is identified in this specimen.",
+          "assertion": "negated",
+          "follow_up_quote": "",
+          "deadline_quote": ""
+        }
+      ]
+    },
+    {
+      "id": "path-uncertain",
+      "report_type": "pathology-text",
+      "text": "SYNTHETIC — fictional test report.\nMargins cannot be assessed in this fragmented specimen.",
+      "expected": [
+        {
+          "quote": "Margins cannot be assessed in this fragmented specimen.",
+          "assertion": "uncertain",
+          "follow_up_quote": "",
+          "deadline_quote": ""
+        }
+      ]
+    },
+    {
+      "id": "ecg-history",
+      "report_type": "ecg-report-text",
+      "text": "SYNTHETIC — fictional test report.\nPrior ECG showed atrial fibrillation in 2020.",
+      "expected": [
+        {
+          "quote": "Prior ECG showed atrial fibrillation in 2020.",
+          "assertion": "historical",
+          "follow_up_quote": "",
+          "deadline_quote": ""
+        }
+      ]
+    },
+    {
+      "id": "ecg-plan",
+      "report_type": "ecg-report-text",
+      "text": "SYNTHETIC — fictional test report.\nECG report describes an uninterpretable tracing due to artifact. Repeat ECG tomorrow.",
+      "expected": [
+        {
+          "quote": "ECG report describes an uninterpretable tracing due to artifact.",
+          "assertion": "present",
+          "follow_up_quote": "Repeat ECG tomorrow.",
+          "deadline_quote": "tomorrow"
+        }
+      ]
+    },
+    {
+      "id": "discharge-plan",
+      "report_type": "discharge-summary",
+      "text": "SYNTHETIC — fictional test report.\nFollow-up blood test has not yet been performed. Repeat CBC in 7 days.",
+      "expected": [
+        {
+          "quote": "Follow-up blood test has not yet been performed.",
+          "assertion": "present",
+          "follow_up_quote": "Repeat CBC in 7 days.",
+          "deadline_quote": "7 days"
+        }
+      ]
+    },
+    {
+      "id": "discharge-negative",
+      "report_type": "discharge-summary",
+      "text": "SYNTHETIC — fictional test report.\nNo fever was documented during this admission.",
+      "expected": [
+        {
+          "quote": "No fever was documented during this admission.",
+          "assertion": "negated",
+          "follow_up_quote": "",
+          "deadline_quote": ""
+        }
+      ]
+    },
+    {
+      "id": "other-negative",
+      "report_type": "other-text",
+      "text": "SYNTHETIC — fictional test report.\nNo current swallowing difficulty is reported.",
+      "expected": [
+        {
+          "quote": "No current swallowing difficulty is reported.",
+          "assertion": "negated",
+          "follow_up_quote": "",
+          "deadline_quote": ""
+        }
+      ]
+    },
+    {
+      "id": "other-history",
+      "report_type": "other-text",
+      "text": "SYNTHETIC — fictional test report.\nA hearing deficit was documented on the prior 2019 examination.",
+      "expected": [
+        {
+          "quote": "A hearing deficit was documented on the prior 2019 examination.",
+          "assertion": "historical",
+          "follow_up_quote": "",
+          "deadline_quote": ""
+        }
+      ]
+    }
+  ]
+}

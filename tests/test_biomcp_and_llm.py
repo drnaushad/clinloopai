@@ -144,8 +144,10 @@ class StubOllama:
 
             def do_POST(self):
                 body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                if self.path == "/api/show":
+                    return self._send({"details": {"family": "synthetic"}, "model_info": {"general.architecture": "synthetic", "synthetic.context_length": 16384}, "capabilities": ["completion"]})
                 stub.prompts.append(body)
-                self._send({"model": body["model"], "response": stub.response, "done": True, "eval_count": 42})
+                self._send({"model": body["model"], "response": stub.response, "done": True, "done_reason": "stop", "eval_count": 42})
 
             def _send(self, body, code=200):
                 data = json.dumps(body).encode()

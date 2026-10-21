@@ -49,26 +49,30 @@ def prompt_version() -> str:
 
 def _installed(base: str) -> Optional[Dict[str, Dict[str, Any]]]:
     try:
-        r = requests.get(f"{base}/api/tags", timeout=5)
-        r.raise_for_status()
-        return {m["name"]: m for m in r.json().get("models", []) if m.get("name")}
-    except (requests.RequestException, ValueError):
+        from .local_llm_engine import _ollama_json
+        data = _ollama_json("GET", "/api/tags", timeout=5, base=base)
+        if not isinstance(data.get("models"), list):
+            return None
+        return {m["name"]: m for m in data["models"] if isinstance(m, dict) and isinstance(m.get("name"), str)}
+    except (requests.RequestException, ValueError, OSError):
         return None
 
 
 def _capabilities(base: str, name: str) -> Optional[List[str]]:
     try:
-        r = requests.post(f"{base}/api/show", json={"model": name}, timeout=10)
-        r.raise_for_status()
-        caps = r.json().get("capabilities")
-        return list(caps) if isinstance(caps, list) else None
-    except (requests.RequestException, ValueError):
+        from .local_llm_engine import _ollama_json, _local_model
+        data = _ollama_json("POST", "/api/show", {"model": name}, timeout=10, base=base)
+        if not _local_model({"name": name, **data}):
+            return None
+        caps = data.get("capabilities")
+        return list(caps) if isinstance(caps, list) and all(isinstance(c, str) for c in caps) else None
+    except (requests.RequestException, ValueError, OSError):
         return None
 
 
 def registry(base: Optional[str] = None) -> Dict[str, Any]:
     """Each role with its configured model and its real state on the model server."""
-    from .local_llm_engine import OLLAMA_BASE_URL
+    from .local_llm_engine import OLLAMA_BASE_URL, _local_model
     base = (base or OLLAMA_BASE_URL).rstrip("/")
     installed = _installed(base)
     roles = []
@@ -82,12 +86,14 @@ def registry(base: Optional[str] = None) -> Dict[str, Any]:
             entry.update(status="model server unreachable")
         elif name not in installed:
             entry.update(status="not installed")
+        elif not _local_model({"name": name, **installed[name]}):
+            entry.update(status="remote or cloud alias refused")
         else:
             m = installed[name]
             d = m.get("details") or {}
             caps = _capabilities(base, name)
-            ok = caps is None or role["needs"] in caps
-            entry.update(status="available" if ok else f"installed, but the model does not declare '{role['needs']}'",
+            ok = caps is not None and role["needs"] in caps
+            entry.update(status="available" if ok else "capability check unavailable" if caps is None else f"installed, but the model does not declare '{role['needs']}'",
                          digest=m.get("digest"), size_bytes=m.get("size"), family=d.get("family"),
                          parameter_size=d.get("parameter_size"), quantization=d.get("quantization_level"),
                          capabilities=caps)

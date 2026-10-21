@@ -120,3 +120,55 @@ Official implementation references: [Structured Outputs](https://developers.open
 and [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create),
 [Anthropic structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs),
 and [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/generate-content/structured-output).
+
+
+## Reliability review — 21 October 2026
+
+The browser now cancels a pending connection before it can restart a cleared session, locks
+analysis while a file is loading, and binds results to the exact source and selected model.
+Changing either invalidates the old result. Source evidence includes surrounding text and a
+count of repeated quote occurrences; assertion labels remain unverified model claims.
+
+Structured local review checks the installed model's declared context window before sending
+text and reserves room for the schema and output. Models with missing or inadequate capacity
+are refused. An explicit successful stop is required; partial output and embedded thinking
+traces are rejected. No input is split or silently truncated. This may refuse older Ollama
+responses or smaller models that previously appeared to work with incomplete context.
+
+The hospital text transport disables environment proxies, rejects redirects, public addresses
+and cloud/remote model aliases, checks completion metadata, and returns generic failures.
+An explicitly configured missing model no longer silently selects another. Inventory and
+capability checks do not prove inference health, clinical accuracy or an air-gapped network.
+GPU use is not inferred from a model's estimated memory requirement.
+
+A separate hospital second-reader change refuses oversized/partial reads instead of silently
+cutting a report. That change is a clinician-review draft under AGENTS.md and is excluded from
+the software release candidate until reviewed line by line.
+
+### Repeatable local synthetic evaluation
+
+Check the fixed fixtures without any model call:
+
+```sh
+node scripts/evaluate_report_review.cjs --check-fixtures
+```
+
+After the operator has checked local inference health, run one explicitly selected installed
+model against the 12 fixed synthetic cases (two per text category):
+
+```sh
+node scripts/evaluate_report_review.cjs --model medgemma:4b --address http://127.0.0.1:11434 --output /tmp/clinloop-medgemma4b-synthetic.json
+```
+
+Use a new output filename for each run. Substitute `medgemma:27b` or `exaone3.5:7.8b` explicitly
+for comparisons; there is no model fallback, download or external provider call. The runner
+uses the application's actual transport and source validator, stops on a failed generation,
+and counts cases not run separately. Its reference expectations test synthetic extraction
+agreement, including negation, uncertainty, history, units and explicit timing. They are not
+independent clinical reference labels, sensitivity/specificity or real-patient accuracy.
+
+Official references checked for this review: [Ollama generate completion metadata and schema format](https://docs.ollama.com/api/generate),
+[Ollama context-window configuration](https://docs.ollama.com/faq),
+[OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
+and the [MedGemma model cards](https://developers.google.com/health-ai-developer-foundations/medgemma/model-card).
+Installed model metadata, rather than a model name alone, determines the capability checks.

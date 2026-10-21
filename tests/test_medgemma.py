@@ -19,7 +19,7 @@ from src.clinloop_engine.imaging_ai import VisionLanguageModel  # noqa: E402
 def _tags(*names):
     resp = mock.Mock(status_code=200)
     resp.json.return_value = {"models": [{"name": n} for n in names]}
-    return mock.patch.object(local_llm_engine.requests, "get", return_value=resp)
+    return mock.patch.object(local_llm_engine, "_ollama_json", return_value=resp.json.return_value)
 
 
 def _clean_env(**extra):
@@ -40,7 +40,7 @@ class ModelOrder(unittest.TestCase):
         known = {m["name"]: m for m in local_llm_engine.PREFERRED_MODELS}
         self.assertEqual(known["medgemma:4b"]["role"], "vision")
         self.assertEqual(known["medgemma:27b"]["role"], "report reader")
-        self.assertIn("Korean weaker than EXAONE", known["medgemma:27b"]["label"])
+        self.assertIn("verify installed capabilities", known["medgemma:27b"]["label"])
 
 
 class SecondReaderModel(unittest.TestCase):
