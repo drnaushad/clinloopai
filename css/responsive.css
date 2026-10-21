@@ -408,3 +408,33 @@ td a, li a, a[href^="patient.html"] { display: inline-block; min-height: 24px; l
 .step-sub, .step-icon { font-size: 0.72rem; }
 .biomcp-tag-cyan, .biomcp-grade-badge, .biomcp-stream-label { font-size: 0.72rem; }
 .filter-btn { min-height: 28px; }
+
+/* Shared language controls: text remains readable if decorative images are unavailable. */
+[data-language] { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
+[data-language]::before { content: ""; display: inline-block; flex: 0 0 20px; width: 20px; height: 14px;
+  background-size: contain; background-position: center; background-repeat: no-repeat;
+  border-radius: 2px; box-shadow: 0 0 0 1px rgba(100,116,139,.35); }
+[data-language="ko"]::before { background-image: url('../icons/flag-kr.svg'); }
+[data-language="en"]::before { background-image: url('../icons/flag-us.svg'); }
+.app-nav { min-width: 0; max-width: 100%; }
+.app-nav:focus-visible { outline: 2px solid #0e7490; outline-offset: 2px; }
+@media (max-width: 1150px) {
+  /* A single strip saves vertical space. Native scrolling and Tab keep every destination reachable. */
+  nav.app-nav, .app-header--pro nav.app-nav, .wrap > header > nav.app-nav {
+    flex-wrap: nowrap !important; overflow-x: auto; overflow-y: hidden; max-width: 100%;
+    width: 100%; margin-left: 0; margin-right: 0; padding: 4px 2px 8px;
+    gap: 4px; justify-content: flex-start !important; scrollbar-width: thin; scroll-padding-inline: 8px; }
+  nav.app-nav .app-nav-link { flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 44px; }
+  .app-header--pro .lang-opt-btn, .app-header--pro .theme-opt-btn, #btn-lang { min-height: 44px; }
+}
+@media (max-width: 640px) {
+  .app-header--pro .header-actions { gap: .35rem !important; }
+  .app-header--pro .prominent-lang-pill button { font-size: .78rem !important; padding-inline: .2rem !important; gap: .25rem; }
+  [data-language]::before { flex-basis: 18px; width: 18px; height: 13px; }
+  /* Supporting pages share the same safe page gutter as the clinical screens. */
+  body > nav.app-nav { margin-block: 0 1rem; }
+  body:has(> nav.app-nav) { padding: 16px; overflow-wrap: break-word; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+}

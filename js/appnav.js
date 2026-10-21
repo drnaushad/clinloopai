@@ -11,7 +11,7 @@
   // Every device shows the same version: a phone may keep yesterday's page in its cache. Each page
   // asks for version.json (never cached); if the live version is newer than this script, the page
   // reloads once, fetching fresh copies. Bump APP_VERSION and version.json together on each release.
-  var APP_VERSION = '2026-10-21.3';
+  var APP_VERSION = '2026-10-21.4';
   (function checkVersion() {
     if (!window.fetch || location.protocol === 'file:') return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -35,6 +35,7 @@
     { page: 'imaging', href: 'imaging', en: 'Imaging', ko: '영상' },
     { page: 'analyse', href: 'analyse', en: 'Analyse patient', ko: '환자 분석' },
     { page: 'reports', href: 'reports', en: 'Live report reader', ko: '실시간 보고서 검토' },
+    { page: 'review', href: 'review.html', en: 'Report review', ko: '보고서 검토' },
     { page: 'private', href: 'private.html', en: 'Personal workspace', ko: '개인 작업 공간' },
     { page: 'validation', href: 'validation', en: 'Validation evidence', ko: '검증 근거' },
     { page: 'deployment', href: 'deployment', en: 'International setup', ko: '국제 배포 계획' }
@@ -66,6 +67,17 @@
     var ko = (document.documentElement.lang || '').indexOf('ko') === 0;
     var here = current();
     navs.forEach(function (nav) {
+      nav.setAttribute('tabindex', '0');
+      if (!nav.hasAttribute('data-focus-scroll')) {
+        nav.setAttribute('data-focus-scroll', '');
+        nav.addEventListener('focusin', function (event) {
+          var link = event.target.closest('a.app-nav-link');
+          if (!link) return;
+          var edge = nav.getBoundingClientRect(), item = link.getBoundingClientRect();
+          if (item.right > edge.right - 8) nav.scrollLeft += item.right - edge.right + 8;
+          else if (item.left < edge.left + 8) nav.scrollLeft -= edge.left - item.left + 8;
+        });
+      }
       if (!nav.getAttribute('aria-label')) nav.setAttribute('aria-label', ko ? 'ClinLoop 화면' : 'ClinLoop pages');
       nav.replaceChildren.apply(nav, PAGES.map(function (p) {
         var a = document.createElement('a');
@@ -75,6 +87,13 @@
         if (p.page === here) a.setAttribute('aria-current', 'page');
         return a;
       }));
+      // Keep the current page visible in the narrow navigation strip without moving the page.
+      requestAnimationFrame(function () {
+        var active = nav.querySelector('[aria-current="page"]');
+        if (active && nav.scrollWidth > nav.clientWidth) {
+          nav.scrollLeft = Math.max(0, active.offsetLeft - nav.firstElementChild.offsetLeft - 8);
+        }
+      });
     });
   }
 
