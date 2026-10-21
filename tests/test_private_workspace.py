@@ -14,4 +14,4 @@ class TestPrivateWorkspace(unittest.TestCase):
             cwd=root, capture_output=True, text=True, timeout=30,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn('# pass 16', result.stdout)
+        self.assertIn('# pass 18', result.stdout)
