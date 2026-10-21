@@ -1,4 +1,4 @@
-"""Explicitly opt-in loopback gateway for SYNTHETIC OpenAI research only.
+"""Explicitly opt-in loopback gateway for SYNTHETIC provider research only.
 
 Not mounted on the clinical API; no hospital database or patient-data access.
 Keys stay in this process environment. No request/response content is logged.
@@ -34,6 +34,8 @@ SYSTEM = (
     'Empty findings do not establish normal results. All output requires human review.'
 )
 ERROR = 'Research request could not be verified. No analysis accepted; human review required.'
+PROVIDERS = {'openai': 'OpenAI', 'anthropic': 'Anthropic (Claude)', 'gemini': 'Google Gemini'}
+Provider = Literal['openai', 'anthropic', 'gemini']
 
 
 class Finding(BaseModel):
@@ -56,6 +58,7 @@ class Input(BaseModel):
     report_type: TYPES
     synthetic_only: StrictBool
     external_api_allowed: StrictBool
+    provider: Provider = 'openai'  # Compatibility with the first OpenAI-only client.
 
 
 def verify_review(value: Any, text: str) -> Dict[str, Any]:
@@ -90,7 +93,79 @@ def response_review(response: Dict[str, Any], text: str) -> Dict[str, Any]:
     return verify_review(json.loads(chunks[0]), text)
 
 
-def create_app(settings: Dict[str, str], transport=None) -> FastAPI:
+def provider_schema(value: Any) -> Any:
+    """Send the common schema subset; enforce all original size constraints locally."""
+    if isinstance(value, list):
+        return [provider_schema(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+    return {key: provider_schema(item) for key, item in value.items()
+            if key not in {'minLength', 'maxLength', 'minItems', 'maxItems'}}
+
+
+def provider_request(provider: str, model: str, key: str, req: Input):
+    """Fixed vendor destinations only. Keys are headers, never URL parameters."""
+    source = json.dumps({'report_type': req.report_type, 'report_text': req.text}, ensure_ascii=False)
+    if provider == 'openai':
+        return 'https://api.openai.com/v1/responses', {'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'}, {
+            'model': model, 'store': False, 'stream': False, 'truncation': 'disabled',
+            'max_output_tokens': 1600, 'instructions': SYSTEM,
+            'input': [{'role': 'user', 'content': source}],
+            'text': {'format': {'type': 'json_schema', 'name': 'report_review', 'strict': True, 'schema': SCHEMA}}}
+    if provider == 'anthropic':
+        return 'https://api.anthropic.com/v1/messages', {'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json'}, {
+            'model': model, 'max_tokens': 1600, 'stream': False, 'system': SYSTEM,
+            'messages': [{'role': 'user', 'content': source}],
+            'output_config': {'format': {'type': 'json_schema', 'schema': provider_schema(SCHEMA)}}}
+    if provider == 'gemini':
+        # Model IDs are validated before interpolation; no slash, query or fragment allowed.
+        return 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
+            'x-goog-api-key': key, 'Content-Type': 'application/json'}, {
+            'systemInstruction': {'parts': [{'text': SYSTEM}]},
+            'contents': [{'role': 'user', 'parts': [{'text': source}]}],
+            'generationConfig': {'candidateCount': 1, 'maxOutputTokens': 1600,
+                                 'responseMimeType': 'application/json', 'responseJsonSchema': provider_schema(SCHEMA)}}
+    raise ValueError(ERROR)
+
+
+def parse_provider_response(provider: str, response: Dict[str, Any], text: str) -> Dict[str, Any]:
+    if provider == 'openai':
+        return response_review(response, text)
+    if response.get('error'):
+        raise ValueError(ERROR)
+    chunks = []
+    if provider == 'anthropic':
+        if response.get('type') != 'message' or response.get('role') != 'assistant' or response.get('stop_reason') != 'end_turn':
+            raise ValueError(ERROR)
+        for item in response.get('content', []):
+            if item.get('type') in {'thinking', 'redacted_thinking'}:
+                continue
+            if item.get('type') != 'text' or not isinstance(item.get('text'), str):
+                raise ValueError(ERROR)
+            chunks.append(item['text'])
+    elif provider == 'gemini':
+        candidates = response.get('candidates', [])
+        if response.get('promptFeedback', {}).get('blockReason') or len(candidates) != 1:
+            raise ValueError(ERROR)
+        candidate = candidates[0]
+        content = candidate.get('content', {})
+        if candidate.get('finishReason') != 'STOP' or content.get('role') != 'model' or any(
+                item.get('blocked') for item in candidate.get('safetyRatings', [])):
+            raise ValueError(ERROR)
+        for part in content.get('parts', []):
+            if part.get('thought') is True:
+                continue
+            if 'functionCall' in part or not isinstance(part.get('text'), str):
+                raise ValueError(ERROR)
+            chunks.append(part['text'])
+    else:
+        raise ValueError(ERROR)
+    if len(chunks) != 1 or len(chunks[0]) > 50000:
+        raise ValueError(ERROR)
+    return verify_review(json.loads(chunks[0]), text)
+
+
+def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:
     """One operator's synthetic gateway; never a shared clinical or multi-tenant service."""
     token = settings.get('token', '')
     origin = settings.get('origin', 'https://clinloopai.app')
@@ -98,9 +173,17 @@ def create_app(settings: Dict[str, str], transport=None) -> FastAPI:
         raise ValueError('A separate random local gateway access code is required.')
     if not (origin == 'https://clinloopai.app' or re.fullmatch(r'http://(?:127\.0\.0\.1|localhost):\d{1,5}', origin)):
         raise ValueError('Use the exact ClinLoop origin or a loopback preview origin.')
-    model = settings.get('model', '')
-    if model and not re.fullmatch(r'[A-Za-z0-9._:-]{1,160}', model):
-        raise ValueError('Invalid model identifier.')
+    configs = {name: dict(settings.get('providers', {}).get(name, {})) for name in PROVIDERS}
+    # Preserve existing OpenAI-only gateway settings.
+    configs['openai'].setdefault('api_key', settings.get('api_key', ''))
+    configs['openai'].setdefault('model', settings.get('model', ''))
+    if set(settings.get('providers', {})) - set(PROVIDERS):
+        raise ValueError('Unknown research provider.')
+    for config in configs.values():
+        config.setdefault('api_key', ''); config.setdefault('model', '')
+        if not isinstance(config['api_key'], str) or not isinstance(config['model'], str) or (
+                config['model'] and (not re.fullmatch(r'[A-Za-z0-9._-]{1,160}', config['model']) or re.match(r'(?:sk-|AIza)', config['model'], re.I))):
+            raise ValueError('Invalid provider configuration or model identifier.')
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     gate = threading.Lock()
     calls: list[float] = []
@@ -138,8 +221,10 @@ def create_app(settings: Dict[str, str], transport=None) -> FastAPI:
 
     @app.get('/review/status', dependencies=[Depends(authorize)])
     def status():
+        entries = [{'id': name, 'label': label, 'configured': bool(configs[name]['api_key'] and configs[name]['model']),
+                    'model': configs[name]['model']} for name, label in PROVIDERS.items()]
         return {'mode': 'synthetic-research-only', 'provider': 'openai',
-                'configured': bool(settings.get('api_key') and model), 'model': model,
+                'configured': entries[0]['configured'], 'model': entries[0]['model'], 'providers': entries,
                 'input': 'report text only', 'clinical_use': False}
 
     @app.post('/review/analyze', dependencies=[Depends(authorize)])
@@ -148,8 +233,10 @@ def create_app(settings: Dict[str, str], transport=None) -> FastAPI:
             raise HTTPException(403, 'Synthetic research and external API consent required.')
         if not req.text.strip() or len(req.text.encode('utf-8')) > 6000:
             raise HTTPException(422, 'Use 1–6000 UTF-8 bytes; no silent truncation.')
-        if not settings.get('api_key') or not model:
-            raise HTTPException(503, 'Configure the API key and model on your own research server.')
+        config = configs[req.provider]
+        model = config['model']
+        if not config['api_key'] or not model:
+            raise HTTPException(503, 'Configure the selected provider key and model on your own research server. No fallback used.')
         if not gate.acquire(blocking=False):
             raise HTTPException(429, 'Research gateway busy.')
         try:
@@ -158,13 +245,9 @@ def create_app(settings: Dict[str, str], transport=None) -> FastAPI:
             if len(calls) >= 12:
                 raise HTTPException(429, 'Research limit reached: 12 requests per hour.')
             calls.append(now)
-            payload = {'model': model, 'store': False, 'stream': False, 'truncation': 'disabled',
-                       'max_output_tokens': 1600, 'instructions': SYSTEM,
-                       'input': [{'role': 'user', 'content': json.dumps({'report_type': req.report_type, 'report_text': req.text}, ensure_ascii=False)}],
-                       'text': {'format': {'type': 'json_schema', 'name': 'report_review', 'strict': True, 'schema': SCHEMA}}}
             try:
-                with session.post('https://api.openai.com/v1/responses', json=payload,
-                                  headers={'Authorization': 'Bearer ' + settings['api_key'], 'Content-Type': 'application/json'},
+                destination, headers, payload = provider_request(req.provider, model, config['api_key'], req)
+                with session.post(destination, json=payload, headers=headers,
                                   timeout=(10, 120), allow_redirects=False, stream=True) as response:
                     if response.status_code != 200:
                         raise ValueError(ERROR)
@@ -173,10 +256,10 @@ def create_app(settings: Dict[str, str], transport=None) -> FastAPI:
                         raw.extend(chunk)
                         if len(raw) > 256000:
                             raise ValueError(ERROR)
-                    review = response_review(json.loads(raw), req.text)
+                    review = parse_provider_response(req.provider, json.loads(raw), req.text)
             except Exception:
                 raise HTTPException(502, ERROR) from None
-            return {'review': review, 'provider': 'openai', 'model': model, 'human_review_required': True,
+            return {'review': review, 'provider': req.provider, 'model': model, 'human_review_required': True,
                     'notice': 'Quotes checked against input, not clinically validated. No history saved by this gateway. Provider retention terms still apply.'}
         finally:
             gate.release()
@@ -187,8 +270,10 @@ def create_app(settings: Dict[str, str], transport=None) -> FastAPI:
 def main() -> None:
     """Run explicitly on loopback; key values are never printed."""
     import uvicorn
-    settings = {'api_key': os.environ.get('OPENAI_API_KEY', ''),
-                'model': os.environ.get('CLINLOOP_RESEARCH_MODEL', ''),
+    settings = {'providers': {
+                    'openai': {'api_key': os.environ.get('OPENAI_API_KEY', ''), 'model': os.environ.get('CLINLOOP_RESEARCH_MODEL', '')},
+                    'anthropic': {'api_key': os.environ.get('ANTHROPIC_API_KEY', ''), 'model': os.environ.get('CLINLOOP_RESEARCH_ANTHROPIC_MODEL', '')},
+                    'gemini': {'api_key': os.environ.get('GEMINI_API_KEY', ''), 'model': os.environ.get('CLINLOOP_RESEARCH_GEMINI_MODEL', '')}},
                 'token': os.environ.get('CLINLOOP_RESEARCH_GATEWAY_TOKEN', ''),
                 'origin': os.environ.get('CLINLOOP_RESEARCH_WEB_ORIGIN', 'https://clinloopai.app')}
     try:

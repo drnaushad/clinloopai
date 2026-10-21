@@ -7,6 +7,8 @@
   function status(text){$('status').textContent=text;}
   function sync(){
     $('local-options').hidden=$('mode').value!=='local';$('research-options').hidden=$('mode').value!=='research';
+    const label=api.PROVIDERS[$('provider').value];
+    $('provider-destination').textContent=label;$('provider-consent').textContent=label;
     $('connect').disabled=busy||connected;
     for(const id of ['report','report-file','analyze','model'])$(id).disabled=!connected||busy;
     $('report-type').disabled=busy;$('complete-confirm').disabled=busy;
@@ -23,6 +25,7 @@
     status(connected?'Report cleared. Local model connection retained.':'Disconnected. Session cleared.');sync();
   }
   $('mode').addEventListener('change',()=>clear(true));
+  $('provider').addEventListener('change',()=>clear(true));
   $('disconnect').addEventListener('click',()=>clear(true));$('clear').addEventListener('click',()=>clear(false));
   $('connect').addEventListener('click',async()=>{
     const current=epoch;busy=true;status('Checking selected connection…');sync();
@@ -31,11 +34,11 @@
       if(!r.ok)throw new Error('Review schema unavailable.');const contract=await r.json();
       let models;
       if($('mode').value==='local')models=await local.connect($('local-address').value,$('local-confirm').checked);
-      else models=[await research.connect($('research-address').value,$('gateway-code').value,$('research-confirm').checked)];
+      else models=[await research.connect($('research-address').value,$('gateway-code').value,$('research-confirm').checked,$('provider').value)];
       if(current!==epoch)return;schema=contract;connected=true;
       $('gateway-code').value='';$('model').replaceChildren(...models.map(m=>new Option(m,m)));
-      status($('mode').value==='local'?'Connected to your local model. No cloud fallback.':'Research gateway connected. Synthetic text is sent to OpenAI only when you select Review report.');
-    }catch(_){if(current===epoch){local.clear(true);research.clear();connected=false;$('gateway-code').value='';status('Connection failed. Check your local service, its exact allowed website origin and access code. No report sent.');}}
+      status($('mode').value==='local'?'Connected to your local model. No cloud fallback.':'Research gateway connected. Synthetic text is sent to '+api.PROVIDERS[research.provider]+' only when you select Review report.');
+    }catch(_){if(current===epoch){local.clear(true);research.clear();connected=false;$('gateway-code').value='';status('Connection failed. Check the selected provider configuration, local service, exact allowed website origin and access code. No report sent.');}}
     finally{if(current===epoch){busy=false;sync();}}
   });
   function render(review){

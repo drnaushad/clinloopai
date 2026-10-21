@@ -33,7 +33,7 @@ test('text uploads reject unsupported files and excessive lengths before reading
   validateFile('synthetic.TXT',6000);
   for(const args of [['report.pdf',200],['image.jpg',200],['report.txt',6001],['report.txt',0]])assert.throws(()=>validateFile(...args));
 });
-function research(handler){const calls=[];const r=new Research(async(url,options)=>{calls.push({url,options});return handler?handler(url,options):ok(url.endsWith('/status')?{mode:'synthetic-research-only',provider:'openai',configured:true,model:'synthetic-test'}:{review:REVIEW});});return {r,calls};}
+function research(handler){const calls=[];const r=new Research(async(url,options)=>{calls.push({url,options});return handler?handler(url,options):ok(url.endsWith('/status')?{mode:'synthetic-research-only',provider:'openai',configured:true,model:'synthetic-test'}:{review:REVIEW,provider:'openai',model:'synthetic-test'});});return {r,calls};}
 test('research requires loopback gateway, access code and consent before transmission',async()=>{
   for(const args of [['http://127.0.0.1:18127',CODE,false],['https://api.openai.com',CODE,true],['http://localhost:18127','sk-an-api-key',true],['http://localhost:18127','sk-proj-'+'x'.repeat(100),true]]){
     const {r,calls}=research();await assert.rejects(r.connect(...args));assert.equal(calls.length,0);
@@ -60,10 +60,10 @@ test('local structured review sends original text only to an inspected local mod
   const body=JSON.parse(calls.at(-1).options.body);assert.deepEqual(body.format,schema);assert.equal(body.prompt,TEXT);assert.equal(body.options.temperature,0);
 });
 function page({localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>validate(REVIEW,TEXT)}={}){
-  const ids=['mode','local-options','research-options','connect','disconnect','status','model','report','report-file','analyze','local-address','research-address','gateway-code','local-confirm','research-confirm','report-type','complete-confirm','result','sample','clear'];
+  const ids=['mode','provider','provider-destination','provider-consent','local-options','research-options','connect','disconnect','status','model','report','report-file','analyze','local-address','research-address','gateway-code','local-confirm','research-confirm','report-type','complete-confirm','result','sample','clear'];
   const el={},events={},windowEvents={},calls=[];
   for(const id of ids)el[id]={value:'',checked:false,children:[],files:[],addEventListener:(n,f)=>{events[id+':'+n]=f;},replaceChildren(...xs){this.children=xs;},append(...xs){this.children.push(...xs);}};
-  el.mode.value='local';el['local-address'].value='http://127.0.0.1:11434';el['research-address'].value='http://127.0.0.1:18127';el['report-type'].value='radiology-text';
+  el.mode.value='local';el.provider.value='openai';el['local-address'].value='http://127.0.0.1:11434';el['research-address'].value='http://127.0.0.1:18127';el['report-type'].value='radiology-text';
   const api=require('../js/report-review.js');
   const context={document:{getElementById:id=>el[id],createElement:()=>({children:[],append(...xs){this.children.push(...xs);}}),addEventListener(){}},
     Option:function(text,value){this.text=text;this.value=value;},fetch:async()=>ok({type:'object'}),setInterval(){},Date,TextDecoder,
@@ -99,4 +99,38 @@ test('edited source invalidates prior output and completeness confirmation',()=>
 test('page exit and browser cache restoration clear session data',()=>{
   const p=page();p.el.report.value=TEXT;p.windowEvents.pagehide();assert.equal(p.el.report.value,'');
   p.el.report.value=TEXT;p.windowEvents.pageshow({persisted:true});assert.equal(p.el.report.value,'');
+});
+test('all three research providers are explicitly selected and sent to the local gateway',async()=>{
+  for(const provider of ['openai','anthropic','gemini']){
+    const {r,calls}=research(url=>ok(url.endsWith('/status')?{mode:'synthetic-research-only',providers:[{id:provider,configured:true,model:'synthetic-'+provider}]}:{provider,model:'synthetic-'+provider,review:REVIEW}));
+    await r.connect('http://localhost:18127',CODE,true,provider);await r.run(TEXT,'radiology-text',true);
+    assert.equal(JSON.parse(calls[1].options.body).provider,provider);assert.equal(r.provider,provider);
+    for(const c of calls)assert.equal(new URL(c.url).origin,'http://localhost:18127');
+  }
+});
+test('unconfigured providers and unknown selections receive no report; no fallback',async()=>{
+  const {r,calls}=research();await assert.rejects(r.connect('http://localhost:18127',CODE,true,'anthropic'));
+  assert.equal(calls.length,1);assert.equal(r.token,'');
+  await assert.rejects(r.connect('http://localhost:18127',CODE,true,'other'));assert.equal(calls.length,1);
+});
+test('a response from another provider or model is rejected',async()=>{
+  for(const wrong of [{provider:'anthropic',model:'synthetic-test'},{provider:'openai',model:'different-model'}]){
+    const {r}=research(url=>ok(url.endsWith('/status')?{mode:'synthetic-research-only',provider:'openai',configured:true,model:'synthetic-test'}:{review:REVIEW,...wrong}));
+    await r.connect('http://localhost:18127',CODE,true);await assert.rejects(r.run(TEXT,'radiology-text',true));
+  }
+});
+test('Gemini and Anthropic keys are rejected as mistaken gateway access codes',async()=>{
+  for(const key of ['AIza'+'x'.repeat(40),'sk-ant-'+'x'.repeat(80)]){
+    const {r,calls}=research();await assert.rejects(r.connect('http://localhost:18127',key,true));assert.equal(calls.length,0);
+  }
+});
+test('changing provider clears report and access code and updates named consent',()=>{
+  const p=page();p.el.mode.value='research';p.el.provider.value='anthropic';p.el.report.value=TEXT;p.el['gateway-code'].value=CODE;
+  p.el['research-confirm'].checked=true;p.events['provider:change']();
+  assert.equal(p.el.report.value,'');assert.equal(p.el['gateway-code'].value,'');assert.equal(p.el['research-confirm'].checked,false);
+  assert.equal(p.el['provider-consent'].textContent,'Anthropic (Claude)');assert.equal(p.el['provider-destination'].textContent,'Anthropic (Claude)');
+});
+test('existing OpenAI-only gateways remain usable without an unknown provider field',async()=>{
+  const {r,calls}=research();await r.connect('http://localhost:18127',CODE,true,'openai');await r.run(TEXT,'radiology-text',true);
+  assert.equal(r.legacy,true);assert.equal(r.provider,'openai');assert(!('provider' in JSON.parse(calls[1].options.body)));
 });

@@ -17,14 +17,35 @@ clinical validation. Use the existing authenticated document/imaging endpoints f
 PDF, OCR and imaging workflows. The public preview is not a replacement for those controls.
 Keep model suggestions in research/shadow review until independently validated.
 
-## OpenAI research pathway
+## OpenAI, Anthropic and Gemini research pathway
 
-The first provider is OpenAI. No other provider is implied by “API.” Use synthetic data only.
-The browser calls a gateway on the user's own computer; the gateway calls only
-`https://api.openai.com/v1/responses`. The API key is never sent to the public website or
-returned to the browser. Requests use Structured Outputs, `store: false`, no tools or
-conversation history, and disabled automatic input truncation. `store: false` is not a
-promise of zero retention: the provider's account settings and terms still apply.
+Choose a research provider explicitly: OpenAI, Anthropic (Claude), or Google Gemini.
+Use synthetic data only. Each has one model ID configured on the operator's personal
+gateway; model availability and structured-output support depend on the provider account.
+The page does not claim that a listed provider or model has been clinically validated.
+Changing provider clears the source, result and access code, then requires a fresh connection
+and named-provider transmission confirmation. There is no fallback between providers.
+
+The browser calls only the personal loopback gateway. That gateway uses fixed destinations:
+
+| Provider | API destination | Server-side key variable | Model variable |
+| --- | --- | --- | --- |
+| OpenAI | `https://api.openai.com/v1/responses` | `OPENAI_API_KEY` | `CLINLOOP_RESEARCH_MODEL` |
+| Anthropic | `https://api.anthropic.com/v1/messages` | `ANTHROPIC_API_KEY` | `CLINLOOP_RESEARCH_ANTHROPIC_MODEL` |
+| Google Gemini | `https://generativelanguage.googleapis.com/v1beta/models/MODEL:generateContent` | `GEMINI_API_KEY` | `CLINLOOP_RESEARCH_GEMINI_MODEL` |
+
+Keys are sent in vendor-specific headers, never in URL queries, public website code or
+browser responses. Model IDs must be bare IDs, without `models/`, slashes, query strings or
+fragments. No model substitution, tools, conversation history or automatic retry is used.
+OpenAI requests retain `store: false` and disabled input truncation. Other providers do
+not receive an invented equivalent of that setting. No zero-retention guarantee is made:
+each provider's account settings and terms apply.
+
+Anthropic uses JSON schema output via `output_config.format`. Gemini uses
+`generationConfig.responseMimeType` and `responseJsonSchema`. Their outgoing schema omits
+string/array length constraints for compatibility, while the original full constraints and
+exact source quotes are still validated locally. Refusals, token-limit stops, blocked results,
+unexpected tools, missing or multiple results, and invalid evidence are rejected in full.
 
 Install the repository's pinned API dependencies in an isolated environment, then run:
 
@@ -32,10 +53,14 @@ Install the repository's pinned API dependencies in an isolated environment, the
 python scripts/run_research_review.py
 ```
 
-The helper asks for the API key with hidden input and a model ID supported by your account.
+The helper asks which provider to configure, then its API key with hidden input and a bare
+model ID with JSON structured-output support. Existing configured keys/models in the
+environment may enable additional providers on that same personal gateway; no unconfigured
+provider is silently substituted. `CLINLOOP_RESEARCH_PROVIDER` can preselect the helper's
+provider as `openai`, `anthropic` or `gemini`.
 It generates a separate local gateway access code in `data/secrets/research-review/`, with
 directory mode 700 and file mode 600. Open that file privately and enter its code in the
-browser, never the OpenAI API key. The helper removes the code file on normal shutdown.
+browser, never a provider API key. The helper removes the code file on normal shutdown.
 Never put an API key in a URL, public JavaScript, command-line arguments, a screenshot or Git.
 
 The gateway binds only `127.0.0.1:18127`. Its exact allowed browser origin defaults to
@@ -92,4 +117,6 @@ labels and patient-separated test sets. A licensed clinician must review changes
 logic line by line under `AGENTS.md` before deployment.
 
 Official implementation references: [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
-and [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create).
+and [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create),
+[Anthropic structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs),
+and [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/generate-content/structured-output).
