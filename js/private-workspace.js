@@ -78,7 +78,7 @@
         throw new Error('Session cleared.');
       } finally { if (epoch === this.epoch) this.busy = false; }
     }
-    async run(model, text) {
+    async run(model, text, review = null) {
       if (!this.address || !this.models.includes(model) || this.busy) throw new Error('Connect and choose an installed local model first.');
       if (typeof text !== 'string' || !text.trim() || new TextEncoder().encode(text).length > MAX_TEXT) throw new Error('Use 1–6000 UTF-8 bytes of synthetic text.');
       const epoch = this.epoch;
@@ -92,7 +92,8 @@
             !details.capabilities.includes('completion')) throw new Error('Model locality could not be established.');
         const data = await this.request('/api/generate', {
           model, prompt: text, stream: false,
-          system: 'Research test on synthetic text only. Do not diagnose or prescribe. Distinguish quoted facts from uncertainty. Your answer is unverified and requires human review.',
+          system: review ? review.system : 'Research test on synthetic text only. Do not diagnose or prescribe. Distinguish quoted facts from uncertainty. Your answer is unverified and requires human review.',
+          ...(review ? {format: review.schema} : {}),
           options: {temperature: 0, num_predict: 768, num_ctx: 8192}, keep_alive: 0
         }, epoch);
         if (!data || data.model !== model || data.done !== true || data.done_reason === 'length' ||

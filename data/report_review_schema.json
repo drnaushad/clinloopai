@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "findings": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "quote": {"type": "string", "minLength": 4, "maxLength": 1200},
+          "assertion": {"type": "string", "enum": ["present", "negated", "uncertain", "historical"]},
+          "follow_up_quote": {"type": "string", "maxLength": 1200},
+          "deadline_quote": {"type": "string", "maxLength": 200}
+        },
+        "required": ["quote", "assertion", "follow_up_quote", "deadline_quote"]
+      }
+    },
+    "missing_context": {"type": "array", "maxItems": 12, "items": {"type": "string", "maxLength": 300}}
+  },
+  "required": ["findings", "missing_context"]
+}
