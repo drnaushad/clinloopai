@@ -11,7 +11,7 @@
   // Every device shows the same version: a phone may keep yesterday's page in its cache. Each page
   // asks for version.json (never cached); if the live version is newer than this script, the page
   // reloads once, fetching fresh copies. Bump APP_VERSION and version.json together on each release.
-  var APP_VERSION = '2026-10-20.6';
+  var APP_VERSION = '2026-10-21.3';
   (function checkVersion() {
     if (!window.fetch || location.protocol === 'file:') return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -35,6 +35,7 @@
     { page: 'imaging', href: 'imaging', en: 'Imaging', ko: '영상' },
     { page: 'analyse', href: 'analyse', en: 'Analyse patient', ko: '환자 분석' },
     { page: 'reports', href: 'reports', en: 'Live report reader', ko: '실시간 보고서 검토' },
+    { page: 'private', href: 'private.html', en: 'Personal workspace', ko: '개인 작업 공간' },
     { page: 'validation', href: 'validation', en: 'Validation evidence', ko: '검증 근거' },
     { page: 'deployment', href: 'deployment', en: 'International setup', ko: '국제 배포 계획' }
   ];

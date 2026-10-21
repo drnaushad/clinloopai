@@ -2,6 +2,33 @@
 
 # ClinLoop AI — Closed-Loop Clinical Safety Monitoring
 
+## Personal model workspace (research preview, not a clinical release)
+
+[Personal workspace](https://clinloopai.app/private.html) provides a separate browser-to-Ollama workspace. Each visitor supplies their own
+loopback endpoint; the page never calls the shared ClinLoop API, forwards browser credentials,
+or stores a conversation in browser storage. It clears page content on disconnect, navigation
+and ten minutes of inactivity. Current text is visible on the unlocked screen; clearing is not
+secure erasure from device memory. The hospital API remains a shared hospital workspace: this
+preview does not add per-user tenancy or change that API's permissions.
+
+Use synthetic text only. Each user must run an Ollama instance they control, disable cloud
+features (`OLLAMA_NO_CLOUD=1`), allow the exact page origin using `OLLAMA_ORIGINS`, and permit
+browser local-network access where supported. Keep Ollama bound to loopback. For a private
+Ubuntu model server, forward its Ollama port to laptop loopback with SSH. Do not expose an
+unauthenticated Ollama port publicly or restart another user's service. Existing services need
+their own administrator-managed configuration; the page does not change it.
+
+The transport rejects non-loopback URLs, redirects, known cloud-model aliases, uninspectable
+models, unfinished or unexpected responses, and stale results after clearing. Local endpoint
+location and model metadata do not prove network isolation. Model-server administrators,
+extensions and compromised devices can still access data. The website delivers executable
+code: using it requires trust in the published website and its delivery chain. Approval for
+real patient processing and independent clinical validation remain separate requirements.
+
+Run the synthetic isolation checks with `node tests/test_private_workspace.cjs` or the existing
+Python test entry point. This preview is published separately from the unpublished clinical-safety
+draft and does not change clinical rules, hospital data, or model-server settings.
+
 > 설명가능 AI 기반 미완결 진료루프 탐지·종결 지원 플랫폼
 > **Try it:** [https://clinloopai.app](https://clinloopai.app) works on any phone, tablet or computer, with
 > no sign-up and no install.

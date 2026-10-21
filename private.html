@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src http://127.0.0.1:* http://localhost:*; img-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>Personal workspace · ClinLoop</title>
+<link rel="stylesheet" href="css/private-workspace.css">
+<script defer src="js/private-workspace.js"></script>
+<script defer src="js/private-workspace-page.js"></script>
+</head>
+<body>
+<header><a href="./">ClinLoop</a><span>Personal workspace · research preview</span></header>
+<main>
+<h1>Your model. A separate session.</h1>
+<p class="lead">Connect this browser directly to Ollama on your own computer. This workspace does not send your conversation to ClinLoop’s shared API or save a conversation history.</p>
+<aside><strong>Research preview</strong> — use synthetic examples only. This connection feature does not establish clinical accuracy or approval to process patient records.</aside>
+<section aria-labelledby="connection-heading">
+<h2 id="connection-heading">1. Connect your own model</h2>
+<p>Start Ollama on your computer with cloud features disabled and allow this website’s exact origin. On shared equipment, ask the owner before changing or restarting Ollama.</p>
+<pre>OLLAMA_NO_CLOUD=1 OLLAMA_HOST=127.0.0.1:11434 OLLAMA_ORIGINS=https://clinloopai.app ollama serve</pre>
+<p>This example starts a new instance only when the port is unused. For an existing installation, configure its service rather than starting a second instance. See the <a href="https://docs.ollama.com/faq" target="_blank" rel="noopener noreferrer">Ollama setup instructions</a>.</p>
+<details><summary>My Ollama runs on a private Ubuntu server</summary><p>On your laptop, open a private tunnel to an Ollama instance you control:</p><pre>ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:11435:127.0.0.1:11434 USER@YOUR_SERVER</pre><p>Use <code>http://127.0.0.1:11435</code> below. The server still needs the exact website origin allowed and cloud features disabled. Server administrators may have access to its processes and logs.</p></details>
+<form id="connect-form" autocomplete="off">
+<label for="endpoint">Ollama address on this computer</label>
+<input id="endpoint" type="url" value="http://127.0.0.1:11434" required spellcheck="false" autocomplete="off">
+<label class="check"><input id="local-only" type="checkbox" required> I control this Ollama instance and have disabled its cloud features. It is not a shared public server.</label>
+<button id="connect" type="submit">Connect my Ollama</button>
+<button id="disconnect" type="button">Disconnect and clear</button>
+</form>
+<p id="status" role="status" aria-live="polite">Disconnected. No model requests have been sent.</p>
+</section>
+<section aria-labelledby="test-heading">
+<h2 id="test-heading">2. Try a synthetic example</h2>
+<label for="model">Installed local model</label><select id="model" disabled><option value="">Connect first</option></select>
+<label for="prompt">Synthetic text (up to 6000 UTF-8 bytes)</label>
+<textarea id="prompt" rows="6" maxlength="6000" autocomplete="off" spellcheck="false" disabled placeholder="Use a fictional example, without patient identifiers."></textarea>
+<div class="actions"><button id="sample" type="button" disabled>Use synthetic example</button><button id="run" type="button" disabled>Run locally</button><button id="clear" type="button">Clear conversation</button></div>
+<h3>Model response — unverified</h3><pre id="answer" aria-live="polite">No response yet.</pre>
+</section>
+<section><h2>What stays private here</h2>
+<ul><li>Model calls go only to the loopback address you connect. There is no shared-server fallback.</li><li>No account, shared patient database, browser storage, history service, analytics or cloud model is used by this page.</li><li>The current text and response stay in page memory. Disconnecting, leaving the page or 10 minutes of inactivity clears the workspace. Closing a tab is not secure deletion from device memory.</li><li>Someone using the same unlocked screen, browser extensions, a compromised device or the administrator of your model server may still see data. A private endpoint alone does not prove network isolation.</li><li>Other ClinLoop pages use a different workspace. This page does not make an existing hospital database private per user, or erase earlier history elsewhere.</li></ul>
+<p>Clearing this page does not erase model-server logs or guarantee that an already submitted model job has stopped. Using the public page also requires trust in the website code delivered to your browser.</p>
+<p>Browsers may request permission to access your local network or block the connection. Allow access only when you intend to connect to your own model; do not disable browser security. If your browser cannot connect, use your approved local installation.</p>
+</section>
+</main>
+</body>
+</html>
