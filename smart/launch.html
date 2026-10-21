@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src https://launch.smarthealthit.org; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>SMART sandbox connection · ClinLoop</title><link rel="stylesheet" href="sandbox.css">
+<script defer src="../js/smart-sandbox.js"></script><script defer src="../js/smart-sandbox-page.js"></script></head>
+<body><header><a href="../">ClinLoop</a><span>SMART sandbox · research preview</span></header><main>
+<h1>Open a synthetic patient chart</h1>
+<p>Test the clinician EHR launch with SMART Health IT’s public R4 sandbox.</p>
+<p><a id="launcher" href="https://launch.smarthealthit.org/" rel="noreferrer">Open the configured SMART launcher</a></p>
+<aside><strong>Synthetic sandbox only.</strong> This page verifies a connection and displays source report conclusions. It does not diagnose, establish accuracy or approve use with real patients.</aside>
+<section><h2>Connect with read-only access</h2><p>The sandbox will ask you to select a synthetic patient and authorize access to that patient’s chart and diagnostic reports.</p>
+<label><input type="checkbox" id="synthetic">I am using the public SMART sandbox with synthetic patients.</label>
+<button type="button" id="start">Continue to SMART sandbox</button><button type="button" id="disconnect">Disconnect and clear</button>
+<p id="status" role="status" aria-live="polite">Ready for an EHR launch. Open this page from the SMART launcher.</p><div id="reports"></div></section>
+<section><h2>Sandbox registration</h2><p>Public client ID: <code>clinloop-smart-sandbox-ui</code></p><p>Website launch path after publication: <code>https://clinloopai.app/smart/launch.html</code></p><p>Website redirect after publication: <code>https://clinloopai.app/smart/callback.html</code></p>
+<p>OAuth uses PKCE S256 and a single-use state check. Only a short-lived login handshake is kept in this tab’s session storage. Tokens and fetched records stay in page memory; leaving, disconnecting or 10 minutes of inactivity clears the page. Clearing does not revoke the server’s grant or guarantee secure deletion from memory.</p>
+<p>No report is sent to ClinLoop’s shared API or a language model. This sandbox preview does not implement hospital access auditing or production clinical controls.</p></section>
+</main></body></html>

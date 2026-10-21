@@ -102,7 +102,39 @@ holds counts only: files, resources by type, patients, loops per rule, unreadabl
 references it had to assume. Use it to test mapping and scale; a synthetic run says nothing about
 accuracy on real patients.
 
-## 4. Settings summary
+## 4. Separate browser EHR launch preview (synthetic SMART sandbox only)
+
+`/smart/launch.html` provides a browser public-client demonstration, separate from the
+Backend Services sync described above. Open its configured launcher link, use Provider
+EHR Launch with FHIR R4, then launch ClinLoop and confirm synthetic sandbox data.
+
+The registration is public client `clinloop-smart-sandbox-ui`, launch URL
+`https://clinloopai.app/smart/launch.html`, redirect URL
+`https://clinloopai.app/smart/callback.html`, with only
+`launch patient/Patient.r patient/DiagnosticReport.rs`. The generated launcher enables
+Strict validation and Always PKCE. Loopback previews use their own exact origin for both
+URLs; do not register a preview redirect for a hospital client.
+
+The preview requires S256 PKCE, unpredictable single-use state, a five-minute login
+handshake and allowlisted SMART sandbox endpoints. It verifies the returned Patient
+resource against launch context, reads up to 20 DiagnosticReport resources for that
+patient, rejects mismatched subjects, and explicitly labels empty/partial data. It
+does not follow pagination links, load attachments, execute FHIR XHTML or make clinical
+decisions. Plain-text conclusions are displayed only when the source supplies them.
+
+Only the temporary handshake is kept in sessionStorage. Access tokens and records are
+not persisted or sent to ClinLoop's shared API or a model. Disconnect, page exit and ten
+minutes of inactivity clear the view. Clearing is not server-side grant revocation or
+secure memory deletion. This page does not implement hospital access auditing and is
+not an approved workflow for real patient records. SMART sandbox interoperability does
+not establish clinical accuracy, production OAuth certification or Epic clinician-launch
+support; the existing Epic application remains a separate Backend Systems registration.
+
+Run the browser security tests with `node tests/test_smart_sandbox.cjs`. Live verification
+must include the actual launcher authorization/callback round trip; a mock token or the
+SMART sample app is not evidence that ClinLoop's own flow works.
+
+## 5. Settings summary
 
 | Variable | Purpose |
 | --- | --- |
