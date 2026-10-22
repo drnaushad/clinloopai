@@ -135,8 +135,8 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js?v=2026-10-21.3"></script>
-<script src="js/appnav.js?v=2026-10-21.5"></script>
+<script src="js/demo.js?v=2026-10-22.1"></script>
+<script src="js/appnav.js?v=2026-10-22.1"></script>
 <link rel="stylesheet" href="css/responsive.css?v=20261021_4">
 <script defer src="js/language-controls.js?v=2026-10-21.4"></script>
 </head>
@@ -568,7 +568,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       $('k-rate').textContent = rate.groups.all ? rate.groups.all.rate_per_1000.toLocaleString() : '–';
       const fs = feed.status;
       $('feed').className = `feed ${fs === 'OK' ? 'ok' : 'alarm'}`;
-      $('feed').textContent = t().feed[fs](feed.hours_since_success);
+      $('feed').textContent = window.CLINLOOP_DEMO && window.CLINLOOP_DEMO.static ? 'Synthetic snapshot · recorded ' + (feed.last_success || 'date unavailable') + ' · not a live feed' : t().feed[fs](feed.hours_since_success);
       if (wl.governance) {
         const g = wl.governance;
         $('gov').className = `feed ${g.rules_approved === g.rules_total && g.critical_findings_list === 'approved' ? 'ok' : ''}`;

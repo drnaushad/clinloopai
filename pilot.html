@@ -153,8 +153,8 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 @media (max-width: 720px) { .q { grid-template-columns: 1fr; } }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js?v=2026-10-21.3"></script>
-<script src="js/appnav.js?v=2026-10-21.5"></script>
+<script src="js/demo.js?v=2026-10-22.1"></script>
+<script src="js/appnav.js?v=2026-10-22.1"></script>
 <link rel="stylesheet" href="css/responsive.css?v=20261021_4">
 <script defer src="js/language-controls.js?v=2026-10-21.4"></script>
 </head>
@@ -230,7 +230,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       results: { pass: '충족', fail: '미충족', 'insufficient data': '자료 부족', 'decided by the clinical leads': '임상 책임자 결정' },
       family: '규칙군', reviewed: '판정', open: '실제 미완결', ppv: 'PPV (95% CI)', kappa: '검토자 간 일치 (일치율 · κ)', observed: '관찰 기간 (일 / 최소)', closedLater: '실제 미완결 중 이후 일반 진료로 완료', delay: '일반 진료 지연 (기한 초과 일수 중앙값)', discordant: '불일치 (재판정 필요)',
       safetyTitle: '안전 보고', noSafety: '아직 없습니다.', notReviewer: '검토팀만 볼 수 있습니다.',
-      footer: 'ClinLoop AI · 시범 운영은 환자를 위험에 두지 않습니다.',
+      footer: 'ClinLoop AI · 시범 운영의 안전을 위해 임상 감독과 통상 진료가 필요합니다.',
     },
     en: {
       title: 'Silent-run review', subtitle: 'Protocol Stage 2: ClinLoop runs silently on the live record; the review team judges a weekly sample.',
@@ -249,7 +249,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       results: { pass: 'Pass', fail: 'Fail', 'insufficient data': 'Insufficient data', 'decided by the clinical leads': 'Clinical leads decide' },
       family: 'Rule family', reviewed: 'Judged', open: 'Truly open', ppv: 'PPV (95% CI)', kappa: 'Agreement between reviewers (observed · κ)', observed: 'Days observed / minimum', closedLater: 'Truly open, later closed by usual care', delay: 'Delay in usual care (median days past deadline)', discordant: 'Discordant (need adjudication)',
       safetyTitle: 'Safety referrals', noSafety: 'None yet.', notReviewer: 'Only the review team sees this.',
-      footer: 'ClinLoop AI · The pilot never leaves a patient at risk.',
+      footer: 'ClinLoop AI · Pilot safety requires active clinical oversight and usual care.',
     },
   };
   const store = { get(k, s = sessionStorage) { try { return s.getItem(k) || ''; } catch { return ''; } },

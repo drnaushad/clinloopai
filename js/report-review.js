@@ -31,13 +31,21 @@
           typeof f.deadline_quote !== 'string' || f.deadline_quote.length > 200 ||
           (f.deadline_quote && !f.follow_up_quote.includes(f.deadline_quote)))
         throw new Error('A finding or deadline could not be traced to the source. No analysis accepted; human review required.');
+      const preceding = text.slice(Math.max(0, text.indexOf(f.quote)-200), text.indexOf(f.quote)).split(/[.!?\n]/).pop();
+      if (f.assertion === 'present' && /(?:^|:\s*)\s*(?:no\b|without\b|negative for\b)/i.test(preceding + f.quote))
+        throw new Error('Possible negation conflict in model output. No interpretation accepted; human review required.');
       const start=text.indexOf(f.quote),end=start+f.quote.length;
       let occurrences=0,at=0;
       while((at=text.indexOf(f.quote,at))!==-1){occurrences++;at+=f.quote.length;}
       return {...f, source_start:start, source_end:end, source_occurrences:occurrences,
         source_context:text.slice(Math.max(0,start-200),Math.min(text.length,end+200))};
     });
-    return {findings, missing_context: data.missing_context.slice(), human_review_required: true};
+    // Surface unmatched recommendation-like source sentences for a human, never infer linkage or timing.
+    const unlinked_source_sentences = [...new Set(text.split(/(?<=[.!?])\s+|\n+/).map(s=>s.trim()).filter(s=>
+      /\b(?:recommend(?:ed|ation|ations)?|repeat|follow[- ]?up|recheck|refer(?:ral)?)\b/i.test(s) &&
+      !findings.some(f=>f.follow_up_quote && f.follow_up_quote.includes(s))))];
+    return {findings, missing_context: [...new Set(data.missing_context)], unlinked_source_sentences,
+      human_review_required: true};
   }
   function validateFile(name, size) {
     if (!/\.txt$/i.test(name) || !Number.isSafeInteger(size) || size < 1 || size > 6000)

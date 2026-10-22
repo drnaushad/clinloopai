@@ -157,8 +157,8 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } .row2 { grid-template-columns: 1fr; } .kv { grid-template-columns: 1fr; } }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js?v=2026-10-21.3"></script>
-<script src="js/appnav.js?v=2026-10-21.5"></script>
+<script src="js/demo.js?v=2026-10-22.1"></script>
+<script src="js/appnav.js?v=2026-10-22.1"></script>
 <link rel="stylesheet" href="css/responsive.css?v=20261021_4">
 <script defer src="js/language-controls.js?v=2026-10-21.4"></script>
 </head>
@@ -269,7 +269,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       extracted: (m, c, p) => `${m === 'ocr' ? 'OCR' : 'PDF 텍스트'} · ${p}쪽` + (c != null ? ` · 인식 신뢰도 ${c}%` : '') + (m === 'ocr' && c != null && c < 85 ? ' · 신뢰도가 낮습니다: 특히 숫자와 단위를 확인하세요' : ''),
       dicomTitle: 'DICOM 영상 분석', dicomHelp: 'X선·CT·MRI·초음파 DICOM 파일 1개. 헤더 안전 점검(환자 불일치, 스크린샷, 부위 누락), 검사 기록, 병원이 활성화한 영상 모델을 실행합니다. 화소 데이터는 저장되지 않습니다.',
       dicomFile: 'DICOM 파일 (.dcm)', expected: '예상 검사 종류 (선택)', analyze: '분석',
-      services: (m) => `DICOM: ${m.dicom_reader} · OCR: ${m.ocr} · 영상 모델 ${m.models.length}개`,
+      services: (m) => window.CLINLOOP_DEMO && window.CLINLOOP_DEMO.static ? '저장된 기능 예시 · 실제 OCR, DICOM 또는 영상 모델 연결 없음' : `DICOM: ${m.dicom_reader} · OCR: ${m.ocr} · 영상 모델 ${m.models.length}개`,
       header: '헤더', qa: '안전 점검', qaOk: '이상 없음', models: '영상 모델', noModels: '활성화된 영상 모델이 없습니다 (CLINLOOP_IMAGING_MODELS).',
       notRun: (r) => `실행 안 함: ${r}`, research: '연구용 · 의료기기 아님', approved: '규제 상태', positive: '양성', threshold: (t) => `기준 ${t}`,
       filed: '환자 기록에 등록했습니다.', refused: '등록하지 않았습니다: 위의 위급 점검 항목을 확인하세요.',
@@ -306,7 +306,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       extracted: (m, c, p) => `${m === 'ocr' ? 'OCR' : 'PDF text'} · ${p} page(s)` + (c != null ? ` · recognition confidence ${c}%` : '') + (m === 'ocr' && c != null && c < 85 ? ' · low confidence: check numbers and units carefully' : ''),
       dicomTitle: 'DICOM image analysis', dicomHelp: 'One X-ray, CT, MRI or ultrasound DICOM file. Header safety checks (wrong patient, screenshot, missing body part), the study record, and the imaging models the hospital has enabled. Pixel data is never stored.',
       dicomFile: 'DICOM file (.dcm)', expected: 'Expected modality (optional)', analyze: 'Analyze',
-      services: (m) => `DICOM: ${m.dicom_reader} · OCR: ${m.ocr} · ${m.models.length} imaging model(s)`,
+      services: (m) => window.CLINLOOP_DEMO && window.CLINLOOP_DEMO.static ? 'Saved capability example only · no live OCR, DICOM or image model connected here' : `DICOM: ${m.dicom_reader} · OCR: ${m.ocr} · ${m.models.length} imaging model(s)`,
       header: 'Header', qa: 'Safety checks', qaOk: 'No problems found', models: 'Imaging models', noModels: 'No imaging models are enabled (CLINLOOP_IMAGING_MODELS).',
       notRun: (r) => `Not run: ${r}`, research: 'Research use · not a medical device', approved: 'Regulatory status', positive: 'positive', threshold: (t) => `threshold ${t}`,
       filed: 'Filed to the patient record.', refused: 'Not filed: see the critical check above.',

@@ -162,11 +162,30 @@ test('changing the selected model invalidates the previous result',()=>{
 });
 test('source context exposes nearby negation and repeated-quote ambiguity without reclassifying the model',()=>{
   const text='SYNTHETIC: No pleural effusion. Previously pleural effusion resolved.';
-  const r=validate({findings:[{quote:'pleural effusion',assertion:'present',follow_up_quote:'',deadline_quote:''}],missing_context:[]},text);
+  const r=validate({findings:[{quote:'pleural effusion',assertion:'negated',follow_up_quote:'',deadline_quote:''}],missing_context:[]},text);
   assert(r.findings[0].source_context.includes('No pleural effusion'));
-  assert.equal(r.findings[0].source_occurrences,2);assert.equal(r.findings[0].assertion,'present');
+  assert.equal(r.findings[0].source_occurrences,2);assert.equal(r.findings[0].assertion,'negated');
 });
 
 test('editing a reviewed report clears the old success status as well as its findings',()=>{
  const p=page();p.el.status.textContent='Source matching passed.';p.events['report:input']();assert(!p.el.status.textContent.includes('matching passed'));assert(p.el.status.textContent.includes('Review again'));
+});
+test('observed synthetic negation reversal is rejected, not relabelled',()=>{
+ const text='No pleural effusion is identified.';
+ assert.throws(()=>validate({findings:[{quote:text,assertion:'present',follow_up_quote:'',deadline_quote:''}],missing_context:[]},text),/negation conflict/);
+ const result=validate({findings:[{quote:text,assertion:'negated',follow_up_quote:'',deadline_quote:''}],missing_context:[]},text);
+ assert.equal(result.findings[0].assertion,'negated');
+});
+test('unlinked recommendation stays visible without inventing a finding or deadline link',()=>{
+ const text='A nodule is present. Repeat chest CT in 6 months.';
+ const review=validate({findings:[{quote:'A nodule is present.',assertion:'present',follow_up_quote:'',deadline_quote:''}],missing_context:['Missing prior study','Missing prior study']},text);
+ assert.deepEqual(review.unlinked_source_sentences,['Repeat chest CT in 6 months.']);assert.equal(review.findings[0].follow_up_quote,'');assert.equal(review.findings[0].deadline_quote,'');assert.equal(review.missing_context.length,1);
+});
+test('linked recommendation is not duplicated; negated recommendations remain human-review candidates',()=>{
+ assert.deepEqual(validate(REVIEW,TEXT).unlinked_source_sentences,[]);
+ const text='No follow-up is needed.';assert.deepEqual(validate({findings:[],missing_context:[]},text).unlinked_source_sentences,[text]);
+});
+test('a quote that drops the preceding negation is not accepted as present',()=>{
+ const text='SYNTHETIC CT: No pleural effusion is identified.';
+ assert.throws(()=>validate({findings:[{quote:'pleural effusion',assertion:'present',follow_up_quote:'',deadline_quote:''}],missing_context:[]},text),/negation conflict/);
 });

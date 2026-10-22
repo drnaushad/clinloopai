@@ -172,3 +172,31 @@ Official references checked for this review: [Ollama generate completion metadat
 [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
 and the [MedGemma model cards](https://developers.google.com/health-ai-developer-foundations/medgemma/model-card).
 Installed model metadata, rather than a model name alone, determines the capability checks.
+
+
+### October 22 safety checks (research preview)
+
+The browser rejects a `present` assertion when its quoted sentence or immediate source prefix begins
+with an explicit English negation (`no`, `without`, `negative for`). This is a conservative abstention
+check, not a validated clinical negation classifier: it can over-reject mixed clauses and does not
+cover every language, uncertainty expression, historical context or omitted finding. It never
+changes an assertion to a different clinical meaning. The original report still requires review.
+
+Recommendation-like English source sentences that the model did not quote as follow-up are shown
+separately for human review, including conditional or negated recommendations. No finding link,
+follow-up action or deadline is inferred. This mitigates a recorded synthetic model failure; it does
+not prove that the underlying model is more accurate. Independent clinician reference labels,
+clinician review of these checks, and task-specific evaluation remain required for clinical use.
+
+The hospital second-reader boundary now refuses empty, oversized (over 6000 UTF-8 bytes), invalid
+or explicitly incomplete answers rather than silently trimming input or accepting partial reads.
+It returns generic errors without model payloads. These boundary checks do not change guideline
+rules or authorize patient care.
+
+The report catalogue independently loads saved synthetic reports while optional live connectivity
+is checked. Case changes clear old readings; late responses cannot replace a newer selection.
+
+For authentication, an unset `CLINLOOP_API_TOKENS` creates no administrator account. Configure
+credentials in a protected service environment or configure hospital SSO before deploying this
+update to a private server. Never recover credentials from logs. Existing running services are not
+changed by preparing or publishing the static website files.

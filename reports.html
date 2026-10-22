@@ -81,7 +81,7 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--m
         <h2 style="margin-top:16px" id="modelheading">Saved MedGemma 27B reading</h2>
         <p><label for="modelchoice">Live model</label> <select id="modelchoice" disabled><option value="medgemma:27b">MedGemma 27B</option></select></p>
         <p class="meta">Input: the selected synthetic report text. Image uploads and unrestricted prompts are not enabled. Model suggestions require human review.</p><div id="model"></div>
-        <p><button class="live" id="live" hidden>Re-read live on the GPU</button><span class="status" id="status"></span></p>
+        <p><button class="live" id="live" hidden>Re-read with selected model</button><span class="status" id="status"></span></p>
         <p class="meta" id="modelmeta"></p>
       </div>
     </div>
@@ -93,21 +93,26 @@ const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 let current = null;
 let liveBackend = null;
+let caseEpoch = 0;
+let liveBusy = false;
+function boundedFetch(url, options = {}, timeoutMs = 8000) {
+  return fetch(url, {...options, signal: AbortSignal.timeout(timeoutMs)});
+}
 
 async function getReport(path) {
   // The same catalogue is available from a demo API or the static snapshot.
   try {
-    const r = await fetch(path);
+    const r = await boundedFetch(path);
     if (r.ok && (r.headers.get("content-type") || "").includes("application/json")) return r;
   } catch (_) { /* saved synthetic readings remain available without a backend */ }
   let hash = 0x811c9dc5;
   for (const b of new TextEncoder().encode("/" + path)) hash = Math.imul(hash ^ b, 0x01000193) >>> 0;
-  return fetch("demo/api/" + hash.toString(16).padStart(8, "0") + ".json");
+  return boundedFetch("demo/api/" + hash.toString(16).padStart(8, "0") + ".json");
 }
 
 async function connectLiveModel() {
   try {
-    const r = await fetch("public-models.json", {cache: "no-store"});
+    const r = await fetch("public-models.json", {cache: "no-store", signal: AbortSignal.timeout(8000)});
     if (!r.ok) return;
     const config = await r.json();
     if (!config.enabled) return;
@@ -115,7 +120,7 @@ async function connectLiveModel() {
     if (url.protocol !== "https:" || url.username || url.password) return;
     const health = await fetch(url.origin + "/health", {signal: AbortSignal.timeout(8000), credentials: "omit"});
     if (health.ok) {
-      const registry = await fetch(url.origin + "/api/v1/demo/models", {credentials: "omit"});
+      const registry = await fetch(url.origin + "/api/v1/demo/models", {credentials: "omit", signal: AbortSignal.timeout(8000)});
       if (!registry.ok) return;
       const data = await registry.json();
       const choice = $("modelchoice"); choice.replaceChildren();
@@ -124,7 +129,7 @@ async function connectLiveModel() {
         option.value = model.name; choice.append(option);
       }
       if (!choice.options.length) return;
-      choice.disabled = false; liveBackend = url.origin;
+      choice.disabled = liveBusy; liveBackend = url.origin; $("live").hidden = !current;
     }
   } catch (_) { /* Live service is optional; never block the saved readings. */ }
 }
@@ -148,6 +153,7 @@ function showReport(text, items) {
 }
 
 function showModel(reading, model) {
+  $("modelmeta").textContent = "";
   $("modelheading").textContent = (reading.source ? "Saved: " : "Live: ") + (reading.model || model.name);
   const box = $("model"); box.replaceChildren();
   if (!reading.available) { box.append(el("p", "empty", reading.reason || "No model reading.")); return; }
@@ -168,11 +174,21 @@ function showModel(reading, model) {
 }
 
 async function openCase(id) {
+  const requestEpoch = ++caseEpoch;
+  current = null;
+  $("live").hidden = true;
+  $("title").textContent = "Loading selected report…";
+  for (const key of ["report", "rules", "model"]) $(key).replaceChildren();
+  for (const key of ["teaches", "modelmeta", "modelheading"]) $(key).textContent = "";
+  try {
   document.querySelectorAll(".cases button").forEach(b => b.setAttribute("aria-current", b.dataset.id === id));
   $("status").textContent = "";
   const r = await getReport(`api/v1/demo/reports/${encodeURIComponent(id)}`);
+  if (requestEpoch !== caseEpoch) return;
   if (!r.ok) { $("title").textContent = "Report unavailable"; return; }
-  const c = current = await r.json();
+  const c = await r.json();
+  if (requestEpoch !== caseEpoch) return;
+  current = c;
   $("title").textContent = c.title;
   $("teaches").textContent = c.teaches;
   const rules = $("rules"); rules.replaceChildren();
@@ -187,28 +203,36 @@ async function openCase(id) {
   showReport(c.text, c.model_reading.items);
   showModel(c.model_reading, c.model);
   $("live").hidden = !liveBackend;
+  $("live").disabled = liveBusy;
+  } catch (_) {
+    if (requestEpoch !== caseEpoch) return;
+    current = null; $("live").hidden = true;
+    $("title").textContent = "Report unavailable. Please select it again.";
+  }
 }
 
 $("live").addEventListener("click", async () => {
-  if (!current || !liveBackend) return;
+  if (!current || !liveBackend || liveBusy) return;
+  liveBusy = true;
   const requestedCase = current;
   const selectedModel = $("modelchoice").value;
   $("live").disabled = true; $("modelchoice").disabled = true;
   $("status").textContent = selectedModel + " is reading. Large models may take longer or time out…";
   try {
-    const r = await fetch(`${liveBackend}/api/v1/demo/reports/${encodeURIComponent(requestedCase.id)}/live?model=${encodeURIComponent(selectedModel)}`, { method: "POST", credentials: "omit" });
+    const r = await boundedFetch(`${liveBackend}/api/v1/demo/reports/${encodeURIComponent(requestedCase.id)}/live?model=${encodeURIComponent(selectedModel)}`, { method: "POST", credentials: "omit" }, 180000);
     const body = await r.json();
-    if (!current || current.id !== requestedCase.id) return;
+    if (current !== requestedCase) return;
     if (!r.ok) { $("status").textContent = body.detail || "Busy. Please try later."; return; }
     showReport(current.text, body.items || []);
     showModel(body, current.model);
-    $("status").textContent = `Live reading done. ${body.live_left_this_hour} live re-read(s) left this hour.`;
-  } catch (e) { $("status").textContent = "The server did not answer."; }
-  finally { $("live").disabled = false; $("modelchoice").disabled = false; }
+    $("status").textContent = body.available ? `Unverified live reading returned. ${body.live_left_this_hour} live re-read(s) left this hour.` : "No usable model reading. Review the original report.";
+  } catch (e) { if (current === requestedCase) $("status").textContent = "The server did not answer. No new reading accepted."; }
+  finally { liveBusy = false; $("live").disabled = false; $("modelchoice").disabled = false; }
 });
 
 (async () => {
-  await connectLiveModel();
+  try {
+  void connectLiveModel(); // Saved readings never wait for the optional live service.
   const r = await getReport("api/v1/demo/reports");
   if (!r.ok) { $("list").textContent = "The demo is not running on this server."; return; }
   const d = await r.json();
@@ -221,8 +245,9 @@ $("live").addEventListener("click", async () => {
     list.append(b);
   }
   if (d.cases.length) openCase(d.cases[0].id);
+  } catch (_) { $("list").textContent = "Saved reports unavailable. Reload to retry."; }
 })();
 </script>
-<script src="js/appnav.js?v=2026-10-21.5"></script>
+<script src="js/appnav.js?v=2026-10-22.1"></script>
 </body>
 </html>

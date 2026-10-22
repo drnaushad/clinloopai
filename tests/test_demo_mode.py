@@ -42,7 +42,7 @@ class TestDemoMode(unittest.TestCase):
         with mock.patch.dict(os.environ, DEMO_ENV):
             tokens = auth._load_tokens()
         self.assertEqual(tokens[demo.DEMO_TOKEN].role, "viewer")
-        self.assertTrue(any(u.role == "admin" for u in tokens.values()))   # the operator's own admin token
+        self.assertFalse(any(u.role == "admin" for u in tokens.values()))  # no implicit administrator
         with mock.patch.dict(os.environ, {"CLINLOOP_DEMO": "", "CLINLOOP_API_TOKENS": ""}):
             self.assertNotIn(demo.DEMO_TOKEN, auth._load_tokens())
 

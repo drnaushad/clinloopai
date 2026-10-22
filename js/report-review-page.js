@@ -60,6 +60,11 @@
         'This quote occurs '+item.source_occurrences+' times. Review every occurrence in the original report; the first match is shown here.':
         'One exact occurrence found. Verify surrounding negation, dates, units and laterality in the original.';
       section.append(h,q,context,matches,follow,deadline);box.append(section);}
+    if (review.unlinked_source_sentences && review.unlinked_source_sentences.length) {
+      const title=document.createElement('h3');title.textContent='Source sentences needing follow-up review';box.append(title);
+      const warning=document.createElement('p');warning.textContent='These sentences were not linked by the model. They may be conditional or negated. Check the original; no action or deadline has been inferred.';box.append(warning);
+      for (const sentence of review.unlinked_source_sentences) {const q=document.createElement('blockquote');q.textContent=sentence;box.append(q);}
+    }
     const heading=document.createElement('h3');heading.textContent='Model-noted missing context — verify manually';box.append(heading);
     for(const text of review.missing_context){const p=document.createElement('p');p.textContent=text;box.append(p);}
     if(!review.missing_context.length){const p=document.createElement('p');p.textContent='No missing context listed by the model. This is not a completeness check.';box.append(p);}

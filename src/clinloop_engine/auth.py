@@ -11,8 +11,8 @@ Roles (each includes the permissions of the ones before it):
     clinician  + defer for clinical reasons, assign owners
     admin      + ingest data, run escalation, read the full audit log
 
-If CLINLOOP_API_TOKENS is unset, a random admin token is generated for this
-process and logged once, so the API is never open by default.
+If CLINLOOP_API_TOKENS is unset, no local bearer account is created.
+Provision credentials explicitly or configure hospital single sign-on.
 
 In public demo mode (CLINLOOP_DEMO=1, see demo.py) a published view-only token is
 added; it can read only the synthetic demo data and cannot upload or change anything.
@@ -24,7 +24,6 @@ accepted too; the person's role comes from their groups at the provider.
 import hmac
 import logging
 import os
-import secrets
 import time
 from dataclasses import dataclass
 from typing import Callable, Dict, Optional
@@ -50,13 +49,11 @@ def _load_tokens() -> Dict[str, User]:
         parts = item.split(":")
         if len(parts) != 3 or parts[2] not in ROLE_RANK or len(parts[0]) < 16:
             raise RuntimeError(
-                f"Invalid CLINLOOP_API_TOKENS entry '{parts[0][:4]}…': expected token:user:role "
+                "Invalid CLINLOOP_API_TOKENS entry: expected token:user:role "
                 f"with a token of at least 16 characters and role in {list(ROLE_RANK)}")
         tokens[parts[0]] = User(parts[1], parts[2])
     if not tokens:
-        token = secrets.token_urlsafe(24)
-        tokens[token] = User("local-admin", "admin")
-        logger.warning("CLINLOOP_API_TOKENS not set. Generated a one-time admin token for this process: %s", token)
+        logger.warning("No local API accounts configured; provision CLINLOOP_API_TOKENS or use configured single sign-on.")
     if os.environ.get("CLINLOOP_DEMO", "").strip().lower() in ("1", "true", "yes"):
         from .demo import DEMO_TOKEN, DEMO_USER
         tokens[DEMO_TOKEN] = User(DEMO_USER, "viewer")   # published, read-only, synthetic data only

@@ -154,10 +154,19 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],
     """The model's actionable items for one report, each verified against the report's own words."""
     from .document_reader import scrub_identifiers
     from .imaging_ai import _json_object
-    clean = scrub_identifiers(text or "", names)[:6000]
-    out = model(PROMPT + clean, SYSTEM_PROMPT)
-    if out.get("error") or not out.get("text"):
-        return {"available": False, "reason": out.get("error") or "no answer", "items": []}
+    if not isinstance(text, str):
+        return {"available": False, "reason": "Invalid report; human review required", "items": []}
+    clean = scrub_identifiers(text, names)
+    if not clean.strip() or len(clean.encode("utf-8")) > 6000:
+        return {"available": False, "reason": "Complete report exceeds the reader limit or is empty; human review required", "items": []}
+    try:
+        out = model(PROMPT + clean, SYSTEM_PROMPT)
+    except Exception:
+        return {"available": False, "reason": "Model unavailable; human review required", "items": []}
+    if not isinstance(out, dict) or out.get("done") is False or ("done_reason" in out and out["done_reason"] != "stop"):
+        return {"available": False, "reason": "Incomplete model response; human review required", "items": []}
+    if out.get("error") or not isinstance(out.get("text"), str) or not out["text"].strip():
+        return {"available": False, "reason": "Model unavailable or returned no answer", "items": []}
     parsed = _json_object(out["text"])
     if not isinstance(parsed.get("items"), list):
         return {"available": False, "reason": "answer was not the expected JSON", "items": [], "model": out.get("model")}

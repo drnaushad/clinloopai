@@ -36,6 +36,24 @@
       note: 'Public demo: synthetic patients only, read-only snapshot. Do not enter real patient information.'
     };
     var realFetch = window.fetch.bind(window);
+    function explainSnapshot() {
+      var note = document.createElement('p');
+      note.id = 'snapshot-status'; note.setAttribute('role', 'note');
+      note.textContent = 'Synthetic snapshot · no live hospital connection. Actions here are browser-only simulations. / 합성 예시 · 실제 병원 연결 없음.';
+      note.style.cssText = 'margin:12px;padding:10px;border:1px solid currentColor;border-radius:8px;font-size:.9rem';
+      document.body.prepend(note);
+      var forms = document.querySelectorAll('#note-form, #report-form, #file-form, #dicom-form, #ct-form');
+      forms.forEach(function (form) {
+        var help = document.createElement('p');
+        help.textContent = 'Unavailable on this public snapshot. Use an approved local installation, or try synthetic text in Analyse patient. / 공개 예시에서는 사용할 수 없습니다.';
+        var link = document.createElement('a'); link.href = 'analyse'; link.textContent = ' Analyse patient'; help.append(link);
+        form.before(help);
+        form.querySelectorAll('input,textarea,select,button').forEach(function (control) { control.disabled = true; });
+        form.addEventListener('submit', function (event) { event.preventDefault(); event.stopImmediatePropagation(); }, true);
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', explainSnapshot);
+    else explainSnapshot();
 
     function fnv1a(text) {
       var bytes = new TextEncoder().encode(text), h = 0x811c9dc5;

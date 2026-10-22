@@ -458,14 +458,15 @@ CDS Hooks discovery document.
 Overdue loops nobody has acknowledged escalate automatically: owner → department lead → patient
 safety officer. Each step waits a severity-specific grace period (1 hour for critical).
 
-Without `CLINLOOP_API_TOKENS`, the API generates a one-time admin token and logs it, so it is never
-open by default. CORS is limited to the cockpit origins (`CLINLOOP_CORS_ORIGINS` overrides).
+Without `CLINLOOP_API_TOKENS`, no local bearer account is created. Provision a strong unique
+token through the protected service environment, or configure hospital single sign-on. Credentials
+are never printed to logs. Existing explicitly configured accounts are unchanged. CORS is limited to the cockpit origins (`CLINLOOP_CORS_ORIGINS` overrides).
 
 Configuration:
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
-| `CLINLOOP_API_TOKENS` | `token:user:role,…` | one-time admin token |
+| `CLINLOOP_API_TOKENS` | `token:user:role,…` | no local bearer account |
 | `CLINLOOP_SIGNING_KEY` | Key for agent audit signatures | per-process random |
 | `CLINLOOP_DB` | Loop registry (SQLite) | `data/clinloop.db` |
 | `CLINLOOP_FHIR_BASE` | Hospital FHIR R4 server; enables background sync | sync off |
