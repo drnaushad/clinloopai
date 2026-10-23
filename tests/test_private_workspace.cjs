@@ -229,3 +229,33 @@ test('structured review refuses an unverified or inadequate context window befor
     await assert.rejects(workspace.run(MODEL,'SYNTHETIC report',{schema:{type:'object'},system:'Extract source only.'}));assert(!calls.some(c=>c.url.endsWith('/api/generate')));
   }
 });
+
+test('workspace navigation cleans legacy URLs without reading session data or making requests', () => {
+  const source=fs.readFileSync('js/workspace-navigation.js','utf8');
+  for(const page of ['private','review']) {
+    let replaced;
+    const context={location:{hostname:'clinloopai.app',protocol:'https:',pathname:'/'+page+'.html',search:'?view=source',hash:'#workspace'},history:{state:null,replaceState:(_a,_b,url)=>{replaced=url;}},document:{querySelector:()=>null}};
+    for(const key of ['fetch','localStorage','sessionStorage']) Object.defineProperty(context,key,{get(){throw new Error('Navigation must not access '+key);}});
+    vm.runInNewContext(source,context);
+    assert.equal(replaced,'/'+page+'?view=source#workspace');
+  }
+});
+test('public HTTP workspace entry upgrades to HTTPS while local previews remain local', () => {
+  const source=fs.readFileSync('js/workspace-navigation.js','utf8');
+  let destination;
+  const location={hostname:'clinloopai.app',protocol:'http:',pathname:'/review',search:'',hash:'',replace:url=>{destination=url;}};
+  vm.runInNewContext(source,{location});assert.equal(destination,'https://clinloopai.app/review');
+  destination=null;location.hostname='127.0.0.1';
+  vm.runInNewContext(source,{location,document:{querySelector:()=>null}});assert.equal(destination,null);
+});
+test('session navigation matches shared page destinations and keeps the current page marked',()=>{
+  const shared=fs.readFileSync('js/appnav.js','utf8');
+  const destinations=[...shared.matchAll(/\{ page: '([^']+)', href: '([^']+)'/g)];
+  for(const page of ['private','review']) {
+    const html=fs.readFileSync(page+'.html','utf8');
+    const nav=html.match(/<nav class="workspace-nav"[^>]*>(.*?)<\/nav>/s)[1];
+    for(const [,id,href] of destinations) assert(nav.includes('href="'+href+'"'),id);
+    assert(nav.includes('href="'+page+'" aria-current="page"'));
+    assert(html.includes('id="workspace" tabindex="-1"'));
+  }
+});

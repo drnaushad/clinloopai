@@ -6,23 +6,24 @@
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src http://127.0.0.1:* http://localhost:*; img-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>Personal workspace · ClinLoop</title>
-<link rel="stylesheet" href="css/private-workspace.css?v=20261023_layout2">
+<link rel="stylesheet" href="css/private-workspace.css?v=20261023_workspace3">
 <script defer src="js/private-workspace.js?v=2026-10-21.review-safety"></script>
 <script defer src="js/private-workspace-page.js"></script>
-</head>
+<link rel="canonical" href="https://clinloopai.app/private"><link rel="icon" href="icons/logo.svg" type="image/svg+xml"><script defer src="js/workspace-navigation.js?v=20261023_1"></script></head>
 <body>
-<header><a href="./">ClinLoop</a><span>Personal workspace · research preview</span></header>
-<main>
-<h1>Your model. A separate session.</h1>
-<p><a href="review.html">Review synthetic report text with source quotes · local models or an optional research API</a></p>
+<a class="skip-link" href="#workspace">Skip to workspace</a><header class="workspace-header"><a class="workspace-brand" href="./"><img src="icons/logo.svg" alt="" width="32" height="32"><span>ClinLoop AI</span></a><span class="workspace-context">Personal workspace · Research preview</span><nav class="workspace-nav" aria-label="ClinLoop pages"><a href="./">Cockpit</a><a href="worklist">Worklist</a><a href="patient">Patient graph</a><a href="quality">Quality</a><a href="governance">Rule sign-off</a><a href="pilot">Pilot review</a><a href="imaging">Imaging</a><a href="analyse">Analyse patient</a><a href="reports">Live report reader</a><a href="review">Report review</a><a href="private" aria-current="page">Personal workspace</a><a href="validation">Validation evidence</a><a href="deployment">International setup</a></nav></header>
+<main id="workspace" tabindex="-1">
+<h1>Personal model workspace</h1>
+<p><a href="review">Review synthetic report text with source quotes · local models or an optional research API</a></p>
 <p class="lead">Connect this browser directly to Ollama on your own computer. This workspace does not send your conversation to ClinLoop’s shared API or save a conversation history.</p>
 <aside><strong>Research preview</strong> — use synthetic examples only. This connection feature does not establish clinical accuracy or approval to process patient records.</aside>
 <section aria-labelledby="connection-heading">
 <h2 id="connection-heading">1. Connect your own model</h2>
-<p>Start Ollama on your computer with cloud features disabled and allow this website’s exact origin. On shared equipment, ask the owner before changing or restarting Ollama.</p>
+<details class="setup-guide"><summary>Model setup and Ubuntu connection guide</summary><p>Start Ollama on your computer with cloud features disabled and allow this website’s exact origin. On shared equipment, ask the owner before changing or restarting Ollama.</p>
 <pre>OLLAMA_NO_CLOUD=1 OLLAMA_HOST=127.0.0.1:11434 OLLAMA_ORIGINS=https://clinloopai.app ollama serve</pre>
 <p>This example starts a new instance only when the port is unused. For an existing installation, configure its service rather than starting a second instance. See the <a href="https://docs.ollama.com/faq" target="_blank" rel="noopener noreferrer">Ollama setup instructions</a>.</p>
 <details><summary>My Ollama runs on a private Ubuntu server</summary><p>On your laptop, open a private tunnel to an Ollama instance you control:</p><pre>ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:11435:127.0.0.1:11434 USER@YOUR_SERVER</pre><p>Use <code>http://127.0.0.1:11435</code> below. The server still needs the exact website origin allowed and cloud features disabled. Server administrators may have access to its processes and logs.</p></details>
+</details>
 <form id="connect-form" autocomplete="off">
 <label for="endpoint">Ollama address on this computer</label>
 <input id="endpoint" type="url" value="http://127.0.0.1:11434" required spellcheck="false" autocomplete="off">

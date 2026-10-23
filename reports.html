@@ -65,7 +65,7 @@ footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--m
 <header>
   <nav class="app-nav" aria-label="ClinLoop pages"></nav>
   <h1>Compare local report readers</h1>
-  <p><a href="review.html">Open a separate report-review session: local LLM or research-only API</a></p>
+  <p><a href="review">Open a separate report-review session: local LLM or research-only API</a></p>
   <p class="lede">Each synthetic report is read twice. ClinLoop's deterministic rules open follow-up obligations with deadlines. Choose MedGemma, EXAONE, or another installed local model for a research comparison. Different models may disagree or miss findings. View a saved reading or request a live re-read when the demo service is available. Anything it finds that no rule tracks goes to a clinician as a suggestion, never a decision.</p>
   <p class="banner" id="note">Synthetic reports only. Not for clinical use.</p>
 </header>
@@ -248,6 +248,6 @@ $("live").addEventListener("click", async () => {
   } catch (_) { $("list").textContent = "Saved reports unavailable. Reload to retry."; }
 })();
 </script>
-<script src="js/appnav.js?v=2026-10-22.1"></script>
+<script src="js/appnav.js?v=20261023_workspace3"></script>
 </body>
 </html>

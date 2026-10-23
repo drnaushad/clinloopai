@@ -668,7 +668,7 @@ if _WEB_ROOT and os.path.isdir(_WEB_ROOT):
         return page
 
     # Clean addresses ("/worklist"); "/worklist.html" keeps working through the static mount below
-    for _page in ("worklist", "patient", "quality", "governance", "imaging", "pilot", "analyse", "reports", "validation", "deployment"):
+    for _page in ("worklist", "patient", "quality", "governance", "imaging", "pilot", "analyse", "reports", "validation", "deployment", "review", "private"):
         if os.path.isfile(os.path.join(_WEB_ROOT, f"{_page}.html")):
             app.add_api_route(f"/{_page}", _page_route(_page), methods=["GET"], include_in_schema=False)
     app.mount("/", StaticFiles(directory=_WEB_ROOT, html=True), name="web")

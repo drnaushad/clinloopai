@@ -35,8 +35,8 @@
     { page: 'imaging', href: 'imaging', en: 'Imaging', ko: '영상' },
     { page: 'analyse', href: 'analyse', en: 'Analyse patient', ko: '환자 분석' },
     { page: 'reports', href: 'reports', en: 'Live report reader', ko: '실시간 보고서 검토' },
-    { page: 'review', href: 'review.html', en: 'Report review', ko: '보고서 검토' },
-    { page: 'private', href: 'private.html', en: 'Personal workspace', ko: '개인 작업 공간' },
+    { page: 'review', href: 'review', en: 'Report review', ko: '보고서 검토' },
+    { page: 'private', href: 'private', en: 'Personal workspace', ko: '개인 작업 공간' },
     { page: 'validation', href: 'validation', en: 'Validation evidence', ko: '검증 근거' },
     { page: 'deployment', href: 'deployment', en: 'International setup', ko: '국제 배포 계획' }
   ];
