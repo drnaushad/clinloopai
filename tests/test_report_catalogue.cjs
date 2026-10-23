@@ -44,6 +44,6 @@ test('static snapshot disables unsupported input forms without changing hospital
  const source=fs.readFileSync(require.resolve('../js/demo.js'),'utf8');
  const fn=source.slice(source.indexOf('function explainSnapshot()'),source.indexOf("    if (document.readyState === 'loading')"));
  const inputs=[{disabled:false},{disabled:false}];let notice='',selector='';const form={before(){},querySelectorAll:()=>inputs,addEventListener(){}};
- const c={document:{createElement:()=>({style:{},setAttribute(){},append(){}}),body:{prepend:n=>notice=n.textContent},querySelectorAll:s=>{selector=s;return [form];}}};vm.createContext(c);vm.runInContext(fn,c);c.explainSnapshot();
+ const c={document:{querySelector:()=>null,createElement:()=>({style:{},setAttribute(){},append(){}}),body:{prepend:n=>notice=n.textContent},querySelectorAll:s=>{selector=s;return [form];}}};vm.createContext(c);vm.runInContext(fn,c);c.explainSnapshot();
  assert.match(notice,/Synthetic snapshot/);assert(inputs.every(x=>x.disabled));assert(selector.includes('#note-form')&&selector.includes('#file-form'));
 });

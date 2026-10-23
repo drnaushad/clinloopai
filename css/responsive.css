@@ -55,7 +55,7 @@ th { white-space: nowrap; }
   body:has(.cockpit-workspace) { height: 100vh !important; height: 100dvh !important; display: flex; flex-direction: column; }
   .top-chrome { position: relative; flex: 0 0 auto; }
   .cockpit-workspace { flex: 1 1 auto; min-height: 0 !important; height: auto !important;
-                       grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+                       grid-template-rows: minmax(0, 1fr); align-items: start; overflow: hidden; }
   .cockpit-workspace > * { min-height: 0; max-height: 100%; }
   /* Panel 1 */
   .cockpit-triage-panel { overflow: hidden; }
@@ -66,7 +66,7 @@ th { white-space: nowrap; }
   .cockpit-center-stage { overflow-y: auto !important; overflow-x: hidden; overscroll-behavior: contain;
                           scrollbar-gutter: stable; }
   .cockpit-center-stage > .stage-view-tabs { position: sticky; top: 0; z-index: 5; flex-shrink: 0; }
-  .cockpit-center-stage > .stage-view-panel { flex: 0 0 auto; height: auto !important; min-height: calc(100% - 64px);
+  .cockpit-center-stage > .stage-view-panel { flex: 0 0 auto; height: auto !important; min-height: 0;
                                               overflow: visible !important; }
   .cockpit-center-stage > .kpi-ribbon-compact { flex-shrink: 0; }
   .hypergraph-canvas-container { min-height: 420px; }
@@ -437,4 +437,42 @@ td a, li a, a[href^="patient.html"] { display: inline-block; min-height: 24px; l
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto !important; }
+}
+
+/* Shared content widths: use desktop space without stretching individual reading lines. */
+.wrap {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1600px;
+  padding-inline: clamp(16px, 3vw, 48px);
+}
+body:has(> nav.app-nav) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1600px;
+  padding-inline: clamp(16px, 3vw, 48px);
+}
+.wrap > header { align-items: center; margin-bottom: 16px; }
+.wrap > header .sub { max-width: 85ch; }
+.inputs { align-items: start; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 20px; }
+.inputs > *, .eval > * { min-width: 0; }
+.eval { width: fit-content; max-width: 100%; box-sizing: border-box; }
+#snapshot-status { margin: 0 0 16px !important; padding: 10px 14px !important; }
+@media (min-width: 1151px) {
+  .cockpit-triage-panel { max-height: 100%; }
+  .cockpit-center-stage { max-height: 100%; }
+  .cockpit-sidebar-right { max-height: 100%; }
+  .card-widget.fill-remaining { flex: 0 0 auto; }
+  #view-summary, #view-privacy { height: auto !important; }
+}
+@media (min-width: 2200px) {
+  .wrap, body:has(> nav.app-nav) { max-width: 1920px; }
+}
+@media (max-width: 700px) {
+  .inputs { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .eval { width: 100%; }
+}
+
+@media (max-width: 360px) {
+  .app-header--pro .prominent-lang-pill { grid-column: 1 / -1; justify-content: center; }
 }

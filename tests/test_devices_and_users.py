@@ -138,6 +138,37 @@ class TestEveryDevice(unittest.TestCase):
         with open(os.path.join(ROOT, "js", "appnav.js"), encoding="utf-8") as f:
             self.assertIn("focusableScrollers", f.read())               # scrolling tables reachable by keyboard
 
+    def test_all_cockpit_tabs_belong_to_the_center_stage(self):
+        # A misplaced tab after </main> is invisible when desktop page scrolling is locked.
+        from html.parser import HTMLParser
+
+        class PanelParser(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.stack = []
+                self.panels = {}
+
+            def handle_starttag(self, tag, attrs):
+                attrs = dict(attrs)
+                if "stage-view-panel" in attrs.get("class", "").split():
+                    self.panels[attrs["id"]] = self.stack[-1][1].get("class", "")
+                if tag not in {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}:
+                    self.stack.append((tag, attrs))
+
+            def handle_endtag(self, tag):
+                for i in range(len(self.stack) - 1, -1, -1):
+                    if self.stack[i][0] == tag:
+                        del self.stack[i:]
+                        break
+
+        parser = PanelParser()
+        with open(os.path.join(ROOT, "index.html"), encoding="utf-8") as f:
+            parser.feed(f.read())
+        self.assertEqual(set(parser.panels), {"view-summary", "view-hypergraph", "view-counterfactual", "view-standards", "view-privacy"})
+        for panel, parent in parser.panels.items():
+            with self.subTest(panel=panel):
+                self.assertIn("cockpit-center-stage", parent.split())
+
     def test_wide_screens_are_an_app_shell_with_independent_panels(self):
         with open(os.path.join(ROOT, "css", "responsive.css"), encoding="utf-8") as f:
             css = f.read()

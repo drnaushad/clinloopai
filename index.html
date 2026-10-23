@@ -28,7 +28,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<link rel="stylesheet" href="css/responsive.css?v=20261021_4">
+<link rel="stylesheet" href="css/responsive.css?v=20261023_layout1">
 <script defer src="js/language-controls.js?v=2026-10-21.4"></script>
 </head>
 
@@ -664,6 +664,262 @@
       </div>
 
       <!-- Benchmark KPI Strip across Bottom -->
+      <!-- ============================================================ -->
+      <!-- 🛡️ PRIVACY SHIELD — 8-Layer Patient Data Protection Panel  -->
+      <!-- ============================================================ -->
+      <div class="stage-view-panel hidden" id="view-privacy" style="padding: 1.4rem; overflow-y: auto; height: calc(100vh - 120px);">
+
+        <!-- Header -->
+        <div class="privacy-hero-banner">
+          <div class="privacy-hero-icon">🛡️</div>
+          <div class="privacy-hero-text">
+            <h2 id="privacy-hero-title" class="privacy-hero-title">Data protection: what is built and what is not</h2>
+            <p id="privacy-hero-sub" class="privacy-hero-sub">ClinLoop sends no patient data to any external AI service. Each item below is marked <b>In use</b>, <b>Optional</b>, <b>Demo</b> or <b>Not built</b>. Nothing here has been independently audited or certified.</p>
+          </div>
+          <div class="privacy-compliance-badges">
+            <span class="prv-badge prv-badge-gold">Not certified</span>
+            <span class="prv-badge prv-badge-green">No patient data to external AI</span>
+          </div>
+        </div>
+
+        <!-- Privacy tooling is active and connected via Local Enclave -->
+        <div class="privacy-firewall-platform">
+          <div class="firewall-platform-header">
+            <span class="firewall-platform-icon">⚡</span>
+            <div>
+              <div id="firewall-platform-title" class="firewall-platform-title">Privacy review example</div>
+              <div id="firewall-platform-sub" class="firewall-platform-sub">No live de-identification or external AI transmission is configured.</div>
+            </div>
+            <span class="firewall-live-badge">● EXAMPLE</span>
+          </div>
+          <div class="firewall-io-grid">
+            <div class="firewall-io-col">
+              <label id="firewall-input-label" class="firewall-io-label firewall-label-danger">Input (stays in this browser)</label>
+              <textarea id="phi-firewall-input" class="firewall-textarea firewall-input-area" placeholder="Try typing: 김민준 (1978-03-12), 주민번호 780312-1234567, 010-1234-5678, minjun@hospital.kr
+CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
+              <div class="firewall-input-meta">
+                <span id="phi-count-badge" class="phi-count">PHI 항목: 0개 탐지됨</span>
+                <button id="firewall-sample-btn" class="firewall-sample-btn">샘플 PHI 입력</button>
+              </div>
+            </div>
+            <div class="firewall-arrow-col">
+              <div class="firewall-arrow-wrap">
+                <div class="firewall-shield-anim" id="firewall-shield-anim">🛡️</div>
+                <div class="firewall-arrow">→</div>
+                <div class="firewall-stats" id="firewall-stats">
+                  <div class="fstat">Stripped: <span id="fstat-stripped">0</span></div>
+                  <div class="fstat">Pseudonymized: <span id="fstat-pseudo">0</span></div>
+
+                </div>
+              </div>
+            </div>
+            <div class="firewall-io-col">
+              <label id="firewall-output-label" class="firewall-io-label firewall-label-safe">Masked output (demo, in this browser only)</label>
+              <div id="phi-firewall-output" class="firewall-textarea firewall-output-area">[De-identified output will appear here in real-time as you type above]</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8 Layer Grid -->
+        <div class="privacy-layers-grid">
+
+          <!-- Layer 1 -->
+          <div class="prv-layer-card prv-status-active" id="prv-layer-1">
+            <div class="prv-layer-header">
+              <div class="prv-layer-num">01</div>
+              <div class="prv-layer-status-badge prv-badge-roadmap" id="prv-l1-status">Optional · hospital server only</div>
+            </div>
+            <div class="prv-layer-icon">🔒</div>
+            <h3 id="prv-l1-title" class="prv-layer-title">Local language model (optional)</h3>
+            <p id="prv-l1-desc" class="prv-layer-desc">Optional: a local language model (for example EXAONE 3.5 or Llama 3, via Ollama) can run on the hospital's own server, inside its firewall, on a CPU or a GPU. Patient text then never leaves the hospital. This public page has no model connected.</p>
+            <div class="prv-layer-tech">
+              <span class="tech-tag">MedLlama2 7B ★</span>
+              <span class="tech-tag">Llama 3.1 Medical</span>
+              <span class="tech-tag">DeepSeek-R1</span>
+              <span class="tech-tag">Ollama</span>
+              <span class="tech-tag">Air-Gapped</span>
+            </div>
+            <div style="margin-bottom:0.5rem;">
+              <button id="test-local-llm-btn" onclick="testLocalLLM()" style="font-size:0.7rem;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);color:#10b981;border-radius:6px;padding:0.25rem 0.6rem;cursor:pointer;">▶ Test Local LLM Now</button>
+              <span id="local-llm-status-badge" style="font-size:0.68rem;color:var(--text-dim);margin-left:0.5rem;">Checking...</span>
+            </div>
+            <div id="local-llm-test-output" style="display:none;font-size:0.7rem;color:#86efac;background:rgba(0,0,0,0.3);border-radius:6px;padding:0.4rem;margin-bottom:0.5rem;font-family:var(--font-mono);white-space:pre-wrap;max-height:80px;overflow-y:auto;"></div>
+            <div class="prv-layer-metric"><span class="metric-icon">⚡</span> <span id="prv-l1-metric">Runs on the hospital's server · CPU or GPU</span></div>
+          </div>
+
+          <!-- Layer 2 -->
+          <div class="prv-layer-card prv-status-roadmap" id="prv-layer-2">
+            <div class="prv-layer-header">
+              <div class="prv-layer-num">02</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l2-status">Not built</div>
+            </div>
+            <div class="prv-layer-icon">🌐</div>
+            <h3 id="prv-l2-title" class="prv-layer-title">Federated Learning</h3>
+            <p id="prv-l2-desc" class="prv-layer-desc">Idea for multi-hospital research: share model updates instead of records. Not built; ClinLoop's rules need no training data.</p>
+            <div class="prv-federated-diagram">
+              <div class="fed-node fed-hospital">🏥 Seoul</div>
+              <div class="fed-node fed-hospital">🏥 Busan</div>
+              <div class="fed-node fed-hospital">🏥 Daegu</div>
+              <div class="fed-center">⚙️ Gradients Only</div>
+            </div>
+            <div class="prv-layer-tech">
+              <span class="tech-tag">NVIDIA FLARE</span>
+              <span class="tech-tag">PySyft</span>
+              <span class="tech-tag">Multi-hospital</span>
+            </div>
+            <div class="prv-layer-metric"><span class="metric-icon">📊</span> <span id="prv-l2-metric">Design goal: patient data stays on-premise · not implemented</span></div>
+          </div>
+
+          <!-- Layer 3 -->
+          <div class="prv-layer-card prv-status-active" id="prv-layer-3">
+            <div class="prv-layer-header">
+              <div class="prv-layer-num">03</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l3-status">Not built</div>
+            </div>
+            <div class="prv-layer-icon">📊</div>
+            <h3 id="prv-l3-title" class="prv-layer-title">Differential Privacy (ε-DP)</h3>
+            <p id="prv-l3-desc" class="prv-layer-desc">Idea for published statistics: add calibrated noise so no individual can be singled out. Not built; the slider below only illustrates the idea.</p>
+            <div class="prv-dp-platform">
+              <div class="dp-formula">Mechanism: X̃ = X + Lap(Δf/ε) where ε=0.1, Δf=sensitivity</div>
+              <div class="dp-row"><span class="dp-label">Exact value:</span><span class="dp-val dp-danger">42.1%</span><span class="dp-note">(re-identifies individual)</span></div>
+              <div class="dp-row"><span class="dp-label">ε-DP output:</span><span class="dp-val dp-safe" id="dp-noisy-val">42.1% ± <span id="dp-noise-span">2.3</span>%</span><span class="dp-note">(population-level only)</span></div>
+              <div class="dp-slider-row">
+                <label style="font-size:0.65rem;color:var(--text-dim);">Privacy Budget ε:</label>
+                <input type="range" id="dp-epsilon-slider" min="1" max="20" value="10" style="flex:1;accent-color:#10b981;">
+                <span id="dp-epsilon-val" style="font-family:var(--font-mono);font-size:0.68rem;color:#10b981;min-width:30px;">0.1</span>
+              </div>
+            </div>
+            <div class="prv-layer-tech">
+              <span class="tech-tag">ε = 0.1</span>
+              <span class="tech-tag">Laplace Noise</span>
+              <span class="tech-tag">Apple / Google standard</span>
+            </div>
+            <div class="prv-layer-metric"><span class="metric-icon">🔢</span> <span id="prv-l3-metric">Illustration only · no privacy guarantee</span></div>
+          </div>
+
+          <!-- Layer 4 -->
+          <div class="prv-layer-card prv-status-roadmap" id="prv-layer-4">
+            <div class="prv-layer-header">
+              <div class="prv-layer-num">04</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l4-status">Not built</div>
+            </div>
+            <div class="prv-layer-icon">💻</div>
+            <h3 id="prv-l4-title" class="prv-layer-title">Confidential Computing (TEE)</h3>
+            <p id="prv-l4-desc" class="prv-layer-desc">Hardware-isolated processing in a cloud (Intel SGX / AMD SEV). Not built and not needed: ClinLoop runs on the hospital's own server.</p>
+            <div class="prv-layer-tech">
+              <span class="tech-tag">Intel SGX</span>
+              <span class="tech-tag">Azure Confidential</span>
+              <span class="tech-tag">AMD SEV</span>
+            </div>
+            <div class="prv-layer-metric"><span class="metric-icon">🔐</span> <span id="prv-l4-metric">Roadmap only · not built</span></div>
+          </div>
+
+          <!-- Layer 5 -->
+          <div class="prv-layer-card prv-status-active" id="prv-layer-5">
+            <div class="prv-layer-header">
+              <div class="prv-layer-num">05</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l5-status">Not built</div>
+            </div>
+            <div class="prv-layer-icon">🧬</div>
+            <h3 id="prv-l5-title" class="prv-layer-title">Synthetic data for research</h3>
+            <p id="prv-l5-desc" class="prv-layer-desc">The public site uses hand-written synthetic patients only. Generating realistic synthetic copies of real records is not built.</p>
+            <div class="prv-layer-tech">
+              <span class="tech-tag">Encrypted EMR Sync</span>
+              <span class="tech-tag">CTGAN</span>
+              <span class="tech-tag">MDClone standard</span>
+            </div>
+            <div class="prv-layer-metric"><span class="metric-icon">🧬</span> <span id="prv-l5-metric">Not built · no compliance certification</span></div>
+          </div>
+
+          <!-- Layer 6 -->
+          <div class="prv-layer-card prv-status-active" id="prv-layer-6">
+            <div class="prv-layer-header">
+              <div class="prv-layer-num">06</div>
+              <div class="prv-layer-status-badge prv-badge-roadmap" id="prv-l6-status">Demo · in this browser</div>
+            </div>
+            <div class="prv-layer-icon">🔥</div>
+            <h3 id="prv-l6-title" class="prv-layer-title">Identifier screening (demo)</h3>
+            <p id="prv-l6-desc" class="prv-layer-desc">Try the box above: it finds identifier patterns (phone, resident number, e-mail, dates) and masks them, in your browser only. Pattern matching misses identifiers it has no pattern for; do not enter real patient information.</p>
+            <div class="prv-layer-tech">
+              <span class="tech-tag">18 PHI Categories</span>
+              <span class="tech-tag">Korean PIPA</span>
+              <span class="tech-tag">phi_deidentifier.py</span>
+            </div>
+            <div class="prv-layer-metric"><span class="metric-icon">🔥</span> <span id="prv-l6-metric">Rule-based identifier removal · not measured on real records</span></div>
+          </div>
+
+          <!-- Layer 7 -->
+          <div class="prv-layer-card prv-status-future" id="prv-layer-7">
+            <div class="prv-layer-header">
+              <div class="prv-layer-num">07</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l7-status">Not built</div>
+            </div>
+            <div class="prv-layer-icon">🔮</div>
+            <h3 id="prv-l7-title" class="prv-layer-title">Homomorphic Encryption (HE)</h3>
+            <p id="prv-l7-desc" class="prv-layer-desc">Computing on encrypted data. A research field, far too slow for this use today; not planned.</p>
+            <div class="prv-layer-tech">
+              <span class="tech-tag">Microsoft SEAL</span>
+              <span class="tech-tag">IBM HElib</span>
+              <span class="tech-tag">Zama.ai</span>
+            </div>
+            <div class="prv-layer-metric"><span class="metric-icon">🔮</span> <span id="prv-l7-metric">Not planned</span></div>
+          </div>
+
+          <!-- Layer 8 -->
+          <div class="prv-layer-card prv-status-active" id="prv-layer-8">
+            <div class="prv-layer-header">
+              <div class="prv-layer-num">08</div>
+              <div class="prv-layer-status-badge prv-badge-future" id="prv-l8-status">Not in use</div>
+            </div>
+            <div class="prv-layer-icon">🏦</div>
+            <h3 id="prv-l8-title" class="prv-layer-title">Pseudonymised identifiers</h3>
+            <p id="prv-l8-desc" class="prv-layer-desc">A pattern-based de-identification module exists in the code (phi_deidentifier.py) but nothing uses it, because no patient data is sent outside the hospital. Its output would need review before being called de-identified.</p>
+            <div class="prv-vault-platform">
+              <div class="vault-row"><span class="vault-before">김민준</span><span class="vault-arrow">→</span><span class="vault-after">PT-99F74B58</span></div>
+              <div class="vault-row"><span class="vault-before">780312-1234567</span><span class="vault-arrow">→</span><span class="vault-after">[주민번호 삭제]</span></div>
+              <div class="vault-row"><span class="vault-before">1978-03-12</span><span class="vault-arrow">→</span><span class="vault-after">1978년</span></div>
+            </div>
+            <div class="prv-layer-tech">
+              <span class="tech-tag">SHA-256 Pseudonym</span>
+              <span class="tech-tag">On-Premise Vault</span>
+              <span class="tech-tag">PCI-DSS model</span>
+            </div>
+            <div class="prv-layer-metric"><span class="metric-icon">🏦</span> <span id="prv-l8-metric">Module present · not used</span></div>
+          </div>
+
+        </div><!-- end privacy-layers-grid -->
+
+        <!-- Global Audit Trail -->
+        <div class="privacy-audit-trail">
+          <div class="audit-trail-header">
+            <span style="font-size:1rem;">📋</span>
+            <div>
+              <div id="audit-trail-privacy-title" class="audit-trail-title">Example activity log</div>
+              <div id="audit-trail-sub" class="audit-trail-sub">Example log of actions in this browser. On a server, ClinLoop keeps an append-only audit log of every detection and clinician action.</div>
+            </div>
+            <button id="audit-export-btn" class="audit-export-btn">⬇ Export Audit Report</button>
+          </div>
+          <div id="audit-log-entries" class="audit-log-entries">
+            <div class="audit-entry audit-entry-system">
+              <span class="audit-ts" id="audit-ts-init"></span>
+              <span class="audit-engine">EXAMPLE</span>
+              <span class="audit-action">Example log started (this browser only)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Score Bar -->
+        <div class="privacy-score-bar">
+          <div class="pscore-title" id="pscore-title">Summary</div>
+          <div class="pscore-items">
+            <div class="pscore-item"><span id="pscore-active">In use: no patient data to external AI; role-based access; audit trail</span></div>
+            <div class="pscore-item"><span id="pscore-roadmap">Optional: local language model · Demo: identifier screening</span></div>
+            <div class="pscore-item"><span id="pscore-future">Not built: 6 of the ideas above</span></div>
+          </div>
+        </div>
+
+      </div><!-- end view-privacy -->
+
       <div class="kpi-ribbon-compact">
         <div class="kpi-card-compact">
           <span class="kpi-label">Regulatory status</span>
@@ -1040,261 +1296,7 @@
     </div>
   </div>
 
-      <!-- ============================================================ -->
-      <!-- 🛡️ PRIVACY SHIELD — 8-Layer Patient Data Protection Panel  -->
-      <!-- ============================================================ -->
-      <div class="stage-view-panel hidden" id="view-privacy" style="padding: 1.4rem; overflow-y: auto; height: calc(100vh - 120px);">
 
-        <!-- Header -->
-        <div class="privacy-hero-banner">
-          <div class="privacy-hero-icon">🛡️</div>
-          <div class="privacy-hero-text">
-            <h2 id="privacy-hero-title" class="privacy-hero-title">Data protection: what is built and what is not</h2>
-            <p id="privacy-hero-sub" class="privacy-hero-sub">ClinLoop sends no patient data to any external AI service. Each item below is marked <b>In use</b>, <b>Optional</b>, <b>Demo</b> or <b>Not built</b>. Nothing here has been independently audited or certified.</p>
-          </div>
-          <div class="privacy-compliance-badges">
-            <span class="prv-badge prv-badge-gold">Not certified</span>
-            <span class="prv-badge prv-badge-green">No patient data to external AI</span>
-          </div>
-        </div>
-
-        <!-- Privacy tooling is active and connected via Local Enclave -->
-        <div class="privacy-firewall-platform">
-          <div class="firewall-platform-header">
-            <span class="firewall-platform-icon">⚡</span>
-            <div>
-              <div id="firewall-platform-title" class="firewall-platform-title">Privacy review example</div>
-              <div id="firewall-platform-sub" class="firewall-platform-sub">No live de-identification or external AI transmission is configured.</div>
-            </div>
-            <span class="firewall-live-badge">● EXAMPLE</span>
-          </div>
-          <div class="firewall-io-grid">
-            <div class="firewall-io-col">
-              <label id="firewall-input-label" class="firewall-io-label firewall-label-danger">Input (stays in this browser)</label>
-              <textarea id="phi-firewall-input" class="firewall-textarea firewall-input-area" placeholder="Try typing: 김민준 (1978-03-12), 주민번호 780312-1234567, 010-1234-5678, minjun@hospital.kr
-CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
-              <div class="firewall-input-meta">
-                <span id="phi-count-badge" class="phi-count">PHI 항목: 0개 탐지됨</span>
-                <button id="firewall-sample-btn" class="firewall-sample-btn">샘플 PHI 입력</button>
-              </div>
-            </div>
-            <div class="firewall-arrow-col">
-              <div class="firewall-arrow-wrap">
-                <div class="firewall-shield-anim" id="firewall-shield-anim">🛡️</div>
-                <div class="firewall-arrow">→</div>
-                <div class="firewall-stats" id="firewall-stats">
-                  <div class="fstat">Stripped: <span id="fstat-stripped">0</span></div>
-                  <div class="fstat">Pseudonymized: <span id="fstat-pseudo">0</span></div>
-                  
-                </div>
-              </div>
-            </div>
-            <div class="firewall-io-col">
-              <label id="firewall-output-label" class="firewall-io-label firewall-label-safe">Masked output (demo, in this browser only)</label>
-              <div id="phi-firewall-output" class="firewall-textarea firewall-output-area">[De-identified output will appear here in real-time as you type above]</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 8 Layer Grid -->
-        <div class="privacy-layers-grid">
-
-          <!-- Layer 1 -->
-          <div class="prv-layer-card prv-status-active" id="prv-layer-1">
-            <div class="prv-layer-header">
-              <div class="prv-layer-num">01</div>
-              <div class="prv-layer-status-badge prv-badge-roadmap" id="prv-l1-status">Optional · hospital server only</div>
-            </div>
-            <div class="prv-layer-icon">🔒</div>
-            <h3 id="prv-l1-title" class="prv-layer-title">Local language model (optional)</h3>
-            <p id="prv-l1-desc" class="prv-layer-desc">Optional: a local language model (for example EXAONE 3.5 or Llama 3, via Ollama) can run on the hospital's own server, inside its firewall, on a CPU or a GPU. Patient text then never leaves the hospital. This public page has no model connected.</p>
-            <div class="prv-layer-tech">
-              <span class="tech-tag">MedLlama2 7B ★</span>
-              <span class="tech-tag">Llama 3.1 Medical</span>
-              <span class="tech-tag">DeepSeek-R1</span>
-              <span class="tech-tag">Ollama</span>
-              <span class="tech-tag">Air-Gapped</span>
-            </div>
-            <div style="margin-bottom:0.5rem;">
-              <button id="test-local-llm-btn" onclick="testLocalLLM()" style="font-size:0.7rem;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);color:#10b981;border-radius:6px;padding:0.25rem 0.6rem;cursor:pointer;">▶ Test Local LLM Now</button>
-              <span id="local-llm-status-badge" style="font-size:0.68rem;color:var(--text-dim);margin-left:0.5rem;">Checking...</span>
-            </div>
-            <div id="local-llm-test-output" style="display:none;font-size:0.7rem;color:#86efac;background:rgba(0,0,0,0.3);border-radius:6px;padding:0.4rem;margin-bottom:0.5rem;font-family:var(--font-mono);white-space:pre-wrap;max-height:80px;overflow-y:auto;"></div>
-            <div class="prv-layer-metric"><span class="metric-icon">⚡</span> <span id="prv-l1-metric">Runs on the hospital's server · CPU or GPU</span></div>
-          </div>
-
-          <!-- Layer 2 -->
-          <div class="prv-layer-card prv-status-roadmap" id="prv-layer-2">
-            <div class="prv-layer-header">
-              <div class="prv-layer-num">02</div>
-              <div class="prv-layer-status-badge prv-badge-future" id="prv-l2-status">Not built</div>
-            </div>
-            <div class="prv-layer-icon">🌐</div>
-            <h3 id="prv-l2-title" class="prv-layer-title">Federated Learning</h3>
-            <p id="prv-l2-desc" class="prv-layer-desc">Idea for multi-hospital research: share model updates instead of records. Not built; ClinLoop's rules need no training data.</p>
-            <div class="prv-federated-diagram">
-              <div class="fed-node fed-hospital">🏥 Seoul</div>
-              <div class="fed-node fed-hospital">🏥 Busan</div>
-              <div class="fed-node fed-hospital">🏥 Daegu</div>
-              <div class="fed-center">⚙️ Gradients Only</div>
-            </div>
-            <div class="prv-layer-tech">
-              <span class="tech-tag">NVIDIA FLARE</span>
-              <span class="tech-tag">PySyft</span>
-              <span class="tech-tag">Multi-hospital</span>
-            </div>
-            <div class="prv-layer-metric"><span class="metric-icon">📊</span> <span id="prv-l2-metric">Design goal: patient data stays on-premise · not implemented</span></div>
-          </div>
-
-          <!-- Layer 3 -->
-          <div class="prv-layer-card prv-status-active" id="prv-layer-3">
-            <div class="prv-layer-header">
-              <div class="prv-layer-num">03</div>
-              <div class="prv-layer-status-badge prv-badge-future" id="prv-l3-status">Not built</div>
-            </div>
-            <div class="prv-layer-icon">📊</div>
-            <h3 id="prv-l3-title" class="prv-layer-title">Differential Privacy (ε-DP)</h3>
-            <p id="prv-l3-desc" class="prv-layer-desc">Idea for published statistics: add calibrated noise so no individual can be singled out. Not built; the slider below only illustrates the idea.</p>
-            <div class="prv-dp-platform">
-              <div class="dp-formula">Mechanism: X̃ = X + Lap(Δf/ε) where ε=0.1, Δf=sensitivity</div>
-              <div class="dp-row"><span class="dp-label">Exact value:</span><span class="dp-val dp-danger">42.1%</span><span class="dp-note">(re-identifies individual)</span></div>
-              <div class="dp-row"><span class="dp-label">ε-DP output:</span><span class="dp-val dp-safe" id="dp-noisy-val">42.1% ± <span id="dp-noise-span">2.3</span>%</span><span class="dp-note">(population-level only)</span></div>
-              <div class="dp-slider-row">
-                <label style="font-size:0.65rem;color:var(--text-dim);">Privacy Budget ε:</label>
-                <input type="range" id="dp-epsilon-slider" min="1" max="20" value="10" style="flex:1;accent-color:#10b981;">
-                <span id="dp-epsilon-val" style="font-family:var(--font-mono);font-size:0.68rem;color:#10b981;min-width:30px;">0.1</span>
-              </div>
-            </div>
-            <div class="prv-layer-tech">
-              <span class="tech-tag">ε = 0.1</span>
-              <span class="tech-tag">Laplace Noise</span>
-              <span class="tech-tag">Apple / Google standard</span>
-            </div>
-            <div class="prv-layer-metric"><span class="metric-icon">🔢</span> <span id="prv-l3-metric">Illustration only · no privacy guarantee</span></div>
-          </div>
-
-          <!-- Layer 4 -->
-          <div class="prv-layer-card prv-status-roadmap" id="prv-layer-4">
-            <div class="prv-layer-header">
-              <div class="prv-layer-num">04</div>
-              <div class="prv-layer-status-badge prv-badge-future" id="prv-l4-status">Not built</div>
-            </div>
-            <div class="prv-layer-icon">💻</div>
-            <h3 id="prv-l4-title" class="prv-layer-title">Confidential Computing (TEE)</h3>
-            <p id="prv-l4-desc" class="prv-layer-desc">Hardware-isolated processing in a cloud (Intel SGX / AMD SEV). Not built and not needed: ClinLoop runs on the hospital's own server.</p>
-            <div class="prv-layer-tech">
-              <span class="tech-tag">Intel SGX</span>
-              <span class="tech-tag">Azure Confidential</span>
-              <span class="tech-tag">AMD SEV</span>
-            </div>
-            <div class="prv-layer-metric"><span class="metric-icon">🔐</span> <span id="prv-l4-metric">Roadmap only · not built</span></div>
-          </div>
-
-          <!-- Layer 5 -->
-          <div class="prv-layer-card prv-status-active" id="prv-layer-5">
-            <div class="prv-layer-header">
-              <div class="prv-layer-num">05</div>
-              <div class="prv-layer-status-badge prv-badge-future" id="prv-l5-status">Not built</div>
-            </div>
-            <div class="prv-layer-icon">🧬</div>
-            <h3 id="prv-l5-title" class="prv-layer-title">Synthetic data for research</h3>
-            <p id="prv-l5-desc" class="prv-layer-desc">The public site uses hand-written synthetic patients only. Generating realistic synthetic copies of real records is not built.</p>
-            <div class="prv-layer-tech">
-              <span class="tech-tag">Encrypted EMR Sync</span>
-              <span class="tech-tag">CTGAN</span>
-              <span class="tech-tag">MDClone standard</span>
-            </div>
-            <div class="prv-layer-metric"><span class="metric-icon">🧬</span> <span id="prv-l5-metric">Not built · no compliance certification</span></div>
-          </div>
-
-          <!-- Layer 6 -->
-          <div class="prv-layer-card prv-status-active" id="prv-layer-6">
-            <div class="prv-layer-header">
-              <div class="prv-layer-num">06</div>
-              <div class="prv-layer-status-badge prv-badge-roadmap" id="prv-l6-status">Demo · in this browser</div>
-            </div>
-            <div class="prv-layer-icon">🔥</div>
-            <h3 id="prv-l6-title" class="prv-layer-title">Identifier screening (demo)</h3>
-            <p id="prv-l6-desc" class="prv-layer-desc">Try the box above: it finds identifier patterns (phone, resident number, e-mail, dates) and masks them, in your browser only. Pattern matching misses identifiers it has no pattern for; do not enter real patient information.</p>
-            <div class="prv-layer-tech">
-              <span class="tech-tag">18 PHI Categories</span>
-              <span class="tech-tag">Korean PIPA</span>
-              <span class="tech-tag">phi_deidentifier.py</span>
-            </div>
-            <div class="prv-layer-metric"><span class="metric-icon">🔥</span> <span id="prv-l6-metric">Rule-based identifier removal · not measured on real records</span></div>
-          </div>
-
-          <!-- Layer 7 -->
-          <div class="prv-layer-card prv-status-future" id="prv-layer-7">
-            <div class="prv-layer-header">
-              <div class="prv-layer-num">07</div>
-              <div class="prv-layer-status-badge prv-badge-future" id="prv-l7-status">Not built</div>
-            </div>
-            <div class="prv-layer-icon">🔮</div>
-            <h3 id="prv-l7-title" class="prv-layer-title">Homomorphic Encryption (HE)</h3>
-            <p id="prv-l7-desc" class="prv-layer-desc">Computing on encrypted data. A research field, far too slow for this use today; not planned.</p>
-            <div class="prv-layer-tech">
-              <span class="tech-tag">Microsoft SEAL</span>
-              <span class="tech-tag">IBM HElib</span>
-              <span class="tech-tag">Zama.ai</span>
-            </div>
-            <div class="prv-layer-metric"><span class="metric-icon">🔮</span> <span id="prv-l7-metric">Not planned</span></div>
-          </div>
-
-          <!-- Layer 8 -->
-          <div class="prv-layer-card prv-status-active" id="prv-layer-8">
-            <div class="prv-layer-header">
-              <div class="prv-layer-num">08</div>
-              <div class="prv-layer-status-badge prv-badge-future" id="prv-l8-status">Not in use</div>
-            </div>
-            <div class="prv-layer-icon">🏦</div>
-            <h3 id="prv-l8-title" class="prv-layer-title">Pseudonymised identifiers</h3>
-            <p id="prv-l8-desc" class="prv-layer-desc">A pattern-based de-identification module exists in the code (phi_deidentifier.py) but nothing uses it, because no patient data is sent outside the hospital. Its output would need review before being called de-identified.</p>
-            <div class="prv-vault-platform">
-              <div class="vault-row"><span class="vault-before">김민준</span><span class="vault-arrow">→</span><span class="vault-after">PT-99F74B58</span></div>
-              <div class="vault-row"><span class="vault-before">780312-1234567</span><span class="vault-arrow">→</span><span class="vault-after">[주민번호 삭제]</span></div>
-              <div class="vault-row"><span class="vault-before">1978-03-12</span><span class="vault-arrow">→</span><span class="vault-after">1978년</span></div>
-            </div>
-            <div class="prv-layer-tech">
-              <span class="tech-tag">SHA-256 Pseudonym</span>
-              <span class="tech-tag">On-Premise Vault</span>
-              <span class="tech-tag">PCI-DSS model</span>
-            </div>
-            <div class="prv-layer-metric"><span class="metric-icon">🏦</span> <span id="prv-l8-metric">Module present · not used</span></div>
-          </div>
-
-        </div><!-- end privacy-layers-grid -->
-
-        <!-- Global Audit Trail -->
-        <div class="privacy-audit-trail">
-          <div class="audit-trail-header">
-            <span style="font-size:1rem;">📋</span>
-            <div>
-              <div id="audit-trail-privacy-title" class="audit-trail-title">Example activity log</div>
-              <div id="audit-trail-sub" class="audit-trail-sub">Example log of actions in this browser. On a server, ClinLoop keeps an append-only audit log of every detection and clinician action.</div>
-            </div>
-            <button id="audit-export-btn" class="audit-export-btn">⬇ Export Audit Report</button>
-          </div>
-          <div id="audit-log-entries" class="audit-log-entries">
-            <div class="audit-entry audit-entry-system">
-              <span class="audit-ts" id="audit-ts-init"></span>
-              <span class="audit-engine">EXAMPLE</span>
-              <span class="audit-action">Example log started (this browser only)</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Summary Score Bar -->
-        <div class="privacy-score-bar">
-          <div class="pscore-title" id="pscore-title">Summary</div>
-          <div class="pscore-items">
-            <div class="pscore-item"><span id="pscore-active">In use: no patient data to external AI; role-based access; audit trail</span></div>
-            <div class="pscore-item"><span id="pscore-roadmap">Optional: local language model · Demo: identifier screening</span></div>
-            <div class="pscore-item"><span id="pscore-future">Not built: 6 of the ideas above</span></div>
-          </div>
-        </div>
-
-      </div><!-- end view-privacy -->
 
   <!-- Modal: Patient Outreach Simulator (KakaoTalk / SMS) -->
   <div class="modal-overlay" id="outreach-modal">
@@ -1563,7 +1565,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
     </div>
   </div>
   <script src="config.js"></script>
-<script src="js/demo.js?v=2026-10-22.1"></script>
+<script src="js/demo.js?v=20261023_layout1"></script>
 <script src="js/top-chrome.js?v=20261015"></script>
 <script src="js/appnav.js?v=2026-10-22.1"></script>
   <script src="js/safety_clock.js?v=20260930_final"></script>

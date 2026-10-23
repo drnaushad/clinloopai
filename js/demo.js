@@ -41,7 +41,9 @@
       note.id = 'snapshot-status'; note.setAttribute('role', 'note');
       note.textContent = 'Synthetic snapshot · no live hospital connection. Actions here are browser-only simulations. / 합성 예시 · 실제 병원 연결 없음.';
       note.style.cssText = 'margin:12px;padding:10px;border:1px solid currentColor;border-radius:8px;font-size:.9rem';
-      document.body.prepend(note);
+      var shell = document.querySelector('.wrap');
+      if (shell) { var heading = shell.querySelector('header'); if (heading) heading.after(note); else shell.prepend(note); }
+      else document.body.prepend(note);
       var forms = document.querySelectorAll('#note-form, #report-form, #file-form, #dicom-form, #ct-form');
       forms.forEach(function (form) {
         var help = document.createElement('p');
