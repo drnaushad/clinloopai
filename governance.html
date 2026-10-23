@@ -150,10 +150,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 @media (max-width: 720px) { .gov-kpis { grid-template-columns: repeat(2, 1fr); } .def { grid-template-columns: 1fr; } }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js?v=20261023_layout2"></script>
-<script src="js/appnav.js?v=2026-10-23.5"></script>
-<link rel="stylesheet" href="css/responsive.css?v=20261023_deep1">
-<script defer src="js/language-controls.js?v=2026-10-21.4"></script>
+<script src="js/demo.js?v=20261023_locale1"></script>
+<script src="js/appnav.js?v=2026-10-23.6"></script>
+<link rel="stylesheet" href="css/responsive.css?v=20261023_locale1">
+<script defer src="js/language-controls.js?v=20261023_locale1"></script>
 <link rel="stylesheet" href="css/app-chrome.css?v=20261023_deep1"><script defer src="js/appearance-controls.js?v=20261023_1"></script></head>
 <body>
 <div class="wrap">
@@ -261,12 +261,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       critTitle: '위급 소견 목록 (ACR 소통 지침)', critHelp: '이 버전의 목록 전체를 승인합니다. 목록 파일이 바뀌면 승인은 무효가 됩니다.',
       approverTitle: '승인자 직함 (예: 영상의학과 과장)', note: '메모', approveList: '이 목록 승인',
       critStatus: { approved: '승인됨', not_approved: '미승인', changed_since_approval: '승인 후 변경됨' },
-      critCols: ['소견', '분류', '보고 기한', '패턴'], category: (c) => `ACR ${c}등급`, minutes: (m) => `${m}분`,
+      patternsHelp: '기술 세부정보: 원문 매칭 패턴 (영어·한국어)', critCols: ['소견', '분류', '보고 기한', '매칭 규칙'], category: (c) => `ACR ${c}등급`, minutes: (m) => `${m}분`,
       approvedBy: (a) => `승인: ${a.approver} (${a.title}) · ${a.decided_at.slice(0, 16)}`, notApproved: '아직 이 병원에서 승인하지 않았습니다.',
       custom: '병원 맞춤 목록', defaultList: '기본 예시 목록',
       fStatus: '상태', fDomain: '분야', all: '전체', search: '규칙 검색',
       status: { pending: '검토 대기', stale: '재검토 필요', changes_requested: '수정 요청', rejected: '반려', approved: '승인' },
-      dTrigger: '트리거', dFollow: '필요한 후속 조치', dDeadline: '기본 기한', dLogic: '시간 논리', dNote: '근거 메모', dRefs: '참고문헌', dFp: '지문',
+      dTrigger: '트리거 (규칙 원문)', dFollow: '필요한 후속 조치', dDeadline: '기본 기한', dLogic: '시간 논리', dNote: '근거 메모', dRefs: '참고문헌 (원문 제목)', dFp: '지문',
       any: '중 하나', all2: '모두', approvals: (n, r) => `승인 ${n}/${r}`,
       decision: '결정', specialty: '전문 분야 (예: 영상의학과 흉부)', reviewNote: '검토 의견 (반려·수정 요청 시 필수)', submit: '결정 기록',
       decisions: { approve: '승인', request_changes: '수정 요청', reject: '반려' },
@@ -297,12 +297,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       critTitle: 'Critical-finding list (ACR communication)', critHelp: 'You approve this version of the whole list. Any change to the list file voids the approval.',
       approverTitle: 'Approver title (e.g. Chair, Department of Radiology)', note: 'Note', approveList: 'Approve this list',
       critStatus: { approved: 'approved', not_approved: 'not approved', changed_since_approval: 'changed since approval' },
-      critCols: ['Finding', 'Category', 'Report within', 'Patterns'], category: (c) => `ACR category ${c}`, minutes: (m) => `${m} min`,
+      patternsHelp: 'Technical detail: source matching patterns (English/Korean)', critCols: ['Finding', 'Category', 'Report within', 'Matching rules'], category: (c) => `ACR category ${c}`, minutes: (m) => `${m} min`,
       approvedBy: (a) => `Approved by ${a.approver} (${a.title}) · ${a.decided_at.slice(0, 16)}`, notApproved: 'Not yet approved by this hospital.',
       custom: 'Hospital list', defaultList: 'Default example list',
       fStatus: 'Status', fDomain: 'Domain', all: 'All', search: 'Search rules',
       status: { pending: 'pending', stale: 'needs re-review', changes_requested: 'changes requested', rejected: 'rejected', approved: 'approved' },
-      dTrigger: 'Trigger', dFollow: 'Required follow-up', dDeadline: 'Default window', dLogic: 'Temporal logic', dNote: 'Evidence note', dRefs: 'References', dFp: 'Fingerprint',
+      dTrigger: 'Trigger (source rule wording)', dFollow: 'Required follow-up', dDeadline: 'Default window', dLogic: 'Temporal logic', dNote: 'Evidence note', dRefs: 'References (original titles)', dFp: 'Fingerprint',
       any: 'any of', all2: 'all of', approvals: (n, r) => `${n}/${r} approvals`,
       decision: 'Decision', specialty: 'Specialty (e.g. Thoracic radiology)', reviewNote: 'Review note (required to reject or request changes)', submit: 'Record decision',
       decisions: { approve: 'Approve', request_changes: 'Request changes', reject: 'Reject' },
@@ -370,7 +370,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     $('crit-table').innerHTML = `<thead><tr><th>${esc(c1)}</th><th>${esc(c2)}</th><th class="num">${esc(c3)}</th><th>${esc(c4)}</th></tr></thead>
       <tbody>${c.findings.map((f) => `<tr><td>${esc((f.label || {})[lang] || (f.label || {}).en || f.id)}</td>
         <td>${esc(t().category(f.category))}</td><td class="num">${esc(t().minutes(f.window_minutes))}</td>
-        <td class="mono">${esc(f.patterns.join(' | '))}</td></tr>`).join('')}</tbody>`;
+        <td><details class="rule-patterns"><summary>${esc(t().patternsHelp)}</summary><pre class="mono">${esc(f.patterns.join(' | '))}</pre></details></td></tr>`).join('')}</tbody>`;
     $('crit-form').classList.toggle('open', can('clinician') && c.status !== 'approved');
   }
 
@@ -390,12 +390,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       ${(r.guideline_alerts || []).map((a) => `<div class="feed ${a.accepted ? 'ok' : 'alarm'}" style="margin:8px 0;font-weight:500;">
         ${esc(t().guidelineAlert(a))}${a.accepted ? ` — ${esc(t().accepted)}: ${esc(a.accepted)}` : ''}</div>`).join('')}
       <dl class="def">
-        <dt>${esc(t().dTrigger)}</dt><dd>${esc(r.description)}</dd>
+        <dt>${esc(t().dTrigger)}</dt><dd data-source-evidence>${esc(r.description)}</dd>
         <dt>${esc(t().dFollow)}</dt><dd>${esc((r.followup_logic === 'any' ? t().any : t().all2) + ': ' + r.required_followups.join(', '))}</dd>
         <dt>${esc(t().dDeadline)}</dt><dd>${esc(r.deadline)}</dd>
         <dt>${esc(t().dLogic)}</dt><dd class="mono">${esc(r.ltl_formula)}</dd>
         ${r.evidence_note ? `<dt>${esc(t().dNote)}</dt><dd>${esc(r.evidence_note)}</dd>` : ''}
-        <dt>${esc(t().dRefs)}</dt><dd>${esc((r.references || []).join('; '))}</dd>
+        <dt>${esc(t().dRefs)}</dt><dd data-source-evidence>${esc((r.references || []).join('; '))}</dd>
         <dt>${esc(t().dFp)}</dt><dd class="mono">${esc(r.fingerprint.slice(0, 16))}…</dd>
       </dl>
       ${reviews ? `<ul class="reviews">${reviews}</ul>` : ''}

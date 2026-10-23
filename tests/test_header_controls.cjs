@@ -21,10 +21,10 @@ test('clinical pages remember only a display preference and preserve translated 
 });
 test('cockpit examples remain hidden until initialization completes and failures keep a clear message',async()=>{
  const app=fs.readFileSync('js/app.js','utf8');const boot=app.slice(app.lastIndexOf("document.addEventListener('DOMContentLoaded'"));
- for(const failed of [false,true]){
-  let callback,ready=false;const status={hidden:false,textContent:''};const document={addEventListener:(_e,fn)=>{callback=fn;},body:{classList:{remove:name=>{assert.equal(name,'cockpit-loading');ready=true;}}},getElementById:()=>status};
+ for(const lang of ['en','ko']) for(const failed of [false,true]){
+  let callback,ready=false;const status={hidden:false,textContent:'',setAttribute(k,v){this[k]=v;}};const document={documentElement:{lang},addEventListener:(_e,fn)=>{callback=fn;},body:{classList:{remove:name=>{assert.equal(name,'cockpit-loading');ready=true;}}},getElementById:()=>status};
   vm.runInNewContext(boot,{document,window:{},ClinLoopApp:class{async init(){if(failed)throw Error('synthetic-only');}}});await callback();
-  assert.equal(ready,!failed);assert.equal(status.hidden,!failed);if(failed)assert.match(status.textContent,/Refresh/);
+  assert.equal(ready,!failed);assert.equal(status.hidden,!failed);if(failed){assert.match(status.textContent,lang==='en'?/Refresh/:/새로고침/);assert.equal(/[가-힣]/.test(status.textContent),lang==='ko');assert.equal(status['data-demo-copy'],'loadFailed');}
  }
  const html=fs.readFileSync('index.html','utf8');assert.equal((html.match(/<nav class="app-nav"/g)||[]).length,1);assert(!html.includes('floating-theme-switch-dock'));
 });

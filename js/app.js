@@ -2611,6 +2611,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (status) status.hidden = true;
   } catch (error) {
     const status = document.getElementById('cockpit-load-status');
-    if (status) status.textContent = 'The examples could not be loaded. Refresh to try again. / 예시를 불러오지 못했습니다. 새로고침해 주세요.';
+    if (status) {
+      status.setAttribute('data-demo-copy', 'loadFailed');
+      status.textContent = document.documentElement.lang.startsWith('ko')
+        ? '예시를 불러오지 못했습니다. 새로고침해 주세요.'
+        : 'The examples could not be loaded. Refresh to try again.';
+    }
   }
 });

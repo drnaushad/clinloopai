@@ -500,3 +500,7 @@ body:has(> nav.app-nav) {
   .report-workspace > main { grid-template-columns: minmax(0, 1fr); }
   .report-workspace .cases { max-height: 280px; }
 }
+
+/* Technical matching expressions retain their source language and stay optional on phones. */
+.rule-patterns summary { cursor: pointer; overflow-wrap: anywhere; }
+.rule-patterns pre { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 52ch; margin-block: 8px; }

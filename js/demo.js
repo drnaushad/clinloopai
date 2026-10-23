@@ -39,7 +39,8 @@
     function explainSnapshot() {
       var note = document.createElement('p');
       note.id = 'snapshot-status'; note.setAttribute('role', 'note');
-      note.textContent = 'Synthetic snapshot · no live hospital connection. Actions here are browser-only simulations. / 합성 예시 · 실제 병원 연결 없음.';
+      note.setAttribute('data-demo-copy', 'snapshot');
+      note.textContent = 'Synthetic snapshot · no live hospital connection. Actions here are browser-only simulations.';
       note.style.cssText = 'margin:12px;padding:10px;border:1px solid currentColor;border-radius:8px;font-size:.9rem';
       var shell = document.querySelector('.wrap');
       if (shell) { var heading = shell.querySelector('header'); if (heading) heading.after(note); else shell.prepend(note); }
@@ -47,13 +48,16 @@
       var forms = document.querySelectorAll('#note-form, #report-form, #file-form, #dicom-form, #ct-form');
       forms.forEach(function (form) {
         var help = document.createElement('p');
-        help.textContent = 'Unavailable on this public snapshot. Use an approved local installation, or try synthetic text in Analyse patient. / 공개 예시에서는 사용할 수 없습니다.';
-        var link = document.createElement('a'); link.href = 'analyse'; link.textContent = ' Analyse patient'; help.append(link);
+        var message = document.createElement('span'); message.setAttribute('data-demo-copy', 'unavailable');
+        message.textContent = 'Unavailable in this public demo. Use an approved local installation, or try synthetic text in Analyse patient.';
+        help.append(message, ' ');
+        var link = document.createElement('a'); link.href = 'analyse'; link.setAttribute('data-demo-copy', 'analyse'); link.textContent = 'Analyse patient'; help.append(link);
         form.before(help);
         var disclosure = document.createElement('details');
         disclosure.className = 'snapshot-tools';
         var summary = document.createElement('summary');
-        summary.textContent = 'View local-installation controls (unavailable in this demo) / 로컬 설치용 기능 보기';
+        summary.setAttribute('data-demo-copy', 'controls');
+        summary.textContent = 'View local-installation controls (unavailable in this demo)';
         form.before(disclosure); disclosure.append(summary); disclosure.append(form);
         form.querySelectorAll('input,textarea,select,button').forEach(function (control) { control.disabled = true; });
         form.addEventListener('submit', function (event) { event.preventDefault(); event.stopImmediatePropagation(); }, true);
@@ -399,6 +403,7 @@
       var banner = document.createElement('div');
       banner.setAttribute('role', 'note');
       banner.id = 'clinloop-demo-banner';
+      banner.setAttribute('data-demo-copy', 'serverDemo');
       banner.style.cssText = 'background:#7c2d12;color:#fff7ed;padding:8px 16px;font:600 13px/1.4 system-ui,sans-serif;' +
         'text-align:center;position:relative;z-index:1000;overflow-wrap:anywhere;';
       banner.textContent = ko

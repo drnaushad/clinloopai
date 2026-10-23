@@ -148,10 +148,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 .bn { padding: 10px 12px; border-left: 4px solid var(--critical); margin: 8px 0; background: var(--surface); border-radius: 8px; }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js?v=20261023_layout2"></script>
-<script src="js/appnav.js?v=2026-10-23.5"></script>
-<link rel="stylesheet" href="css/responsive.css?v=20261023_deep1">
-<script defer src="js/language-controls.js?v=2026-10-21.4"></script>
+<script src="js/demo.js?v=20261023_locale1"></script>
+<script src="js/appnav.js?v=2026-10-23.6"></script>
+<link rel="stylesheet" href="css/responsive.css?v=20261023_locale1">
+<script defer src="js/language-controls.js?v=20261023_locale1"></script>
 <link rel="stylesheet" href="css/app-chrome.css?v=20261023_deep1"><script defer src="js/appearance-controls.js?v=20261023_1"></script></head>
 <body>
 <div class="wrap">
@@ -192,6 +192,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const T = {
     ko: {
+      sourceQuote: '보고서 인용 (원문 언어 유지)',
       title: '후속 조치가 끊기는 곳', subtitle: '병원 전체에서 어떤 규칙, 어떤 단계, 어떤 환자군에서 진료 루프가 닫히지 않는지 보여줍니다.',
       worklist: '작업 목록 →', governance: '규칙 승인 →', api: 'ClinLoop API', token: '접근 토큰', signin: '로그인',
       note: '절차를 고치기 위한 화면입니다. 의료진 개인의 순위를 매기지 않습니다. 담당자별 표는 업무량 분배를 위한 것입니다.',
@@ -218,6 +219,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       footer: 'ClinLoop AI · 절차의 빈틈을 찾습니다. 사람을 탓하지 않습니다.',
     },
     en: {
+      sourceQuote: 'Original report quote (source language)',
       title: 'Where follow-up breaks', subtitle: 'Hospital-wide: which rules, which steps and which patient groups lose their care loops.',
       worklist: 'Worklist →', governance: 'Rule sign-off →', api: 'ClinLoop API', token: 'Access token', signin: 'Sign in',
       note: 'For fixing processes, not ranking clinicians. The owner table is for balancing workload.',
@@ -275,6 +277,11 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   const bar = (x, label) => x == null ? '<span class="sub">–</span>'
     : `<div class="rate" title="${esc(label)}: ${pct(x)}"><div class="track"><div class="fill" style="width:${Math.round(x * 100)}%"></div></div><span class="v">${pct(x)}</span></div>`;
 
+  function stepLabel(value) {
+    return String(value || t().none).replace(/_/g, ' ')
+      .replace(/\bfollowup\b/g, 'follow-up').replace(/\b(ct|mri|pet)\b/gi, (term) => term.toUpperCase());
+  }
+
   function render() {
     document.documentElement.lang = lang;
     $('btn-lang').textContent = lang === 'ko' ? 'English' : '한국어';
@@ -288,14 +295,14 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       .map(([v, l]) => `<div class="card kpi"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join('');
     $('bn').innerHTML = d.bottlenecks.length ? d.bottlenecks.map((b) => `<div class="bn"><b>${esc(b.rule_id)}</b> ${esc(b.rule_name)}
       · <span class="chip overdue">${esc(t().overdue)} ${esc(b.overdue)}</span> <span class="chip ${esc(b.severity)}">${esc(b.severity)}</span>
-      ${b.top_missing ? `<div class="sub" style="margin-top:4px;">${esc(t().missingStep)}: <b>${esc(b.top_missing)}</b></div>` : ''}</div>`).join('')
+      ${b.top_missing ? `<div class="sub" style="margin-top:4px;">${esc(t().missingStep)}: <b>${esc(stepLabel(b.top_missing))}</b></div>` : ''}</div>`).join('')
       : `<p class="sub">${esc(t().noBn)}</p>`;
     $('rules').innerHTML = `<table class="tbl"><thead><tr><th>${esc(t().rule)}</th><th class="num">${esc(t().active)}</th><th class="num">${esc(t().overdue)}</th>
       <th>${esc(t().ontimeCol)}</th><th class="num">${esc(t().closedLate)}</th><th class="num">${esc(t().byClin)}</th><th class="num">${esc(t().deferred)}</th><th>${esc(t().missingStep)}</th></tr></thead><tbody>
       ${d.rules.map((r) => `<tr><td><b>${esc(r.rule_id)}</b> ${esc(r.rule_name)}</td><td class="num">${r.active}</td>
         <td class="num">${r.overdue ? `<span class="gap">${r.overdue}</span>` : 0}</td><td>${bar(r.on_time_rate, t().ontimeCol)}</td>
         <td class="num">${r.closed_late}</td><td class="num">${r.closed_by_clinician}</td><td class="num">${r.deferred}</td>
-        <td class="sub">${esc(r.top_missing || t().none)}</td></tr>`).join('')}</tbody></table>`;
+        <td class="sub">${esc(stepLabel(r.top_missing))}</td></tr>`).join('')}</tbody></table>`;
     const overallMissed = due ? missed / due : null;
     $('eq').innerHTML = Object.entries(d.strata).map(([key, groups]) => `<h3 class="sub" style="margin:12px 0 4px;"><b>${esc(t()[key] || key)}</b></h3>
       <div class="scroll"><table class="tbl"><thead><tr><th>${esc(t().group)}</th><th class="num">${esc(t().n)}</th><th class="num">${esc(t().missed)}</th><th>${esc(t().rate)}</th><th></th></tr></thead><tbody>
@@ -334,7 +341,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       const items = (state.srItems || []).filter((i) => !i.verdict);
       $('sr-items').innerHTML = state.srItems == null ? '' : `<h3 style="margin:16px 0 4px;">${esc(t().srPending)}</h3>` + (items.length ? items.map((i) => `
         <div class="sugg"><span class="chip neutral">${esc(i.label[lang] || i.label.en)}</span> <b>${esc(i.patient_id)}</b> · ${esc(t().srReport)} ${esc((i.report_date || '').slice(0, 10))}
-          <blockquote>“${esc(i.quote)}”</blockquote><div class="sub">${esc(t().srModelReason)}: ${esc(i.reason || '–')}</div>
+          <p class="sub">${esc(t().sourceQuote)}</p><blockquote data-source-evidence>“${esc(i.quote)}”</blockquote><div class="sub">${esc(t().srModelReason)}: ${esc(i.reason || '–')}</div>
           <form data-sid="${esc(i.id)}"><select name="verdict" aria-label="${esc(t().srReviewed)}">${Object.entries(t().verdicts).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select>
             <label class="check"><input type="checkbox" name="urgent"> ${esc(t().srUrgent)}</label>
             <input type="text" name="referral" maxlength="500" placeholder="${esc(t().srReferral)}" aria-label="${esc(t().srReferral)}">
