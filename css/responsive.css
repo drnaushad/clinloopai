@@ -443,14 +443,14 @@ td a, li a, a[href^="patient.html"] { display: inline-block; min-height: 24px; l
 .wrap {
   box-sizing: border-box;
   width: 100%;
-  max-width: 1600px;
-  padding-inline: clamp(16px, 3vw, 48px);
+  max-width: none;
+  padding-inline: clamp(16px, 1.5vw, 40px);
 }
 body:has(> nav.app-nav) {
   box-sizing: border-box;
   width: 100%;
-  max-width: 1600px;
-  padding-inline: clamp(16px, 3vw, 48px);
+  max-width: none;
+  padding-inline: clamp(16px, 1.5vw, 40px);
 }
 .wrap > header { align-items: center; margin-bottom: 16px; }
 .wrap > header .sub { max-width: 85ch; }
@@ -465,9 +465,6 @@ body:has(> nav.app-nav) {
   .card-widget.fill-remaining { flex: 0 0 auto; }
   #view-summary, #view-privacy { height: auto !important; }
 }
-@media (min-width: 2200px) {
-  .wrap, body:has(> nav.app-nav) { max-width: 1920px; }
-}
 @media (max-width: 700px) {
   .inputs { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .eval { width: 100%; }
@@ -475,4 +472,32 @@ body:has(> nav.app-nav) {
 
 @media (max-width: 360px) {
   .app-header--pro .prominent-lang-pill { grid-column: 1 / -1; justify-content: center; }
+}
+
+/* Workspaces use the available screen; cards remain as tall as their content. */
+.report-workspace > header, .report-workspace > main {
+  width: 100%; max-width: none; padding-inline: clamp(16px, 1.5vw, 40px);
+}
+.report-workspace > header .app-nav { justify-content: flex-start; }
+.report-workspace > main, .grid2, .cols { align-items: start; }
+.report-workspace > main { grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); }
+.report-workspace .cases { max-height: 75vh; overflow-y: auto; }
+.workspace-empty {
+  padding: 18px; margin-block: 16px; border: 1px dashed var(--border, #cbd5e1);
+  border-radius: 10px; color: var(--muted, #475569); line-height: 1.6;
+}
+.results:has(#results:not(:empty)) .workspace-empty,
+.pane:has(#graph-wrap:not([hidden])) > .workspace-empty { display: none; }
+.snapshot-tools { margin-block: 12px; }
+.snapshot-tools > summary { padding: 10px 0; cursor: pointer; font-weight: 600; }
+.snapshot-tools > summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.wrap input, .wrap select, .wrap button { min-height: 40px; }
+.wrap input[type=checkbox], .wrap input[type=radio] { min-height: 0; }
+@media (min-width: 2200px) {
+  body:has(.wrap), .report-workspace { font-size: 18px; }
+  .wrap label, .wrap .sub, .wrap .meta, .wrap .status-line { font-size: .9em; }
+}
+@media (max-width: 860px) {
+  .report-workspace > main { grid-template-columns: minmax(0, 1fr); }
+  .report-workspace .cases { max-height: 280px; }
 }

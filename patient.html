@@ -161,9 +161,9 @@ svg .ob-label { font: 700 10px var(--font-mono); }
 @media (max-width: 720px) { .row3 { grid-template-columns: 1fr; } }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js?v=20261023_layout1"></script>
+<script src="js/demo.js?v=20261023_layout2"></script>
 <script src="js/appnav.js?v=2026-10-22.1"></script>
-<link rel="stylesheet" href="css/responsive.css?v=20261023_layout1">
+<link rel="stylesheet" href="css/responsive.css?v=20261023_layout2">
 <script defer src="js/language-controls.js?v=2026-10-21.4"></script>
 </head>
 <body>
@@ -195,6 +195,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
         <div><label for="when" data-i18n="when"></label><input id="when" type="datetime-local"></div>
         <button class="primary" type="submit" data-i18n="load"></button>
       </form>
+      <p class="workspace-empty" data-i18n="graphEmpty"></p>
       <div id="stats" class="kpis" hidden></div>
       <div class="graph-wrap" id="graph-wrap" hidden><svg id="graph" role="img" aria-labelledby="graph-desc"><desc id="graph-desc"></desc></svg></div>
       <div class="legend" id="legend" hidden></div>
@@ -225,6 +226,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const T = {
     ko: {
+      graphEmpty: '위에 환자 ID를 입력하고 그래프 보기를 선택하세요. 불러온 시간축이 여기에 표시됩니다.',
       title: '환자 지식 그래프', subtitle: '엔진이 읽은 모든 임상 사건(진단·검사 수치·오더·약물·예약·영상·판독·영상 AI)과 그 사이의 진료 의무를 시간축 위에 보여줍니다.',
       imaging: '영상 →', worklist: '작업 목록 →', api: 'ClinLoop API', token: '접근 토큰', signin: '로그인', patient: '환자 ID',
       when: '평가 시점 (선택, 기본: 지금)', load: '그래프 보기', working: '불러오는 중…',
@@ -243,6 +245,7 @@ svg .ob-label { font: 700 10px var(--font-mono); }
       llmTitle: '로컬 AI 제안 (검토용, 자동 추적 안 함)', llmNone: '추가 제안 없음', llmOff: (r) => `로컬 AI 사용 불가: ${r}`, noteSource: '읽은 부분',
     },
     en: {
+      graphEmpty: 'Select a patient: enter a patient ID above, then choose Show graph. The timeline appears here after loading.',
       title: 'Patient knowledge graph', subtitle: 'Every clinical event the engine read (diagnoses, lab values, orders, medications, appointments, imaging, reports, imaging AI) and the clinical obligations between them, on one time axis.',
       imaging: 'Imaging →', worklist: 'Worklist →', api: 'ClinLoop API', token: 'Access token', signin: 'Sign in', patient: 'Patient ID',
       when: 'Evaluate at (optional, default: now)', load: 'Show graph', working: 'Loading…',

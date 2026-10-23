@@ -50,6 +50,11 @@
         help.textContent = 'Unavailable on this public snapshot. Use an approved local installation, or try synthetic text in Analyse patient. / 공개 예시에서는 사용할 수 없습니다.';
         var link = document.createElement('a'); link.href = 'analyse'; link.textContent = ' Analyse patient'; help.append(link);
         form.before(help);
+        var disclosure = document.createElement('details');
+        disclosure.className = 'snapshot-tools';
+        var summary = document.createElement('summary');
+        summary.textContent = 'View local-installation controls (unavailable in this demo) / 로컬 설치용 기능 보기';
+        form.before(disclosure); disclosure.append(summary); disclosure.append(form);
         form.querySelectorAll('input,textarea,select,button').forEach(function (control) { control.disabled = true; });
         form.addEventListener('submit', function (event) { event.preventDefault(); event.stopImmediatePropagation(); }, true);
       });

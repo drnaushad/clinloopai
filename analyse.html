@@ -137,9 +137,9 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js?v=20261023_layout1"></script>
+<script src="js/demo.js?v=20261023_layout2"></script>
 <script src="js/appnav.js?v=2026-10-22.1"></script>
-<link rel="stylesheet" href="css/responsive.css?v=20261023_layout1">
+<link rel="stylesheet" href="css/responsive.css?v=20261023_layout2">
 <script defer src="js/language-controls.js?v=2026-10-21.4"></script>
 </head>
 <body>
@@ -231,6 +231,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     <section class="results" aria-labelledby="h-results">
       <h2 id="h-results" data-i18n="resultsTitle"></h2>
       <div id="run-status" class="status-line" role="status" aria-live="polite" style="padding:0 0 8px;"></div>
+      <p class="workspace-empty" data-i18n="resultsEmpty"></p>
       <div id="results" aria-live="polite" tabindex="-1"></div>
     </section>
   </div>
@@ -257,6 +258,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   // ── Language ──────────────────────────────────────────────────────────────
   const T = {
     ko: {
+      resultsEmpty: '아직 결과가 없습니다. 합성 예시를 선택하거나 보고서를 입력한 뒤 분석을 선택하세요.',
       title: '환자 분석', subtitle: '환자 자료(FHIR 번들)나 판독지 한 건을 넣으면 엔진이 찾은 미완결 진료 루프를 보여줍니다.',
       localNote: '이 브라우저 안에서만 실행됩니다. 어떤 자료도 외부로 전송되지 않습니다. 합성 자료만 사용하세요 — 공개 사이트에 실제 환자 정보를 넣지 마십시오.',
       serverNote: '이 병원의 ClinLoop 서버로 자료를 보냅니다. 찾은 루프는 작업 목록에 기록되고, 모든 처리는 접근 기록에 남습니다. 자료를 불러오려면 관리자 권한이 필요합니다.',
@@ -288,6 +290,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       rule: '규칙', source: (s) => `자료: ${s}`, srcFile: '선택한 파일', srcPaste: '붙여넣은 판독지', srcExample: '예시',
     },
     en: {
+      resultsEmpty: 'No results yet. Choose a synthetic example, load a FHIR bundle, or enter a report and select Analyse.',
       title: 'Analyse patient', subtitle: "Load a patient's data (a FHIR Bundle) or paste a single report, and see the open clinical loops the engine finds.",
       localNote: 'Runs in this browser only. Nothing is sent anywhere. Synthetic data only — do not load real patient information on the public site.',
       serverNote: "Data goes to this hospital's ClinLoop server. Loops found are recorded on the worklist and every load is recorded in the access log. Loading data needs the admin role.",
