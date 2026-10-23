@@ -1,0 +1,58 @@
+/* Shared header rhythm and display controls for all thirteen main workspaces. */
+body { font-size: 16px; }
+.app-nav-link, .workspace-nav a { font-family: inherit; font-size: 14px; font-weight: 600;
+  min-height: 44px; padding: 8px 12px; display: inline-flex; align-items: center; border-radius: 8px; }
+.app-header--pro > .brand-section { order: 1; }
+.app-header--pro > .header-actions { order: 2; }
+.app-header--pro > nav.app-nav { order: 3 !important; flex-basis: 100% !important; justify-content: flex-start; }
+.app-header--pro .header-actions > button, .app-header--pro .more-menu > summary,
+.app-header--pro .theme-opt-btn, .app-header--pro .lang-opt-btn { min-height: 44px; }
+.app-header--pro .header-actions { align-items: center; gap: 8px; }
+.app-header--pro .header-actions .btn-secondary { gap: 8px; }
+.app-header--pro .header-actions svg { flex: 0 0 auto; }
+.more-menu-list { max-width: calc(100vw - 32px); }
+.appearance-controls { display: inline-flex; align-items: center; gap: 2px; padding: 3px;
+  border: 1px solid var(--border, #cbd5e1); border-radius: 9px; width: fit-content;
+  background: var(--surface, #fff); margin-block: 0; }
+.appearance-controls button { width: auto; min-width: 58px; min-height: 38px; padding: 6px 10px; margin: 0;
+  font: 600 14px/1.3 system-ui,sans-serif; border: 0; border-radius: 6px;
+  color: var(--muted, #475569); background: transparent; box-shadow: none; cursor: pointer; }
+.appearance-controls button[aria-pressed=true] { background: #0369a1; color: #fff; }
+.appearance-controls button:focus-visible { outline: 2px solid #0369a1; outline-offset: 2px; }
+.wrap > header > nav:has(#btn-lang) { align-items: center; flex-wrap: wrap; }
+body > .appearance-controls { margin-block: 12px; }
+.workspace-header > .appearance-controls { margin-left: auto; }
+.mini-bar-return { display: inline-flex; min-height: 44px; align-items: center; padding: 6px 12px;
+  color: var(--text-main, #0f172a); text-decoration: none; font-weight: 600; }
+.mini-bar-return [lang=ko] { display: none; }
+html[lang^=ko] .mini-bar-return [lang=en] { display: none; }
+html[lang^=ko] .mini-bar-return [lang=ko] { display: inline; }
+body.cockpit-loading .cockpit-workspace { visibility: hidden; pointer-events: none; }
+#cockpit-load-status { padding: 20px; margin: 16px 24px; border: 1px solid #cbd5e1; border-radius: 10px; }
+#cockpit-load-status[hidden] { display: none; }
+@media (min-width: 2200px) { body { font-size: 18px; } }
+@media (max-width: 640px) {
+  .app-header--pro > .header-actions { order: 3; }
+  .app-header--pro > nav.app-nav { order: 2 !important; }
+  .app-header--pro .header-actions { gap: 8px !important; }
+  .app-nav-link, .workspace-nav a { padding-inline: 10px; }
+}
+:root[data-theme=light] { color-scheme: light; --bg: #f1f5f9; --surface: #fff; --text: #0f172a;
+  --muted: #475569; --border: #cbd5e1; --accent: #0369a1; --accent-soft: #e0f2fe; --notice: #fff4dd; --notice-edge: #a16207; }
+:root[data-theme=dark] { color-scheme: dark; --bg: #0b1220; --surface: #111a2e; --text: #e2e8f0;
+  --muted: #b4c1d2; --border: #334155; --accent: #7dd3fc; --accent-soft: #153449; --notice: #382c14; --notice-edge: #fbbf24; }
+:root[data-theme] body:has(> nav.app-nav) { background: var(--bg); color: var(--text); }
+:root[data-theme] body:has(> nav.app-nav) > section { background: var(--surface); border-color: var(--border); }
+:root[data-theme] body:has(> nav.app-nav) a { color: var(--accent); }
+:root[data-theme] body:has(> nav.app-nav) .meta { color: var(--muted); }
+:root[data-theme=dark] body:has(> nav.app-nav) .notice { background: #382c14; }
+:root[data-theme=light] body:has(> nav.app-nav) .notice { background: #fff4dd; }
+/* Status text must wrap inside narrow cards rather than widen the whole page. */
+.wrap .chip { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+@media (min-width: 1151px) {
+  .cockpit-workspace { grid-template-columns: 300px minmax(0, 1fr) 320px; }
+  .stage-view-tabs { flex-wrap: wrap; row-gap: 4px; }
+}
+@media (min-width: 1151px) and (max-width: 1400px) {
+  .cockpit-workspace { grid-template-columns: 240px minmax(0, 1fr) 280px; }
+}

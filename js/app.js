@@ -348,12 +348,17 @@ class ClinLoopApp {
   }
 
   async loadData() {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      const resp = await fetch('data/cases.json');
+      const resp = await fetch('data/cases.json', { signal: controller.signal });
+      if (!resp.ok) throw new Error('Examples unavailable');
       this.cases = await resp.json();
     } catch (e) {
       console.error('Failed to load cases.json, using fallback data', e);
       this.cases = this._getFallbackCases();
+    } finally {
+      clearTimeout(timeout);
     }
     this.filteredCases = [...this.cases];
     this.animateGlobalImpactCounter();
@@ -900,6 +905,7 @@ class ClinLoopApp {
 
     const setTheme = (theme) => {
       const isDark = (theme === 'dark');
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
       if (isDark) {
         document.body.classList.add('dark-theme');
         if (btnThemeDark) btnThemeDark.classList.add('active');
@@ -2588,7 +2594,15 @@ CT 소견 (2024-03-15): 우하엽 14mm 간유리음영 결절 발견
 
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  window.app = new ClinLoopApp();
-  window.app.init();
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    window.app = new ClinLoopApp();
+    await window.app.init();
+    document.body.classList.remove('cockpit-loading');
+    const status = document.getElementById('cockpit-load-status');
+    if (status) status.hidden = true;
+  } catch (error) {
+    const status = document.getElementById('cockpit-load-status');
+    if (status) status.textContent = 'The examples could not be loaded. Refresh to try again. / 예시를 불러오지 못했습니다. 새로고침해 주세요.';
+  }
 });

@@ -1,6 +1,6 @@
 /**
  * top-chrome.js: on tablets and phones (where the page scrolls) the full top bar scrolls away with the
- * page and a slim bar (#mini-bar: logo + page navigation) slides in over the top once it is gone.
+ * page and a slim bar (#mini-bar: logo + return-to-navigation link) slides in over the top once it is gone.
  *
  * The slim bar is position: fixed and moves with a transform, so showing or hiding it never changes the
  * page's layout. An earlier version shrank the sticky top bar instead; that moved the page under the
@@ -15,6 +15,7 @@
   if (!bar || !mini) return;
   function show(on) {
     mini.classList.toggle('is-visible', on);
+    mini.setAttribute('aria-hidden', String(!on));
     if (on) mini.removeAttribute('inert'); else mini.setAttribute('inert', '');
   }
   show(false);
