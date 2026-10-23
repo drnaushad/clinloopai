@@ -19,7 +19,6 @@ th { white-space: nowrap; }
    the cockpit wider than the screen) */
 .cockpit-workspace > *, .cockpit-center-stage > *, .summary-hero-card > *, .comparison-cards-row > *,
 .summary-buttons-row > *, .kpi-ribbon-compact > *, .comparison-grid > *, .modal-overlay > * { min-width: 0; }
-.modal-overlay > * { max-width: 100%; }
 
 /* Comfortable touch targets */
 @media (pointer: coarse) {

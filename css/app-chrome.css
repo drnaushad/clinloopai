@@ -1,6 +1,7 @@
 /* Shared header rhythm and display controls for all thirteen main workspaces. */
-body { font-size: 16px; }
-.app-nav-link, .workspace-nav a { font-family: inherit; font-size: 14px; font-weight: 600;
+:root { font-size: clamp(16px, calc(.45vw + 8px), 20px); }
+body { font-size: 1rem; }
+.app-nav-link, .workspace-nav a { font-family: inherit; font-size: .875rem; font-weight: 600;
   min-height: 44px; padding: 8px 12px; display: inline-flex; align-items: center; border-radius: 8px; }
 .app-header--pro > .brand-section { order: 1; }
 .app-header--pro > .header-actions { order: 2; }
@@ -30,7 +31,6 @@ html[lang^=ko] .mini-bar-return [lang=ko] { display: inline; }
 body.cockpit-loading .cockpit-workspace { visibility: hidden; pointer-events: none; }
 #cockpit-load-status { padding: 20px; margin: 16px 24px; border: 1px solid #cbd5e1; border-radius: 10px; }
 #cockpit-load-status[hidden] { display: none; }
-@media (min-width: 2200px) { body { font-size: 18px; } }
 @media (max-width: 640px) {
   .app-header--pro > .header-actions { order: 3; }
   .app-header--pro > nav.app-nav { order: 2 !important; }
@@ -56,3 +56,10 @@ body.cockpit-loading .cockpit-workspace { visibility: hidden; pointer-events: no
 @media (min-width: 1151px) and (max-width: 1400px) {
   .cockpit-workspace { grid-template-columns: 240px minmax(0, 1fr) 280px; }
 }
+
+.workflow-dialog-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
+.workflow-dialog-head h2 { font-size: 1.25rem; margin: 0; }
+.workflow-dialog-head button { background: transparent; color: var(--text-main); border: 0; font-size: 1.4rem; min-width: 44px; min-height: 44px; cursor: pointer; }
+.workflow-dialog-actions { display: flex; justify-content: flex-end; }
+.workflow-limit { padding: 12px; border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-muted); }
+.comp-column h3 { font-size: 1.05rem; line-height: 1.4; }

@@ -21,16 +21,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="css/styles.css?v=20261021">
+  <link rel="stylesheet" href="css/styles.css?v=20261023_deep1">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0e7490">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<link rel="stylesheet" href="css/responsive.css?v=20261023_layout2">
+<link rel="stylesheet" href="css/responsive.css?v=20261023_deep1">
 <script defer src="js/language-controls.js?v=2026-10-21.4"></script>
-<link rel="stylesheet" href="css/app-chrome.css?v=20261023_1"><script defer src="js/appearance-controls.js?v=20261023_1"></script></head>
+<link rel="stylesheet" href="css/app-chrome.css?v=20261023_deep1"><script defer src="js/appearance-controls.js?v=20261023_1"></script></head>
 
 <body class="cockpit-loading">
 
@@ -1086,77 +1086,16 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
     </div>
   </div>
 
-  <!-- Modal: EMR vs ClinLoop AI Split Comparison -->
-  <div class="modal-overlay" id="emr-modal">
-    <div class="comparison-modal">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: var(--cyan-neon);">
-          Workflow comparison (design, not measured) · 업무 흐름 비교 (측정값 아님)
-        </h2>
-        <button id="btn-close-modal" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer;">✕</button>
-      </div>
-
-      <p style="font-size: 0.84rem; color: var(--text-muted);">
-        Evaluating current case: <strong id="emr-view-scenario-name" style="color: var(--text-main);"></strong>
-      </p>
-
-      <div class="comparison-grid">
-        <div class="comp-column">
-          <div class="comp-header" style="color: var(--crimson-danger);">
-            ❌ Traditional Hospital EMR Inbox
-          </div>
-          <ul class="comp-list">
-            <li>
-              <span>⚠️</span>
-              <span><strong>Fragmented Silos:</strong> Lab results, imaging notes, and referrals exist in disconnected software modules with no continuous temporal link.</span>
-            </li>
-            <li>
-              <span>⚠️</span>
-              <span><strong>Passive "Mark as Reviewed":</strong> A physician clicking "Reviewed" does NOT verify whether the patient was actually notified or attended follow-up.</span>
-            </li>
-            <li>
-              <span>⚠️</span>
-              <span><strong>platform limitation:</strong> ClinLoop has not yet been compared against a hospital EMR (Stage 1 validation).</span>
-            </li>
-            <li>
-              <span>⚠️</span>
-              <span><strong>Missed Action:</strong> <span id="emr-missing-action" style="color: var(--crimson-danger);"></span> remains silently forgotten in the database until patient re-presents in crisis.</span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="comp-column clinloop">
-          <div class="comp-header" style="color: var(--cyan-neon);">
-            ✅ ClinLoop AI (Neuro-Symbolic Safety Layer)
-          </div>
-          <ul class="comp-list">
-            <li>
-              <span>⭐</span>
-              <span><strong>Temporal Hypergraph:</strong> Ingests all clinical events and creates multi-way obligation chains across time.</span>
-            </li>
-            <li>
-              <span>⭐</span>
-              <span><strong>Safety clock:</strong> Computes a deadline for each obligation and escalates overdue ones when run on a server (shown here on examples).</span>
-            </li>
-            <li>
-              <span>⭐</span>
-              <span><strong>Evidence so far:</strong> Software tests on synthetic data only. Task-specific synthetic results are listed on the Validation evidence page. Not clinically validated.</span>
-            </li>
-            <li>
-              <span>⭐</span>
-              <span><strong>Audit trail:</strong> Every detection, status change and clinician action is logged with its rule and evidence.</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div style="display: flex; justify-content: flex-end;">
-        <button class="btn-secondary" onclick="document.getElementById('emr-modal').classList.remove('open')">
-          Close Comparison
-        </button>
-      </div>
-    </div>
-  </div>
+  <!-- Workflow comparison: editorial information, never a measured clinical outcome. -->
+  <div class="modal-overlay" id="emr-modal"><div class="comparison-modal">
+    <div class="workflow-dialog-head"><h2 data-workflow-copy="title">Workflow review — design only</h2><button id="btn-close-modal" type="button" aria-label="Close dialog">✕</button></div>
+    <p><span data-workflow-copy="case">Selected synthetic example:</span> <strong id="emr-view-scenario-name"></strong></p>
+    <div class="comparison-grid">
+      <section class="comp-column"><h3 data-workflow-copy="existing">Questions for the existing workflow</h3><ul class="comp-list"><li data-workflow-copy="existing1">Does the current system link results to the follow-up actions they require?</li><li data-workflow-copy="existing2">Does it distinguish acknowledgement, scheduling and completed care?</li><li data-workflow-copy="existing3">How are responsibility and escalation recorded?</li><li data-workflow-copy="existing4">EMR features vary. ClinLoop has not been compared with a hospital’s production workflow.</li></ul></section>
+      <section class="comp-column clinloop"><h3 data-workflow-copy="demonstrated">What ClinLoop demonstrates</h3><ul class="comp-list"><li data-workflow-copy="demo1">Synthetic cases demonstrate rule-based follow-up tracking.</li><li data-workflow-copy="demo2">A proposed deadline, its rule and supporting evidence are displayed for human review.</li><li data-workflow-copy="demo3">The hospital backend supports audit events. This public page simulates actions in the browser.</li><li data-workflow-copy="demo4">Clinical accuracy and patient benefit have not been established.</li></ul></section>
+    </div><p><span data-workflow-copy="missing">Follow-up request in this example:</span> <strong id="emr-missing-action"></strong></p>
+    <p class="workflow-limit"><span data-workflow-copy="limit">This is a design comparison. It does not establish superiority over an EMR or improved patient outcomes.</span></p><div class="workflow-dialog-actions"><button class="btn-secondary" type="button" data-close-dialog><span data-workflow-copy="close">Close comparison</span></button></div>
+  </div></div>
 
   <!-- Scripts -->
 
@@ -1555,9 +1494,9 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
   <script src="config.js"></script>
 <script src="js/demo.js?v=20261023_layout2"></script>
 <script src="js/top-chrome.js?v=20261023_header1"></script>
-<script src="js/appnav.js?v=20261023_workspace3"></script>
+<script src="js/appnav.js?v=2026-10-23.5"></script>
   <script src="js/safety_clock.js?v=20260930_final"></script>
   <script src="js/hypergraph.js?v=20260930_final"></script>
-  <script src="js/app.js?v=20261023_header1"></script>
+  <script src="js/app.js?v=20261023_deep1"></script>
 </body>
 </html>

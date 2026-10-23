@@ -138,10 +138,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 </style>
 <script src="config.js"></script>
 <script src="js/demo.js?v=20261023_layout2"></script>
-<script src="js/appnav.js?v=20261023_workspace3"></script>
-<link rel="stylesheet" href="css/responsive.css?v=20261023_layout2">
+<script src="js/appnav.js?v=2026-10-23.5"></script>
+<link rel="stylesheet" href="css/responsive.css?v=20261023_deep1">
 <script defer src="js/language-controls.js?v=2026-10-21.4"></script>
-<link rel="stylesheet" href="css/app-chrome.css?v=20261023_1"><script defer src="js/appearance-controls.js?v=20261023_1"></script></head>
+<link rel="stylesheet" href="css/app-chrome.css?v=20261023_deep1"><script defer src="js/appearance-controls.js?v=20261023_1"></script></head>
 <body>
 <div class="wrap">
   <header>
@@ -258,6 +258,8 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   // ── Language ──────────────────────────────────────────────────────────────
   const T = {
     ko: {
+      preparing: "분석할 자료를 준비하는 중입니다…",
+      sourceChanged: "입력이 바뀌어 이전 결과를 지웠습니다. 다시 분석해 주세요.",
       resultsEmpty: '아직 결과가 없습니다. 합성 예시를 선택하거나 보고서를 입력한 뒤 분석을 선택하세요.',
       title: '환자 분석', subtitle: '환자 자료(FHIR 번들)나 판독지 한 건을 넣으면 엔진이 찾은 미완결 진료 루프를 보여줍니다.',
       localNote: '이 브라우저 안에서만 실행됩니다. 어떤 자료도 외부로 전송되지 않습니다. 합성 자료만 사용하세요 — 공개 사이트에 실제 환자 정보를 넣지 마십시오.',
@@ -290,6 +292,8 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       rule: '규칙', source: (s) => `자료: ${s}`, srcFile: '선택한 파일', srcPaste: '붙여넣은 판독지', srcExample: '예시',
     },
     en: {
+      preparing: "Preparing source for analysis…",
+      sourceChanged: "Source changed. Run analysis again; the previous result has been cleared.",
       resultsEmpty: 'No results yet. Choose a synthetic example, load a FHIR bundle, or enter a report and select Analyse.',
       title: 'Analyse patient', subtitle: "Load a patient's data (a FHIR Bundle) or paste a single report, and see the open clinical loops the engine finds.",
       localNote: 'Runs in this browser only. Nothing is sent anywhere. Synthetic data only — do not load real patient information on the public site.',
@@ -328,6 +332,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   };
   let lang = store.get('clinloop_lang', localStorage) || ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');
   const t = () => T[lang];
+  let running = false;
   let last = null;            // last result, re-drawn when the language changes
 
   function applyLang() {
@@ -506,15 +511,27 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     last.draw();
   }
 
-  async function run(bundle, source) {
+  function invalidateResults() {
+    last = null;
+    $('results').replaceChildren();
+  }
+
+  async function run(loadBundle, source) {
+    if (running) return;
+    running = true;
+    invalidateResults();
     const busy = document.querySelectorAll('#app button, #app input, #app select, #app textarea');
     busy.forEach((el) => { el.disabled = true; });
+    setRun(t().preparing);
     try {
+      const bundle = typeof loadBundle === 'function' ? await loadBundle() : loadBundle;
       if (IN_BROWSER) await analyseHere(bundle, source);
       else await sendToServer(bundle);
     } catch (err) {
-      setRun(err.message, true);
+      invalidateResults();
+      setRun(err.message || t().analyseFailed, true);
     } finally {
+      running = false;
       busy.forEach((el) => { el.disabled = false; });
       applyRole();
     }
@@ -533,33 +550,44 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     applyLang();
   });
 
-  $('btn-eval-now').addEventListener('click', () => { $('eval-time').value = ''; });
+  $('btn-eval-now').addEventListener('click', () => { $('eval-time').value = ''; invalidateResults(); setRun(t().sourceChanged); });
 
   $('bundle-file').addEventListener('change', async (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    if (file.size > MAX_BYTES) { setRun(t().tooBig, true); e.target.value = ''; return; }
-    let bundle;
-    try { bundle = parseBundle(await file.text()); } catch (err) { setRun(err.message, true); e.target.value = ''; return; }
-    await run(bundle, () => t().srcFile);
-    e.target.value = '';           // picking the same file again analyses it again
+    await run(async () => {
+      if (file.size > MAX_BYTES) throw new Error(t().tooBig);
+      let text;
+      try { text = await file.text(); } catch (_) { throw new Error(t().notJson); }
+      return parseBundle(text);
+    }, () => t().srcFile);
+    e.target.value = '';
   });
 
   document.querySelectorAll('.example').forEach((btn) => btn.addEventListener('click', async () => {
-    let bundle;
-    try {
-      const r = await fetch(`demo/examples/${btn.dataset.example}.json`, { cache: 'no-cache' });
-      if (!r.ok) throw new Error();
-      bundle = parseBundle(await r.text());
-    } catch { setRun(t().exampleFailed, true); return; }
-    await run(bundle, () => `${t().srcExample}: ${btn.textContent}`);
+    await run(async () => {
+      let text;
+      try {
+        const r = await fetch(`demo/examples/${btn.dataset.example}.json`, { cache: 'no-cache' });
+        if (!r.ok) throw new Error();
+        text = await r.text();
+      } catch (_) { throw new Error(t().exampleFailed); }
+      return parseBundle(text);
+    }, () => `${t().srcExample}: ${btn.textContent}`);
   }));
 
   $('paste-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const bundle = pasteBundle($('paste-kind').value, $('paste-title').value.trim(), $('paste-date').value, $('paste-text').value.trim());
-    await run(bundle, () => t().srcPaste);
+    await run(() => pasteBundle($('paste-kind').value, $('paste-title').value.trim(), $('paste-date').value, $('paste-text').value.trim()), () => t().srcPaste);
   });
+
+  for (const id of ['eval-time', 'paste-kind', 'paste-title', 'paste-date', 'paste-text']) {
+    for (const event of ['input', 'change']) $(id).addEventListener(event, () => {
+      if (running) return;
+      invalidateResults();
+      setRun(t().sourceChanged);
+    });
+  }
 
   $('connect-form').addEventListener('submit', async (e) => {
     e.preventDefault();
