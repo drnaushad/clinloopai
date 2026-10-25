@@ -525,6 +525,21 @@ class ClinLoopApp {
     this._survivalAnimFrame = requestAnimationFrame(animate);
   }
 
+  updateDisplayLabels() {
+    const ko = this.currentLang === 'ko';
+    const labels = {
+      'theme-opt-light': ko ? '라이트' : 'Light', 'theme-opt-dark': ko ? '다크' : 'Dark',
+      'dock-btn-light': ko ? '라이트' : 'Light', 'dock-btn-dark': ko ? '다크' : 'Dark',
+      'sound-toggle': ko ? (this.soundEnabled ? '소리: 켜짐' : '소리: 꺼짐')
+                         : (this.soundEnabled ? 'Sound: on' : 'Sound: off')
+    };
+    Object.entries(labels).forEach(([id, text]) => {
+      const button = document.getElementById(id);
+      if (button) button.textContent = text;
+    });
+    document.getElementById('sound-toggle')?.setAttribute('aria-pressed', String(this.soundEnabled));
+  }
+
   setupEventListeners() {
     // -----------------------------------------------------------------------
     // Compute: the hardware the ClinLoop server really has (CPU or GPU), and what uses it.
@@ -969,6 +984,7 @@ class ClinLoopApp {
 
 
       this.applyI18nText(this.currentLang);
+      this.updateDisplayLabels();
       if (this.renderConnections) this.renderConnections();
 
       this.outreachLang = this.currentLang;
@@ -1012,7 +1028,7 @@ class ClinLoopApp {
     if (soundToggle) {
       soundToggle.addEventListener('click', () => {
         this.soundEnabled = !this.soundEnabled;
-        soundToggle.textContent = this.soundEnabled ? 'Sound: on' : 'Sound: off';
+        this.updateDisplayLabels();
       });
     }
 

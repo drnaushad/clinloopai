@@ -11,7 +11,7 @@
   // Every device shows the same version: a phone may keep yesterday's page in its cache. Each page
   // asks for version.json (never cached); if the live version is newer than this script, the page
   // reloads once, fetching fresh copies. Bump APP_VERSION and version.json together on each release.
-  var APP_VERSION = '2026-10-23.6';
+  var APP_VERSION = '2026-10-25.1';
   (function checkVersion() {
     if (!window.fetch || location.protocol === 'file:') return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -61,6 +61,14 @@
     catch (e) { /* some file:// views refuse: keep the address as it is */ }
   })();
 
+  function revealActive(nav) {
+    var active = nav.querySelector('[aria-current="page"]');
+    if (!active || nav.scrollWidth <= nav.clientWidth) return;
+    var item = active.getBoundingClientRect(), edge = nav.getBoundingClientRect();
+    if (item.left < edge.left + 8) nav.scrollLeft += item.left - edge.left - 8;
+    else if (item.right > edge.right - 8) nav.scrollLeft += item.right - edge.right + 8;
+  }
+
   function render() {
     var navs = document.querySelectorAll('nav.app-nav');
     if (!navs.length) return;
@@ -77,6 +85,10 @@
           if (item.right > edge.right - 8) nav.scrollLeft += item.right - edge.right + 8;
           else if (item.left < edge.left + 8) nav.scrollLeft -= edge.left - item.left + 8;
         });
+        // A scrollbar or a wrapping header can narrow the strip without a window resize.
+        if (window.ResizeObserver) {
+          new window.ResizeObserver(function () { revealActive(nav); }).observe(nav);
+        }
       }
       if (!nav.getAttribute('aria-label')) nav.setAttribute('aria-label', ko ? 'ClinLoop 화면' : 'ClinLoop pages');
       nav.replaceChildren.apply(nav, PAGES.map(function (p) {
@@ -88,12 +100,7 @@
         return a;
       }));
       // Keep the current page visible in the narrow navigation strip without moving the page.
-      requestAnimationFrame(function () {
-        var active = nav.querySelector('[aria-current="page"]');
-        if (active && nav.scrollWidth > nav.clientWidth) {
-          nav.scrollLeft = Math.max(0, active.offsetLeft - nav.firstElementChild.offsetLeft - 8);
-        }
-      });
+      requestAnimationFrame(function () { revealActive(nav); });
     });
   }
 
@@ -264,7 +271,10 @@
     session();
     focusableScrollers();
     new MutationObserver(soon).observe(document.body, { childList: true, subtree: true });
-    window.addEventListener('resize', soon);
+    window.addEventListener('resize', function () {
+      soon();
+      document.querySelectorAll('nav.app-nav').forEach(revealActive);
+    });
     // Each page's language switch sets <html lang>; follow it
     new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   }

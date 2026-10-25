@@ -18,8 +18,14 @@
     if (item.right > edge.right) nav.scrollLeft += item.right - edge.right + 8;
     else if (item.left < edge.left) nav.scrollLeft -= edge.left - item.left + 8;
   });
-  var active = nav.querySelector('[aria-current="page"]');
-  if (active && active.getBoundingClientRect().right > nav.getBoundingClientRect().right) {
-    nav.scrollLeft = Math.max(0, active.offsetLeft - nav.firstElementChild.offsetLeft - 8);
+  function revealActive() {
+    var active = nav.querySelector('[aria-current="page"]');
+    if (!active || nav.scrollWidth <= nav.clientWidth) return;
+    var item = active.getBoundingClientRect(), edge = nav.getBoundingClientRect();
+    if (item.left < edge.left + 8) nav.scrollLeft += item.left - edge.left - 8;
+    else if (item.right > edge.right - 8) nav.scrollLeft += item.right - edge.right + 8;
   }
+  revealActive();
+  window.addEventListener('resize', revealActive);
+  if (window.ResizeObserver) new window.ResizeObserver(revealActive).observe(nav);
 })();

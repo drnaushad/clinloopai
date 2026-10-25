@@ -35,8 +35,8 @@ input[type=file]::file-selector-button { min-height: 36px; margin-right: 8px; }
 textarea { resize: vertical; }
 .check, label:has(> input[type=checkbox]) { display: flex; align-items: flex-start; gap: 10px; font-weight: 400; }
 input[type=checkbox] { flex: 0 0 20px; width: 20px; height: 20px; margin: 3px 0 0; }
-button { font: inherit; min-height: 44px; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--accent);
-  background: var(--accent); color: #fff; cursor: pointer; margin: 12px 6px 0 0; max-width: 100%; white-space: normal; }
+button { font: inherit; min-height: 44px; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--action-bg, #0369a1);
+  background: var(--action-bg, #0369a1); color: var(--action-fg, #fff); cursor: pointer; margin: 12px 6px 0 0; max-width: 100%; white-space: normal; }
 button:disabled { opacity: .5; cursor: default; }
 button#disconnect, button#clear { background: var(--surface); color: var(--accent); }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--bg); padding: 16px; border-radius: 8px; font-size: .85rem; }
@@ -64,7 +64,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 @media (max-width: 520px) {
   .workspace-context { flex-basis: 100%; }
   section { padding: 16px; }
-  input[type=file] { font-size: .9rem; }
+  input[type=file] { font-size: 1rem; }
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #0b1220; --surface: #111a2e; --text: #e2e8f0; --muted: #b4c1d2;
