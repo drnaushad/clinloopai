@@ -60,7 +60,7 @@ button.live:disabled { opacity: .55; cursor: progress; }
 footer { max-width: 1180px; margin: 0 auto; padding: 0 16px 30px; color: var(--muted); font-size: 13px; }
 </style>
 <link rel="stylesheet" href="css/responsive.css?v=20261023_locale1">
-<link rel="stylesheet" href="css/app-chrome.css?v=20261025_devices1"><script defer src="js/appearance-controls.js?v=20261023_1"></script></head>
+<link rel="stylesheet" href="css/app-chrome.css?v=20261025_shell1"><script defer src="js/appearance-controls.js?v=20261023_1"></script><script defer src="js/workspace-shell.js?v=20261025_shell1"></script></head>
 <body class="report-workspace">
 <header>
   <nav class="app-nav" aria-label="ClinLoop pages"></nav>
@@ -248,6 +248,6 @@ $("live").addEventListener("click", async () => {
   } catch (_) { $("list").textContent = "Saved reports unavailable. Reload to retry."; }
 })();
 </script>
-<script src="js/appnav.js?v=2026-10-25.1"></script>
+<script src="js/appnav.js?v=2026-10-25.2"></script>
 </body>
 </html>
