@@ -1,19 +1,26 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src https://launch.smarthealthit.org; base-uri 'none'; form-action 'none'; object-src 'none'">
-<title>SMART sandbox connection · ClinLoop</title><link rel="stylesheet" href="sandbox.css">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src https://launch.smarthealthit.org https://hapi.fhir.org; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>Test EMR connections · ClinLoop</title><link rel="stylesheet" href="sandbox.css?v=20261026_hapi1">
+<script defer src="../js/hapi-sandbox.js?v=20261026_hapi1"></script>
 <script defer src="../js/smart-sandbox.js"></script><script defer src="../js/smart-sandbox-page.js"></script></head>
-<body><header><a href="../">ClinLoop</a><span>SMART sandbox · research preview</span></header><main>
-<h1>Open a synthetic patient chart</h1>
-<p>Test the clinician EHR launch with SMART Health IT’s public R4 sandbox.</p>
-<p><a id="launcher" href="https://launch.smarthealthit.org/" rel="noreferrer">Open the configured SMART launcher</a></p>
+<body><header><a href="../">ClinLoop</a><span>Test EMR connections · research preview</span></header><main>
+<h1>Connect to a test EMR</h1>
+<p>Choose SMART Health IT for a clinician login test, or HAPI FHIR for a direct read-only connection to ClinLoop’s known synthetic test cohort.</p>
+<p><a href="#hapi-connection">Connect HAPI FHIR</a> · <a id="launcher" href="https://launch.smarthealthit.org/" rel="noreferrer">Open the SMART Health IT launcher</a></p>
 <aside><strong>Synthetic sandbox only.</strong> This page verifies a connection and displays source report conclusions. It does not diagnose, establish accuracy or approve use with real patients.</aside>
-<section><h2>Connect with read-only access</h2><p>The sandbox will ask you to select a synthetic patient and authorize access to that patient’s chart and diagnostic reports.</p>
+<section><h2>SMART Health IT · clinician login</h2><p>The sandbox will ask you to select a synthetic patient and authorize access to that patient’s chart and diagnostic reports.</p>
 <label><input type="checkbox" id="synthetic">I am using the public SMART sandbox with synthetic patients.</label>
 <button type="button" id="start">Continue to SMART sandbox</button><button type="button" id="disconnect">Disconnect and clear</button>
 <p id="status" role="status" aria-live="polite">Ready for an EHR launch. Open this page from the SMART launcher.</p><div id="reports"></div></section>
-<section><h2>Sandbox registration</h2><p>Public client ID: <code>clinloop-smart-sandbox-ui</code></p><p>Website launch path after publication: <code>https://clinloopai.app/smart/launch.html</code></p><p>Website redirect after publication: <code>https://clinloopai.app/smart/callback.html</code></p>
+<section id="hapi-connection" aria-labelledby="hapi-title"><h2 id="hapi-title">HAPI FHIR · direct test connection</h2>
+<p>Connect to <code>https://hapi.fhir.org/baseR4</code>. No account or API key is needed. This reads only the known ClinLoop synthetic cohort; it cannot browse hospital patients, upload records or change a clinical task.</p>
+<label><input type="checkbox" id="hapi-synthetic">I want to read ClinLoop’s synthetic test cohort on the public HAPI server.</label>
+<button type="button" id="hapi-connect">Connect HAPI FHIR</button><button type="button" id="hapi-disconnect">Disconnect HAPI and clear</button>
+<p id="hapi-status" role="status" aria-live="polite">Not connected. Confirm the synthetic cohort, then connect.</p><div id="hapi-reports"></div>
+<p>Reports are displayed as plain text in this page’s memory. Nothing is sent to ClinLoop’s shared API or a language model. Leaving or ten minutes of inactivity clears this view. The public test server can reset or change; missing records are not normal results. Connectivity does not measure clinical accuracy.</p></section>
+<details><summary>SMART registration and session privacy</summary><section><h2>Sandbox registration</h2><p>Public client ID: <code>clinloop-smart-sandbox-ui</code></p><p>Website launch path after publication: <code>https://clinloopai.app/smart/launch.html</code></p><p>Website redirect after publication: <code>https://clinloopai.app/smart/callback.html</code></p>
 <p>OAuth uses PKCE S256 and a single-use state check. Only a short-lived login handshake is kept in this tab’s session storage. Tokens and fetched records stay in page memory; leaving, disconnecting or 10 minutes of inactivity clears the page. Clearing does not revoke the server’s grant or guarantee secure deletion from memory.</p>
-<p>No report is sent to ClinLoop’s shared API or a language model. This sandbox preview does not implement hospital access auditing or production clinical controls.</p></section>
+<p>No report is sent to ClinLoop’s shared API or a language model. This sandbox preview does not implement hospital access auditing or production clinical controls.</p></section></details>
 </main></body></html>

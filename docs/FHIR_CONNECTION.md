@@ -134,6 +134,26 @@ Run the browser security tests with `node tests/test_smart_sandbox.cjs`. Live ve
 must include the actual launcher authorization/callback round trip; a mock token or the
 SMART sample app is not evidence that ClinLoop's own flow works.
 
+### HAPI browser test connection
+
+The same `/smart/launch.html` page offers **Connect HAPI FHIR** without a login.
+Confirm the synthetic cohort first. The browser reads metadata and two bounded tagged
+searches directly from `https://hapi.fhir.org/baseR4`: Patients and DiagnosticReports.
+Only the fixed ClinLoop test cohort and its known resource IDs are accepted. This is
+not a general public-patient browser. No uploads, writes, pagination, attachments,
+model calls or shared ClinLoop API calls are performed. The SMART callback keeps its
+original SMART-only connection policy; HAPI never receives SMART tokens.
+
+Source conclusions are plain text in page memory. Disconnect, page exit, restored
+browser-cache pages and ten idle minutes clear the view. Public records can be reset
+or edited: missing data, partial data or a successful connection never establishes
+normal findings, completed follow-up or clinical accuracy. No source record is
+imported into the clinical database. Backend ingestion remains a separate workflow.
+
+Run `node tests/test_hapi_sandbox.cjs` for the HAPI boundary and lifecycle tests.
+Live verification should record only connection status, resource counts and clearing
+behavior. This preview is for synthetic interoperability checks only.
+
 ## 5. Settings summary
 
 | Variable | Purpose |
