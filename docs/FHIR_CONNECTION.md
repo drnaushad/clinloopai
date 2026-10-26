@@ -88,6 +88,37 @@ Group id, a system-level export (`<base>/$export`) is requested. An export not r
 In this mode, `--check` reports whether the server declares `$export` and whether login works; it
 does not start an export.
 
+**Epic public sandbox compatibility (verified 2026-10-26).** A guarded, isolated run
+exported 2,662 synthetic resources for 7 patients and mapped 995 events, with 7 mapping warnings. Authentication,
+file retrieval, worklist authorization and audit-chain checks passed. All nine DiagnosticReport
+records lacked plain-text conclusions, so this does not establish report-text interpretation
+accuracy. Seven reports advertised HTML or PDF attachments, which were not downloaded or interpreted.
+This check covered the initial full export; incremental exports and `_since` support were not verified.
+ImagingStudy was denied by the current application registration; excluding it and
+using Epic’s default output format eliminated the server-reported export errors.
+
+For a separately approved deployment with that same permission profile, prepare:
+
+```sh
+CLINLOOP_FHIR_BULK_TYPES=Observation,DiagnosticReport,ServiceRequest,Appointment,Communication,Encounter,MedicationRequest,Procedure,Condition,DocumentReference,Patient
+CLINLOOP_FHIR_BULK_OUTPUT_FORMAT=default
+```
+
+These settings do not grant access. Missing imaging-study or communication records cannot establish
+that follow-up was completed. Confirm the required dataset coverage with hospital IT. The original
+full type list and explicit FHIR NDJSON format remain defaults for other installations. `default`
+omits `_outputFormat`; other allowed values are `application/fhir+ndjson`, `application/ndjson` and
+`ndjson`. Types must be a unique subset of ClinLoop’s supported types and include Patient.
+
+The transport rejects manifest error files before importing records or advancing its cursor,
+cleans up its own job on failure, and refuses cross-origin authenticated status/file requests and
+automatic redirects. Downloaded resources are staged before a single atomic mirror transaction,
+so a truncated/invalid download cannot commit an earlier batch. Exports larger than 8 MiB spill into
+an owner-only temporary file that closes automatically; hospital deployments must put temporary
+storage on their approved protected/encrypted volume. End-to-end crash/restart recovery and real
+hospital completeness still require deployment validation. This test changed no shared service configuration or
+patient database and created no clinical approvals.
+
 **Files on disk (Synthea, a saved export).** Before any server is available, a folder of FHIR files
 can be run through the same sync:
 
