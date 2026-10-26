@@ -160,12 +160,13 @@ body.clinloop-page { max-width: none; width: 100%; margin: 0; padding: 0; font-f
   border-radius: 8px; color: var(--shell-text); background: var(--shell-bg); }
 .shell-skip:focus { top: 8px; }
 @media (max-width: 1150px) {
-  .clinloop-shell > nav.clinloop-shell-links { flex-wrap: nowrap !important; }
+  /* Phones, landscape phones and tablets share the same complete page menu.
+     No destination depends on discovering a sideways-scrolling tab strip. */
+  .clinloop-shell > nav.clinloop-shell-links { display: none !important; }
+  .clinloop-shell-mobile { display: block; padding-top: 12px; }
 }
 @media (max-width: 700px) {
   .clinloop-shell-controls { margin-left: 0; flex-basis: 100%; }
-  .clinloop-shell > nav.clinloop-shell-links { display: none !important; }
-  .clinloop-shell-mobile { display: block; padding-top: 12px; }
 }
 @media print {
   .clinloop-shell, .cockpit-tools, .shell-skip { display: none !important; }

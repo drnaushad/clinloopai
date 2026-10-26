@@ -26,7 +26,7 @@
       items.push({ path: path, label: link.textContent.trim(),
         group: ROUTES.indexOf(path) < 8 ? 0 : ROUTES.indexOf(path) < 11 ? 1 : 2 });
       return items;
-    }, []);
+    }, []).sort(function (a, b) { return ROUTES.indexOf(a.path) - ROUTES.indexOf(b.path); });
   }
   function mount(doc, win) {
     var nav = doc.querySelector('nav.app-nav, nav.workspace-nav');
@@ -100,7 +100,13 @@
     }
     function sync() {
       var ko = doc.documentElement.lang.indexOf('ko') === 0;
+      var here = route(win.location.pathname) || '/';
       label.textContent = ko ? '화면 이동' : 'Go to page';
+      nav.setAttribute('aria-label', ko ? 'ClinLoop 화면' : 'ClinLoop pages');
+      nav.querySelectorAll('a[href]').forEach(function (link) {
+        if (route(link.getAttribute('href')) === here) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
+      });
       controls.setAttribute('role', 'group');
       controls.setAttribute('aria-label', ko ? '화면 및 계정 설정' : 'Display and account');
       var themeGroup = controls.querySelector('.theme-segmented-control');
@@ -112,24 +118,32 @@
       var skip = doc.querySelector('.shell-skip'); if (skip) skip.textContent = ko ? '작업 공간으로 건너뛰기' : 'Skip to workspace';
       var items = catalog(nav.querySelectorAll('a[href]'));
       var next = JSON.stringify([ko, items]);
-      if (next === signature) return;
-      signature = next;
-      var groups = (ko ? ['진료 작업 공간', '연구', '검증 및 설정'] : ['Clinical workspace', 'Research', 'Evidence and setup']).map(function (text) {
-        var group = doc.createElement('optgroup'); group.label = text; return group;
-      });
-      items.forEach(function (item) {
-        var option = doc.createElement('option'); option.value = item.path; option.textContent = item.label;
-        groups[item.group].append(option);
-      });
-      picker.replaceChildren.apply(picker, groups);
-      picker.value = route(win.location.pathname) || '/';
+      if (next !== signature) {
+        signature = next;
+        var groups = (ko ? ['진료 작업 공간', '연구', '검증 및 설정'] : ['Clinical workspace', 'Research', 'Evidence and setup']).map(function (text) {
+          var group = doc.createElement('optgroup'); group.label = text; return group;
+        });
+        items.forEach(function (item) {
+          var option = doc.createElement('option'); option.value = item.path; option.textContent = item.label;
+          groups[item.group].append(option);
+        });
+        picker.replaceChildren.apply(picker, groups);
+      }
+      // Back/Forward can restore the old select value from the page cache.
+      // Always reflect the actual address, even when the labels did not change.
+      picker.value = here;
       if (win.requestAnimationFrame) win.requestAnimationFrame(revealActive);
     }
     picker.addEventListener('change', function () {
       var next = destination(picker.value, win.location.pathname);
       if (next) win.location.assign(next);
+      else picker.value = route(win.location.pathname) || '/';
     });
     sync();
+    if (win.addEventListener) {
+      win.addEventListener('pageshow', sync);
+      win.addEventListener('popstate', sync);
+    }
     if (win.ResizeObserver) new win.ResizeObserver(revealActive).observe(nav);
     if (win.MutationObserver) {
       new win.MutationObserver(sync).observe(nav, {childList: true, subtree: true, characterData: true});
