@@ -30,19 +30,26 @@
   $('disconnect').addEventListener('click',()=>clear(true));$('clear').addEventListener('click',()=>clear(false));
   $('connect').addEventListener('click',async()=>{
     if(busy||loading||connected)return;
-    const current=epoch,mode=$('mode').value,provider=$('provider').value;busy=true;status('Checking selected connection…');sync();
+    const current=epoch,mode=$('mode').value,provider=$('provider').value;let setupLoaded=false;busy=true;status('Checking selected connection…');sync();
     try {
       const r=await fetch('data/report_review_schema.json',{cache:'no-store',credentials:'omit',redirect:'error'});
       if(current!==epoch)return;
       if(!r.ok)throw new Error('Review schema unavailable.');const contract=await r.json();
       if(current!==epoch)return;
       let models;
+      setupLoaded=true;
       if(mode==='local')models=await local.connect($('local-address').value,$('local-confirm').checked);
       else models=[await research.connect($('research-address').value,$('gateway-code').value,$('research-confirm').checked,provider)];
       if(current!==epoch)return;schema=contract;connected=true;
       $('gateway-code').value='';$('model').replaceChildren(...models.map(m=>new Option(m,m)));
       status($('mode').value==='local'?'Connected to your local model. No cloud fallback.':'Research gateway connected. Synthetic text is sent to '+api.PROVIDERS[research.provider]+' only when you select Review report.');
-    }catch(_){if(current===epoch){local.clear(true);research.clear();connected=false;$('gateway-code').value='';status('Connection failed. Check the selected provider configuration, local service, exact allowed website origin and access code. No report sent.');}}
+    }catch(_){if(current===epoch){
+      local.clear(true);research.clear();connected=false;$('gateway-code').value='';
+      const message=!setupLoaded?'Report review setup could not be loaded. Refresh this page and check your connection.':
+        mode==='local'?'Could not connect to local Ollama. Confirm the local-model checkbox, that Ollama is running on this browser’s device, and that https://clinloopai.app is an allowed origin. Allow local-network access if your browser prompts; an embedded browser may block it. See Local connection instructions.':
+        api.PROVIDERS[provider]+' research gateway connection failed. Check your local gateway, the selected provider configuration and the gateway access code.';
+      status(message+' No report sent.');
+    }}
     finally{if(current===epoch){busy=false;sync();}}
   });
   function render(review){

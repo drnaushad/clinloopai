@@ -59,7 +59,7 @@ test('local structured review sends original text only to an inspected local mod
   assert.equal(calls.length,3);for(const c of calls)assert.equal(new URL(c.url).origin,'http://localhost:11434');
   const body=JSON.parse(calls.at(-1).options.body);assert.deepEqual(body.format,schema);assert.equal(body.prompt,TEXT);assert.equal(body.options.temperature,0);
 });
-function page({localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>validate(REVIEW,TEXT),schemaFetch=async()=>ok({type:'object'})}={}){
+function page({localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>validate(REVIEW,TEXT),localConnect=async()=>['synthetic'],researchConnect=async()=> 'synthetic-api',schemaFetch=async()=>ok({type:'object'})}={}){
   const ids=['mode','provider','provider-destination','provider-consent','local-options','research-options','connect','disconnect','status','model','report','report-file','analyze','local-address','research-address','gateway-code','local-confirm','research-confirm','report-type','complete-confirm','result','sample','clear'];
   const el={},events={},windowEvents={},calls=[];
   for(const id of ids)el[id]={value:'',checked:false,children:[],files:[],addEventListener:(n,f)=>{events[id+':'+n]=f;},replaceChildren(...xs){this.children=xs;},append(...xs){this.children.push(...xs);}};
@@ -68,8 +68,8 @@ function page({localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>val
   const context={document:{getElementById:id=>el[id],createElement:()=>({children:[],append(...xs){this.children.push(...xs);}}),addEventListener(){}},
     Option:function(text,value){this.text=text;this.value=value;},fetch:schemaFetch,setInterval(){},Date,TextDecoder,
     window:{fetch:async()=>ok({type:'object'}),addEventListener:(n,f)=>{windowEvents[n]=f;},
-      ClinLoopPrivate:{Workspace:class{clear(v){calls.push(['localClear',v]);}async connect(){calls.push(['localConnect']);return['synthetic'];}async run(){calls.push(['localRun']);return localRun();}}},
-      ClinLoopReportReview:{...api,Research:class{clear(){calls.push(['researchClear']);}async connect(){calls.push(['researchConnect']);return'synthetic-api';}async run(){calls.push(['researchRun']);return researchRun();}}}}};
+      ClinLoopPrivate:{Workspace:class{clear(v){calls.push(['localClear',v]);}async connect(){calls.push(['localConnect']);return localConnect();}async run(){calls.push(['localRun']);return localRun();}}},
+      ClinLoopReportReview:{...api,Research:class{clear(){calls.push(['researchClear']);}async connect(){calls.push(['researchConnect']);return researchConnect();}async run(){calls.push(['researchRun']);return researchRun();}}}}};
   vm.runInNewContext(fs.readFileSync(require.resolve('../js/report-review-page.js'),'utf8'),context);
   return{el,events,windowEvents,calls};
 }
@@ -77,6 +77,30 @@ test('default hospital pathway uses local models and does not call research tran
   const p=page();p.el['local-confirm'].checked=true;await p.events['connect:click']();
   p.el.report.value=TEXT;p.el['complete-confirm'].checked=true;await p.events['analyze:click']();
   assert(p.calls.some(x=>x[0]==='localRun'));assert(!p.calls.some(x=>x[0]==='researchRun'||x[0]==='researchConnect'));
+});
+test('local connection failures explain device and browser requirements without provider credentials',async()=>{
+ const p=page({localConnect:async()=>{throw new Error('SENSITIVE_SENTINEL');}});
+ p.el['local-confirm'].checked=true;await p.events['connect:click']();
+ assert(p.el.status.textContent.includes('local Ollama'));
+ assert(p.el.status.textContent.includes('local-network access'));
+ assert(p.el.status.textContent.includes('https://clinloopai.app'));
+ assert(!/access code|provider configuration|SENSITIVE_SENTINEL/.test(p.el.status.textContent));
+ assert.equal(p.el.analyze.disabled,true);assert(!p.calls.some(c=>c[0].endsWith('Run')));
+});
+test('research connection failures name the selected provider and clear the gateway code',async()=>{
+ const p=page({researchConnect:async()=>{throw new Error('SENSITIVE_SENTINEL');}});
+ p.el.mode.value='research';p.el.provider.value='anthropic';p.el['gateway-code'].value=CODE;
+ await p.events['connect:click']();
+ assert(p.el.status.textContent.includes('Anthropic (Claude) research gateway'));
+ assert(p.el.status.textContent.includes('gateway access code'));
+ assert(!p.el.status.textContent.includes('SENSITIVE_SENTINEL'));assert.equal(p.el['gateway-code'].value,'');
+ assert.equal(p.el.analyze.disabled,true);
+});
+test('missing review schema is reported as setup failure before connecting a model',async()=>{
+ const p=page({schemaFetch:async()=>{throw new Error('SENSITIVE_SENTINEL');}});await p.events['connect:click']();
+ assert(p.el.status.textContent.includes('setup could not be loaded'));
+ assert(!p.calls.some(c=>c[0]==='localConnect'||c[0]==='researchConnect'));
+ assert(!p.el.status.textContent.includes('SENSITIVE_SENTINEL'));
 });
 test('changing pathways clears source, result and gateway code before the new connection',()=>{
   const p=page();p.el.report.value=TEXT;p.el['gateway-code'].value=CODE;p.el.mode.value='research';p.events['mode:change']();

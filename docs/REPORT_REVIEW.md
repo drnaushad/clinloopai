@@ -200,3 +200,22 @@ For authentication, an unset `CLINLOOP_API_TOKENS` creates no administrator acco
 credentials in a protected service environment or configure hospital SSO before deploying this
 update to a private server. Never recover credentials from logs. Existing running services are not
 changed by preparing or publishing the static website files.
+
+
+## 2026-10-26 software-only update candidate
+
+Connection failures now distinguish local Ollama, the named research gateway, and missing review
+setup. The local address belongs to the browser's device: opening the public page on a phone does
+not connect it to another computer's loopback server. Local-network permission is a browser control;
+an embedded browser may still block access after server-side origin checks pass.
+
+The synthetic evaluator now checks exact one-to-one source tuples, checkpoint identity at both run
+boundaries, separate attempted/rejected/unrun coverage, and report-type/language breakdowns across
+24 fixed developer-authored cases. Legacy plan-wide bounds are labelled coverage penalties, not
+measured extraction accuracy. Entirely unrun subgroups have null measured recall. These fixtures
+are development checks, not independent clinician reference labels.
+
+The source-bound review-packet tool records pending human review against exact source hashes and
+changed lines. Staging unchanged new files does not invalidate a receipt; changed source still does.
+It cannot verify medical credentials, create runtime rule approvals, publish code or authorize care.
+This software update contains no clinical-rule or learned-model activation.
