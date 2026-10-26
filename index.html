@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-workspace="index" data-language-options="en ko">
 <head>
+<script src="js/display-start.js?v=20261026_stable1"></script>
   <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,9 +19,6 @@
   <meta property="og:image" content="https://clinloopai.app/icons/icon-512.png">
   <meta name="twitter:card" content="summary">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="css/styles.css?v=20261023_deep1">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0e7490">
@@ -30,16 +28,16 @@
 
 <link rel="stylesheet" href="css/responsive.css?v=20261023_locale1">
 <script defer src="js/language-controls.js?v=20261023_locale1"></script>
-<link rel="stylesheet" href="css/app-chrome.css?v=20261026_menus1"><script defer src="js/appearance-controls.js?v=20261023_1"></script><script defer src="js/workspace-shell.js?v=20261026_menus1"></script></head>
+<link rel="stylesheet" href="css/app-chrome.css?v=20261026_stable1"><script defer src="js/appearance-controls.js?v=20261026_stable1"></script><script defer src="js/workspace-shell.js?v=20261026_stable1"></script></head>
 
-<body class="cockpit-loading">
+<body class="clinloop-page cockpit-loading"><a class="skip-link shell-skip" href="#clinloop-workspace">Skip to workspace</a>
 
   <!-- Full-Width Cockpit Header -->
   <!-- Top bar: brand, actions, safety notice and example-data strip. Stays at the top while the page
        scrolls, and condenses to one row once the reader scrolls down (js/app.js, css/responsive.css). -->
   <div class="top-chrome" id="top-chrome">
-  <header class="app-header app-header--pro">
-    <div class="brand-section">
+  <!-- clinloop-shell:start -->
+<header class="clinloop-shell" data-static-shell="true"><div class="clinloop-shell-top"><div class="brand-section">
       <div class="brand-logo">
         <svg class="brand-mark" viewBox="0 0 48 48" role="img" aria-label="ClinLoop logo: rod of Asclepius inside a closing loop"><path d="M37.6 10.4A19 19 0 1 0 43 24" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/><path d="M44.2 8.6 43.9 18.9 34 16.2Z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M24 8.6v30.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><g class="bm-serpent"><path d="M27 14.2C21.2 13.8 19 17.4 24 18.6 29 19.8 29 22.8 24 23.8 19 24.8 19 28 24 29 28 29.8 27.8 32.6 25 34.2" fill="none" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="28.6" cy="13.4" rx="3" ry="2.1" transform="rotate(-18 28.6 13.4)" stroke="none"/></g></svg>
       </div>
@@ -47,12 +45,15 @@
         <h1 class="brand-title">ClinLoop AI</h1>
         <div class="brand-subtitle" id="i18n-brand-sub">Finds and closes missed follow-up of clinical results</div>
       </div>
-    </div>
-
-    <!-- The same page navigation on every page (js/appnav.js) -->
-    <nav class="app-nav"></nav>
-
-    <div class="header-actions">
+    </div><div class="clinloop-shell-controls" role="group" aria-label="Display and account"><div class="theme-segmented-control prominent-theme-pill" role="group" aria-label="Theme Switcher">
+        <button id="theme-opt-light" class="theme-opt-btn active" title="Light theme">Light</button>
+        <button id="theme-opt-dark" class="theme-opt-btn" title="Dark theme">Dark</button>
+      </div><div class="prominent-lang-pill" role="group" aria-label="Language Selector">
+        <button id="lang-opt-ko" class="lang-opt-btn" title="한국어" lang="ko">한국어</button>
+        <button id="lang-opt-en" class="lang-opt-btn active" title="English" lang="en">English</button>
+      </div></div></div><nav class="app-nav clinloop-shell-links" aria-label="ClinLoop pages"><a class="app-nav-link" href="./" data-label-en="Cockpit" data-label-ko="종합 화면" aria-current="page"><span data-nav-language="en">Cockpit</span><span data-nav-language="ko">종합 화면</span></a><a class="app-nav-link" href="worklist" data-label-en="Worklist" data-label-ko="업무 목록"><span data-nav-language="en">Worklist</span><span data-nav-language="ko">업무 목록</span></a><a class="app-nav-link" href="patient" data-label-en="Patient graph" data-label-ko="환자 그래프"><span data-nav-language="en">Patient graph</span><span data-nav-language="ko">환자 그래프</span></a><a class="app-nav-link" href="quality" data-label-en="Quality" data-label-ko="품질 지표"><span data-nav-language="en">Quality</span><span data-nav-language="ko">품질 지표</span></a><a class="app-nav-link" href="governance" data-label-en="Rule sign-off" data-label-ko="규칙 승인"><span data-nav-language="en">Rule sign-off</span><span data-nav-language="ko">규칙 승인</span></a><a class="app-nav-link" href="pilot" data-label-en="Pilot review" data-label-ko="시범 검토"><span data-nav-language="en">Pilot review</span><span data-nav-language="ko">시범 검토</span></a><a class="app-nav-link" href="imaging" data-label-en="Imaging" data-label-ko="영상"><span data-nav-language="en">Imaging</span><span data-nav-language="ko">영상</span></a><a class="app-nav-link" href="analyse" data-label-en="Analyse patient" data-label-ko="환자 분석"><span data-nav-language="en">Analyse patient</span><span data-nav-language="ko">환자 분석</span></a><a class="app-nav-link" href="reports" data-label-en="Live report reader" data-label-ko="실시간 보고서 검토"><span data-nav-language="en">Live report reader</span><span data-nav-language="ko">실시간 보고서 검토</span></a><a class="app-nav-link" href="review" data-label-en="Report review" data-label-ko="보고서 검토"><span data-nav-language="en">Report review</span><span data-nav-language="ko">보고서 검토</span></a><a class="app-nav-link" href="private" data-label-en="Personal workspace" data-label-ko="개인 작업 공간"><span data-nav-language="en">Personal workspace</span><span data-nav-language="ko">개인 작업 공간</span></a><a class="app-nav-link" href="validation" data-label-en="Validation evidence" data-label-ko="검증 근거"><span data-nav-language="en">Validation evidence</span><span data-nav-language="ko">검증 근거</span></a><a class="app-nav-link" href="deployment" data-label-en="International setup" data-label-ko="국제 배포 계획"><span data-nav-language="en">International setup</span><span data-nav-language="ko">국제 배포 계획</span></a></nav><div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label><select id="clinloop-page-picker"><optgroup label="Clinical workspace"><option value="/" selected>Cockpit</option><option value="/worklist">Worklist</option><option value="/patient">Patient graph</option><option value="/quality">Quality</option><option value="/governance">Rule sign-off</option><option value="/pilot">Pilot review</option><option value="/imaging">Imaging</option><option value="/analyse">Analyse patient</option></optgroup><optgroup label="Research"><option value="/reports">Live report reader</option><option value="/review">Report review</option><option value="/private">Personal workspace</option></optgroup><optgroup label="Evidence and setup"><option value="/validation">Validation evidence</option><option value="/deployment">International setup</option></optgroup></select></div></header>
+<!-- clinloop-shell:end -->
+<div class="app-header--pro cockpit-tools"><div class="header-actions">
       <button id="btn-gpu-hud" class="badge badge-gpu" hidden style="cursor: pointer; color: var(--text-muted); font-weight: 700; align-items: center; gap: 0.4rem;" title="Hardware on the ClinLoop server, and what uses it">
         <span class="pulse-dot" id="gpu-hud-dot" style="background: var(--text-dim);"></span>
         <span id="gpu-hud-label">Compute</span>
@@ -89,16 +90,9 @@
           <button id="sound-toggle" class="btn-secondary" title="Alert sounds">Sound: off</button>
         </div>
       </details>
-      <div class="theme-segmented-control prominent-theme-pill" role="group" aria-label="Theme Switcher">
-        <button id="theme-opt-light" class="theme-opt-btn active" title="Light theme">Light</button>
-        <button id="theme-opt-dark" class="theme-opt-btn" title="Dark theme">Dark</button>
-      </div>
-      <div class="prominent-lang-pill" role="group" aria-label="Language Selector">
-        <button id="lang-opt-ko" class="lang-opt-btn" title="한국어" lang="ko">한국어</button>
-        <button id="lang-opt-en" class="lang-opt-btn active" title="English" lang="en">English</button>
-      </div>
-    </div>
-  </header>
+
+
+    </div></div>
 
   <!-- One status strip: the safety notice, then the example data at a glance -->
   <div class="status-strip">
@@ -135,7 +129,7 @@
 
   <p id="cockpit-load-status" role="status" aria-live="polite" data-demo-copy="loading">Loading synthetic examples…</p>
   <noscript><p>Enable JavaScript to use this synthetic demo.</p></noscript>
-  <main class="cockpit-workspace">
+  <main id="clinloop-workspace" class="cockpit-workspace">
 
     <!-- ====================================================================
          COLUMN 1: Left Triage & Patient Worklist
@@ -1494,7 +1488,7 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
   <script src="config.js"></script>
 <script src="js/demo.js?v=20261023_locale1"></script>
 <script src="js/top-chrome.js?v=20261023_header1"></script>
-<script src="js/appnav.js?v=2026-10-26.menus1"></script>
+<script src="js/appnav.js?v=2026-10-26.stable1"></script>
   <script src="js/safety_clock.js?v=20260930_final"></script>
   <script src="js/hypergraph.js?v=20260930_final"></script>
   <script src="js/app.js?v=20261025_devices1"></script>

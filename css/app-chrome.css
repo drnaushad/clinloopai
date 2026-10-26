@@ -48,6 +48,9 @@ body.cockpit-loading .cockpit-workspace { visibility: hidden; pointer-events: no
 .wrap button.primary { background: var(--action-bg); border-color: var(--action-bg); color: var(--action-fg); }
 .wrap button, .wrap select, .appearance-controls button { min-height: 44px; }
 .report-workspace button { min-height: 44px; }
+:root[data-theme=dark] .report-workspace { --warn: #fbbf24; --warn-soft: #382c14;
+  --ok: #34d399; --ok-soft: #12352e; --critical: #fb7185; --critical-soft: #3f1b2a; }
+.report-workspace button.live { background: var(--action-bg); color: var(--action-fg); }
 /* Landscape phones and tablets need the same legible form text as portrait phones. */
 @media (max-width: 1150px) {
   input, select, textarea { font-size: 16px !important; }
@@ -87,6 +90,7 @@ body.cockpit-loading .cockpit-workspace { visibility: hidden; pointer-events: no
   --shell-canvas: #f1f5f9; --shell-notice: #fff4dd;
   --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-heading: var(--font-body); --font-head: var(--font-body);
+  --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme=light]) { --shell-bg: #111a2e; --shell-text: #e2e8f0; --shell-muted: #b4c1d2;
@@ -97,6 +101,10 @@ body.cockpit-loading .cockpit-workspace { visibility: hidden; pointer-events: no
   --shell-border: #334155; --shell-accent: #7dd3fc; --shell-soft: #153449;
   --shell-canvas: #0b1220; --shell-notice: #382c14; }
 body.clinloop-page { max-width: none; width: 100%; margin: 0; padding: 0; font-family: var(--font-body); }
+body.clinloop-page { background: var(--shell-canvas); color: var(--shell-text); }
+.clinloop-shell [data-nav-language=ko] { display: none; }
+html[lang^=ko] .clinloop-shell [data-nav-language=en] { display: none; }
+html[lang^=ko] .clinloop-shell [data-nav-language=ko] { display: inline; }
 .clinloop-shell, .clinloop-shell * { box-sizing: border-box; }
 .clinloop-shell { box-sizing: border-box; width: 100%; max-width: none; margin: 0;
   padding: 12px clamp(16px, 1.5vw, 40px) 8px; display: block; background: var(--shell-bg);
@@ -119,10 +127,22 @@ body.clinloop-page { max-width: none; width: 100%; margin: 0; padding: 0; font-f
   font: 600 14px/1.3 var(--font-body); border-radius: 6px; box-shadow: none !important;
   color: var(--shell-muted); background: transparent; white-space: nowrap; }
 .clinloop-shell-controls :is(.appearance-controls, .theme-segmented-control, .prominent-lang-pill) button { border: 0; }
+.clinloop-shell-controls :is(.appearance-controls, .theme-segmented-control, .prominent-lang-pill) button {
+  border-radius: 6px !important; padding: 6px 10px !important; transition: none !important; }
+.clinloop-shell-controls :is(#btn-lang, .prominent-lang-pill) { min-width: 104px; }
+/* A saved theme must already be selected while the page scripts initialize. */
+.clinloop-shell-controls :is(.appearance-controls, .theme-segmented-control) button {
+  background: transparent !important; color: var(--shell-muted) !important; }
+:root[data-theme=light] .clinloop-shell-controls :is(.appearance-controls, .theme-segmented-control) button:first-child,
+:root[data-theme=dark] .clinloop-shell-controls :is(.appearance-controls, .theme-segmented-control) button:last-child {
+  background: var(--action-bg) !important; color: var(--action-fg) !important; }
 .clinloop-shell-controls :is(button.active, button[aria-pressed=true]) {
   background: var(--action-bg) !important; color: var(--action-fg) !important; }
 /* The cockpit uses the same single destination-language button as the other pages. */
 .clinloop-shell-controls .prominent-lang-pill :is(button.active, button[aria-pressed=true]) { display: none; }
+.clinloop-shell-controls .prominent-lang-pill button { display: inline-flex !important; }
+html:not([lang^=ko]) .clinloop-shell-controls #lang-opt-en,
+html[lang^=ko] .clinloop-shell-controls #lang-opt-ko { display: none !important; }
 .clinloop-shell > .clinloop-shell-links { display: flex; align-items: center; flex-wrap: wrap;
   justify-content: flex-start !important; width: 100%; max-width: 100%; gap: 4px; padding: 8px 0 0;
   margin: 0; border: 0; overflow-x: auto; }
@@ -159,6 +179,18 @@ body.clinloop-page { max-width: none; width: 100%; margin: 0; padding: 0; font-f
 .shell-skip { position: absolute; top: -120px; left: 16px; z-index: 1000; padding: 10px 16px;
   border-radius: 8px; color: var(--shell-text); background: var(--shell-bg); }
 .shell-skip:focus { top: 8px; }
+.update-notice { position: fixed; z-index: 400; bottom: 16px; right: 16px; box-sizing: border-box;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px; max-width: min(480px, calc(100vw - 32px));
+  margin: 0; padding: 12px; border: 1px solid var(--shell-border); border-radius: 10px;
+  background: var(--shell-bg); color: var(--shell-text); box-shadow: 0 4px 18px #0f172a20; }
+html { scrollbar-gutter: stable; }
+body.report-loading > :is(main, footer) { visibility: hidden; }
+#report-load-status { margin: 16px clamp(16px, 1.5vw, 40px); padding: 16px;
+  border: 1px solid var(--shell-border); border-radius: 10px; color: var(--shell-muted); }
+#report-load-status[hidden] { display: none; }
+.update-notice span { flex-basis: 100%; }
+.update-notice button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--shell-border);
+  border-radius: 6px; background: var(--shell-bg); color: var(--shell-text); cursor: pointer; }
 @media (max-width: 1150px) {
   /* Phones, landscape phones and tablets share the same complete page menu.
      No destination depends on discovering a sideways-scrolling tab strip. */

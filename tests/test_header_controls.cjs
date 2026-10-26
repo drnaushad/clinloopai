@@ -55,5 +55,5 @@ test('cockpit examples remain hidden until initialization completes and failures
   vm.runInNewContext(boot,{document,window:{},ClinLoopApp:class{async init(){if(failed)throw Error('synthetic-only');}}});await callback();
   assert.equal(ready,!failed);assert.equal(status.hidden,!failed);if(failed){assert.match(status.textContent,lang==='en'?/Refresh/:/새로고침/);assert.equal(/[가-힣]/.test(status.textContent),lang==='ko');assert.equal(status['data-demo-copy'],'loadFailed');}
  }
- const html=fs.readFileSync('index.html','utf8');assert.equal((html.match(/<nav class="app-nav"/g)||[]).length,1);assert(!html.includes('floating-theme-switch-dock'));
+ const html=fs.readFileSync('index.html','utf8');assert.equal((html.match(/<nav class="app-nav(?: |")/g)||[]).length,1);assert(!html.includes('floating-theme-switch-dock'));
 });

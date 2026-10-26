@@ -45,7 +45,7 @@ class TestEveryDevice(unittest.TestCase):
             html = f.read()
         top = html.index('id="top-chrome"')
         self.assertTrue(top < html.index('class="app-header') < html.index('id="global-impact-bar"')
-                        < html.index('id="mini-bar"') < html.index('<main class="cockpit-workspace">'))
+                        < html.index('id="mini-bar"') < html.index('class="cockpit-workspace"'))
         self.assertIn('src="js/top-chrome.js', html)
         with open(os.path.join(ROOT, "css", "responsive.css"), encoding="utf-8") as f:
             css = f.read()
@@ -56,10 +56,11 @@ class TestEveryDevice(unittest.TestCase):
             js = f.read()
         self.assertIn("IntersectionObserver", js)
         self.assertNotIn("addEventListener('scroll'", js)
-        # First paint: fonts are linked from the page, not chained through an @import in the stylesheet
+        # First paint uses system fonts without a delayed external font swap.
         with open(os.path.join(ROOT, "css", "styles.css"), encoding="utf-8") as f:
             self.assertNotIn("@import url", f.read())
-        self.assertIn('rel="preconnect" href="https://fonts.gstatic.com" crossorigin', html)
+        self.assertNotIn('fonts.gstatic.com', html)
+        self.assertNotIn('fonts.googleapis.com', html)
 
     def test_many_people_at_once_in_the_browser(self):
         """Dialogs close by Escape/✕/outside click; one sign-in per tab with sign-out; the worklist
@@ -100,7 +101,7 @@ class TestEveryDevice(unittest.TestCase):
             with open(os.path.join(ROOT, page), encoding="utf-8") as f:
                 html = f.read()
             with self.subTest(page=page):
-                self.assertIn('<nav class="app-nav">', html)
+                self.assertRegex(html, r'<nav class="app-nav(?: |")')
                 self.assertRegex(html, r'src="js/appnav\.js(\?v=[0-9a-z_.-]+)?"')
         with open(os.path.join(ROOT, "js", "appnav.js"), encoding="utf-8") as f:
             nav = f.read()
@@ -229,9 +230,8 @@ if __name__ == "__main__":
 
 
 class TestSameVersionOnEveryDevice(unittest.TestCase):
-    def test_pages_reload_when_a_newer_version_is_live(self):
-        """version.json and the page script carry the same release; pages check it uncached, so a phone
-        holding yesterday's copy reloads instead of showing an older app."""
+    def test_pages_offer_a_saved_work_refresh_when_a_newer_version_is_live(self):
+        """Version metadata matches the release; stale pages offer a deliberate refresh."""
         import json
         import re
         live = json.load(open(os.path.join(ROOT, "version.json"), encoding="utf-8"))["version"]

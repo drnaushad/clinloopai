@@ -7,9 +7,9 @@
     var owned = document.getElementById('theme-opt-light');
     var group, light, dark;
     function selected() {
-      if (owned) return body.classList.contains('dark-theme') ? 'dark' : 'light';
       var theme = root.getAttribute('data-theme');
       if (theme === 'light' || theme === 'dark') return theme;
+      if (owned) return body.classList.contains('dark-theme') ? 'dark' : 'light';
       return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     function render() {
@@ -25,23 +25,30 @@
       light.setAttribute('aria-pressed', String(theme === 'light'));
       dark.setAttribute('aria-pressed', String(theme === 'dark'));
     }
+    if (owned) body.classList.toggle('dark-theme', selected() === 'dark');
     if (!owned) {
-      group = document.createElement('div');group.className = 'appearance-controls';group.setAttribute('role','group');
-      light = document.createElement('button');dark = document.createElement('button');
+      group = document.querySelector('.appearance-controls');
+      var existing = group && group.querySelectorAll('button');
+      light = existing && existing.length === 2 ? existing[0] : document.createElement('button');
+      dark = existing && existing.length === 2 ? existing[1] : document.createElement('button');
+      var reused = !!(existing && existing.length === 2);
+      if (!reused) { group = document.createElement('div');group.className = 'appearance-controls';group.setAttribute('role','group'); }
       [light,dark].forEach(function (button, index) {
-        button.type = 'button';group.append(button);
+        button.type = 'button';if (!reused) group.append(button);
         button.addEventListener('click', function () {
           var theme = index ? 'dark' : 'light';root.setAttribute('data-theme',theme);
           if (!isolated) {try { window.localStorage.setItem('clinloop_theme',theme); } catch (error) { /* Preferences are optional. */ }}
           render();
         });
       });
+      if (!reused) {
       var language = document.getElementById('btn-lang');
       if (language) language.before(group);
       else {
         var header = document.querySelector('.workspace-header');
         if (header) header.insertBefore(group,header.querySelector('nav'));
         else {var nav=document.querySelector('nav.app-nav');if(nav) nav.after(group);else return;}
+      }
       }
     }
     render();

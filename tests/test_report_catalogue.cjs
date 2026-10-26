@@ -37,7 +37,7 @@ test('optional model discovery is bounded and does not gate catalogue loading',a
  // Execute the actual initialization with a never-resolving optional connection.
  let catalogueRequested=false;
  const init=html.slice(html.indexOf('(async () => {'),html.indexOf('</script>', html.indexOf('(async () => {')));
- const boot={connectLiveModel:()=>new Promise(()=>{}),getReport:async()=>{catalogueRequested=true;return {ok:true,json:async()=>({note:'Synthetic',cases:[]})};},$:()=>({replaceChildren(){},append(){}})};
+ const boot={connectLiveModel:()=>new Promise(()=>{}),getReport:async()=>{catalogueRequested=true;return {ok:true,json:async()=>({note:'Synthetic',cases:[]})};},$:()=>({replaceChildren(){},append(){},setAttribute(){}}),document:{body:{classList:{remove(){}}}}};
  vm.createContext(boot);await vm.runInContext(init,boot);assert(catalogueRequested);
 });
 test('static snapshot disables unsupported input forms without changing hospital mode',()=>{

@@ -253,9 +253,10 @@ test('session navigation matches shared page destinations and keeps the current 
   const destinations=[...shared.matchAll(/\{ page: '([^']+)', href: '([^']+)'/g)];
   for(const page of ['private','review']) {
     const html=fs.readFileSync(page+'.html','utf8');
-    const nav=html.match(/<nav class="workspace-nav"[^>]*>(.*?)<\/nav>/s)[1];
+    const nav=html.match(/<nav class="workspace-nav(?: [^"]*)?"[^>]*>(.*?)<\/nav>/s)[1];
     for(const [,id,href] of destinations) assert(nav.includes('href="'+href+'"'),id);
-    assert(nav.includes('href="'+page+'" aria-current="page"'));
+    const current=nav.match(new RegExp('<a[^>]*href="'+page+'"[^>]*>'))[0];
+    assert(current.includes('aria-current="page"'));
     assert(html.includes('id="workspace" tabindex="-1"'));
   }
 });

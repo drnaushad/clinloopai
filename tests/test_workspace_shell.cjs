@@ -21,7 +21,12 @@ class Element {
   setAttribute(k,v){this.attrs[k]=v;} getAttribute(k){return Object.hasOwn(this.attrs,k)?this.attrs[k]:null;}
   removeAttribute(k){delete this.attrs[k];}
   addEventListener(k,fn){this.events[k]=fn;}
-  querySelector(selector){return this.children.find(e=>selector==='[data-shell-account]'&&e.getAttribute('data-shell-account')!==null)||null;}
+  querySelector(selector){
+    const matches=e=>selector==='[data-shell-account]'?e.getAttribute('data-shell-account')!==null:
+      selector.startsWith('.')?e.className.split(' ').includes(selector.slice(1)):e.tagName===selector.toUpperCase();
+    for(const child of this.children){if(matches(child))return child;const nested=child.querySelector(selector);if(nested)return nested;}
+    return null;
+  }
   querySelectorAll(){return this.children.filter(e=>e.tagName==='A');}
   replaceChildren(...nodes){for(const child of [...this.children])child.remove();this.append(...nodes);}
 }
@@ -53,15 +58,33 @@ function fixture(account) {
   return {doc,win,body,main,nav,appearance,accountGroup,oldCallback,focus,observers,assigned,events};
 }
 test('the catalogue keeps source labels, drops foreign links and groups clinical/research/setup pages',()=>{
-  const make=(href,text)=>({getAttribute:()=>href,textContent:text});
+  const make=(href,text)=>({getAttribute:key=>key==='href'?href:null,textContent:text});
   const items=catalog([make('worklist','Worklist'),make('review','보고서 검토'),make('review','duplicate'),make('validation','Validation evidence'),make('https://elsewhere.example','ignore')]);
   assert.deepEqual(items,[{path:'/worklist',label:'Worklist',group:0},{path:'/review',label:'보고서 검토',group:1},{path:'/validation',label:'Validation evidence',group:2}]);
 });
 test('page menus keep the same route order even if their source links arrive in a different order',()=>{
-  const make=(href,text)=>({getAttribute:()=>href,textContent:text});
+  const make=(href,text)=>({getAttribute:key=>key==='href'?href:null,textContent:text});
   const items=catalog([make('deployment','International setup'),make('review','보고서 검토'),make('./','Cockpit'),make('worklist','Worklist')]);
   assert.deepEqual(items.map(x=>x.path),['/','/worklist','/review','/deployment']);
   assert.equal(items.find(x=>x.path==='/review').label,'보고서 검토');
+});
+test('a prerendered shell is hydrated without moving its header, controls, content or navigation',()=>{
+  const f=fixture(true);mount(f.doc,f.win);
+  const shell=f.body.children.find(e=>e.className==='clinloop-shell');
+  shell.removeAttribute('data-shell-bound');
+  const parent=f.nav.parentElement,buttonsParent=f.appearance.parentElement,children=[...f.body.children];
+  const originalCreate=f.doc.createElement;
+  f.doc.createElement=tag=>{assert(['option','optgroup'].includes(tag),'hydration rebuilt '+tag);return originalCreate(tag);};
+  mount(f.doc,f.win);
+  assert.equal(f.nav.parentElement,parent);assert.equal(f.appearance.parentElement,buttonsParent);
+  assert.deepEqual(f.body.children,children);assert.equal(f.doc.activeElement,f.focus);
+  assert.equal(shell.getAttribute('data-shell-bound'),'true');
+  const picker=shell.querySelector('select');assert.equal(picker.value,'/review');
+  f.events.pageshow({persisted:true});assert.equal(picker.value,'/review');
+});
+test('bilingual static links use only the selected display label in the page selector',()=>{
+  const link={getAttribute:key=>({href:'worklist','data-label-en':'Worklist','data-label-ko':'업무 목록'})[key]||null,textContent:'Worklist업무 목록'};
+  assert.equal(catalog([link],'en')[0].label,'Worklist');assert.equal(catalog([link],'ko')[0].label,'업무 목록');
 });
 for(const account of [false,true])test((account?'clinical':'isolated')+' menu follows Back/Forward restoration without reading or changing the session',()=>{
   const f=fixture(account);mount(f.doc,f.win);

@@ -8,22 +8,32 @@
  */
 (function () {
   'use strict';
-  // Every device shows the same version: a phone may keep yesterday's page in its cache. Each page
-  // asks for version.json (never cached); if the live version is newer than this script, the page
-  // reloads once, fetching fresh copies. Bump APP_VERSION and version.json together on each release.
-  var APP_VERSION = '2026-10-26.menus1';
+  // Check for updates without interrupting a report, a form or the current page.
+  var APP_VERSION = '2026-10-26.stable1';
   (function checkVersion() {
     if (!window.fetch || location.protocol === 'file:') return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (v) {
-        if (!v || !v.version || v.version === APP_VERSION) return;
-        var key = 'clinloop_reloaded_for';
-        try { if (sessionStorage.getItem(key) === v.version) return; sessionStorage.setItem(key, v.version); }
-        catch (e) { return; }                         // cannot remember the reload: never risk a loop
-        location.reload();
-      })
-      .catch(function () { /* offline: keep the page as it is */ });
+        if (!v || typeof v.version !== 'string' || !/^[A-Za-z0-9._-]{1,80}$/.test(v.version) || v.version === APP_VERSION) return;
+        function notice() {
+          if (document.getElementById('clinloop-update-notice')) return;
+          var ko = (document.documentElement.lang || '').indexOf('ko') === 0;
+          var box = document.createElement('aside'); box.id = 'clinloop-update-notice';
+          box.className = 'update-notice'; box.setAttribute('role', 'status');
+          var text = document.createElement('span');
+          text.textContent = ko ? '새 버전이 있습니다. 작업을 저장한 후 새로고침하세요.' : 'An update is available. Save your work before refreshing.';
+          var refresh = document.createElement('button'); refresh.type = 'button';
+          refresh.textContent = ko ? '새로고침' : 'Refresh';
+          refresh.addEventListener('click', function () { location.reload(); });
+          var dismiss = document.createElement('button'); dismiss.type = 'button';
+          dismiss.textContent = ko ? '나중에' : 'Later';
+          dismiss.addEventListener('click', function () { box.remove(); });
+          box.append(text, refresh, dismiss); document.body.append(box);
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', notice, {once:true});
+        else notice();
+      }).catch(function () { /* Offline use never triggers a refresh. */ });
   })();
   var PAGES = [
     { page: 'index', href: './', en: 'Cockpit', ko: '종합 화면' },
@@ -91,7 +101,15 @@
         }
       }
       if (!nav.getAttribute('aria-label')) nav.setAttribute('aria-label', ko ? 'ClinLoop 화면' : 'ClinLoop pages');
-      nav.replaceChildren.apply(nav, PAGES.map(function (p) {
+      var existing = Array.from(nav.querySelectorAll('a.app-nav-link'));
+      var complete = existing.length === PAGES.length && existing.every(function (a, i) { return a.getAttribute('href') === PAGES[i].href; });
+      if (complete) existing.forEach(function (a, i) {
+        var p = PAGES[i], label = ko ? p.ko : p.en;
+        if (!a.hasAttribute('data-label-en') && a.textContent !== label) a.textContent = label;
+        if (p.page === here) { if (a.getAttribute('aria-current') !== 'page') a.setAttribute('aria-current', 'page'); }
+        else if (a.hasAttribute('aria-current')) a.removeAttribute('aria-current');
+      });
+      else nav.replaceChildren.apply(nav, PAGES.map(function (p) {
         var a = document.createElement('a');
         a.href = p.href;
         a.textContent = ko ? p.ko : p.en;
