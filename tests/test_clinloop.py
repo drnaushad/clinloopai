@@ -862,8 +862,8 @@ class TestWaveTwoRules(unittest.TestCase):
     def test_radiologist_recommendation_deadline_comes_from_report(self):
         from src.clinloop_engine.clinical_ontology import get_rule_by_id, get_deadline_days
         rule = get_rule_by_id("R031")
-        self.assertAlmostEqual(get_deadline_days(rule, {"recommended_interval_days": 182.6}), 182.6 + 30)
-        self.assertAlmostEqual(get_deadline_days(rule, {"recommended_interval_days": 14}), 14 + 7)
+        self.assertAlmostEqual(get_deadline_days(rule, {"recommended_interval_days": 182.6}), 182.6)
+        self.assertAlmostEqual(get_deadline_days(rule, {"recommended_interval_days": 14}), 14)
         statuses = _loop_statuses([
             _evt("r", "radiology_report", "2026-01-01T09:00:00",
                  {"recommended_modality": "mri", "recommended_interval_days": 90}),

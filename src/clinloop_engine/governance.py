@@ -66,7 +66,7 @@ def _radiology_logic_hash() -> str:
 
 
 def rule_fingerprint(rule: ObligationRule) -> str:
-    """Hash of what a reviewer signs off: the rule's clinical definition (and radiology decision code)."""
+    """Bind approval to the rule and all shared code that can change its result."""
     definition = {
         "rule_id": rule.rule_id, "name": rule.name, "description": rule.description,
         "trigger_event": rule.trigger_event.value, "trigger_condition": rule.trigger_condition,
@@ -78,13 +78,20 @@ def rule_fingerprint(rule: ObligationRule) -> str:
     }
     if rule.trigger_event == EventType.RADIOLOGY_REPORT:
         definition["radiology_logic"] = _radiology_logic_hash()
+    # A change to status normalisation or follow-up matching affects even rules
+    # whose catalogue definition is unchanged. Old approvals must not survive it.
+    here = os.path.dirname(__file__)
+    definition["decision_logic"] = {
+        name: _cached("sha256", os.path.join(here, name), _sha256_file)
+        for name in _DECISION_SOURCES
+    }
     return hashlib.sha256(json.dumps(definition, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
 # The code that turns records into obligations. A change to any of these can change which loops open.
 _DECISION_SOURCES = ("clinical_ontology.py", "fhir_ingest.py", "radiology.py", "temporal_hypergraph.py",
                      "loop_detector.py", "safety_clock.py", "motifs.py", "guideline_reports.py", "note_reader.py",
-                     "ecg.py", "report_text.py", "imaging_fhir.py", "ai_review.py", "profile.py")
+                     "ecg.py", "report_text.py", "imaging_fhir.py", "ai_review.py", "profile.py", "second_reader.py")
 
 
 def ruleset_version() -> str:

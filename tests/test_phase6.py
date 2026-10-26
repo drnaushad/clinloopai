@@ -79,7 +79,7 @@ class TestBasis(unittest.TestCase):
     def test_long_deadlines_show_a_date_and_review_reason_is_clinical(self):
         r003 = next(b for b in self.d["R003"].basis if b.startswith("Rule R003"))
         self.assertRegex(r003, r"by \d{4}-\d{2}-\d{2} \(")                    # no false clock time
-        self.assertIn("(112 days)", r003)                                      # never "112.5 days"
+        self.assertIn("(90 days)", r003)  # no scheduling grace after the stated tracking interval
         self.assertNotIn("Culture Bacteria identified", self.d["R006"].basis[0])   # code text and display not repeated
         r022 = next(b for b in self.d["R022"].basis if b.startswith("Rule R022"))
         self.assertRegex(r022, r"by \d{4}-\d{2}-\d{2} \d{2}:\d{2} \(1 hour\)")   # a one-hour window keeps the time
@@ -130,7 +130,7 @@ class TestPhase7Korean(unittest.TestCase):
             rows = list(csv.DictReader(f))
         self.assertGreaterEqual(len(rows), 40)
         result = score(rows)
-        self.assertEqual(result["exact_agreement"], len(rows), [d for d in result.get("disagreements", [])][:3])
+        self.assertEqual(result["exact_agreement"], len(rows), result["discordant"][:3])
 
     def test_aneurysm_without_recorded_sex_uses_the_lower_repair_threshold(self):
         """Clinical review: an unknown sex fell to the men's 5.5 cm threshold, so a woman's 5.2 cm

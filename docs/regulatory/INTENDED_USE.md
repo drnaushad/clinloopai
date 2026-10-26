@@ -3,6 +3,15 @@
 **Status: draft for review by a regulatory specialist and the clinical lead. Not approved.**
 Version 0.1, October 2026. Applies to the **core profile** (`CLINLOOP_PROFILE=core`) only.
 
+## First validation target proposed on 2026-10-26
+
+The next candidate targets English radiology report text and longitudinal evidence of the resulting
+follow-up tasks, using local processing. This is a proposed validation scope, not a clinical release
+or a reduction in the research interfaces. Images, OCR, waveforms, other specialties and additional
+languages need separate evidence before entering this first clinical scope. A clinical lead must
+approve the exact rule subset, population, sample size and acceptance criteria in advance. No
+clinician, institution or regulator has approved this candidate. No software test grants that approval.
+
 ## 1. Intended use
 
 > ClinLoop is software for hospital staff that tracks clinical follow-up obligations arising from

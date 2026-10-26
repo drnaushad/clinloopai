@@ -625,7 +625,7 @@ class ClinLoopApp {
       btnAction.addEventListener('click', () => {
         if (!this.currentCase || this.closedOverrides.has(this.currentCase.scenario_id)) return;
         document.getElementById('modal-pt-name').textContent = `${this.currentCase.patient_id} (${this.currentCase.scenario_name})`;
-        document.getElementById('modal-order-desc').textContent = this.currentCase.missing_followup || 'Mandatory clinical follow-up';
+        document.getElementById('modal-order-desc').textContent = this.currentCase.missing_followup || 'Clinical follow-up for review';
         orderModal.classList.add('open');
       });
     }
@@ -1952,16 +1952,9 @@ class ClinLoopApp {
         ageSex: '여성 42세',
         dept: '산부인과 정기 건강검진 (자궁경부 세포검사)',
         finding: '자궁경부 세포검사(Pap) 결과 고등급 편평상피내 병변(HSIL) 발견 (자궁경부암 전암 단계)',
-        missed: '환자에게 단순 결과지만 우편 발송되고, 30일 이내 필수적인 질확대경 조준생검(Colposcopy) 예약 누락',
-        guideline: 'ASCCP 2020 임상 가이드라인 (30일 이내 질확대경 조준생검 필수 시행 권고)',
-        deadline: '5일 남음 (즉시 질확대경 조직검사 필요)',
-        negRisk: '36.5% (24개월 내 침윤성 자궁경부암 진행 위험)',
-        negSurvival: '52.0% (광범위 자궁적출 및 항암치료 필요)',
-        posCure: '98.0% (조기 원추절제술 LEEP 완치)',
-        posSurvival: '98.0% (+46.0% 생존율 향상!)',
-        delta: '+46.0%',
-        qaly: '+8.4 QALYs',
-        liability: '2.8억 원'
+        missed: '결과 우편 발송은 기록되어 있지만 위험도 평가와 적절한 후속 진료 계획은 확인되지 않음',
+        guideline: 'ASCCP 2019 위험도 기반 관리: HPV, 나이, 임신 여부 및 검사 이력을 확인. 30일은 제안된 기관별 추적 목표이며 지침의 일률적인 기한이 아님',
+        deadline: '예시 추적 목표 · 의료진 검토 필요',
       },
       'SC-0004': {
         name: '김철수 (Kim, Chul-soo)',
@@ -1971,45 +1964,24 @@ class ClinLoopApp {
         missed: '갈비뼈 치료만 완료되고 폐 결절에 대한 외래 예약이나 호흡기내과 협진이 누락된 채 105일 경과',
         guideline: 'Fleischner Society 2017 가이드라인 (6–8mm 고형 결절: 6–12개월 내 흉부 CT 추적, 침상형 등 고위험 형태는 더 이른 추적 고려)',
         deadline: '74일 남음 (마감일자: 2026-12-04)',
-        negRisk: '42.1% (1년 내 Stage IV 전이암 악화 위험)',
-        negSurvival: '15.0% (치명적 급락)',
-        posCure: '94.8% (조기 흉강경 절제술 완치)',
-        posSurvival: '90.0% (+75.0% 생존율 향상!)',
-        delta: '+75.0%',
-        qaly: '+11.2 QALYs',
-        liability: '3.5억 원'
       },
       'SC-0098': {
         name: '박순자 (Park, Soon-ja)',
         ageSex: '여성 71세',
         dept: '순환기내과 심방세동 항응고 치료',
         finding: '심방세동 뇌졸중 예방을 위해 와파린(Warfarin) 용량을 5mg에서 7.5mg으로 증량 처방',
-        missed: '와파린 증량 후 7~14일 이내 필수적인 혈액응고수치(PT/INR) 추적 혈액검사 오더 누락',
-        guideline: 'ACC/AHA 2020 항응고 가이드라인 (용량 변경 후 7일 이내 INR 목표 2.0~3.0 검증 필수)',
+        missed: '와파린 용량 변경 후 계획된 INR 재검이 합성 기록에서 확인되지 않음',
+        guideline: '용량 변경 후 INR 모니터링은 의료진이 결정 · 적응증, 목표 범위 및 재검 시점을 확인',
         deadline: '2일 남음 (출혈/뇌출혈 급성 위기)',
-        negRisk: '28.0% (치명적 뇌출혈 또는 심부 장기 출혈 위험)',
-        negSurvival: '65.0% (급성 출혈 합병증 위험)',
-        posCure: '96.5% (적정 INR 2.5 모니터링 및 안전)',
-        posSurvival: '94.0% (+29.0% 생존율 향상!)',
-        delta: '+29.0%',
-        qaly: '+6.2 QALYs',
-        liability: '2.2억 원'
       },
       'SC-0164': {
         name: '최민경 (Choi, Min-kyung)',
         ageSex: '여성 58세',
         dept: '흉부외과 폐암 조기진단 클리닉',
         finding: '흉부 CT에서 10.8mm 폐 결절 발견 (Fleischner 가이드라인 고위험)',
-        missed: '누락 없음: ClinLoop 추적 알림을 통해 30일 이내 흉강경 쐐기절제술 정상 시행 완료 (대조군)',
+        missed: '합성 기록에서 해당 추적 조치의 근거 확인 · 완치나 ClinLoop로 인한 환자 이익을 입증하지 않음',
         guideline: 'Fleischner Society 2017 & NCCN 폐암 조기선별 가이드라인 준수 완료',
         deadline: '완료됨 (Closed Loop)',
-        negRisk: '0.0% (안전 종결)',
-        negSurvival: '96.0% (완치)',
-        posCure: '98.5% (조기 절제 완치)',
-        posSurvival: '96.0% (완치 추적 관찰 중)',
-        delta: '+55.0%',
-        qaly: '+9.8 QALYs',
-        liability: '0원 (안전 방어)'
       },
       'SC-0083': {
         name: '정우성 (Jung, Woo-sung)',
@@ -2017,15 +1989,8 @@ class ClinLoopApp {
         dept: '응급의학과 열성질환 진료 후 퇴원',
         finding: '퇴원 48시간 후 시행된 혈액배양 검사에서 녹농균(Pseudomonas aeruginosa) 균혈증 양성 보고',
         missed: '퇴원 환자에게 양성 배양 결과가 유선 통보되지 않고 EMR 결과조회함에 미확인 상태로 3일간 방치',
-        guideline: 'IDSA 패혈증 임상 가이드라인 (혈액배양 양성 시 6시간 이내 환자 즉시 리콜 및 표적 항생제 투여)',
+        guideline: '병원 위급 결과 통보 절차에 따른 긴급 의료진 검토와 의사소통 · 치료는 담당 의료진이 결정',
         deadline: '1일 남음 (패혈성 쇼크 골든타임 임박)',
-        negRisk: '68.5% (치명적 패혈성 쇼크 및 다발성 장기부전)',
-        negSurvival: '32.0% (중환자실 사망 위험)',
-        posCure: '91.0% (표적 세페핌 항생제 즉시 정맥주사 완치)',
-        posSurvival: '88.0% (+56.0% 생존율 향상!)',
-        delta: '+56.0%',
-        qaly: '+12.5 QALYs',
-        liability: '4.2억 원'
       }
     };
 
@@ -2035,64 +2000,36 @@ class ClinLoopApp {
         ageSex: 'Female 42y',
         dept: 'Gynecology Routine Screening (Cervical Cytology)',
         finding: 'Cervical Pap Smear reveals High-Grade Squamous Intraepithelial Lesion (HSIL / Pre-cancerous stage)',
-        missed: 'Routine lab report mailed home; mandatory Colposcopy & biopsy within 30 days omitted from EMR schedule',
-        guideline: 'ASCCP 2020 Clinical Consensus Guidelines (Mandatory Colposcopy-directed Biopsy within 30 days)',
-        deadline: '5 Days Remaining (Immediate Colposcopy Mandated)',
-        negRisk: '36.5% (Progression to invasive cervical carcinoma within 24m)',
-        negSurvival: '52.0% (Requires radical hysterectomy & chemoradiation)',
-        posCure: '98.0% (Curative early LEEP conization)',
-        posSurvival: '98.0% (+46.0% survival advantage!)',
-        delta: '+46.0%',
-        qaly: '+8.4 QALYs',
-        liability: '280M KRW'
+        missed: 'Result mailing is recorded; clinician risk assessment and an appropriate follow-up plan are not confirmed',
+        guideline: 'ASCCP 2019 risk-based management: verify HPV, age, pregnancy and screening history. The proposed 30-day tracking target is local policy, not a universal guideline deadline',
+        deadline: 'Example tracking target; clinician review required',
       },
       'SC-0004': {
         name: 'Kim, Chul-soo',
         ageSex: 'Male 52y',
         dept: 'Emergency Medicine Trauma (Discharged post-rib fracture fixation)',
-        finding: 'Chest CT reveals incidental 7.8mm spiculated pulmonary nodule in RUL (High suspicion of early Stage IA lung cancer)',
+        finding: 'Chest CT reports an incidental 7.8 mm spiculated right upper lobe pulmonary nodule; diagnosis and management need clinician assessment',
         missed: 'Rib fracture treated but follow-up CT and Pulmonology referral silently lost in EMR for 105 days post-discharge',
         guideline: 'Fleischner Society 2017 Guidelines (6–8 mm solid nodule: chest CT at 6–12 months; consider earlier follow-up for suspicious morphology such as spiculation)',
         deadline: '74 Days Remaining (Safety Deadline: 2026-12-04)',
-        negRisk: '42.1% (Progression to metastatic Stage IV within 1 year)',
-        negSurvival: '15.0% (Catastrophic drop in survival)',
-        posCure: '94.8% (Curative early VATS wedge resection)',
-        posSurvival: '90.0% (+75.0% survival advantage!)',
-        delta: '+75.0%',
-        qaly: '+11.2 QALYs',
-        liability: '350M KRW'
       },
       'SC-0098': {
         name: 'Park, Soon-ja',
         ageSex: 'Female 71y',
         dept: 'Cardiology Atrial Fibrillation Anticoagulation Clinic',
         finding: 'Warfarin dosage titrated from 5.0mg to 7.5mg daily for stroke prophylaxis',
-        missed: 'Mandatory follow-up PT/INR coagulation blood test within 7-14 days post-titration never ordered in EMR',
-        guideline: 'ACC/AHA 2020 Anticoagulation Guidelines (Verify target INR 2.0-3.0 within 7 days of dose escalation)',
+        missed: 'The synthetic record does not show the planned INR recheck after a warfarin dose change',
+        guideline: 'Clinician-directed INR monitoring after a dose change; confirm the indication, target range and recheck timing',
         deadline: '2 Days Remaining (Acute hemorrhage/stroke crisis)',
-        negRisk: '28.0% (Risk of fatal intracranial hemorrhage or GI bleed)',
-        negSurvival: '65.0% (Severe bleeding complication morbidity)',
-        posCure: '96.5% (Safe INR 2.5 achieved with therapeutic monitoring)',
-        posSurvival: '94.0% (+29.0% survival advantage!)',
-        delta: '+29.0%',
-        qaly: '+6.2 QALYs',
-        liability: '220M KRW'
       },
       'SC-0164': {
         name: 'Choi, Min-kyung',
         ageSex: 'Female 58y',
         dept: 'Thoracic Surgery Early Lung Nodule Surveillance',
         finding: 'Incidental 10.8mm lung nodule detected on chest CT (Fleischner High-Risk)',
-        missed: 'Zero Omission: ClinLoop automated tracking successfully prompted VATS wedge resection within 30 days (Closed Loop)',
+        missed: 'The synthetic record contains follow-up evidence for this tracked step; this does not establish cure or a benefit caused by ClinLoop',
         guideline: 'Fleischner Society 2017 & NCCN Early Lung Screening Compliance',
         deadline: 'Fulfilled (Closed Loop)',
-        negRisk: '0.0% (Safely Resolved)',
-        negSurvival: '96.0% (Cured)',
-        posCure: '98.5% (Curative surgical resection)',
-        posSurvival: '96.0% (Surveillance follow-up)',
-        delta: '+55.0%',
-        qaly: '+9.8 QALYs',
-        liability: '0 KRW (Safe Defense)'
       },
       'SC-0083': {
         name: 'Jung, Woo-sung',
@@ -2100,34 +2037,20 @@ class ClinLoopApp {
         dept: 'Emergency Medicine Febrile Illness (Discharged home)',
         finding: 'Blood culture drawn at ED shows Pseudomonas aeruginosa bacteremia 48h post-discharge',
         missed: 'Critical positive lab result left unacknowledged in EMR inbox; patient not phoned or recalled for 3 days',
-        guideline: 'IDSA Sepsis Clinical Guidelines (Immediate recall and IV targeted antipseudomonal antibiotic within 6 hours)',
+        guideline: 'Urgent clinician review and communication under the hospital critical-result protocol; management is decided by the treating team',
         deadline: '1 Day Remaining (Imminent septic shock golden hour)',
-        negRisk: '68.5% (Septic shock and multi-organ failure progression)',
-        negSurvival: '32.0% (High ICU mortality risk)',
-        posCure: '91.0% (Immediate IV Cefepime targeted therapy cure)',
-        posSurvival: '88.0% (+56.0% survival advantage!)',
-        delta: '+56.0%',
-        qaly: '+12.5 QALYs',
-        liability: '420M KRW'
       }
     };
 
     const profiles = isKo ? patientProfiles_ko : patientProfiles_en;
     const prof = profiles[c.scenario_id] || {
-      name: `환자 (${c.patient_id})`,
-      ageSex: `${c.patient_age}세 ${c.patient_sex}`,
-      dept: '외래 검사',
+      name: isKo ? `환자 (${c.patient_id})` : `Patient (${c.patient_id})`,
+      ageSex: isKo ? `${c.patient_age}세 ${c.patient_sex}` : `${c.patient_age}y ${c.patient_sex}`,
+      dept: isKo ? '외래 검사' : 'Outpatient testing',
       finding: c.scenario_name,
       missed: c.missing_followup,
-      guideline: '표준 임상 가이드라인 준수 권고',
-      deadline: '추적 조치 필요',
-      negRisk: '30.0%',
-      negSurvival: '50.0%',
-      posCure: '95.0%',
-      posSurvival: '92.0%',
-      delta: c.counterfactual ? c.counterfactual.delta_5yr_survival : '+40%',
-      qaly: '+8.0 QALYs',
-      liability: '2.5억 원'
+      guideline: isKo ? '의료진이 적용 가능한 지침과 후속 계획을 검토해야 함' : 'Clinician review of the applicable guideline and follow-up plan is required',
+      deadline: isKo ? '추적 조치 필요' : 'Follow-up review required',
     };
 
     const nameEl = document.getElementById('summary-patient-name');
@@ -2142,9 +2065,9 @@ class ClinLoopApp {
         ? `${prof.ageSex} • 등록번호: ${c.patient_id} • 내원: ${prof.dept}`
         : `${prof.ageSex} • PT-ID: ${c.patient_id} • Dept: ${prof.dept}`;
     }
-    if (q1El) q1El.innerHTML = `<strong>${prof.finding}</strong>`;
-    if (q2El) q2El.innerHTML = `<strong>${prof.missed}</strong>`;
-    if (q3El) q3El.innerHTML = `<strong>${prof.guideline}</strong>`;
+    if (q1El) q1El.textContent = prof.finding;
+    if (q2El) q2El.textContent = prof.missed;
+    if (q3El) q3El.textContent = prof.guideline;
 
     const deadlineDateEl = document.getElementById('summary-deadline-date');
     if (deadlineDateEl) {

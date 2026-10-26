@@ -27,7 +27,7 @@ class TestDatasetEvaluation(unittest.TestCase):
                 rows.append(dict(record, reviewer_id=reviewer, reviewer_role='clinician',
                                  label_status='complete', expected_rules='R003' if i==0 else 'NONE'))
             e.write_sheet(self.out/filename,rows)
-        e.private_json(self.out/'prediction_provenance.json', {'models':{'medgemma:27b':'synthetic-digest'}})
+        e.private_json(self.out/'prediction_provenance.json', {'models':{'medgemma:27b':'synthetic-digest'}, 'records_sha256':self.manifest['records_sha256']})
         rows=[]
         for i,record in enumerate(self.records):
             rows.append({'report_id':record['report_id'],'system':'rules','available':True,'action':i==0})
@@ -93,4 +93,41 @@ class TestDatasetEvaluation(unittest.TestCase):
         p=self.out/'predictions.jsonl';p.write_text(p.read_text()+p.read_text().splitlines()[0]+'\n')
         with self.assertRaises(ValueError):e.score_study(self.out)
         p=self.out/'records.json';p.write_text(p.read_text()+' ')
+        with self.assertRaises(ValueError):e.score_study(self.out)
+
+
+    def test_reviewer_identity_whitespace_and_case_do_not_establish_independence(self):
+        self.complete_reviews()
+        rows=list(e.read_sheet(self.out/'reviewer_2.csv').values())
+        for row in rows:row['reviewer_id']=' CLINICIAN-A '
+        e.write_sheet(self.out/'reviewer_2.csv',rows)
+        with self.assertRaises(ValueError):e.score_study(self.out)
+
+    def test_reference_context_cannot_be_edited_without_new_study(self):
+        self.complete_reviews()
+        rows=list(e.read_sheet(self.out/'reviewer_1.csv').values())
+        rows[0]['conclusion']='SENSITIVE_SENTINEL'
+        e.write_sheet(self.out/'reviewer_1.csv',rows)
+        with self.assertRaises(ValueError) as exc:e.score_study(self.out)
+        self.assertNotIn('SENSITIVE',str(exc.exception))
+
+    def test_nonfinite_deadline_bounds_are_rejected(self):
+        for high in ('inf','nan'):
+            with self.subTest(high=high),self.assertRaises(ValueError):
+                e.completed_reference(dict(label_status='complete',reviewer_id='clinician-a',
+                    reviewer_role='clinician',expected_rules='R003',min_deadline_days='0',max_deadline_days=high))
+
+    def test_prediction_types_and_foreign_keys_are_not_silently_scored(self):
+        for change in ({'available':'false'},{'action':'false'},{'available':False,'action':True},
+                       {'report_id':'SENSITIVE_SENTINEL'}):
+            with self.subTest(change=change):
+                self.complete_reviews()
+                p=self.out/'predictions.jsonl';rows=[json.loads(x) for x in p.read_text().splitlines()]
+                rows[0].update(change);p.write_text('\n'.join(json.dumps(x) for x in rows)+'\n')
+                with self.assertRaises(ValueError) as exc:e.score_study(self.out)
+                self.assertNotIn('SENSITIVE',str(exc.exception))
+
+    def test_prediction_provenance_must_match_source(self):
+        self.complete_reviews()
+        e.private_json(self.out/'prediction_provenance.json',{'records_sha256':'changed','models':{}})
         with self.assertRaises(ValueError):e.score_study(self.out)

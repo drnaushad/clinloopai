@@ -119,21 +119,32 @@ ANTICOAGULANTS = {"warfarin", "coumadin", "와파린"}
 PSA_THRESHOLD_NG_ML = 4.0
 HBA1C_UNCONTROLLED_PCT = 9.0
 
-# FHIR status → ClinLoop status. Statuses not listed are kept lower-cased.
+# Non-completion status normalisation. Completion is resource-specific below:
+# arriving for a visit, for example, is not evidence that the visit occurred.
 STATUS_MAP = {
-    # results / reports
-    "final": "completed", "amended": "completed", "corrected": "completed",
-    "appended": "completed", "preliminary": "pending", "registered": "pending",
+    "preliminary": "pending", "registered": "pending",
     "partial": "pending",
     # appointments
-    "fulfilled": "completed", "arrived": "completed", "checked-in": "completed",
+    "arrived": "pending", "checked-in": "pending",
     "booked": "scheduled", "pending": "scheduled", "proposed": "scheduled",
     "waitlist": "scheduled", "noshow": "no_show",
     # requests / procedures / communications / encounters
-    "active": "completed", "on-hold": "pending", "in-progress": "pending",
-    "preparation": "planned", "finished": "completed",
-    # imaging studies
-    "available": "completed",
+    "active": "pending", "on-hold": "pending", "in-progress": "pending",
+    "preparation": "planned",
+}
+
+COMPLETION_STATUSES = {
+    "Observation": {"final", "amended", "corrected"},
+    "DiagnosticReport": {"final", "amended", "corrected", "appended"},
+    "Procedure": {"completed"}, "Communication": {"completed"},
+    "Encounter": {"finished"}, "Appointment": {"fulfilled"},
+    "ImagingStudy": {"available"}, "DocumentReference": {"current"},
+    # A request documents an issued order, not that the requested care occurred.
+    "ServiceRequest": {"completed"}, "MedicationRequest": {"active", "completed"},
+}
+REQUEST_EVENT_TYPES = {
+    EventType.COLPOSCOPY_REFERRAL.value, EventType.BIOPSY_ORDER.value,
+    EventType.SPECIALIST_REFERRAL.value, EventType.IMAGING_ORDER.value, EventType.LAB_ORDER.value,
 }
 
 
@@ -212,8 +223,18 @@ def _explicit_event_type(resource: Dict) -> Optional[str]:
 
 
 def _status(resource: Dict) -> str:
-    raw = str(resource.get("status", "completed")).lower()
-    return STATUS_MAP.get(raw, raw)
+    raw = str(resource.get("status") or "").strip().lower()
+    rtype = resource.get("resourceType")
+    if rtype == "Condition":
+        # Condition uses clinicalStatus, not a top-level status. It supplies context.
+        known = {"active", "recurrence", "relapse", "remission", "resolved", "inactive"}
+        return "completed" if _codes(resource.get("clinicalStatus")) & known else "unknown"
+    if raw in COMPLETION_STATUSES.get(rtype, set()):
+        return "completed"
+    if rtype == "ServiceRequest" and raw == "active":
+        return "ordered"
+    return STATUS_MAP.get(raw, raw if raw in {"cancelled", "canceled", "entered-in-error", "not-done",
+                                             "revoked", "stopped", "unknown", "draft"} else "unknown")
 
 
 def _flag_from_interpretation(resource: Dict) -> Optional[str]:
@@ -658,7 +679,8 @@ def _map_service_request(r: Dict) -> List[Tuple[str, str, Dict]]:
     if "colposcopy" in text or "질확대경" in text:
         etype = EventType.COLPOSCOPY_REFERRAL.value
     elif _EUS.search(text):
-        etype = EventType.ENDOSCOPIC_ULTRASOUND.value
+        etype = EventType.IMAGING_ORDER.value
+        details["requested_procedure"] = EventType.ENDOSCOPIC_ULTRASOUND.value
     elif ("biopsy" in text or "aspiration" in text or re.search(r"\bfna\b", text)
           or "조직검사" in text or "세침" in text):
         etype = EventType.BIOPSY_ORDER.value
@@ -1205,6 +1227,7 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
     """
     by_patient: Dict[str, List[Dict]] = defaultdict(list)
     warnings: List[str] = []
+    uncertain_status_count = 0
     patients = _patient_context(bundle_or_resources)
     resources = list(_resources(bundle_or_resources))
     token = _CURRENT_RESOURCES.set(resources)
@@ -1224,7 +1247,7 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
             continue
         pid = _patient_id(r)
         if not pid:
-            warnings.append(f"{rtype}/{rid}: no patient reference; skipped")
+            warnings.append("FHIR resource: no patient reference; skipped")
             continue
         status = _status(r)
         if status == "entered-in-error":
@@ -1232,7 +1255,7 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
         try:
             mapped = mapper(r) if mapper else []
         except Exception as e:      # one malformed resource must not stop every other patient's monitoring
-            warnings.append(f"{rtype}/{rid}: could not be read ({type(e).__name__}); skipped")
+            warnings.append(f"FHIR resource: could not be read ({type(e).__name__}); skipped")
             continue
         if explicit:
             ts = mapped[0][1] if mapped else _first(
@@ -1240,16 +1263,19 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
                 r.get("start"), r.get("performedDateTime"))
             base = mapped[0][2] if mapped else {}
             mapped = [(explicit, ts, {**base, "mapping": [f"explicit extension→{explicit}"]})]
+        if mapped and status == "unknown":
+            # Count only: never echo resource IDs, source status strings or report text.
+            uncertain_status_count += 1
         for etype, ts, details in mapped:
             if not ts:
-                if f"{rtype}/{rid}: no timestamp; skipped" not in warnings:
-                    warnings.append(f"{rtype}/{rid}: no timestamp; skipped")
+                if "FHIR resource: no timestamp; skipped" not in warnings:
+                    warnings.append("FHIR resource: no timestamp; skipped")
                 continue
             try:
                 normalize_timestamp(ts)
             except (ValueError, TypeError):   # "10/01/2026": skipped with a warning, the rest of the feed goes on
-                if f"{rtype}/{rid}: unreadable date '{str(ts)[:30]}'; skipped" not in warnings:
-                    warnings.append(f"{rtype}/{rid}: unreadable date '{str(ts)[:30]}'; skipped")
+                if "FHIR resource: unreadable date; skipped" not in warnings:
+                    warnings.append("FHIR resource: unreadable date; skipped")
                 continue
             # Deterministic id: the same resource yields the same loop key on
             # every ingest, whatever order the bundle lists resources in.
@@ -1260,9 +1286,14 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
                 "event_type": etype,
                 "timestamp": ts,
                 "details": details,
-                "status": status,
+                "status": (("completed" if etype in REQUEST_EVENT_TYPES else "ordered")
+                           if rtype == "ServiceRequest" and status in ("ordered", "completed") else status),
                 "source": f"{rtype}/{rid}",
             })
+
+    if uncertain_status_count:
+        warnings.append(f"{uncertain_status_count} mapped resources have missing or unrecognised status; "
+                        "completion requires human review")
 
     # A feed whose numeric results carry neither an interpretation code nor a reference range
     # cannot raise abnormal-result alerts at all: say so instead of looking reassuringly quiet

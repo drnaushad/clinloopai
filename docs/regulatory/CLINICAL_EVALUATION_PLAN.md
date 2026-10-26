@@ -5,6 +5,17 @@ October 2026. This plan sets out what evidence is needed for the core profile, a
 procedures themselves are in the [study protocol](../STUDY_PROTOCOL.md) and the
 [silent-run runbook](../PILOT_RUNBOOK.md); this plan does not repeat them.
 
+## Current evidence status (2026-10-26)
+
+This remains an unsigned plan. Numerical targets below are research proposals, not approved clinical
+acceptance criteria. Software checks do not complete technical assurance or establish clinical safety.
+The initial proposed validation scope is English radiology report text; the clinical lead and
+statistician must agree the rule subset, population, sample size and decision thresholds before a
+new validation cohort is scored. Code review, independent reference labels, security assessment and
+a prospective silent study remain separate requirements. Public synthetic FHIR connections establish
+transport compatibility only. Reused OpenI reports lack established patient grouping and independent
+reference labels, so they cannot establish patient-independent external accuracy.
+
 ## 1. Claims to be supported
 
 Only these claims will be made, and each needs the evidence named:
@@ -26,7 +37,7 @@ the evidence beneath it. ClinLoop's position, October 2026:
 
 | Level | Question | What answers it | Status |
 | --- | --- | --- | --- |
-| 1. Technical | Does the software do what it was designed to do? | Automated tests, deterministic rules, tamper-evident audit, traceability from each risk control to code and tests | **Done** for the core (tests in CI, `TRACEABILITY.md`) |
+| 1. Technical | Does the software do what it was designed to do? | Automated tests, deterministic rules, tamper-evident audit, traceability from each risk control to code and tests | Software checks available; clinical source review and deployment assurance pending |
 | 2. External validity | Is it right on real records it has never seen? | Stage 1: blinded dual chart review (1A on MIMIC, [`STUDY_PROTOCOL_STAGE1A.md`](../STUDY_PROTOCOL_STAGE1A.md); 1B in a Korean hospital) | **Not started.** Tools ready; needs data access, reviewers, ethics |
 | 3. Decision impact | On live data, are its alerts true, wanted and manageable? | Stage 2 silent run: PPV, burden, what usual care misses ([`PILOT_RUNBOOK.md`](../PILOT_RUNBOOK.md)) | **Not started.** Tools ready |
 | 4. Clinical impact | Do patients get their follow-up sooner, without harm? | Stage 3 stepped-wedge trial, primary outcome time to completion of overdue follow-up, measured from the audit log (`outcomes.py`) | **Not started** |

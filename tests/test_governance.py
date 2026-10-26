@@ -76,6 +76,20 @@ class TestRuleSignoff(unittest.TestCase):
         changed = dataclasses.replace(RULE, deadline_days=RULE.deadline_days + 1)
         self.assertNotEqual(governance.rule_fingerprint(RULE), governance.rule_fingerprint(changed))
 
+    def test_shared_completion_logic_invalidates_existing_approval(self):
+        rule = next(r for r in OBLIGATION_RULES if r.rule_id == "R017")
+        fp = governance.rule_fingerprint(rule)
+        self.store.add_rule_review(rule.rule_id, fp, "approve", "synthetic.reviewer", "clinician", "Research")
+        self.assertEqual(governance.all_rule_statuses(self.store)[rule.rule_id]["status"], "approved")
+        original = governance._cached
+
+        def changed(kind, path, load):
+            return "changed-completion-logic" if path.endswith("fhir_ingest.py") else original(kind, path, load)
+
+        with mock.patch.object(governance, "_cached", side_effect=changed):
+            self.assertNotEqual(governance.rule_fingerprint(rule), fp)
+            self.assertEqual(governance.all_rule_statuses(self.store)[rule.rule_id]["status"], "stale")
+
     def test_rejection_needs_a_reason_and_specialty_is_required(self):
         fp = governance.rule_fingerprint(RULE)
         with self.assertRaises(WorkflowError):

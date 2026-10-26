@@ -9,6 +9,7 @@ import csv
 import hashlib
 import json
 import logging
+import math
 import os
 import random
 import time
@@ -195,7 +196,8 @@ def read_sheet(path: Path) -> Dict:
 def completed_reference(row: Dict) -> Optional[Dict]:
     if str(row.get('label_status', '')).strip().lower() != 'complete':
         return None
-    if not row.get('reviewer_id') or row.get('reviewer_role', '').strip().lower() != 'clinician':
+    reviewer = str(row.get('reviewer_id') or '').strip().casefold()
+    if not reviewer or row.get('reviewer_role', '').strip().lower() != 'clinician':
         raise ValueError('Completed references require a declared clinician reviewer')
     if not row.get('expected_rules', '').strip():
         raise ValueError('Explicit rule IDs or NONE required')
@@ -206,9 +208,9 @@ def completed_reference(row: Dict) -> Optional[Dict]:
     if bool(low) != bool(high):
         raise ValueError('Both deadline bounds are required')
     bounds = (float(low), float(high)) if low else None
-    if bounds and not 0 <= bounds[0] <= bounds[1]:
+    if bounds and (not all(math.isfinite(v) for v in bounds) or not 0 <= bounds[0] <= bounds[1]):
         raise ValueError('Invalid deadline interval')
-    return {'rules': rules, 'bounds': bounds, 'reviewer': row['reviewer_id']}
+    return {'rules': rules, 'bounds': bounds, 'reviewer': reviewer}
 
 
 def metrics(pairs: List) -> Dict:
@@ -232,6 +234,11 @@ def score_study(out: Path) -> Dict:
     sheets = [read_sheet(out/name) for name in ('reviewer_1.csv','reviewer_2.csv','adjudication.csv')]
     if any(set(sheet) != {r['report_id'] for r in records} for sheet in sheets):
         raise ValueError('Review sheets do not match the sampled records')
+    # Reference labels must describe the exact frozen report/context used for inference.
+    source_fields = ('study', 'conclusion', 'report_date', 'age', 'sex', 'smoking', 'cancer')
+    if any(str(sheet[r['report_id']].get(k) or '') != str(r.get(k) or '')
+           for sheet in sheets for r in records for k in source_fields):
+        raise ValueError('Review source or context changed; prepare a new study')
     refs, unresolved = {}, 0
     for record in records:
         rid = record['report_id']
@@ -250,12 +257,20 @@ def score_study(out: Path) -> Dict:
     if unresolved:
         raise ValueError('Reference review incomplete: accuracy is not computed')
     predictions = {}
+    record_ids = {r['report_id'] for r in records}
     for line in (out/'predictions.jsonl').read_text().splitlines():
         r = json.loads(line); key = (r['report_id'],r['system'])
+        if r['report_id'] not in record_ids or type(r.get('available')) is not bool:
+            raise ValueError('Prediction keys or availability invalid')
+        if (r['available'] and type(r.get('action')) is not bool) or \
+                (not r['available'] and r.get('action') is not None):
+            raise ValueError('Prediction action must be binary or an explicit abstention')
         if key in predictions:
             raise ValueError('Duplicate predictions')
         predictions[key] = r
     provenance = json.loads((out/'prediction_provenance.json').read_text())
+    if provenance.get('records_sha256') != manifest['records_sha256']:
+        raise ValueError('Prediction provenance does not match frozen reports')
     systems = ['rules'] + list(provenance['models'])
     if any(s not in systems for _, s in predictions):
         raise ValueError('Unexpected prediction system')

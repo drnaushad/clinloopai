@@ -5,6 +5,89 @@ does about each need, the design decisions behind it, and what is still missing.
 document for the team, the hospital's IT and privacy officers and its regulatory adviser. It is not
 legal or regulatory advice.
 
+## 2026-10-26 integrated completion candidate — local, not published
+
+The previously tested clinical corrections and research comparators are combined with the
+published shared-header interface in a separate checkout. The existing shared server, production
+registry, website and GPU configuration are unchanged. This is software integration, not clinical
+approval. No clinician signatures, validation labels or hospital approvals have been invented.
+
+- Structured trajectories: compare the deterministic engine with fitted logistic regression,
+  gradient-boosted trees and a small `(32, 16)` neural network on the same seed-42 group holdout.
+  Training preprocessing sees training records only; no model weights or patient risk service are served.
+- Unstructured text: the existing application-transport evaluator now uses 24 developer-authored
+  English/Korean synthetic fixtures across six text categories. It measures strict source-sentence,
+  assertion, follow-up and timing agreement; duplicate/extra findings count against precision, and
+  rejected/unrun cases stay in the recall denominator. Breakdowns do not imply specialty validation.
+- Checkpoint identity: the evaluator requires an installed checkpoint digest before inference and
+  checks it again at the end. Changed identity withholds comparison metrics. This cannot attest a
+  malicious server or detect every intervening replacement that is reverted before the final check.
+- Reference review: the local dataset scorer rejects modified source context, malformed prediction
+  types/foreign keys, mismatched input provenance and non-finite deadline bounds. Reviewer names are
+  normalized to prevent trivial duplicate identities; identity strings are not licence verification.
+- Clinical changes retain the review requirements below. Images, OCR, waveforms, new languages,
+  fine-tuning and graph neural networks need separate datasets and evaluations. The small event
+  neural network is not an image model, LLM or graph neural network.
+
+**Local runtime finding (2026-10-26):** the current GPU query returned an NVIDIA driver/NVML
+version mismatch. Ollama answered its metadata endpoints. The initial tags entries listed completion only, but
+the detailed `/api/show` check declared completion and vision for both installed MedGemma
+checkpoints; EXAONE declared completion. No inference, GPU repair, driver install, reboot or
+shared-service restart was attempted. Declared capability is not measured image accuracy.
+
+To finish the clinical release, the responsible clinicians must review the exact clinical diff,
+validate hospital status mappings and source deadlines, then approve new rule fingerprints.
+Before real-patient use, establish independently annotated report and longitudinal test cohorts,
+pre-specified performance/uncertainty targets and subgroup analysis, hospital privacy/security
+and applicable regulatory assessment, then a supervised silent pilot. Restricted datasets still
+require approved access. Synthetic fixtures and FHIR sandbox connectivity cannot substitute.
+
+## 2026-10-25 safety correction — local clinical draft, not released
+
+The code candidate addresses confirmed technical failures, not every possible medical limitation.
+All changed clinical logic must be reviewed line by line under `AGENTS.md` before publication or use.
+No patient records, model downloads, shared services or credentials were changed for this correction.
+
+| Confirmed gap | Candidate behavior | Review and operational consequence |
+| --- | --- | --- |
+| Missing/unmapped follow-up status could close a loop | Affirmative completion allowlist, resource-specific FHIR mapping, unknown-status count warning; unknown direct events remain open | Validate every hospital interface's status vocabulary. Reevaluate prior engine-resolved tasks with uncertain evidence; do not assume a code update alone repairs persisted records. |
+| Arrival/check-in counted as a completed visit | Only fulfilled appointments satisfy the tracked visit; orders stay distinct from performed procedures | Validate what the source system means by fulfilled. A fulfilled appointment is not evidence that every downstream result was reviewed. |
+| EUS request mapped as a performed endoscopic ultrasound | Request is an imaging order, regardless of active/completed request status | A performed procedure needs its own evidence. Review R042 matching. |
+| Scheduling grace silently extended clinical deadlines | No extra grace in report, guideline or clinician-note clocks; whole report calendar months/years and selected calendar-based guideline intervals preserve anniversaries | Some formerly on-time tasks become late. Confirm local scheduling policy separately; it must not alter or conceal the source deadline. Fractional months and note-reader month intervals still use approximate day conversion. |
+| Rule approval survived a change in shared matching/ingestion code | Rule fingerprints now bind all shared decision sources | Existing approvals become stale. Re-review and approve the candidate fingerprint; do not copy old approvals. |
+| "All follow-ups completed" could imply completed care | Closed output says only the tracked obligation is satisfied; English/Korean basis states the scope | Referral, order, performed study, result review, patient communication and overall care are different milestones. The candidate does not add unvalidated care-pathway rules. |
+| HSIL example asserted a universal mandatory biopsy deadline | Risk-assessment context and proposed local 30-day tracking target are explicit | A clinician must determine the correct ASCCP risk-based pathway; no treatment algorithm was added. |
+
+Before any rollout: review the clinical diff, validate source mappings, run a shadow reevaluation against
+a backed-up local registry, review newly reopened/late tasks with the responsible clinicians, then
+approve the new fingerprints. No automatic production migration or reingestion was executed.
+
+Still required outside this software correction: independently annotated, patient-separated testing
+for each intended report type/language/model; a clinician-led silent pilot; hospital privacy/security
+and regulatory assessment; approved dataset access; and demonstrated ownership, handover and escalation
+in the actual hospital. Sandbox connectivity, synthetic test passes and local LLM availability do not
+satisfy those requirements. PDF/OCR, medical images and waveform interpretation need their own validated
+workflows. The public site remains synthetic-only.
+
+FHIR mapping references: [event status](https://hl7.org/fhir/R4/valueset-event-status.html),
+[appointment status](https://hl7.org/fhir/R4/valueset-appointmentstatus.html),
+[request status](https://hl7.org/fhir/R4/valueset-request-status.html).
+Cervical management context: [ASCCP expedited-treatment guidance](https://www.asccp.org/clinical-practice/practice-pearls/tips-for-best-practice-on-role-of-expedited-treatment/).
+
+## 2026-10-25 research ML/neural extension — local draft
+
+The benchmark now fits logistic-regression, gradient-boosted-tree and two-hidden-layer neural comparators and tests
+them with the deterministic engine on a shared synthetic patient/duplicate-group holdout. Legacy
+reference-label EMR/LLM simulators are excluded from measured comparisons. This adds an offline research
+capability, not a clinical prediction service or a new model in the public model selector. It does not
+establish diagnostic or report-reading accuracy; the methods solve the small synthetic task easily.
+
+The second reader now preserves source context, marks repeated/negated quotes for review, suppresses
+free-text model medical rationales from verified evidence, and invalidates cached reads after prompt,
+verifier-code or configured-name changes. These changes require clinician review before any clinical use.
+No source-context check proves a model interpretation correct. Same-name checkpoint replacement and
+real clinical validation remain separate requirements. No GPU workload or shared service was changed.
+
 ## 1. Intended use (draft for review)
 
 The full statement, with users, inputs, outputs and limits, is in
@@ -157,7 +240,7 @@ edit the range, regenerate the lock (command at the top of the file), run the te
 
 | Gap | Why it matters | Suggested step |
 | --- | --- | --- |
-| Vendor sandbox run | SMART login is tested against a stub that follows the specification, not yet a vendor's server | Run `fhir_sync --check`, then a sync, against Medplum or the SMART Health IT launcher with synthetic patients (`docs/FHIR_CONNECTION.md`) |
+| Sandbox integration | Public SMART browser authorization and read-only HAPI synthetic source preview passed on 2026-10-26. Backend HAPI tests exposed cached history omitting new follow-ups; the no-cache correction is a tested local draft | Review/deploy the transport correction separately, repeat incremental ingestion and validate hospital-specific mapping; browser connectivity does not establish analysis accuracy |
 | Vendor Bulk FHIR run | Bulk export is tested against a stub that follows the Bulk Data specification, not yet Epic | Group-level export from the Epic sandbox with synthetic patients |
 | Hospital identity provider run | Single sign-on is tested against a stub provider in a real browser, not yet the hospital's Keycloak / Entra ID / ADFS | Register ClinLoop as a public client (PKCE) with `https://<server>/worklist.html` as its redirect address, map groups to roles, sign in once per role |
 | Monitor thresholds | The default volume and dismissal thresholds are reasonable guesses, not tuned on real alert patterns | Run with `CLINLOOP_MONITOR=0` (report only) during the shadow pilot and set thresholds from what is seen |

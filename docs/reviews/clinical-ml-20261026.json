@@ -1,0 +1,401 @@
+{
+  "format_version": 1,
+  "base_commit": "aadad952cd68715e24735f0412b3034c393ed45b",
+  "files": [
+    {
+      "file": "js/app.js",
+      "sha256": "411ed63684e428ac5427e8a0bcd0d7b8e033a76d553df919d3620a1998e1b67b",
+      "changed_hunks": [
+        "@@ -628 +628 @@ class ClinLoopApp {",
+        "@@ -1955,10 +1955,3 @@ class ClinLoopApp {",
+        "@@ -1974,7 +1966,0 @@ class ClinLoopApp {",
+        "@@ -1987,2 +1973,2 @@ class ClinLoopApp {",
+        "@@ -1990,7 +1975,0 @@ class ClinLoopApp {",
+        "@@ -2003 +1982 @@ class ClinLoopApp {",
+        "@@ -2006,7 +1984,0 @@ class ClinLoopApp {",
+        "@@ -2020 +1992 @@ class ClinLoopApp {",
+        "@@ -2022,7 +1993,0 @@ class ClinLoopApp {",
+        "@@ -2038,10 +2003,3 @@ class ClinLoopApp {",
+        "@@ -2053 +2011 @@ class ClinLoopApp {",
+        "@@ -2057,7 +2014,0 @@ class ClinLoopApp {",
+        "@@ -2070,2 +2021,2 @@ class ClinLoopApp {",
+        "@@ -2073,7 +2023,0 @@ class ClinLoopApp {",
+        "@@ -2086 +2030 @@ class ClinLoopApp {",
+        "@@ -2089,7 +2032,0 @@ class ClinLoopApp {",
+        "@@ -2103 +2040 @@ class ClinLoopApp {",
+        "@@ -2105,7 +2041,0 @@ class ClinLoopApp {",
+        "@@ -2117,3 +2047,3 @@ class ClinLoopApp {",
+        "@@ -2122,9 +2052,2 @@ class ClinLoopApp {",
+        "@@ -2145,3 +2068,3 @@ class ClinLoopApp {"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "scripts/build_engine_manifest.py",
+      "sha256": "dddc6871516df10d65d1c6c6371400b6fc57d693146516c4bfbcb4febae3c132",
+      "changed_hunks": [
+        "@@ -27,2 +27,2 @@ DATA_FILES = [\"src/clinloop_engine/config/critical_findings.json\"]"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/baselines.py",
+      "sha256": "2cf84e9b133a8441051d513dbf0df58410e362b2f547b7eb93dfe9c898416f2b",
+      "changed_hunks": [
+        "@@ -14 +14,4 @@ Implements two baselines for benchmarking against ClinLoop AI:",
+        "@@ -42 +45 @@ class EMRInboxBaseline:",
+        "@@ -154 +157 @@ class LLMBaseline:"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/basis.py",
+      "sha256": "721706e0fa929dcb99c743b2fe32dd8195dfb9afb4d19a02a2df3be2697e3453",
+      "changed_hunks": [
+        "@@ -146,0 +147,12 @@ def _window_ko(days: float) -> str:",
+        "@@ -177,0 +190,2 @@ def build_ko(trigger, rule, deadline: Optional[datetime], deadline_days: float,",
+        "@@ -179 +193 @@ def build_ko(trigger, rule, deadline: Optional[datetime], deadline_days: float,",
+        "@@ -191,0 +206,2 @@ def build_ko(trigger, rule, deadline: Optional[datetime], deadline_days: float,",
+        "@@ -218,0 +235,2 @@ def build(trigger, rule, deadline: Optional[datetime], window: str, followups, s",
+        "@@ -232,0 +251,2 @@ def build(trigger, rule, deadline: Optional[datetime], window: str, followups, s"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/benchmark.py",
+      "sha256": "02a3868c2a6d5bf8ae660a788253ba2a3fa302b2a0a243ecd3e8e047da7805fe",
+      "changed_hunks": [
+        "@@ -4 +4 @@ benchmark.py — ClinLoop AI Benchmarking Suite",
+        "@@ -10,0 +11,2 @@ import os",
+        "@@ -15 +17 @@ import pandas as pd",
+        "@@ -18 +20,2 @@ from .loop_detector import ClinLoopDetector",
+        "@@ -28 +31 @@ class BenchmarkSuite:",
+        "@@ -30,2 +32,0 @@ class BenchmarkSuite:",
+        "@@ -79,38 +80,47 @@ class BenchmarkSuite:",
+        "@@ -118,6 +128,4 @@ class BenchmarkSuite:",
+        "@@ -125,13 +133,5 @@ class BenchmarkSuite:",
+        "@@ -139,3 +139,2 @@ class BenchmarkSuite:",
+        "@@ -143 +142,19 @@ class BenchmarkSuite:",
+        "@@ -145 +161,0 @@ class BenchmarkSuite:",
+        "@@ -153 +169 @@ class BenchmarkSuite:"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/clinical_ontology.py",
+      "sha256": "9cc980b532ea494bbaec440114b4ceb5c58972f3bd5192112bff3022396085e1",
+      "changed_hunks": [
+        "@@ -205 +205 @@ OBLIGATION_RULES: List[ObligationRule] = [",
+        "@@ -215,0 +216,3 @@ OBLIGATION_RULES: List[ObligationRule] = [",
+        "@@ -1298,2 +1300,0 @@ def get_deadline_days(rule: ObligationRule, details: Dict) -> float:",
+        "@@ -1303 +1304 @@ def get_deadline_days(rule: ObligationRule, details: Dict) -> float:",
+        "@@ -1310,9 +1310,0 @@ RADIOLOGIST_REC_RULES = {\"R030\", \"R031\", \"R032\", \"R033\"}",
+        "@@ -1338,4 +1330,7 @@ def is_fulfilling_status(status: Optional[str]) -> bool:",
+        "@@ -1349 +1344 @@ def format_window(days: float) -> str:"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/fhir_ingest.py",
+      "sha256": "4b40e5985b86699fddae49b90c3daefcb24d4062ac7e8726230d956d65e76e5e",
+      "changed_hunks": [
+        "@@ -122 +122,2 @@ HBA1C_UNCONTROLLED_PCT = 9.0",
+        "@@ -124,3 +125 @@ STATUS_MAP = {",
+        "@@ -129 +128 @@ STATUS_MAP = {",
+        "@@ -133,4 +132,16 @@ STATUS_MAP = {",
+        "@@ -215,2 +226,12 @@ def _status(resource: Dict) -> str:",
+        "@@ -661 +682,2 @@ def _map_service_request(r: Dict) -> List[Tuple[str, str, Dict]]:",
+        "@@ -1207,0 +1230 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1227 +1250 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1235 +1258 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1242,0 +1266,3 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1245,2 +1271,2 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1251,2 +1277,2 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1263 +1289,2 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1266,0 +1294,4 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/fhir_sync.py",
+      "sha256": "54436e0668ee94149d8a60a77a2d785e5c59087afa7cc7a328ea11023c62e9a9",
+      "changed_hunks": [
+        "@@ -90 +90,2 @@ class FHIRClient:"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/governance.py",
+      "sha256": "b0745bda7f4b7b542738b876d8e58dcbb00279b9a3281bfa90875c2d1221f26b",
+      "changed_hunks": [
+        "@@ -69 +69 @@ def rule_fingerprint(rule: ObligationRule) -> str:",
+        "@@ -80,0 +81,7 @@ def rule_fingerprint(rule: ObligationRule) -> str:",
+        "@@ -87 +94 @@ _DECISION_SOURCES = (\"clinical_ontology.py\", \"fhir_ingest.py\", \"radiology.py\", \""
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/loop_detector.py",
+      "sha256": "bab469677437d14f50dc6c53f92678c9de6116a87b0aa311fd67bf6ce5612734",
+      "changed_hunks": [
+        "@@ -171 +171 @@ class ClinLoopDetector:"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/model_registry.py",
+      "sha256": "82a02a57a8815aafa93a1e390b0993353e9776e727cc54c9aa16fc9b395944b9",
+      "changed_hunks": [
+        "@@ -18,0 +19 @@ import os",
+        "@@ -72,0 +74,28 @@ def _capabilities(base: str, name: str) -> Optional[List[str]]:",
+        "@@ -100,0 +130 @@ def registry(base: Optional[str] = None) -> Dict[str, Any]:",
+        "@@ -101,0 +132 @@ def registry(base: Optional[str] = None) -> Dict[str, Any]:"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/note_reader.py",
+      "sha256": "1af5b5013a3fcf43f46837c76e2b6b484b65d610ddc568bf14fe19278c87e634",
+      "changed_hunks": [
+        "@@ -30 +29,0 @@ from typing import Any, Dict, List, Optional, Tuple",
+        "@@ -351 +350 @@ def _plan(kind: str, target: Optional[str], s: str, extra: Optional[Dict[str, An"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/radiology.py",
+      "sha256": "854f0f0db5272d47925ac6bd07e3bd90918d69d456d4e3357a8f1d4b68d0dfa3",
+      "changed_hunks": [
+        "@@ -26,0 +27 @@ loop exists, or why it does not.",
+        "@@ -34 +35 @@ from typing import Any, Dict, List, Optional, Tuple",
+        "@@ -40,0 +42,15 @@ YEAR = 365.25",
+        "@@ -719 +735 @@ def _extract_recommendation(text: str, code_text: str = \"\") -> Optional[Dict[str",
+        "@@ -723 +739,2 @@ def _extract_recommendation(text: str, code_text: str = \"\") -> Optional[Dict[str",
+        "@@ -739 +756,3 @@ def _extract_recommendation(text: str, code_text: str = \"\") -> Optional[Dict[str",
+        "@@ -745 +764 @@ def _extract_recommendation(text: str, code_text: str = \"\") -> Optional[Dict[str",
+        "@@ -749 +768,3 @@ def _extract_recommendation(text: str, code_text: str = \"\") -> Optional[Dict[str",
+        "@@ -1047,0 +1069,3 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,",
+        "@@ -1049 +1073 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,",
+        "@@ -1225,2 +1249,2 @@ def fleischner(n: Dict[str, Any], ctx: Dict[str, Any], prior: List[Dict[str, Any",
+        "@@ -1244 +1268 @@ def _fleischner_stepped(n, size, typ, multiple, risk, baseline, when, label, not",
+        "@@ -1246 +1270 @@ def _fleischner_stepped(n, size, typ, multiple, risk, baseline, when, label, not",
+        "@@ -1248 +1272 @@ def _fleischner_stepped(n, size, typ, multiple, risk, baseline, when, label, not",
+        "@@ -1256 +1280 @@ def _fleischner_stepped(n, size, typ, multiple, risk, baseline, when, label, not",
+        "@@ -1267 +1291 @@ def _fleischner_stepped(n, size, typ, multiple, risk, baseline, when, label, not",
+        "@@ -1269,2 +1293,2 @@ def _fleischner_stepped(n, size, typ, multiple, risk, baseline, when, label, not",
+        "@@ -1279,3 +1303,3 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,",
+        "@@ -1300 +1324 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,",
+        "@@ -1307 +1331 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,",
+        "@@ -1321 +1345 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,",
+        "@@ -1323,2 +1347,2 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,",
+        "@@ -1378 +1402 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,",
+        "@@ -1431,0 +1456 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -",
+        "@@ -1455 +1480,10 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -",
+        "@@ -1479,2 +1513,9 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -",
+        "@@ -1532,0 +1574,2 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/second_reader.py",
+      "sha256": "4bbe46b7780d405d701345579bbc2a74ecc29a291613bad18dca05d24f3eb29f",
+      "changed_hunks": [
+        "@@ -27 +27 @@ Safeguards:",
+        "@@ -72 +72,2 @@ SYSTEM_PROMPT = (",
+        "@@ -134,0 +136,8 @@ def _norm(text: str) -> str:",
+        "@@ -146,0 +156,5 @@ def local_model() -> Optional[Callable[[str, str], Dict[str, Any]]]:",
+        "@@ -148,0 +163,3 @@ def local_model() -> Optional[Callable[[str, str], Dict[str, Any]]]:",
+        "@@ -151,0 +169,15 @@ def local_model() -> Optional[Callable[[str, str], Dict[str, Any]]]:",
+        "@@ -172,0 +205 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],",
+        "@@ -186,0 +220,18 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],",
+        "@@ -188 +239,4 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],",
+        "@@ -190 +244,2 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],",
+        "@@ -261,5 +316 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],",
+        "@@ -268 +319 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],",
+        "@@ -270,0 +322,4 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],",
+        "@@ -280 +335,12 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],",
+        "@@ -286 +352,4 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],",
+        "@@ -303 +372,2 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/temporal_hypergraph.py",
+      "sha256": "936e5ddb407617832f2bdc1f6332cdd96c3875340f71280324a81071772a8869",
+      "changed_hunks": [
+        "@@ -101 +101 @@ class ClinicalNode:",
+        "@@ -232 +232 @@ class DynamicTemporalHypergraph:",
+        "@@ -459 +459 @@ class DynamicTemporalHypergraph:"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/visualizer.py",
+      "sha256": "23a931498bd518e95c86e7dade97696b8529fd14fed52dc03ab1db3c7a99ae23",
+      "changed_hunks": [
+        "@@ -20,2 +20,3 @@ COLORS = {",
+        "@@ -48 +49 @@ class Visualizer:",
+        "@@ -72 +73 @@ class Visualizer:",
+        "@@ -91 +92 @@ class Visualizer:",
+        "@@ -95 +96 @@ class Visualizer:",
+        "@@ -105 +106 @@ class Visualizer:",
+        "@@ -125,0 +127,2 @@ class Visualizer:",
+        "@@ -130 +133 @@ class Visualizer:",
+        "@@ -133,3 +136,3 @@ class Visualizer:"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/run_benchmark.py",
+      "sha256": "f7912e2dce6f9f4275be9c2163a42cecbd854ed1b1f113b4a9ab3e9d3f7684f8",
+      "changed_hunks": [
+        "@@ -7,2 +7,2 @@ Executes the full pipeline:",
+        "@@ -24 +24 @@ def main():",
+        "@@ -38 +38 @@ def main():",
+        "@@ -47 +47 @@ def main():",
+        "@@ -54 +54 @@ def main():",
+        "@@ -55,0 +56 @@ def main():"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/validation/dataset_evaluation.py",
+      "sha256": "5b56e5ec57f2d21585b945b2c75dcfb227c9138ca1de81281eb0508013bc72a5",
+      "changed_hunks": [
+        "@@ -11,0 +12 @@ import logging",
+        "@@ -198 +199,2 @@ def completed_reference(row: Dict) -> Optional[Dict]:",
+        "@@ -209 +211 @@ def completed_reference(row: Dict) -> Optional[Dict]:",
+        "@@ -211 +213 @@ def completed_reference(row: Dict) -> Optional[Dict]:",
+        "@@ -234,0 +237,5 @@ def score_study(out: Path) -> Dict:",
+        "@@ -252,0 +260 @@ def score_study(out: Path) -> Dict:",
+        "@@ -254,0 +263,5 @@ def score_study(out: Path) -> Dict:",
+        "@@ -258,0 +272,2 @@ def score_study(out: Path) -> Dict:"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/validation/learned_baselines.py",
+      "sha256": "dbbb4fd776724cd9b7992e2e052ef2b8cd41967b644e866b7315b9c03c72706a",
+      "changed_hunks": [
+        "new file: review every line"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    }
+  ],
+  "software_tests_do_not_approve_clinical_use": true,
+  "runtime_rule_signoffs_created": false
+}

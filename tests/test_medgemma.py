@@ -17,9 +17,11 @@ from src.clinloop_engine.imaging_ai import VisionLanguageModel  # noqa: E402
 
 
 def _tags(*names):
-    resp = mock.Mock(status_code=200)
-    resp.json.return_value = {"models": [{"name": n} for n in names]}
-    return mock.patch.object(local_llm_engine, "_ollama_json", return_value=resp.json.return_value)
+    def transport(method, path, payload=None, **kwargs):
+        if path == "/api/show":
+            return {"capabilities": ["completion"]}
+        return {"models": [{"name": n, "digest": "a" * 64} for n in names]}
+    return mock.patch.object(local_llm_engine, "_ollama_json", side_effect=transport)
 
 
 def _clean_env(**extra):

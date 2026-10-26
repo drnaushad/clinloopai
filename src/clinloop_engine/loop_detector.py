@@ -168,7 +168,7 @@ class ClinLoopDetector:
                 else:
                     missing_step = f"Completed late: follow-up came after the {format_window(he.deadline_days)} deadline"
             else:
-                missing_step = "All follow-ups completed"
+                missing_step = "Tracked obligation satisfied; overall care completion is not established"
 
             detection = LoopDetection(
                 detection_id=self._next_detection_id(),

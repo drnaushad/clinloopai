@@ -24,6 +24,7 @@ a human-readable note into the event's mapping, so a reviewer can see why a
 loop exists, or why it does not.
 """
 
+import calendar
 import hashlib
 import json
 import os
@@ -31,12 +32,27 @@ import re
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
-from .clinical_ontology import EventType, FLEISCHNER_LARGE_NODULE_DAYS, radiology_grace_days
+from .clinical_ontology import EventType, FLEISCHNER_LARGE_NODULE_DAYS
 from .report_text import affirmed, first_affirmed, not_negated, previous_sentence, sentence, span
 from .safety_clock import normalize_timestamp
 
 MONTH = 30.44
 YEAR = 365.25
+
+
+def _calendar_due(when: datetime, months: int) -> datetime:
+    """Same local clock time after whole calendar months, clamping month ends."""
+    year, month0 = divmod(when.year * 12 + when.month - 1 + months, 12)
+    return when.replace(year=year, month=month0 + 1,
+                        day=min(when.day, calendar.monthrange(year, month0 + 1)[1]))
+
+
+def _nominal_calendar_days(days: float, when: datetime) -> float:
+    """Convert known month-based guideline intervals at their actual anchor date."""
+    for months in (6, 12, 24):
+        if abs(days - months * MONTH) < 0.01:
+            return (_calendar_due(when, months) - when).total_seconds() / 86400
+    return days
 
 # ── Anatomy: body regions and organs ─────────────────────────────────────────
 #
@@ -716,11 +732,12 @@ def _extract_recommendation(text: str, code_text: str = "") -> Optional[Dict[str
     A recommendation that names a modality but no interval gets a 30-day default
     (``recommended_interval_stated`` False), so "CT for further evaluation" is not lost.
     """
-    def result(m, modality, days, stated):
+    def result(m, modality, days, stated, calendar_months=None):
         if days is not None and not (0 < days <= MAX_REC_INTERVAL_DAYS):
             return None       # "in 0 months" or "in 99999 years": not a usable interval
         return {"recommended_modality": modality, "recommended_interval_days": days,
-                "recommended_interval_stated": stated, "regions": _rec_regions(text, m, code_text),
+                "recommended_interval_stated": stated, "recommended_calendar_months": calendar_months,
+                "regions": _rec_regions(text, m, code_text),
                 "evidence_span": span(text, m)}
 
     for i, pattern in enumerate(_REC_PATTERNS):
@@ -736,17 +753,21 @@ def _extract_recommendation(text: str, code_text: str = "") -> Optional[Dict[str
             number = float(_WORD_NUM.get(value.lower(), value)) if value else None
             if modality and number is not None:
                 # An implausible interval ("in 0 months") is not replaced by a guessed default
-                return result(m, modality, round(number * _UNIT_DAYS[m.group("unit").lower().rstrip("s")], 1), True)
+                unit = m.group("unit").lower().rstrip("s")
+                months = number * (12 if unit in ("year", "yr") else 1) if unit in ("month", "mo", "year", "yr") else None
+                return result(m, modality, round(number * _UNIT_DAYS[unit], 1), True, months)
     for m in _REC_ANNUAL.finditer(text):
         s = sentence(text, m.start(), m.end())
         if _usable_rec(text, m) and (_REC_CUE.search(s) or s.strip().lower().startswith(m.group(0).lower()[:8])):
             modality = _norm_modality(next(g for g in m.groups() if g))
             if modality:
-                return result(m, modality, YEAR, True)
+                return result(m, modality, YEAR, True, 12)
     for m in _REC_KO.finditer(text):
         if affirmed(text, m) and not _HEDGE.search(sentence(text, m.start(), m.end())):
             number = float(m.group(2) or m.group(1))
-            return result(m, _norm_modality(m.group(4)), round(number * _UNIT_DAYS[m.group(3)], 1), True)
+            unit = m.group(3)
+            months = number * (12 if unit == "년" else 1) if unit in ("개월", "년") else None
+            return result(m, _norm_modality(m.group(4)), round(number * _UNIT_DAYS[unit], 1), True, months)
     for pattern in _REC_NO_INTERVAL + [_REC_KO_NO_INTERVAL]:
         for m in pattern.finditer(text):
             modality = _norm_modality(next(g for g in m.groups() if g))
@@ -1045,8 +1066,11 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
         mapping.append("BI-RADS 0: recall for additional breast imaging (ACR BI-RADS) → 30 days")
     if rec and rec["recommended_modality"]:
         rad["recommendation"] = rec
+        months = rec.get("recommended_calendar_months")
+        interval = (f"{months:g} calendar months" if months is not None and float(months).is_integer()
+                    else f"{rec['recommended_interval_days']:g} days")
         mapping.append(f"radiologist recommends {rec['recommended_modality']} in "
-                       f"{rec['recommended_interval_days']:g} days"
+                       f"{interval}"
                        + ("" if rec["recommended_interval_stated"] else " (no interval stated: 30-day default)")
                        + (f" [{', '.join(rec['regions'])}]" if rec["regions"] else ""))
     biopsy = (_biopsy_recommendation(after_withdrawal) if after_withdrawal else None) or \
@@ -1222,8 +1246,8 @@ def fleischner(n: Dict[str, Any], ctx: Dict[str, Any], prior: List[Dict[str, Any
             days, rng = FLEISCHNER_LARGE_NODULE_DAYS, "3 months (solid component ≥6 mm: highly suspicious)"
         else:
             days, rng = 6 * MONTH, "3–6 months"
-    days += radiology_grace_days(days)
-    notes.append(f"{label}: CT at {rng} → due within {days:.0f} days (incl. grace)")
+    days = _nominal_calendar_days(days, when)
+    notes.append(f"{label}: CT at {rng} → due within {days:.0f} days (no added scheduling grace)")
     return {"action": "followup", "days": round(days, 1), "notes": notes, "review": review}
 
 
@@ -1241,11 +1265,11 @@ def _fleischner_stepped(n, size, typ, multiple, risk, baseline, when, label, not
             notes.append(f"stable {label}, low risk: optional CT at 18–24 months (not tracked)")
             return {"action": "none", "days": None, "notes": notes, "review": None}
         if size > 8 and not multiple and elapsed is not None and elapsed < 9:
-            target, step = baseline + timedelta(days=12 * MONTH), "next CT at ~12 months (proposed)"
+            target, step = _calendar_due(baseline, 12), "next CT at ~12 months (proposed)"
         elif baseline:
-            target, step = baseline + timedelta(days=24 * MONTH), "next CT at 18–24 months"
+            target, step = _calendar_due(baseline, 24), "next CT at 18–24 months"
         else:
-            target, step = when + timedelta(days=12 * MONTH), "next CT within 12 months (baseline unknown)"
+            target, step = _calendar_due(when, 12), "next CT within 12 months (baseline unknown)"
     elif typ == "ggn":
         if size < 6:
             notes.append(f"stable {label}: CT at 2 and 4 years may be considered (optional, not tracked)")
@@ -1253,7 +1277,7 @@ def _fleischner_stepped(n, size, typ, multiple, risk, baseline, when, label, not
         if elapsed is not None and elapsed >= 59:
             notes.append(f"stable {label}, {since}: 5 years of stability → surveillance complete")
             return {"action": "none", "days": None, "notes": notes, "review": None}
-        target, step = when + timedelta(days=24 * MONTH), "CT every 2 years until 5 years"
+        target, step = _calendar_due(when, 24), "CT every 2 years until 5 years"
     else:
         if (n.get("solid_component_mm") or 0) >= 6:
             notes.append(f"persistent {label} with solid component ≥6 mm: highly suspicious → work-up within 30 days")
@@ -1264,10 +1288,10 @@ def _fleischner_stepped(n, size, typ, multiple, risk, baseline, when, label, not
         if elapsed is not None and elapsed >= 59:
             notes.append(f"stable {label}, {since}: 5 years of stability → surveillance complete")
             return {"action": "none", "days": None, "notes": notes, "review": None}
-        target, step = when + timedelta(days=12 * MONTH), "annual CT for 5 years"
+        target, step = _calendar_due(when, 12), "annual CT for 5 years"
     days = max(30.0, (target - when).total_seconds() / 86400)
-    days = round(days + radiology_grace_days(days), 1)
-    notes.append(f"stable {label} ({since}): {step} → due within {days:.0f} days (incl. grace)")
+    days = round(days, 1)
+    notes.append(f"stable {label} ({since}): {step} → due within {days:.0f} days (no added scheduling grace)")
     return {"action": "followup", "days": days, "notes": notes, "review": review}
 
 
@@ -1276,9 +1300,9 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,
     kind = f["kind"]
     size = f.get("size_mm")
 
-    def plan(rule_id, condition, days, note, regions=None, grace=False):
-        if grace:
-            days = days + radiology_grace_days(days)
+    def plan(rule_id, condition, days, note, regions=None):
+        if ctx.get("_event_time"):
+            days = _nominal_calendar_days(days, ctx["_event_time"])
         return {"rule_id": rule_id, "condition": condition, "days": round(days, 1),
                 "regions": regions or [f["organ"]], "note": note}
 
@@ -1297,14 +1321,14 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,
             return plan("R038", "adrenal_mass_workup", 30, "adrenal mass ≥4 cm → endocrine surgery referral (ACR 2017)")
         if size >= 20:
             return plan("R037", "adrenal_nodule_followup", 90, "indeterminate adrenal nodule 2–4 cm → adrenal protocol CT or MRI (ACR 2017; 90 days proposed)")
-        return plan("R037", "adrenal_nodule_followup", 12 * MONTH, "indeterminate adrenal nodule 1–2 cm → adrenal CT or MRI at 12 months (ACR 2017)", grace=True)
+        return plan("R037", "adrenal_nodule_followup", 12 * MONTH, "indeterminate adrenal nodule 1–2 cm → adrenal CT or MRI at 12 months (ACR 2017)")
 
     if kind == "renal":
         if f["suspicious"]:
             return plan("R039", "suspicious_renal_mass", 30,
                         f"renal mass{' Bosniak ' + f['bosniak'] if f['bosniak'] else ''}: solid/enhancing or Bosniak III–IV → urology referral (ACR 2018)")
         if f["bosniak"] == "IIF":
-            return plan("R040", "renal_lesion_followup", 6 * MONTH, "Bosniak IIF cyst → CT or MRI at 6 months (Bosniak v2019)", grace=True)
+            return plan("R040", "renal_lesion_followup", 6 * MONTH, "Bosniak IIF cyst → CT or MRI at 6 months (Bosniak v2019)")
         if f["benign"]:
             return {"none": "renal: simple cyst, Bosniak I–II, angiomyolipoma or too small to characterise → no follow-up (ACR 2018)"}
         if f["indeterminate"] and (size or 0) >= 10:
@@ -1318,10 +1342,10 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,
             return plan("R042", "pancreatic_cyst_worrisome", 30,
                         f"pancreatic cyst with worrisome features ({', '.join(f['worrisome'])}) → EUS / pancreas specialist (ACR 2017)")
         if size < 15:
-            return plan("R041", "pancreatic_cyst_followup", 24 * MONTH, "pancreatic cyst <1.5 cm → MRI/MRCP in 2 years (ACR 2017)", grace=True)
+            return plan("R041", "pancreatic_cyst_followup", 24 * MONTH, "pancreatic cyst <1.5 cm → MRI/MRCP in 2 years (ACR 2017)")
         if size <= 25:
-            return plan("R041", "pancreatic_cyst_followup", 12 * MONTH, "pancreatic cyst 1.5–2.5 cm → MRI/MRCP in 1 year (ACR 2017)", grace=True)
-        return plan("R041", "pancreatic_cyst_followup", 6 * MONTH, "pancreatic cyst >2.5 cm → MRI/MRCP in 6 months or EUS-FNA (ACR 2017)", grace=True)
+            return plan("R041", "pancreatic_cyst_followup", 12 * MONTH, "pancreatic cyst 1.5–2.5 cm → MRI/MRCP in 1 year (ACR 2017)")
+        return plan("R041", "pancreatic_cyst_followup", 6 * MONTH, "pancreatic cyst >2.5 cm → MRI/MRCP in 6 months or EUS-FNA (ACR 2017)")
 
     if kind == "thyroid_incidental":
         age = ctx.get("age")
@@ -1375,7 +1399,7 @@ def acr_incidental(f: Dict[str, Any], ctx: Dict[str, Any]) -> Optional[Dict[str,
                                     (45, 1, "4.0–4.4 cm"), (10_000, 0.5, "≥4.5 cm")):
             if d < upper:
                 return plan("R044", "aaa_surveillance", years * YEAR,
-                            f"abdominal aorta {d / 10:g} cm ({label}) → imaging in {years:g} year(s) (ACR 2013)", grace=True)
+                            f"abdominal aorta {d / 10:g} cm ({label}) → imaging in {years:g} year(s) (ACR 2013)")
     return None
 
 
@@ -1429,6 +1453,7 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
         rad = d["radiology"]
         when = ts(e)
         ctx = context_at(when)
+        ctx["_event_time"] = when
         ctx["emphysema"] = bool(re.search(r"emphysema|폐기종", d.get("conclusion") or "", re.I))
         # The radiologist stating the patient has cancer counts even when the problem list does not say so
         if first_affirmed(_KNOWN_CANCER, d.get("conclusion") or ""):       # not "암 병력 없음", "no known malignancy"
@@ -1452,7 +1477,16 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
             if evidence:
                 spans.append(evidence)
 
-        rec = rad.get("recommendation")
+        rec = dict(rad["recommendation"]) if rad.get("recommendation") else None
+        if rec and rec.get("recommended_calendar_months") is not None:
+            months = rec["recommended_calendar_months"]
+            if float(months).is_integer():
+                # Calendar intervals preserve month ends and leap years. Fractional
+                # months retain their explicitly approximate day conversion.
+                due = _calendar_due(when, int(months))
+                rec["recommended_interval_days"] = (due - when).total_seconds() / 86400
+                rad["recommendation"] = rec
+                mapping.append(f"Report interval: {months:g} calendar months; due {due.date().isoformat()} without scheduling grace")
         rec_tracked = rec is not None
         if rec and d.get("lung_rads") and rec["recommended_modality"] == "ct":
             rec_tracked = False
@@ -1476,8 +1510,15 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
                     mapping.append("nodule work-up (R046) covers the CT recommendation")
             elif decision["action"] == "followup":
                 rec_ct = rec_tracked and rec["recommended_modality"] == "ct"
-                rec_deadline = (rec["recommended_interval_days"] + radiology_grace_days(rec["recommended_interval_days"])
-                                if rec_ct else None)
+                rec_deadline = rec["recommended_interval_days"] if rec_ct else None
+                same_three_month_track = (rec_ct and rec.get("recommended_calendar_months") == 3
+                                          and decision["days"] == FLEISCHNER_LARGE_NODULE_DAYS)
+                if same_three_month_track:
+                    # Keep the established nodule task (including its permitted
+                    # tissue-sampling alternatives), using the earlier real due
+                    # date. Calendar conversion must not create duplicate tasks.
+                    decision["days"] = min(decision["days"], rec_deadline)
+                    mapping.append("same three-month nodule follow-up: earlier report or rule deadline retained")
                 if rec_ct and rec["recommended_interval_stated"] and rec_deadline < decision["days"]:
                     mapping.append("radiologist interval is tighter than Fleischner: tracked as R030")
                 else:
@@ -1530,6 +1571,8 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
         if rec_tracked:
             d.update({k: rec[k] for k in ("recommended_modality", "recommended_interval_days",
                                           "recommended_interval_stated")})
+            mapping.append("Deadline source: report-stated interval; no scheduling grace added" if rec["recommended_interval_stated"]
+                           else "Deadline source: proposed default or guideline interval, not a report-stated deadline; clinician review required")
             if rec["regions"]:
                 regions[REC_RULE[rec["recommended_modality"]]] = rec["regions"]
             spans.append(rec["evidence_span"])

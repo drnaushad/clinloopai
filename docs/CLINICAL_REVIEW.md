@@ -10,6 +10,54 @@ and `LoopStore.supersede_sources` (preliminary and final reports), `LoopStore.se
 and `_refuse_if_opted_out` (message opt-out). Not in scope: the 65 obligation rules themselves, which
 each need specialist sign-off on the governance page.
 
+## 2026-10-26 completion candidate — review pending
+
+No approval is recorded for this candidate. The integration retains the published shared interface;
+clinical changes remain governed by `AGENTS.md`: **"Clinical logic needs a clinician reviewer"** and
+are drafts until reviewed line by line. A software test pass is not a clinician signature.
+
+| Review topic | Evidence to inspect | Required judgement |
+| --- | --- | --- |
+| Completion evidence | `tests/test_completion_evidence.py`, FHIR and graph diffs | Which source statuses prove the specific tracked task happened? |
+| Clinical deadlines | Radiology, note-reader and ontology diffs; strict deadline regressions | Preserve the source recommendation and validate calendar conventions and local policy |
+| Closure wording and demo claims | Basis/worklist/cockpit diffs | Distinguish a tracked task from complete care or proven patient benefit |
+| Model suggestions | Second-reader/context tests and silent-mode tests | Review negation, ambiguity, unavailable output and clinical oversight |
+| Independent evaluation | Dataset scorer tests and synthetic disagreement queue | Approve intended use, annotation/adjudication protocol, thresholds and cohort design |
+
+Review each changed clinical source file and record its exact content hash, reviewer, date,
+decision and requested corrections in the generated review packet. That packet does not create
+runtime rule approvals. Once reviewed, hospital rule sign-offs must bind the current fingerprints.
+The source-mapping reassessment and backed-up shadow reevaluation in `PRODUCTION_READINESS.md`
+remain necessary before rollout. Existing public synthetic snapshots are not reingested by this work.
+
+
+### Engineering review packet
+
+Create a fresh packet against the exact published base, with a new output filename:
+
+```sh
+python scripts/clinical_review_packet.py --base <40-character-base-commit> --output <private-review.json>
+python scripts/clinical_review_packet.py --base <same-base-commit> --check <private-review.json>
+```
+
+The packet names every changed source file, its hash and changed hunks. New source files require
+review of every line. All decisions start pending. A reviewer records their name, role, timezone-aware
+review timestamp, decision and line-by-line completion; clinically consequential files require a
+clinician role. Qualifications, independence and the actual review must be verified by the project’s
+clinical lead: text fields cannot establish a medical licence or prove a review happened.
+
+The checker rejects stale code, omitted files, altered scope, future/undated receipts and inappropriate
+reviewer roles. A complete receipt set is reported as **review records complete, not clinical
+validation**. It never writes runtime rule approvals, enables ML, publishes code or authorizes patient
+care. Pending review returns exit status 2; invalid receipts return 1.
+
+For ML, retain the fixed dataset split, training-only preprocessing, exact checkpoint/prompt/schema
+versions, rejected outputs and unrun cases. The applicable clinical study still needs an independently
+labelled population, intended-use acceptance criteria and supervised clinical evaluation. These are
+separate from code review and software testing, consistent with the
+[FDA/IMDRF good machine learning practice principles](https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/good-machine-learning-practice-medical-device-development-guiding-principles).
+
+
 ## 1. Rule monitoring
 
 **Question:** can the monitor hide a true clinical obligation?

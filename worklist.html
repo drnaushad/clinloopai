@@ -243,7 +243,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       feed: { OK: (h) => `데이터 수신 정상 · 마지막 수신 ${h}시간 전`, STALE: (h) => `⚠ 데이터 수신 중단: 마지막 정상 수신 ${h ?? '–'}시간 전. 작업 목록이 불완전할 수 있습니다.`,
               FAILING: () => '⚠ 데이터 연동 실패: 최근 3회 수신이 모두 실패했습니다. 작업 목록이 불완전할 수 있습니다.',
               NEVER: () => '⚠ 아직 수신된 임상 데이터가 없습니다.' },
-      patient: '환자', graph: '환자 지식 그래프', rule: '규칙', deadline: '기한', owner: '담당', risk: '위험도', unassigned: '미지정',
+      patient: '환자', graph: '환자 지식 그래프', rule: '규칙', deadline: '기한', owner: '담당', risk: '우선순위 점수', riskHelp: '규칙 기반 우선순위이며 질병이나 위해 발생의 확률이 아닙니다.', unassigned: '미지정',
       pastDeadline: '기한 초과', escalatedTo: '에스컬레이션 →',
       states: { new: '신규', acknowledged: '확인함', deferred: '보류', closed_by_clinician: '의료진 종결', resolved_by_engine: '기록상 완료', superseded: '최종 판독으로 대체' },
       severity: { critical: '위급', high: '높음', moderate: '중간', low: '낮음' },
@@ -291,7 +291,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       feed: { OK: (h) => `Data feed OK · last received ${h} h ago`, STALE: (h) => `⚠ Data feed silent: last successful update ${h ?? '–'} h ago. The worklist may be incomplete.`,
               FAILING: () => '⚠ Data feed failing: the last 3 updates all failed. The worklist may be incomplete.',
               NEVER: () => '⚠ No clinical data has been received yet.' },
-      patient: 'Patient', graph: 'Patient knowledge graph', rule: 'Rule', deadline: 'Deadline', owner: 'Owner', risk: 'Risk', unassigned: 'unassigned',
+      patient: 'Patient', graph: 'Patient knowledge graph', rule: 'Rule', deadline: 'Deadline', owner: 'Owner', risk: 'Priority score', riskHelp: 'Heuristic priority, not a probability of disease or patient harm.', unassigned: 'unassigned',
       pastDeadline: 'PAST DEADLINE', escalatedTo: 'escalated →',
       states: { new: 'new', acknowledged: 'acknowledged', deferred: 'deferred', closed_by_clinician: 'closed by clinician', resolved_by_engine: 'done in record', superseded: 'replaced by final report' },
       severity: { critical: 'critical', high: 'high', moderate: 'moderate', low: 'low' },
@@ -392,7 +392,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
     const rule = state.rules[l.rule_id];
     if (!rule) return l.missing_step;
     if ((l.missing_step || '').startsWith('Completed late')) return t().lateDone(windowText(rule.deadline_days));
-    if ((l.missing_step || '').startsWith('All follow-ups')) return lang === 'ko' ? '모든 후속 조치 완료' : 'All follow-ups completed';
+    if (/^(All follow-ups|Tracked obligation satisfied)/.test(l.missing_step || '')) return lang === 'ko' ? '추적 중인 조치 확인 · 전체 진료 완료를 의미하지 않음' : 'Tracked obligation satisfied · overall care completion is not established';
     const m = (l.missing_step || '').match(/^Missing: (.+) within (.+)$/);
     if (!m) return l.missing_step;
     const items = m[1].split(/, | or /).map(ev);
@@ -430,7 +430,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
         <span>${esc(t().rule)} <b>${esc(l.rule_id)}</b></span>
         <span>${esc(t().deadline)} <b>${esc(fmtDate(l.deadline))}</b></span>
         <span>${esc(t().owner)} <b>${esc(l.owner === 'unassigned' ? t().unassigned : l.owner)}</b></span>
-        <span>${esc(t().risk)} <b>${esc((l.risk_score ?? 0).toFixed(2))}</b></span>
+        <span title="${esc(t().riskHelp)}">${esc(t().risk)} <b>${esc((l.risk_score ?? 0).toFixed(2))}</b></span>
       </div>
       <div class="missing">${esc(missingText(l))}</div>
       ${active ? `<div class="action">${esc(actionText(l))}</div>` : ''}

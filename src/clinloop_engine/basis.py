@@ -144,6 +144,18 @@ def _window_ko(days: float) -> str:
     return f"{int(days) if days >= 2 else round(days, 1):g}일"
 
 
+def _deadline_note_ko(line: str) -> str:
+    """Translate the new deadline provenance notes, retaining source quotes elsewhere."""
+    if line == "Deadline source: report-stated interval; no scheduling grace added":
+        return "기한 출처: 판독문에 명시된 간격이며 추가 유예 기간을 더하지 않음"
+    if line.startswith("Deadline source: proposed default or guideline interval"):
+        return "기한 출처: 제안된 기본값 또는 지침 간격이며 판독문에 명시된 기한이 아님. 의료진 검토 필요"
+    match = re.fullmatch(r"Report interval: ([\d.]+) calendar months; due ([\d-]+) without scheduling grace", line)
+    if match:
+        return f"판독문 간격: 달력 기준 {match[1]}개월, 기한 {match[2]}, 추가 유예 기간 없음"
+    return line
+
+
 def build_ko(trigger, rule, deadline: Optional[datetime], deadline_days: float, followups, status: str,
              expected: List[str], logic: str) -> List[str]:
     """The same basis in Korean, built from the same facts as build()."""
@@ -175,8 +187,10 @@ def build_ko(trigger, rule, deadline: Optional[datetime], deadline_days: float, 
     by = deadline.strftime("%Y-%m-%d") if long_window else _when(deadline)
     name_ko = RULE_NAMES_KO.get(rule.rule_id, rule.name)
     lines.append(f"규칙 {rule.rule_id} ({name_ko}): {by}까지 {wanted} 필요 ({_window_ko(deadline_days)}).")
+    if rule.rule_id == "R005":
+        lines.append("30일은 제안된 기관별 추적 목표이며 ASCCP의 일률적인 기한이 아닙니다. HPV, 나이, 임신 여부 및 검사 이력을 확인하여 의료진이 후속 계획을 결정해야 합니다.")
     for line in _reasoning(details):
-        lines.append(f"판단 근거: {line}.")
+        lines.append(f"판단 근거: {_deadline_note_ko(line)}.")
     if followups:
         found = "; ".join(f"{step(f.event_type)} ({_when(f.timestamp)})" for f in followups)
         lines.append(f"기록에서 확인: {found}.")
@@ -189,6 +203,8 @@ def build_ko(trigger, rule, deadline: Optional[datetime], deadline_days: float, 
             lines.append(f"아직 없음: {', '.join(step(t) for t in missing)}.")
     if status == "delayed":
         lines.append("후속 조치가 기한 이후에 이루어졌습니다.")
+    if status in ("closed", "delayed"):
+        lines.append("완료 범위: 이 규칙이 추적하는 조치만 확인되었습니다. 의뢰나 검사 처방만으로 진료·치료 전체의 완료를 입증하지 않습니다.")
     refs = [r for r in (rule.references or []) if isinstance(r, str) and r.strip()]
     if refs:
         lines.append(f"참고 문헌: {refs[0]}")
@@ -216,6 +232,8 @@ def build(trigger, rule, deadline: Optional[datetime], window: str, followups, s
     long_window = bool(deadline and trigger.timestamp and (deadline - trigger.timestamp).days >= 2)
     by = deadline.strftime("%Y-%m-%d") if long_window else _when(deadline)
     lines.append(f"Rule {rule.rule_id} ({rule.name}) expects: {wanted} by {by} ({window}).")
+    if rule.rule_id == "R005":
+        lines.append(rule.evidence_note)
     for line in _reasoning(details):
         lines.append(f"How this was worked out: {line}.")
     if followups:
@@ -230,6 +248,8 @@ def build(trigger, rule, deadline: Optional[datetime], window: str, followups, s
             lines.append(f"Still missing: {', '.join(_step(t) for t in missing)}.")
     if status == "delayed":
         lines.append("The follow-up came after the deadline.")
+    if status in ("closed", "delayed"):
+        lines.append("Completion scope: only the step(s) tracked by this rule are established. A referral or order does not prove that the visit, procedure or overall care was completed.")
     refs = [r for r in (rule.references or []) if isinstance(r, str) and r.strip()]
     if refs:
         lines.append(f"Reference: {refs[0]}")

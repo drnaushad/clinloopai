@@ -24,8 +24,8 @@ ENTRY = "src.clinloop_engine.browser_analyse"
 DATA_FILES = ["src/clinloop_engine/config/critical_findings.json"]
 
 
-# Reached only from note_reader.llm_suggestions (local LLM, OCR, image models): never used in the browser
-NOT_IN_BROWSER = {"document_reader", "local_llm_engine", "imaging_ai"}
+# Network/model-inventory helpers reached only through backend model calls: never used in the browser
+NOT_IN_BROWSER = {"document_reader", "local_llm_engine", "imaging_ai", "model_registry"}
 PACKAGE = os.path.join(ROOT, "src", "clinloop_engine")
 
 

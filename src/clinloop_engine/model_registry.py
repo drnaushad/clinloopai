@@ -16,6 +16,7 @@ No addresses, keys or patient data are returned.
 """
 import hashlib
 import os
+import re
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -70,6 +71,34 @@ def _capabilities(base: str, name: str) -> Optional[List[str]]:
         return None
 
 
+def checkpoint_identity(name: str, base: Optional[str] = None) -> Optional[Dict[str, str]]:
+    """Fresh local checkpoint identity for cache provenance, never a model fallback.
+
+    Missing, duplicate, malformed or cloud-backed inventory is unavailable.
+    The Ollama manifest digest identifies its weights/template/parameters; it
+    does not prove a server is truthful or establish clinical performance.
+    """
+    from .local_llm_engine import OLLAMA_BASE_URL, _local_model, _ollama_json
+    try:
+        endpoint = base or OLLAMA_BASE_URL
+        data = _ollama_json("GET", "/api/tags", timeout=5, base=endpoint)
+        rows = data.get("models")
+        if not isinstance(rows, list):
+            return None
+        matches = [row for row in rows if isinstance(row, dict) and row.get("name") == name]
+        if len(matches) != 1 or not _local_model(matches[0]):
+            return None
+        digest = matches[0].get("digest")
+        if not isinstance(digest, str) or not re.fullmatch(r"(?:sha256:)?[a-fA-F0-9]{64}", digest):
+            return None
+        caps = _capabilities(endpoint, name)
+        if caps is None or "completion" not in caps:
+            return None
+        return {"model": name, "digest": digest.removeprefix("sha256:").lower()}
+    except (requests.RequestException, ValueError, OSError, TypeError):
+        return None
+
+
 def registry(base: Optional[str] = None) -> Dict[str, Any]:
     """Each role with its configured model and its real state on the model server."""
     from .local_llm_engine import OLLAMA_BASE_URL, _local_model
@@ -98,7 +127,9 @@ def registry(base: Optional[str] = None) -> Dict[str, Any]:
                          parameter_size=d.get("parameter_size"), quantization=d.get("quantization_level"),
                          capabilities=caps)
         if role["role"] == "second_reader":
+            from .second_reader import reader_contract
             entry["prompt_version"] = prompt_version()
+            entry["verification_version"] = reader_contract()
             entry["inference"] = {"temperature": 0.0, "max_tokens": 600}
         roles.append(entry)
     return {"roles": roles, "all_available": all(r["status"] == "available" for r in roles)}

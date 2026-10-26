@@ -118,30 +118,30 @@ class TestFleischner2017(unittest.TestCase):
         statuses, dets, _ = run([patient(), smoking("266919005"),
                                  rad("a", T0, "CT chest", "7 mm solid nodule in the right middle lobe.")])
         self.assertEqual(statuses, {"R003": "open"})
-        self.assertAlmostEqual(deadline_days(dets, "R003"), 365.25 + 30, delta=1)
+        self.assertAlmostEqual(deadline_days(dets, "R003"), 365.25, delta=1)
 
     def test_solid_over_8mm_three_months(self):
         _, dets, _ = run([patient(), rad("a", T0, "CT chest", "1.1 cm solid nodule in the right lower lobe.")])
-        self.assertAlmostEqual(deadline_days(dets, "R003"), 90 + 22.5, delta=1)
+        self.assertAlmostEqual(deadline_days(dets, "R003"), 90, delta=1)
 
     def test_multiple_solid_three_to_six_months(self):
         _, dets, reports = run([patient(), rad("a", T0, "CT chest",
                                                "Multiple bilateral solid nodules, the largest 7 mm in the right lower lobe.")])
         self.assertTrue(reports[0]["details"]["radiology"]["lung_nodule"]["multiple"])
-        self.assertAlmostEqual(deadline_days(dets, "R003"), 182.6 + 30, delta=1)
+        self.assertAlmostEqual(deadline_days(dets, "R003"), 181, delta=0.01)
 
     def test_ground_glass(self):
         statuses, _, _ = run([patient(), rad("a", T0, "CT chest", "5 mm pure ground-glass nodule in the left lower lobe.")])
         self.assertEqual(statuses, {})
         _, dets, _ = run([patient(), rad("a", T0, "CT chest", "8 mm pure ground-glass nodule in the left lower lobe.")])
-        self.assertAlmostEqual(deadline_days(dets, "R003"), 365.25 + 30, delta=1)
+        self.assertAlmostEqual(deadline_days(dets, "R003"), 365.25, delta=1)
 
     def test_part_solid_with_large_solid_component(self):
         _, dets, reports = run([patient(), rad("a", T0, "CT chest",
                                                "9 mm part-solid nodule with a 7 mm solid component in the right upper lobe.")])
         nodule = reports[0]["details"]["radiology"]["lung_nodule"]
         self.assertEqual((nodule["type"], nodule["solid_component_mm"], nodule["multiple"]), ("part_solid", 7.0, False))
-        self.assertAlmostEqual(deadline_days(dets, "R003"), 90 + 22.5, delta=1)
+        self.assertAlmostEqual(deadline_days(dets, "R003"), 90, delta=1)
 
     def test_benign_calcified_nodule(self):
         statuses, _, _ = run([patient(), rad("a", T0, "CT chest", "8 mm calcified granuloma in the right upper lobe.")])
@@ -169,7 +169,7 @@ class TestFleischner2017(unittest.TestCase):
             rad("a", "2024-01-10T09:00:00Z", "CT chest", "7 mm solid nodule in the right middle lobe."),
             rad("b", "2025-01-10T09:00:00Z", "CT chest", "Stable 7 mm solid nodule."),
             rad("c", "2026-01-12T09:00:00Z", "CT chest", "No change in the 7 mm right middle lobe nodule.")])
-        self.assertEqual(statuses, {"R003": ["closed", "closed"]})
+        self.assertEqual(statuses, {"R003": ["delayed", "closed"]})
         self.assertTrue(any("stable ≥2 years" in m for m in reports[-1]["details"]["mapping"]))
 
     def test_stability_stated_in_text(self):
@@ -227,7 +227,7 @@ class TestACRIncidentalFindings(unittest.TestCase):
     def test_pancreatic_cyst(self):
         _, dets, _ = run([patient(), rad("a", T0, "CT abdomen", "1.2 cm cystic lesion in the pancreatic tail, likely side-branch IPMN.")])
         self.assertEqual([d.rule_id for d in dets], ["R041"])
-        self.assertAlmostEqual(deadline_days(dets, "R041"), 2 * 365.25 + 30, delta=2)
+        self.assertAlmostEqual(deadline_days(dets, "R041"), 2 * 365.25, delta=2)
         statuses, _, _ = run([patient(), rad("a", T0, "MRI abdomen MRCP",
                                              "3.2 cm pancreatic head cyst with an enhancing mural nodule. Main pancreatic duct measures 8 mm.")])
         self.assertEqual(statuses, {"R042": "open"})
@@ -251,7 +251,7 @@ class TestACRIncidentalFindings(unittest.TestCase):
     def test_abdominal_aortic_aneurysm(self):
         _, dets, _ = run([patient(), rad("a", T0, "CT abdomen", "Infrarenal abdominal aortic aneurysm measuring 4.2 cm.")])
         self.assertEqual([d.rule_id for d in dets], ["R044"])
-        self.assertAlmostEqual(deadline_days(dets, "R044"), 365.25 + 30, delta=1)
+        self.assertAlmostEqual(deadline_days(dets, "R044"), 365.25, delta=1)
         self.assertEqual(run([patient(sex="female"), rad("a", T0, "CT abdomen",
                                                          "Fusiform infrarenal aortic aneurysm, maximal diameter 5.2 cm.")])[0],
                          {"R045": "open"})
@@ -304,7 +304,7 @@ class TestLiveRunBundle(unittest.TestCase):
 
     EXPECTED = {
         "RP-01": {"R003": "open"}, "RP-02": {"R003": "open"}, "RP-03": {"R030": "open"},
-        "RP-04": {"R019": "closed", "R034": "open"}, "RP-05": {"R030": "open"}, "RP-06": {"R018": "open"},
+        "RP-04": {"R019": "delayed", "R034": "open"}, "RP-05": {"R030": "open"}, "RP-06": {"R018": "open"},
         "RP-07": {"R027": "delayed", "R028": "open"}, "RP-08": {"R036": "open"}, "RP-09": {}, "RP-10": {},
         "RP-11": {"R031": "open"}, "RP-12": {"R003": "open"}, "RP-13": {"R033": "open"}, "RP-14": {"R035": "open"},
         "RP-15": {"R003": "open"}, "RP-16": {"R030": "open"}, "RP-17": {"R037": "open"}, "RP-18": {"R030": "open"},

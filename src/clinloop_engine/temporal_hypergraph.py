@@ -98,7 +98,7 @@ class ClinicalNode:
     event_type: str         # EventType.value
     timestamp: datetime
     details: Dict = field(default_factory=dict)
-    status: str = "completed"
+    status: str = "unknown"
 
     @property
     def event_enum(self) -> Optional[EventType]:
@@ -229,7 +229,7 @@ class DynamicTemporalHypergraph:
                 event_type=evt["event_type"],
                 timestamp=self._parse_timestamp(evt["timestamp"]),
                 details=evt.get("details") or {},
-                status=evt.get("status") or "completed",
+                status=evt.get("status") or "unknown",
             )
             self.nodes[node.node_id] = node
             nodes_list.append(node)
@@ -456,7 +456,7 @@ class DynamicTemporalHypergraph:
                 ]
                 if not_done:
                     hyperedge.evidence_chain.append(
-                        f"Not counted as follow-up (did not take place): {not_done}"
+                        f"Not counted as follow-up (completion not established): {not_done}"
                     )
                 # A follow-up stamped with exactly the trigger's time is not counted (it may be the
                 # triggering study itself; PRODUCTION_READINESS.md §4.1). Say so, so a reviewer can

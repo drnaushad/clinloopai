@@ -219,3 +219,34 @@ The source-bound review-packet tool records pending human review against exact s
 changed lines. Staging unchanged new files does not invalidate a receipt; changed source still does.
 It cannot verify medical credentials, create runtime rule approvals, publish code or authorize care.
 This software update contains no clinical-rule or learned-model activation.
+## Unstructured-text evaluation candidate (2026-10-26)
+
+The fixed synthetic evaluator contains 24 cases (18 English, six Korean) covering six text
+categories. Added stresses include mixed negation, multiple recommendations with distinct intervals,
+an addendum, unreadable laboratory context and an instruction-like document footer. These are
+software expectations written by developers, not independent clinician references.
+
+`node tests/test_report_evaluation.cjs` tests the real application transport with stand-in models,
+including omitted findings, extra/duplicate findings, wrong assertion/timing, unsupported quotes,
+partial output and changed checkpoint identity. This does not call a real LLM.
+
+The optional local inference command in the README records checkpoint, prompt, schema, fixtures and
+executable hashes. Exact tuple matching uses the full source quote, assertion, follow-up quote and
+timing quote; it is one-to-one. Clinically equivalent alternate quotations may score as mismatches.
+Metrics schema 2 separates attempted cases, rejected responses and unrun cases. Precision is
+conditional on accepted output. Attempted-case recall includes rejected responses as abstentions;
+unrun cases contribute no measured misses or recall. Legacy plan-wide recall/F1 fields remain
+explicitly labelled conservative coverage bounds, not measured extraction accuracy. Report-type and
+language results include attempted and accepted coverage; an entirely unrun subgroup has null measured
+recall. Incomplete runs cannot support a complete paired model comparison.
+Separate error counts describe assertion, follow-up and timing errors only when the source quotation
+matches. No confidence intervals or clinical-equivalence/clinical-performance claims are made.
+
+No images, DICOM, PDF/OCR or waveforms enter this evaluator. Modality-specific models require their
+own capability checks, reference data and acceptance studies. No model comparison authorizes care.
+
+
+The earlier two-case CPU pilot was rescored under schema 2 without new inference, changed prompts or
+changed reference expectations. Its 22 unrun cases remain unrun. Rescoring an old run neither improves
+the model nor establishes clinical performance. Model availability, schema/source rejection and lack
+of independent labels remain open requirements.

@@ -1,3 +1,5 @@
+> **Unreviewed clinical/ML draft branch.** This branch is for engineering and independent clinician review. It is not merged into the released website and does not authorize patient care. Clinical review records remain pending. See [the draft review checklist](docs/reviews/CLINICAL_ML_DRAFT_20261026.md).
+
 <img src="icons/logo.svg" width="72" alt="ClinLoop logo: the rod of Asclepius inside a loop closed by an arrow">
 
 # ClinLoop AI — Closed-Loop Clinical Safety Monitoring
@@ -331,9 +333,10 @@ python src/run_benchmark.py
 
 This script:
 1. generates 300 seeded synthetic trajectories into `data/synthetic/`,
-2. runs ClinLoop AI and the two baselines,
-3. writes `results/benchmark_results.json`,
-4. saves four figures, `results/fig1_roc_curves.png` … `fig4_alert_fatigue.png`.
+2. separates patient/duplicate groups into training and test partitions,
+3. fits logistic regression, gradient-boosted trees and a two-hidden-layer neural network, then evaluates them and ClinLoop on the same held-out trajectories,
+4. writes aggregate results and provenance to `results/benchmark_results.json`,
+5. saves four figures, `results/fig1_roc_curves.png` … `fig4_alert_fatigue.png`.
 
 It takes a few seconds.
 
@@ -779,29 +782,52 @@ criteria, endpoints, sample sizes and ethics) is drafted for a partner hospital 
 
 ---
 
-## Benchmark results (synthetic, n = 300)
+## Research benchmark: genuine ML and neural comparators (local draft)
 
-From `python src/run_benchmark.py`. The evaluation clock is fixed at 2027-01-01, after the last
-synthetic event, and the data generator and the simulated baselines are re-seeded on every run, so
-results are identical on every run.
+`python src/run_benchmark.py` now compares the deterministic engine, a fitted logistic regression,
+gradient-boosted trees and a fitted neural network with hidden layers `(32, 16)` on the **same** synthetic group holdout.
+The old EMR/LLM simulators remain compatibility illustrations in `baselines.py`; they are excluded
+from measured results and plots because they use reference labels to fabricate predictions.
 
-| Metric | EMR inbox (simulated) | LLM zero-shot (simulated) | **ClinLoop AI** |
-| --- | :---: | :---: | :---: |
-| Sensitivity | 0.249 | 0.756 | 1.000 |
-| Specificity | 0.589 | 0.832 | 1.000 |
-| Precision | 0.567 | 0.906 | 1.000 |
-| F1 | 0.346 | 0.824 | 1.000 |
-| False alerts / 100 patients | 13.0 | 5.3 | 0.0 |
+The generated cohort has 300 synthetic event trajectories. Seed 42 selects connected groups, joining
+all visits of one patient and exact duplicate predictor representations; the current run uses
+207 training / 93 test trajectories. These are synthetic group counts, not hospital patient validation.
+Preprocessing is fitted on the training partition only. No test-label-driven seed search or threshold
+tuning occurs. The fixed research decision threshold is 0.5.
 
-**This is a rule-conformance test, not an accuracy result.**
+Predictors contain observed event types, a small clinical-condition vocabulary, status/flag counts,
+relative timing and adjacent typed temporal edges. They exclude IDs, reference labels, outcome
+annotations, scenario narratives, detector outputs and future events. These comparators do **not**
+read raw report text, PDFs or images and are **not** graph neural networks or LLMs.
 
-- **Labels and detector share the same rules.** The generator writes its ground-truth labels from
-  the guideline rules the detector implements. A perfect score shows only that the engine
-  implements its specification without error. Clinical accuracy can only be measured against
-  clinician chart review of real records.
-- **The baselines are not real models.** `EMRInboxBaseline` and `LLMBaseline` read the ground-truth
-  label and add random errors at hard-coded rates. They illustrate known failure modes and are not
-  measured comparators.
+All four methods reached perfect classification in the 2026-10-26 synthetic rerun. That is evidence
+that the generated task is easy and shares assumptions with the rule engine, **not** evidence of
+clinical accuracy, improved patient outcomes or superiority over another medical system. It does not
+resolve the separate report-extraction misses recorded in `docs/ACCURACY_EVALUATION.md`.
+
+The target is an open **or delayed** synthetic obligation, including a task already completed late;
+it is not a prediction that a patient currently needs treatment. Scores are uncalibrated research
+outputs. Models stay in memory: no learned weights are served, no clinical tasks are changed, and
+nothing is trained on real patient records. Outputs record split counts, overlap checks, runtime
+versions, seed, convergence status and the rule-set version. No raw trajectories or patient keys
+are copied into the aggregate evaluation output.
+
+Use these tools to develop an honest comparison protocol. Before considering clinical ML: obtain
+approved local data, independent clinician outcome labels and a task-specific evaluation; separate
+patients, institutions and time periods as appropriate; lock model/prompt/checkpoint versions;
+assess missed critical cases, false alerts, calibration, subgroup results and abstention; then run a
+clinician-led silent pilot. An LLM's self-reported confidence is not calibrated clinical certainty.
+
+Existing local MedGemma/EXAONE adapters provide deep neural text connections; image workflows additionally require a checkpoint that declares vision support and separate validation.
+Fine-tuning, image models, graph neural networks and learned clinical prioritisation remain distinct
+research projects with their own data and validation requirements. Keep model suggestions separate
+from the graph's verified evidence of a performed follow-up.
+
+Sources: [scikit-learn leakage guidance](https://scikit-learn.org/stable/common_pitfalls.html),
+[group separation](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GroupShuffleSplit.html),
+[MedGemma intended use](https://deepmind.google/models/gemma/medgemma/),
+[TRIPOD-LLM reporting guidance](https://www.nature.com/articles/s41591-024-03425-5).
+
 
 ---
 
@@ -888,3 +914,24 @@ contributions, validation studies and deployment.
 - WHO, *Global Patient Safety Report* 2024
 - MacMahon H et al. *Fleischner Society guidelines for incidental pulmonary nodules*, Radiology 2017
 - Perkins RB et al. *ASCCP Risk-Based Management Consensus Guidelines*, 2019/2020
+
+
+### Integrated clinical/research completion candidate (2026-10-26, not published)
+
+The candidate keeps the latest shared interface and combines the pending clinical safety corrections
+with an offline comparison of rules, logistic regression, gradient-boosted trees and a small neural
+network. See [production readiness](docs/PRODUCTION_READINESS.md) for the remaining human review gates.
+No trained model is added to the clinical decision path or public selector.
+
+For unstructured report text, run `node scripts/evaluate_report_review.cjs --check-fixtures` to
+validate the 24 synthetic fixtures without inference. Once local GPU/model health is restored and
+resource use is authorized, the existing evaluator can test an exact installed checkpoint:
+
+```sh
+node scripts/evaluate_report_review.cjs --model medgemma:27b --address http://127.0.0.1:11434 --output /tmp/clinloop-synthetic-text-evaluation.json
+```
+
+Choose a fresh private output path. Only fixed synthetic fixtures are sent; no patient file input or
+cloud fallback is supported. A valid 64-hex checkpoint digest is required, and identity is checked
+again after evaluation. These source/format and exact-fixture scores are not clinical accuracy.
+See [report review](docs/REPORT_REVIEW.md) for error metrics and modality limits.

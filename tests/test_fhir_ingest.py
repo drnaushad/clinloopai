@@ -247,7 +247,7 @@ class TestRadiologyReportReading(unittest.TestCase):
         statuses, _ = self._rules("Chest radiograph PA", text, extra=[
             _rad("r2", "P", "2026-02-25T09:00:00Z", "Chest radiograph PA", "Pneumonia has resolved.")],
             when=datetime(2026, 3, 1))
-        self.assertEqual(statuses, {"R033": "closed"})
+        self.assertEqual(statuses, {"R033": "delayed"})
 
     def test_korean_xray_recommendation(self):
         statuses, _ = self._rules("흉부 X선", "우하엽 폐렴. 6주 후 추적 X선 검사 권고.")
@@ -272,11 +272,11 @@ class TestRadiologyReportReading(unittest.TestCase):
                                   "Lung-RADS 4A. 7 mm solid nodule in the right upper lobe. Recommend LDCT in 3 months.")
         self.assertEqual(statuses, {"R019": "open"})   # not R003 as well
 
-    def test_lung_rads_interval_has_grace(self):
+    def test_lung_rads_late_followup_is_not_hidden_by_grace(self):
         statuses, _ = self._rules("Low-dose CT chest", "Lung-RADS 4A. 7 mm solid nodule.", extra=[
             _rad("r2", "P", "2026-04-15T09:00:00Z", "Low-dose CT chest", "Lung-RADS 2.")],   # 95 days later
             when=datetime(2026, 5, 1))
-        self.assertEqual(statuses, {"R019": "closed"})
+        self.assertEqual(statuses, {"R019": "delayed"})
 
     def test_lung_rads_3_needs_six_month_ldct(self):
         statuses, _ = self._rules("Low-dose CT chest", "Stable 7 mm right upper lobe nodule. Lung-RADS 3.")

@@ -42,6 +42,9 @@ def report(text, rid="r1", when="2026-03-01T09:00:00Z", category="RAD", title="P
 
 
 class FakeModel:
+    def checkpoint_identity(self):
+        return {"model": "fake-7b", "digest": "a" * 64}
+
     def __init__(self, items, error=None):
         self.items, self.error, self.prompts = items, error, []
 
@@ -84,6 +87,31 @@ class TestReadReport(unittest.TestCase):
     def test_unreadable_answer_is_not_a_clean_read(self):
         out = sr.read_report(UNUSUAL, lambda p, s: {"text": "I think the patient is fine.", "model": "fake"})
         self.assertFalse(out["available"])
+
+    def test_cropped_critical_quote_retains_preceding_negation_and_drops_model_advice(self):
+        model = FakeModel([{"category": "critical_finding", "quote": "pulmonary embolism",
+                            "reason": "Start invented treatment immediately"}])
+        out = sr.read_report("No pulmonary embolism is identified.", model)
+        item = out["items"][0]
+        self.assertEqual(item["quote"], "No pulmonary embolism is identified.")
+        self.assertTrue(item["context_flagged"])
+        self.assertTrue(item["human_review_required"])
+        self.assertNotIn("invented treatment", item["reason"])
+        self.assertIn("untrusted", sr.SYSTEM_PROMPT)
+
+    def test_repeated_source_quote_is_not_presented_as_unique_evidence(self):
+        model = FakeModel([{"category": "critical_finding", "quote": "pulmonary embolism", "reason": "Unverified"}])
+        out = sr.read_report("Prior pulmonary embolism. No pulmonary embolism today.", model)
+        item = out["items"][0]
+        self.assertEqual(item["source_occurrences"], 2)
+        self.assertTrue(item["source_ambiguous"])
+        self.assertEqual(len(item["source_context"]), 2)
+
+    def test_cropped_non_actionable_advice_uses_full_source_context(self):
+        model = FakeModel([{"category": "imaging_followup", "quote": "follow-up imaging", "reason": "Unverified"}])
+        out = sr.read_report("No further follow-up imaging is necessary.", model)
+        self.assertEqual(out["items"], [])
+        self.assertEqual(out["not_actionable"], 1)
 
 
 class TestSecondReadPatient(unittest.TestCase):
@@ -139,6 +167,16 @@ class TestSecondReadPatient(unittest.TestCase):
         sr.second_read_patient(self.store, "P", [PATIENT, report(UNUSUAL, "a"), report(UNUSUAL, "b")],
                                model=model, budget=budget, now=NOW)
         self.assertEqual(len(model.prompts), 1)
+
+    def test_prompt_or_configured_name_change_invalidates_cached_read(self):
+        resources, model = [PATIENT, report(UNUSUAL)], FakeModel([])
+        sr.second_read_patient(self.store, "P", resources, model=model, now=NOW)
+        with mock.patch.object(sr, "SYSTEM_PROMPT", sr.SYSTEM_PROMPT + " New research contract."):
+            sr.second_read_patient(self.store, "P", resources, model=model, now=NOW)
+        self.assertEqual(len(model.prompts), 2)
+        with mock.patch.dict(os.environ, {"CLINLOOP_SECOND_READER_MODEL": "synthetic-other-checkpoint"}):
+            sr.second_read_patient(self.store, "P", resources, model=model, now=NOW)
+        self.assertEqual(len(model.prompts), 3)
 
     def test_model_failure_is_recorded_and_files_nothing(self):
         flags = sr.second_read_patient(self.store, "P", [PATIENT, report(UNUSUAL)], model=FakeModel([], error="timeout"), now=NOW)

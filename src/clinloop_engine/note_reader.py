@@ -27,7 +27,6 @@ rules missed; suggestions are shown to a person and never open a loop.
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from .clinical_ontology import radiology_grace_days
 
 DAY = 1.0
 WEEK = 7.0
@@ -348,7 +347,7 @@ def _plan(kind: str, target: Optional[str], s: str, extra: Optional[Dict[str, An
     stated = days is not None
     if not stated:
         days = DEFAULT_DAYS[kind]
-    due = round(days + (radiology_grace_days(days) if kind == "imaging" else max(3.0, 0.15 * days)), 1)
+    due = round(days, 1)  # Preserve the plan interval; do not silently add scheduling grace.
     plan = {"kind": kind, "target": target, "interval_days": days, "interval_stated": stated,
             "interval_text": words, "due_days": due, "rule_id": RULE_FOR[kind], "evidence": s.strip()[:300],
             "tracked": True, "reason": None, "_at": at}

@@ -1,24 +1,81 @@
-# How accurately does ClinLoop read reports? A blind evaluation
+# Report-reading evaluation: historical development results and current limits
 
 **Question:** given a radiology or pathology report, does ClinLoop open the follow-up obligations a careful
 specialist would, with the right deadline, and stay quiet when nothing is needed? When follow-up
 happens, does it close the right obligation, and only that one?
 
-**Short answer.** The best guides are the first-pass scores on sets nobody had looked at.
+**Current interpretation (2026-10-25): clinical accuracy is not established.** The historical
+scores below describe synthetic development exercises, with labels written by AI assistants or
+project developers rather than an independent clinician reference panel. "Blind" here means the
+case writers did not see the implementation; it does not establish independent clinical review.
+Later reuse for debugging means these cases are regression fixtures, not an untouched test cohort.
 
-- **Short impressions** (clean, one-paragraph): **97%** of reports handled correctly.
-- **Full, real-style reports** (sections, addenda, Korean-English shorthand, scanned-text noise):
-  - **80%** on the first such set;
-  - **87.5%** on a second, untouched set after a round of fixes;
-  - no false alarms on 96% of normal reports.
-- **Follow-up tracking** over patient timelines:
-  - about **85%** of findings got the correct status (done, done late, pending, missed);
-  - after the fixes, **0 false closures**. A follow-up is never shown as done when it was not.
+The previously published aggregate check reported 635/753 exact synthetic matches, 466/582 expected
+obligations found, 466/503 predicted obligations matched, and 363/456 eligible deadlines within strict
+reference bounds. Timing excludes missed obligations. These are historical, version-specific results;
+they must not be attributed to a new engine without rerunning the evaluation.
 
-Every defect found was fixed and is covered by a test. All 450 cases and 60 timelines now pass, but
-those are no longer unbiased numbers. The steady gap between first-pass scores and after-fix scores
-is the honest message: real report wording has a long tail. These are synthetic reports, so this is
-software verification, not clinical validation (see "Limits" below).
+A 2026-10-25 review reproduced false closure when a procedure's completion status was missing or
+unmapped, and hidden scheduling grace after report and note intervals. A local correction is a
+**clinical draft pending line-by-line clinician review**, not a deployed or clinically validated fix.
+The draft requires affirmative completion evidence, preserves report deadlines, distinguishes tracked
+task completion from overall care completion, and invalidates approval after shared decision-code
+changes. The limits and review gates are recorded in `PRODUCTION_READINESS.md`.
+
+Claims of "zero false closures" below apply only to the specific historical fixtures and code tested.
+They do not prove that false closure is impossible or that all defects have been fixed. Any historic
+"clinically equivalent" grouping is broad action-group agreement, not clinician-adjudicated equivalence.
+Do not use this page as a clinical performance claim, diagnostic guarantee, or evidence of patient benefit.
+
+## Integrated rerun (2026-10-26; local draft)
+
+The combined candidate was rerun without relabelling the existing 753 report fixtures or 60
+longitudinal fixtures. Results remain 635/753 exact report rule sets, 466/582 expected obligations
+found, 466/503 predicted obligations matched, and 448/456 deadlines within strict reference bounds.
+Thus 116 expected obligations remain missed and 37 predicted obligations remain extra under these
+synthetic labels. Timing excludes missed obligations. The timelines remain 35/60 exact and 53/78
+strict rule-status matches; no false closure was observed in these specific fixtures.
+
+A counts-only disagreement queue was generated for clinician review. These are not clinically
+adjudicated errors: some may involve label or task-definition disagreements. Do not rewrite rules
+or reference labels just to raise the aggregate score. Review the source, intended use and medical
+basis independently, preserve original labels and record adjudications separately.
+
+The structured-event benchmark now compares four systems (rules, logistic regression,
+gradient-boosted trees and a small neural network) on the same 207-training/93-test synthetic
+partition. All four classify this easy generated task perfectly. This is not a report-reading,
+image, external-validation or patient-benefit result, and does not resolve the report misses above.
+The 24-case unstructured-text evaluator was tested with stand-in models. A later CPU-only MedGemma
+4B pilot attempted two cases, accepted one and stopped on a source/schema rejection; neither case
+matched the exact expected tuples. The other 22 cases were unrun. Metrics schema 2 reports unrun
+cases separately from measured misses; no comparative clinical performance is established. GPU
+validation and the remaining model matrix are pending.
+
+## Local safety-correction rerun (2026-10-25; not released)
+
+The same 753 previously used synthetic report fixtures were rerun against the published baseline
+`0a95df39` and the local clinical draft, without changing their reference labels.
+
+| Check | Baseline | Local draft |
+| --- | --- | --- |
+| Exact report rule sets | 635/753 (84.3%) | 635/753 (84.3%) |
+| Expected obligations found | 466/582 (80.1%) | 466/582 (80.1%) |
+| Matched predicted obligations | 466/503 (92.6%) | 466/503 (92.6%) |
+| Negative reports with no alert | 265/266 (99.6%) | 265/266 (99.6%) |
+| Deadlines within strict reference bounds, conditional on an exact matching rule | 363/456 (79.6%) | 448/456 (98.2%) |
+
+These are software comparisons on reused synthetic fixtures, not clinical accuracy estimates.
+Runs used `PYTHONHASHSEED=42`. The deadline denominator excludes missed obligations; report detection
+was unchanged on the final comparison. Testing caught and corrected an intermediate calendar-conversion
+regression that duplicated a nodule/biopsy task. Equivalent three-month nodule tracking now preserves
+one task and the earlier calendar or rule deadline. The original reference labels were not rewritten;
+all 42 developer-labelled Korean cases still agree at the rule-set level.
+
+On the 60 reused synthetic timelines, the local draft matched 35/60 complete timelines and 53/78
+strict rule-status comparisons. Broad finding-status agreement was 53/57 (93.0%). No false closures
+were observed in these fixtures; 21 rule-presence disagreements and four open-versus-done disagreements
+remain. This is not evidence that all false-closure mechanisms or missing obligations are eliminated.
+All results are subordinate to independent clinician reference labels and a hospital silent pilot.
 
 ## Method
 
@@ -88,7 +145,7 @@ python tests/report_eval/run_timelines.py tests/report_eval/timelines.json --sho
 | Timelines, confirmation set | 20 | 85.0% | **0** |
 | All 60 after fixes | 60 | 93.0% | **0** (enforced in CI) |
 
-**The 3 false closures**, now fixed:
+**Three false closures in that historical exercise**, addressed at the time:
 - a cardiology referral closed a Lung-RADS 4B work-up;
 - a nephrology referral closed a suspicious-kidney-mass referral;
 - a liver biopsy closed a pancreatic-cyst work-up.
@@ -117,7 +174,7 @@ as it stood, before anything was changed for it:
 | **Confirmation, written after the fixes (40 Korean, 40 English)** | 80 | **91.2%** | **93.1%** | 97.6% |
 | All 690 after every fix (not unbiased) | 690 | 99.7% | 99.6% | 99.3% |
 
-**The confirmation set is the honest number for this round.** It improves on the earlier untouched
+**The confirmation set is a historical synthetic first-pass result for this round.** It improves on the earlier untouched
 real-style sets (80% and 87.5%), but the long tail is still there. Korean-language reports remain
 weaker than English ones on first pass (87.5% against 95.0% in the confirmation set).
 

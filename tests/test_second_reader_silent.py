@@ -64,7 +64,8 @@ class TestSilentReading(unittest.TestCase):
         rows = self.store.second_reader_suggestions()
         self.assertEqual(len(rows), 1)
         self.assertEqual((rows[0]["category"], rows[0]["quote"], rows[0]["report_ref"]),
-                         ("imaging_followup", "Please obtain a dedicated pelvic MRI", "DiagnosticReport/r1"))
+                         ("imaging_followup", "Please obtain a dedicated pelvic MRI at the earliest convenience.", "DiagnosticReport/r1"))
+        self.assertIn("clinical interpretation requires clinician review", rows[0]["reason"])
         self.assertEqual(self.store.second_read("P|r1")["flags"], 1)
         # Read once: the same report is not sent again, and the suggestion is not filed twice
         model = FakeModel(MRI)

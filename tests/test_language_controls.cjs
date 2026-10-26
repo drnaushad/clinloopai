@@ -75,3 +75,24 @@ test('sign-in status follows the selected language while preserving username, ro
   assert.equal(status.textContent,'Signed in as practice.clinician (clinician). · as of 2026-10-20 12:22');
   status.textContent='연결 오류: source text';localizeSessionStatus(doc);assert.equal(status.textContent,'연결 오류: source text');
 });
+
+
+test('cockpit summary uses the selected language for an unfamiliar synthetic case and treats text as text', () => {
+  const vm = require('node:vm');
+  const fs = require('node:fs');
+  const source = fs.readFileSync('js/app.js', 'utf8');
+  const nodes = Object.fromEntries(['summary-patient-name','summary-patient-meta','summary-q1-finding',
+    'summary-q2-problem','summary-q3-action','summary-neg-risk'].map(id=>[id,{textContent:''}]));
+  for (const node of Object.values(nodes)) Object.defineProperty(node,'innerHTML',{set(){throw Error('Summary text interpreted as markup');}});
+  const context={window:{},location:{hostname:"clinloopai.app",protocol:"https:"},document:{addEventListener(){},getElementById:id=>nodes[id]||null}};
+  vm.runInNewContext(source+'\nthis.renderSummary = ClinLoopApp.prototype.updateSummaryView;',context);
+  const app={currentLang:'en',closedOverrides:new Set(),currentCase:{scenario_id:'SYNTHETIC-UNFAMILIAR',
+    patient_id:'SYNTHETIC-P',patient_age:60,patient_sex:'F',scenario_name:'<img src=x onerror=alert(1)>',missing_followup:'Synthetic follow-up'}};
+  context.renderSummary.call(app);
+  for (const node of Object.values(nodes)) assert(!/[가-힣]/.test(node.textContent));
+  assert.equal(nodes['summary-q1-finding'].textContent,'<img src=x onerror=alert(1)>');
+  assert.equal(nodes['summary-neg-risk'].textContent,'Not estimated');
+  app.currentCase.scenario_id='SC-0062';context.renderSummary.call(app);
+  assert.match(nodes['summary-q3-action'].textContent,/risk-based/);
+  assert.doesNotMatch(nodes['summary-q3-action'].textContent,/Mandatory/);
+});

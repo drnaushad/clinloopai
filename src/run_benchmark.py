@@ -4,8 +4,8 @@ run_benchmark.py — Main Entry Script for ClinLoop AI
 Executes the full pipeline:
 1. Generates 300 synthetic patient trajectories
 2. Runs the ClinLoop AI engine (Hypergraph + Safety Clock + Risk Scorer)
-3. Runs EMR and LLM baselines
-4. Calculates metrics and generates benchmark figures
+3. Fits logistic-regression, gradient-boosted-tree and neural baselines on a training group split
+4. Evaluates all four systems on the same synthetic patient-group holdout
 """
 
 import os
@@ -21,7 +21,7 @@ from src.clinloop_engine.visualizer import Visualizer
 def main():
     print("=" * 60)
     print(" ClinLoop AI: Neuro-Symbolic Open-Loop Detection Engine")
-    print(" ClinLoop AI - Benchmark Suite")
+    print(" Research only: synthetic group holdout, not clinical accuracy")
     print("=" * 60)
     
     # 1. Setup paths
@@ -35,7 +35,7 @@ def main():
     save_scenarios(scenarios, data_dir)
     
     # 3. Run Benchmarks
-    print("\n[2/4] Executing baseline algorithms and ClinLoop AI...")
+    print("\n[2/4] Training ML/neural comparators and evaluating a common group holdout...")
     suite = BenchmarkSuite(scenarios)
     results = suite.run()
     
@@ -44,15 +44,16 @@ def main():
     
     # Print summary table
     print("\n" + "-"*55)
-    print(f"{'Model':<20} | {'Sens':<6} | {'Spec':<6} | {'F1':<6} | {'F.Alerts':<8}")
+    print(f"{'Model':<26} | {'Sens':<6} | {'Spec':<6} | {'F1':<6} | {'F.Alerts':<8}")
     print("-" * 55)
     for model, metrics in results["overall"].items():
         sens = metrics["sensitivity"]
         spec = metrics["specificity"]
         f1 = metrics["f1_score"]
         fa = metrics["alert_fatigue"]
-        print(f"{model:<20} | {sens:.3f}  | {spec:.3f}  | {f1:.3f}  | {fa:5.1f}/100")
+        print(f"{model:<26} | {sens:.3f}  | {spec:.3f}  | {f1:.3f}  | {fa:5.1f}/100")
     print("-" * 55)
+    print("Research scores only: no clinical state changed and no hospital accuracy established.")
     
     # 4. Generate Visualizations
     print("\n[4/4] Generating publication-quality figures...")

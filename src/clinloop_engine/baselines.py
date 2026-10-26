@@ -11,7 +11,10 @@ Implements two baselines for benchmarking against ClinLoop AI:
 2. LLMBaseline: Simulated LLM zero-shot approach
    - Better at understanding clinical text
    - BUT: hallucination (~12-15%), temporal drift, no formal logic
-   - Uses TF-IDF + logistic regression as a proxy with injected errors
+   - Reads reference labels and injects errors; not a measured or fitted comparator
+
+These legacy illustrations are excluded from BenchmarkSuite measured results.
+Genuine fitted comparators live in src/validation/learned_baselines.py.
 """
 
 import random
@@ -39,7 +42,7 @@ class EMRInboxBaseline:
     """
 
     def __init__(self):
-        self.name = "EMR Inbox Baseline"
+        self.name = "EMR inbox simulator (reference-label dependent)"
         # Types this baseline can detect (limited scope)
         self._detectable_types = {
             "lab_result",       # Only if flagged
@@ -151,7 +154,7 @@ class LLMBaseline:
     """
 
     def __init__(self, hallucination_rate: float = 0.14):
-        self.name = "LLM Zero-shot Baseline"
+        self.name = "LLM simulator (reference-label dependent; no model inference)"
         self.hallucination_rate = hallucination_rate
         # LLM is better than EMR but still imperfect
         self._sensitivity_by_severity = {

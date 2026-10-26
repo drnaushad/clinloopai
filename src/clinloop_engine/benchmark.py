@@ -1,21 +1,24 @@
 """
 benchmark.py — ClinLoop AI Benchmarking Suite
 
-Evaluates the performance of ClinLoop AI against baselines (EMR Inbox, LLM).
+Compares the deterministic engine with fitted ML/neural baselines on a synthetic group holdout.
 Calculates metrics: Sensitivity, Specificity, F1, Alert Fatigue.
 Stratifies performance by risk severity.
 """
 
 import json
 import os
+import hashlib
+from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc, precision_recall_curve
+from sklearn.metrics import confusion_matrix, roc_curve, auc, precision_recall_curve, brier_score_loss, log_loss
 
 from .loop_detector import ClinLoopDetector
-from .baselines import EMRInboxBaseline, LLMBaseline
+from ..validation.learned_baselines import event_features, grouped_split, train_and_predict
+from .safety_clock import normalize_timestamp
 
 # Fixed evaluation clock, after the last synthetic event (Nov 2026). Using the
 # wall clock would make AUROC/PR-AUC change depending on the day it is run.
@@ -25,10 +28,8 @@ BENCHMARK_EVALUATION_TIME = datetime(2027, 1, 1)
 class BenchmarkSuite:
     def __init__(self, scenarios: List[Dict], evaluation_time: Optional[datetime] = None):
         self.scenarios = [s.to_dict() if hasattr(s, "to_dict") else s for s in scenarios]
-        self.evaluation_time = evaluation_time or BENCHMARK_EVALUATION_TIME
+        self.evaluation_time = normalize_timestamp(evaluation_time or BENCHMARK_EVALUATION_TIME)
         self.clinloop = ClinLoopDetector(evaluation_time=self.evaluation_time)
-        self.emr_baseline = EMRInboxBaseline()
-        self.llm_baseline = LLMBaseline(hallucination_rate=0.14)
         self.results = {}
         
     def _calculate_metrics(self, y_true: List[bool], y_pred: List[bool], y_scores: List[float], name: str) -> Dict:
@@ -76,73 +77,88 @@ class BenchmarkSuite:
         }
 
     def run(self) -> Dict:
-        """Run all detectors and compute benchmark metrics."""
-        print(f"Running benchmark on {len(self.scenarios)} scenarios...")
-        
-        # 1. Get predictions
-        print("  Evaluating ClinLoop AI (Neuro-Symbolic)...")
-        clinloop_preds = self.clinloop.get_predictions(self.scenarios)
-        
-        print("  Evaluating EMR Inbox Baseline...")
-        emr_preds = self.emr_baseline.predict(self.scenarios)
-        
-        print("  Evaluating LLM Zero-shot Baseline...")
-        llm_preds = self.llm_baseline.predict(self.scenarios)
-        
-        # 2. Extract ground truth (Positive class = OPEN or DELAYED loop)
-        y_true = [s["ground_truth_status"] in ("open", "delayed") for s in self.scenarios]
-        
-        # 3. Extract predicted labels and scores
-        # ClinLoop
-        cl_pred_labels = [p["predicted_status"] in ("open", "delayed", "needs_human_review") for p in clinloop_preds]
-        cl_pred_scores = [p["predicted_risk"] for p in clinloop_preds]
-        
-        # EMR
-        emr_pred_labels = [p["predicted_status"] in ("open", "delayed") for p in emr_preds]
-        emr_pred_scores = [p["predicted_risk"] for p in emr_preds]
-        
-        # LLM
-        llm_pred_labels = [p["predicted_status"] in ("open", "delayed") for p in llm_preds]
-        llm_pred_scores = [p["predicted_risk"] for p in llm_preds]
-        
-        # 4. Calculate overall metrics
-        metrics = {
-            "ClinLoop AI": self._calculate_metrics(y_true, cl_pred_labels, cl_pred_scores, "ClinLoop AI"),
-            "EMR Baseline": self._calculate_metrics(y_true, emr_pred_labels, emr_pred_scores, "EMR Baseline"),
-            "LLM Baseline": self._calculate_metrics(y_true, llm_pred_labels, llm_pred_scores, "LLM Baseline")
-        }
-        
-        # 5. Stratify by severity
-        severities = ["critical", "high", "moderate", "low"]
+        """A fixed patient/duplicate-group holdout; every comparator sees the same cases.
+
+        The label is an open OR delayed synthetic obligation, including a late
+        completion. It does not mean the patient currently needs an intervention.
+        No reference-label simulator is treated as a measured comparator.
+        """
+        import platform
+        import sklearn
+        from .governance import ruleset_version
+
+        if any(s.get("ground_truth_status") not in {"open", "closed", "delayed"} for s in self.scenarios):
+            raise ValueError("Research cohort requires explicit binary-evaluable reference statuses")
+        features = [event_features(s, self.evaluation_time) for s in self.scenarios]
+        train, test, split = grouped_split(self.scenarios, features)
+        labels = [s["ground_truth_status"] in ("open", "delayed") for s in self.scenarios]
+        y_train, y_true = [labels[i] for i in train], [labels[i] for i in test]
+        if set(y_train) != {False, True} or set(y_true) != {False, True}:
+            raise ValueError("Fixed research split lacks a class; collect more independent groups")
+        print(f"Synthetic group holdout: {len(train)} training / {len(test)} test trajectories")
+        learned = train_and_predict([features[i] for i in train], y_train, [features[i] for i in test])
+        # Inference receives observed events and grouping keys only. Labels,
+        # severity annotations, scenario names and missing-followup hints stay out.
+        views = [{"scenario_id": self.scenarios[i]["scenario_id"],
+                  "patient_id": self.scenarios[i]["patient_id"],
+                  "events": [e for e in self.scenarios[i]["events"]
+                             if normalize_timestamp(e["timestamp"]) <= self.evaluation_time]}
+                 for i in test]
+        batch = self.clinloop.process_batch(views)
+        predictions = []
+        for view in views:
+            detections = batch.get(view["scenario_id"], [])
+            top = detections[0] if detections else None
+            predictions.append({"predicted_status": top.loop_status if top else "closed",
+                                "predicted_risk": top.risk_score if top else 0.0,
+                                "predicted_abstain": top.should_abstain if top else False})
+        cl_labels = [p["predicted_status"] in ("open", "delayed", "needs_human_review") for p in predictions]
+        scores = {"ClinLoop AI": [p["predicted_risk"] for p in predictions]}
+        predicted = {"ClinLoop AI": cl_labels}
+        metrics = {"ClinLoop AI": self._calculate_metrics(y_true, cl_labels, scores["ClinLoop AI"], "ClinLoop AI")}
+        for name, result in learned.items():
+            scores[name] = result["scores"]
+            predicted[name] = [score >= 0.5 for score in result["scores"]]
+            metrics[name] = self._calculate_metrics(y_true, predicted[name], scores[name], name)
+            metrics[name]["training"] = {k: v for k, v in result.items() if k != "scores"}
+            metrics[name]["threshold"] = 0.5
+            metrics[name]["brier_score"] = float(brier_score_loss(y_true, scores[name]))
+            metrics[name]["log_loss"] = float(log_loss(y_true, scores[name], labels=[False, True]))
         stratified = {}
-        
-        for sev in severities:
-            # Indices for this severity
-            idx = [i for i, s in enumerate(self.scenarios) if s.get("ground_truth_severity", "").lower() == sev]
-            
-            if not idx:
+        for severity in ("critical", "high", "moderate", "low"):
+            positions = [j for j, i in enumerate(test)
+                         if self.scenarios[i].get("ground_truth_severity", "").lower() == severity]
+            if not positions:
                 continue
-                
-            y_true_sev = [y_true[i] for i in idx]
-            cl_pred_sev = [cl_pred_labels[i] for i in idx]
-            emr_pred_sev = [emr_pred_labels[i] for i in idx]
-            llm_pred_sev = [llm_pred_labels[i] for i in idx]
-            
-            stratified[sev] = {
-                "count": len(idx),
-                "ClinLoop_Sens": recall_score(y_true_sev, cl_pred_sev, zero_division=0) if any(y_true_sev) else 1.0,
-                "EMR_Sens": recall_score(y_true_sev, emr_pred_sev, zero_division=0) if any(y_true_sev) else 1.0,
-                "LLM_Sens": recall_score(y_true_sev, llm_pred_sev, zero_division=0) if any(y_true_sev) else 1.0,
-            }
-            
+            positives = sum(y_true[j] for j in positions)
+            stratified[severity] = {"count": len(positions), "positive_references": positives,
+                                    "sensitivity": {name: (sum(y_true[j] and rows[j] for j in positions) / positives
+                                                           if positives else None)
+                                                    for name, rows in predicted.items()}}
         self.results = {
-            "overall": metrics,
-            "stratified": stratified,
-            "n_samples": len(self.scenarios),
+            "schema_version": 2, "overall": metrics, "stratified": stratified,
+            "cohort_samples": len(self.scenarios), "n_samples": len(test), "split": split,
             "evaluation_time": self.evaluation_time.isoformat(),
-            "abstention_rate": sum(p["predicted_abstain"] for p in clinloop_preds) / len(clinloop_preds)
+            "abstention_rate": sum(p["predicted_abstain"] for p in predictions) / len(predictions),
+            "scope": "Synthetic event-trajectory software experiment; not report-text, LLM or clinical accuracy",
+            "target": "Open or delayed obligation, including a completed-late task; not current treatment need",
+            "feature_contract": "Observed typed events and temporal edges only; no IDs, reference labels, scenario hints, rule outputs or future events",
+            "preprocessing_fit": "training partition only", "model_artifacts_saved": False,
+            "clinical_state_modified": False, "clinical_accuracy_established": False,
+            "probability_calibration": "Not established; all scores are research ranking outputs",
+            "provenance": {"python": platform.python_version(), "sklearn": sklearn.__version__,
+                           "numpy": np.__version__, "ruleset_version": ruleset_version(), "seed": 42,
+                           "research_source_sha256": hashlib.sha256(
+                               Path(__file__).read_bytes() +
+                               (Path(__file__).parents[1] / "validation" / "learned_baselines.py").read_bytes()).hexdigest()},
+            "excluded_comparators": {"EMRInboxBaseline": "Reference-label simulation, not a measured hospital system",
+                                      "LLMBaseline": "Reference-label simulation, not an LLM inference or fitted model"},
+            "limits": ["Synthetic generator labels share assumptions with the rule engine",
+                       "Patient separation is within this synthetic cohort only",
+                       "No template-family, site, temporal or external clinical validation",
+                       "No learned comparator can open, close or suppress a clinical task",
+                       "Learned baselines use structured event features, not raw reports or images"],
         }
-        
         return self.results
 
     def save_results(self, output_dir: str):
@@ -150,5 +166,5 @@ class BenchmarkSuite:
         os.makedirs(output_dir, exist_ok=True)
         path = os.path.join(output_dir, "benchmark_results.json")
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(self.results, f, indent=2)
+            json.dump(self.results, f, indent=2, allow_nan=False)
         print(f"  ✓ Saved benchmark results to {path}")

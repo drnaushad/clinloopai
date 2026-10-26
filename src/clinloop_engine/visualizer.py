@@ -17,8 +17,9 @@ from typing import Dict, List
 plt.style.use('seaborn-v0_8-whitegrid')
 COLORS = {
     "ClinLoop AI": "#0288d1",      # Blue
-    "EMR Baseline": "#757575",     # Gray
-    "LLM Baseline": "#f57c00",     # Orange
+    "Logistic regression": "#757575",
+    "Neural network (32,16)": "#f57c00",
+    "Gradient-boosted trees": "#7b1fa2",
     "Light Blue": "#e1f5fe",
     "Light Orange": "#ffe0b2",
     "Light Gray": "#eeeeee"
@@ -45,7 +46,7 @@ class Visualizer:
         plt.ylim([0.0, 1.05])
         plt.xlabel("False Positive Rate (1 - Specificity)", fontsize=12)
         plt.ylabel("True Positive Rate (Sensitivity)", fontsize=12)
-        plt.title("Receiver Operating Characteristic (ROC)", fontsize=14, pad=15)
+        plt.title("ROC — synthetic group holdout", fontsize=14, pad=15)
         plt.legend(loc="lower right", fontsize=11)
         plt.tight_layout()
         
@@ -69,7 +70,7 @@ class Visualizer:
         plt.ylim([0.0, 1.05])
         plt.xlabel("Recall (Sensitivity)", fontsize=12)
         plt.ylabel("Precision (PPV)", fontsize=12)
-        plt.title("Precision-Recall Curve", fontsize=14, pad=15)
+        plt.title("Precision–recall — synthetic group holdout", fontsize=14, pad=15)
         plt.legend(loc="lower left", fontsize=11)
         plt.tight_layout()
         
@@ -88,11 +89,11 @@ class Visualizer:
         
         plt.figure(figsize=(10, 6), dpi=300)
         x = np.arange(len(metrics_to_plot))
-        width = 0.25
+        width = 0.8 / max(1, n_models)
         
         for i, model in enumerate(models):
             values = [results["overall"][model][m] for m in metrics_to_plot]
-            pos = x - width + (i * width)
+            pos = x + (i - (n_models - 1) / 2) * width
             bars = plt.bar(pos, values, width, label=model, color=COLORS[model])
             
             # Add text labels on bars
@@ -102,7 +103,7 @@ class Visualizer:
                          f'{height:.2f}', ha='center', va='bottom', fontsize=10)
                 
         plt.ylabel('Score', fontsize=12)
-        plt.title('Performance Comparison: ClinLoop vs Baselines', fontsize=14, pad=15)
+        plt.title('Synthetic group holdout — not clinical accuracy', fontsize=14, pad=15)
         plt.xticks(x, labels, fontsize=12)
         plt.ylim(0, 1.1)
         plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=11)
@@ -123,16 +124,18 @@ class Visualizer:
         
         colors = [COLORS[m] for m in models]
         bars = plt.bar(x, fatigue_values, 0.5, color=colors)
+        upper = max(1.0, max(fatigue_values, default=0.0) * 1.2)
+        plt.ylim(0, upper)
         
         # Add values on top
         for bar in bars:
             height = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width()/2., height + 0.5,
+            plt.text(bar.get_x() + bar.get_width()/2., height + upper * 0.02,
                      f'{height:.1f}', ha='center', va='bottom', fontsize=11)
             
-        plt.ylabel('False Alerts / 100 Patients', fontsize=12)
-        plt.title('Alert Fatigue Analysis (Lower is Better)', fontsize=14, pad=15)
-        plt.xticks(x, models, fontsize=12)
+        plt.ylabel('False alerts / 100 synthetic trajectories', fontsize=12)
+        plt.title('False alerts — synthetic group holdout', fontsize=14, pad=15)
+        plt.xticks(x, [m.replace(' (', '\n(') for m in models], fontsize=10)
         plt.grid(axis='y', linestyle='--', alpha=0.7)
         plt.tight_layout()
         

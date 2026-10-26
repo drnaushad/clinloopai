@@ -87,7 +87,8 @@ class FHIRClient:
         self.base = base_url.rstrip("/")
         self.timeout = timeout
         self.session = session or requests.Session()
-        self.session.headers.update({"Accept": "application/fhir+json"})
+        # Do not reuse a cached patient history after the change feed advances.
+        self.session.headers.update({"Accept": "application/fhir+json", "Cache-Control": "no-cache"})
         if auth is not None:
             self.session.auth = auth
         elif token:

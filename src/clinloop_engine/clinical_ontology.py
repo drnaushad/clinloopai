@@ -202,7 +202,7 @@ OBLIGATION_RULES: List[ObligationRule] = [
     ObligationRule(
         rule_id="R005",
         name="Abnormal Cervical Cytology → Colposcopy Referral",
-        description="Abnormal Pap smear requires colposcopy within 30 days",
+        description="Abnormal cervical cytology needs clinician risk assessment and an appropriate follow-up plan",
         trigger_event=EventType.LAB_RESULT,
         trigger_condition="abnormal_cervical_cytology",
         # The referral, or the colposcopy itself (a patient seen directly needs no separate referral)
@@ -213,6 +213,9 @@ OBLIGATION_RULES: List[ObligationRule] = [
         clinical_domain="laboratory",
         ltl_formula="□(LAB_RESULT[abnormal_pap] → ◇_{≤30d} (COLPOSCOPY_REFERRAL ∨ COLPOSCOPY_VISIT))",
         references=["ASCCP 2019 Risk-Based Management Guidelines"],
+        evidence_note="30 days is a proposed local tracking target, not a universal ASCCP deadline. "
+                      "Confirm cytology, HPV, age, pregnancy and screening history with a clinician. "
+                      "A recorded referral satisfies this referral task; it does not prove colposcopy or treatment occurred.",
     ),
     ObligationRule(
         rule_id="R006",
@@ -1295,27 +1298,16 @@ def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
             return MONITORING_WINDOW_DAYS[drug]
     if rule.rule_id == "R024" and details.get("severe_hypertension") is True:
         return 3.0   # severe hypertension: BP check within 72 hours (ACOG CO 736)
-    if rule.rule_id in LUNG_RADS_INTERVAL_RULES:
-        return rule.deadline_days + radiology_grace_days(rule.deadline_days)
     if rule.rule_id in RADIOLOGIST_REC_RULES:
         try:
             interval = float(details["recommended_interval_days"])
-            return interval + radiology_grace_days(interval)
+            return interval
         except (KeyError, TypeError, ValueError):
             pass
     return rule.deadline_days
 
 
 RADIOLOGIST_REC_RULES = {"R030", "R031", "R032", "R033"}
-# Scheduled screening intervals: a few days' slip is on time, not a missed follow-up
-LUNG_RADS_INTERVAL_RULES = {"R019", "R034"}
-
-
-def radiology_grace_days(interval_days: float) -> float:
-    """Scheduling tolerance after a radiologist's stated interval: 25%, at least 7 and at most 30 days."""
-    return min(30.0, max(7.0, 0.25 * interval_days))
-
-
 # ── Follow-up event statuses ────────────────────────────────────────────────
 #
 # A follow-up only closes a loop if it actually happened. A cancelled CT, a
@@ -1335,10 +1327,13 @@ NON_FULFILLING_STATUSES = frozenset({
 
 
 def is_fulfilling_status(status: Optional[str]) -> bool:
-    """True if an event with this status counts as a completed follow-up. Spaces and case are
-    ignored ("Entered in error", "IN PROGRESS")."""
-    norm = re.sub(r"[\s_]+", "-", str(status or "completed").strip().lower())
-    return norm not in NON_FULFILLING_STATUSES and norm.replace("-", "_") not in NON_FULFILLING_STATUSES
+    """Require affirmative completion evidence; missing/unmapped statuses stay open.
+
+    FHIR resource-specific statuses are normalised by the ingestion adapter first.
+    This allowlist also protects direct event imports that bypass that adapter.
+    """
+    norm = re.sub(r"[\s_]+", "-", str(status or "").strip().lower())
+    return norm in {"completed", "finished", "fulfilled", "final", "amended", "corrected", "appended"}
 
 
 def format_window(days: float) -> str:
@@ -1346,7 +1341,7 @@ def format_window(days: float) -> str:
     if days < 1.0:
         hours = round(days * 24)
         return f"{hours} hour{'s' if hours != 1 else ''}"
-    # Windows of two days or more are shown in whole days: "112.5 days" (3 months plus grace) is false precision.
+    # Windows of two days or more are shown in whole days.
     whole = int(days) if float(days).is_integer() or days >= 2 else round(days, 1)
     return f"{whole} day{'s' if whole != 1 else ''}"
 

@@ -5,6 +5,16 @@ the live record for about three months while a review team checks a weekly sampl
 marks overdue. Nothing reaches clinical care, so usual care is unchanged. Stage 1 (retrospective chart
 review, `src/validation/chart_review.py`) comes first; ethics approval comes before either.
 
+## Candidate preparation status (2026-10-26)
+
+Engineering may exercise this workflow with synthetic records and ephemeral authentication in an
+isolated test database. That is a software rehearsal, not a prospective hospital pilot. No hospital
+partner, named reviewer team, privacy/security acceptance or institutional approval is recorded for
+the current candidate. The numerical thresholds and durations below are draft protocol proposals;
+the clinical lead and statistician must approve them before use. A real pilot remains blocked until
+every prerequisite is documented. Do not change shared service settings just to make this checklist
+appear complete. Clinical/ML drafts stay unpublished and no patient outreach is enabled.
+
 ## 1. Before starting
 
 | Step | Who | Done when |

@@ -5,6 +5,27 @@ Blind evaluations ([`ACCURACY_EVALUATION.md`](ACCURACY_EVALUATION.md)) showed a 
 writer of realistic reports found wording it did not know. The second reader is a safety net for that
 tail.
 
+## Source-context correction (2026-10-25; local draft pending clinical review)
+
+The verifier now preserves the complete source sentence for a unique short model quote when it fits
+within the existing display limit. It exposes repeated-quote ambiguity and surrounding context;
+negated/qualified critical suggestions remain explicit human-review candidates, not diagnoses.
+Noncritical advice that becomes explicitly unnecessary in its complete source context is not flagged.
+Source matching and these limited pattern checks do not establish clinical correctness.
+
+Free-text model medical rationales are replaced with controlled source-check wording; an invented
+treatment recommendation must not be presented as verified evidence. The system prompt explicitly
+treats reports as untrusted data and prohibits obeying embedded instructions or inferring completed care.
+All returned suggestions require human review. Core/silent mode behavior is preserved.
+
+Cached reads bind prompt/verifier code, configured name, complete report context and the installed
+checkpoint digest. Fresh local metadata is checked before cache reuse and around generation.
+Same-name weight replacement invalidates the cache; changed or unavailable identity during generation
+discards that result. Injected test adapters without identity cannot reuse cached reads. Checkpoint
+identity is provenance, not model approval; changing weights still requires a new evaluation. Real model/checkpoint performance,
+prompt-injection resistance, negation, uncertainty and multilingual interpretation still need independent
+validation. Existing historical model scores below do not automatically apply to the new prompt/verifier.
+
 ## What it does
 
 For each recent radiology or pathology report, the hospital's **own** language model reads the report
@@ -68,12 +89,12 @@ API endpoints:
   model sees it.
 - **Verified:** quotes are checked against the report and the categories are fixed. An answer that is
   not the expected JSON counts as a failure, never as "nothing found".
-- **Bounded:** a report is read once, and again only if its text changes. Only recent reports are read
+- **Bounded:** a report is read again after its text, prompt, verifier or configured model name changes. Only recent reports are read
   (`CLINLOOP_SECOND_READER_LOOKBACK_DAYS`, default 30), with at most `CLINLOOP_SECOND_READER_MAX` per
   sync run (default 20).
-- **Which model:** `CLINLOOP_SECOND_READER_MODEL` (default `medgemma:27b`, which reads English
-  radiology/pathology reports) when it is installed on the Ollama server, otherwise the general best
-  model (EXAONE first, for Korean patient messages). Install with `ollama pull medgemma:27b` (~17 GB at
+- **Which model:** `CLINLOOP_SECOND_READER_MODEL` (default `medgemma:27b`) must be installed on the
+  Ollama server. An unavailable configured reader fails toward human review; it does not silently use
+  a different model. Install with `ollama pull medgemma:27b` (~17 GB at
   Q4, ~20 GB GPU/RAM). MedGemma is a Google research model under the Health AI Developer Foundations
   terms, not cleared as a medical device; its flags remain suggestions for a person to review, and in
   the core profile the reader stays silent.
@@ -124,8 +145,9 @@ python tests/report_eval/run_second_reader_eval.py tests/report_eval/second_read
 
 **Limits:**
 - **Synthetic reports.**
-- **The stand-in model is a hosted model,** not the hospital's own. A local 7–30B model may find less
-  and invent more. Verified quotes make invented items harmless, but they cannot recover missed ones.
+- **The stand-in model is a hosted model,** not the hospital's own. Performance may differ with a local
+  model. Matching source words does not establish a correct interpretation or make an invented
+  recommendation harmless, and it cannot recover a missed finding.
 - **Before going live:** run the hospital's model on its own de-identified reports in shadow mode,
   measure both numbers again against two specialists, and set the workload the clinicians accept.
 
