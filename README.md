@@ -1,4 +1,4 @@
-> **Unreviewed clinical/ML draft branch.** This branch is for engineering and independent clinician review. It is not merged into the released website and does not authorize patient care. Clinical review records remain pending. See [the draft review checklist](docs/reviews/CLINICAL_ML_DRAFT_20261026.md).
+> **Research preview — 2026-10-27.research1.** Published for synthetic-data software evaluation with independent review deferred by the project owner. This includes unreviewed clinical safety changes and offline ML comparators. It does not authorize patient care. All human source-review decisions remain pending; no clinician signatures or runtime approvals have been created. See [the review checklist](docs/reviews/CLINICAL_ML_DRAFT_20261026.md).
 
 <img src="icons/logo.svg" width="72" alt="ClinLoop logo: the rod of Asclepius inside a loop closed by an arrow">
 

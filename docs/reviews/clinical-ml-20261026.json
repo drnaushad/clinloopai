@@ -4,8 +4,10 @@
   "files": [
     {
       "file": "js/app.js",
-      "sha256": "411ed63684e428ac5427e8a0bcd0d7b8e033a76d553df919d3620a1998e1b67b",
+      "sha256": "7ac8ec7b5e16903071847289aeb5774b269d97d8cb281b9e82ea45c27ca98097",
       "changed_hunks": [
+        "@@ -17 +17 @@ const CLINLOOP_I18N = {",
+        "@@ -98 +98 @@ const CLINLOOP_I18N = {",
         "@@ -628 +628 @@ class ClinLoopApp {",
         "@@ -1955,10 +1955,3 @@ class ClinLoopApp {",
         "@@ -1974,7 +1966,0 @@ class ClinLoopApp {",
@@ -37,10 +39,39 @@
       "notes": []
     },
     {
+      "file": "js/appnav.js",
+      "sha256": "bda1c6638da9c86f898035cf0b8d478ce2799a798ef7407bca1d708328ac8da9",
+      "changed_hunks": [
+        "@@ -12 +12 @@"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
       "file": "scripts/build_engine_manifest.py",
       "sha256": "dddc6871516df10d65d1c6c6371400b6fc57d693146516c4bfbcb4febae3c132",
       "changed_hunks": [
         "@@ -27,2 +27,2 @@ DATA_FILES = [\"src/clinloop_engine/config/critical_findings.json\"]"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "scripts/build_workspace_shell.py",
+      "sha256": "e65abf44ded92271eab924e56c8a0dd54007b33620b947253b38c2c0c778b113",
+      "changed_hunks": [
+        "@@ -15,2 +15,2 @@ ROOT = Path(__file__).resolve().parents[1]",
+        "@@ -116 +116,7 @@ def shell(text: str, name: str, entries: list[dict]) -> str:"
       ],
       "requires_clinician": false,
       "reviewer": null,

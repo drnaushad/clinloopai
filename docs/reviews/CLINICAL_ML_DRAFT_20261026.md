@@ -1,10 +1,10 @@
 # Clinical/ML draft review — 26 October 2026
 
-Status: unreleased clinical behavior prepared for source review on a draft branch. No clinical approvals have been recorded. The released website remains on `main`. The 27 October engineering corrections and remaining requirements are recorded in [the PR58 deep review](PR58_DEEP_REVIEW_20261027.md); the refreshed packet contains 20 pending source reviews.
+Status: published as an unvalidated synthetic-data research preview at the project owner’s request, with independent source review deferred. No clinical approvals have been recorded. This is not a clinical release. The 27 October engineering corrections are recorded in [the PR58 deep review](PR58_DEEP_REVIEW_20261027.md). The publication packet contains 22 pending source reviews: the original 20 plus two release/navigation files.
 
 This branch carries the remaining clinical safety drafts, source provenance checks, patient/duplicate-separated synthetic ML comparators, dataset evaluation tooling and regression tests. Previously published interface, report-review, Epic and SMART/HAPI changes are preserved.
 
-Before merging clinical behavior:
+Before approving clinical behavior for patient-care use:
 
 - Arrange an independent, appropriately qualified clinician to review every changed clinical line and record decisions against the exact source hashes in `clinical-ml-20261026.json`.
 - Adjudicate the known synthetic report and timeline disagreements. Engineering tests do not resolve clinical reference disagreements.

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-workspace="index" data-language-options="en ko">
 <head>
-<script src="js/display-start.js?v=20261026_stable1"></script>
+<script src="js/display-start.js?v=20261027_research1"></script>
   <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,12 +9,12 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
   <title>ClinLoop AI | Closed-Loop Follow-up of Clinical Results</title>
-  <meta name="description" content="Clinical-use edition: finds and tracks missed follow-up of abnormal lab results, imaging findings and referrals with guideline-based rules a clinician can check. This public demo uses synthetic examples.">
+  <meta name="description" content="Research preview: explores tracking missed follow-up of abnormal lab results, imaging findings and referrals with guideline-based rules a clinician can check. This public demo uses synthetic examples.">
   <link rel="canonical" href="https://clinloopai.app/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ClinLoop AI">
   <meta property="og:title" content="ClinLoop AI | Closed-Loop Follow-up of Clinical Results">
-  <meta property="og:description" content="Finds and tracks missed follow-up of abnormal results, imaging findings and referrals. Clinical-use edition; public demo with synthetic examples.">
+  <meta property="og:description" content="Finds and tracks missed follow-up of abnormal results, imaging findings and referrals. Research preview with synthetic examples; independent clinical review pending.">
   <meta property="og:url" content="https://clinloopai.app/">
   <meta property="og:image" content="https://clinloopai.app/icons/icon-512.png">
   <meta name="twitter:card" content="summary">
@@ -28,7 +28,7 @@
 
 <link rel="stylesheet" href="css/responsive.css?v=20261023_locale1">
 <script defer src="js/language-controls.js?v=20261023_locale1"></script>
-<link rel="stylesheet" href="css/app-chrome.css?v=20261026_stable1"><script defer src="js/appearance-controls.js?v=20261026_stable1"></script><script defer src="js/workspace-shell.js?v=20261026_stable1"></script></head>
+<link rel="stylesheet" href="css/app-chrome.css?v=20261027_research1"><script defer src="js/appearance-controls.js?v=20261027_research1"></script><script defer src="js/workspace-shell.js?v=20261027_research1"></script></head>
 
 <body class="clinloop-page cockpit-loading"><a class="skip-link shell-skip" href="#clinloop-workspace">Skip to workspace</a>
 
@@ -51,7 +51,7 @@
       </div><div class="prominent-lang-pill" role="group" aria-label="Language Selector">
         <button id="lang-opt-ko" class="lang-opt-btn" title="한국어" lang="ko">한국어</button>
         <button id="lang-opt-en" class="lang-opt-btn active" title="English" lang="en">English</button>
-      </div></div></div><nav class="app-nav clinloop-shell-links" aria-label="ClinLoop pages"><a class="app-nav-link" href="./" data-label-en="Cockpit" data-label-ko="종합 화면" aria-current="page"><span data-nav-language="en">Cockpit</span><span data-nav-language="ko">종합 화면</span></a><a class="app-nav-link" href="worklist" data-label-en="Worklist" data-label-ko="업무 목록"><span data-nav-language="en">Worklist</span><span data-nav-language="ko">업무 목록</span></a><a class="app-nav-link" href="patient" data-label-en="Patient graph" data-label-ko="환자 그래프"><span data-nav-language="en">Patient graph</span><span data-nav-language="ko">환자 그래프</span></a><a class="app-nav-link" href="quality" data-label-en="Quality" data-label-ko="품질 지표"><span data-nav-language="en">Quality</span><span data-nav-language="ko">품질 지표</span></a><a class="app-nav-link" href="governance" data-label-en="Rule sign-off" data-label-ko="규칙 승인"><span data-nav-language="en">Rule sign-off</span><span data-nav-language="ko">규칙 승인</span></a><a class="app-nav-link" href="pilot" data-label-en="Pilot review" data-label-ko="시범 검토"><span data-nav-language="en">Pilot review</span><span data-nav-language="ko">시범 검토</span></a><a class="app-nav-link" href="imaging" data-label-en="Imaging" data-label-ko="영상"><span data-nav-language="en">Imaging</span><span data-nav-language="ko">영상</span></a><a class="app-nav-link" href="analyse" data-label-en="Analyse patient" data-label-ko="환자 분석"><span data-nav-language="en">Analyse patient</span><span data-nav-language="ko">환자 분석</span></a><a class="app-nav-link" href="reports" data-label-en="Live report reader" data-label-ko="실시간 보고서 검토"><span data-nav-language="en">Live report reader</span><span data-nav-language="ko">실시간 보고서 검토</span></a><a class="app-nav-link" href="review" data-label-en="Report review" data-label-ko="보고서 검토"><span data-nav-language="en">Report review</span><span data-nav-language="ko">보고서 검토</span></a><a class="app-nav-link" href="private" data-label-en="Personal workspace" data-label-ko="개인 작업 공간"><span data-nav-language="en">Personal workspace</span><span data-nav-language="ko">개인 작업 공간</span></a><a class="app-nav-link" href="validation" data-label-en="Validation evidence" data-label-ko="검증 근거"><span data-nav-language="en">Validation evidence</span><span data-nav-language="ko">검증 근거</span></a><a class="app-nav-link" href="deployment" data-label-en="International setup" data-label-ko="국제 배포 계획"><span data-nav-language="en">International setup</span><span data-nav-language="ko">국제 배포 계획</span></a></nav><div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label><select id="clinloop-page-picker"><optgroup label="Clinical workspace"><option value="/" selected>Cockpit</option><option value="/worklist">Worklist</option><option value="/patient">Patient graph</option><option value="/quality">Quality</option><option value="/governance">Rule sign-off</option><option value="/pilot">Pilot review</option><option value="/imaging">Imaging</option><option value="/analyse">Analyse patient</option></optgroup><optgroup label="Research"><option value="/reports">Live report reader</option><option value="/review">Report review</option><option value="/private">Personal workspace</option></optgroup><optgroup label="Evidence and setup"><option value="/validation">Validation evidence</option><option value="/deployment">International setup</option></optgroup></select></div></header>
+      </div></div></div><nav class="app-nav clinloop-shell-links" aria-label="ClinLoop pages"><a class="app-nav-link" href="./" data-label-en="Cockpit" data-label-ko="종합 화면" aria-current="page"><span data-nav-language="en">Cockpit</span><span data-nav-language="ko">종합 화면</span></a><a class="app-nav-link" href="worklist" data-label-en="Worklist" data-label-ko="업무 목록"><span data-nav-language="en">Worklist</span><span data-nav-language="ko">업무 목록</span></a><a class="app-nav-link" href="patient" data-label-en="Patient graph" data-label-ko="환자 그래프"><span data-nav-language="en">Patient graph</span><span data-nav-language="ko">환자 그래프</span></a><a class="app-nav-link" href="quality" data-label-en="Quality" data-label-ko="품질 지표"><span data-nav-language="en">Quality</span><span data-nav-language="ko">품질 지표</span></a><a class="app-nav-link" href="governance" data-label-en="Rule sign-off" data-label-ko="규칙 승인"><span data-nav-language="en">Rule sign-off</span><span data-nav-language="ko">규칙 승인</span></a><a class="app-nav-link" href="pilot" data-label-en="Pilot review" data-label-ko="시범 검토"><span data-nav-language="en">Pilot review</span><span data-nav-language="ko">시범 검토</span></a><a class="app-nav-link" href="imaging" data-label-en="Imaging" data-label-ko="영상"><span data-nav-language="en">Imaging</span><span data-nav-language="ko">영상</span></a><a class="app-nav-link" href="analyse" data-label-en="Analyse patient" data-label-ko="환자 분석"><span data-nav-language="en">Analyse patient</span><span data-nav-language="ko">환자 분석</span></a><a class="app-nav-link" href="reports" data-label-en="Live report reader" data-label-ko="실시간 보고서 검토"><span data-nav-language="en">Live report reader</span><span data-nav-language="ko">실시간 보고서 검토</span></a><a class="app-nav-link" href="review" data-label-en="Report review" data-label-ko="보고서 검토"><span data-nav-language="en">Report review</span><span data-nav-language="ko">보고서 검토</span></a><a class="app-nav-link" href="private" data-label-en="Personal workspace" data-label-ko="개인 작업 공간"><span data-nav-language="en">Personal workspace</span><span data-nav-language="ko">개인 작업 공간</span></a><a class="app-nav-link" href="validation" data-label-en="Validation evidence" data-label-ko="검증 근거"><span data-nav-language="en">Validation evidence</span><span data-nav-language="ko">검증 근거</span></a><a class="app-nav-link" href="deployment" data-label-en="International setup" data-label-ko="국제 배포 계획"><span data-nav-language="en">International setup</span><span data-nav-language="ko">국제 배포 계획</span></a></nav><div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label><select id="clinloop-page-picker"><optgroup label="Clinical workspace"><option value="/" selected>Cockpit</option><option value="/worklist">Worklist</option><option value="/patient">Patient graph</option><option value="/quality">Quality</option><option value="/governance">Rule sign-off</option><option value="/pilot">Pilot review</option><option value="/imaging">Imaging</option><option value="/analyse">Analyse patient</option></optgroup><optgroup label="Research"><option value="/reports">Live report reader</option><option value="/review">Report review</option><option value="/private">Personal workspace</option></optgroup><optgroup label="Evidence and setup"><option value="/validation">Validation evidence</option><option value="/deployment">International setup</option></optgroup></select></div><aside class="research-release-notice" role="note"><span data-nav-language="en">Research preview · synthetic data only. Independent review and clinical validation pending. <a href="validation#research-release">Review status</a></span><span data-nav-language="ko">연구 미리보기 · 합성 데이터 전용. 독립 검토 및 임상 검증 대기 중. <a href="validation#research-release">검토 현황</a></span></aside></header>
 <!-- clinloop-shell:end -->
 <div class="app-header--pro cockpit-tools"><div class="header-actions">
       <button id="btn-gpu-hud" class="badge badge-gpu" hidden style="cursor: pointer; color: var(--text-muted); font-weight: 700; align-items: center; gap: 0.4rem;" title="Hardware on the ClinLoop server, and what uses it">
@@ -97,7 +97,7 @@
   <!-- One status strip: the safety notice, then the example data at a glance -->
   <div class="status-strip">
     <div class="platform-status" role="note" aria-label="Safety notice">
-      <span class="platform-status-label" id="platform-notice-label">Clinical edition · public demo</span>
+      <span class="platform-status-label" id="platform-notice-label">Research preview · synthetic data only</span>
       <span class="platform-status-copy" id="platform-notice-copy">Synthetic example cases on this public page · Hospital use after local validation and specialist rule sign-off.</span>
     </div>
     <div id="global-impact-bar" class="kpi-strip" aria-label="Example data at a glance">
@@ -1488,9 +1488,9 @@ CT 소견: 14mm GGN 발견 (2024-03-15)"></textarea>
   <script src="config.js"></script>
 <script src="js/demo.js?v=20261023_locale1"></script>
 <script src="js/top-chrome.js?v=20261023_header1"></script>
-<script src="js/appnav.js?v=2026-10-26.stable1"></script>
+<script src="js/appnav.js?v=2026-10-27.research1"></script>
   <script src="js/safety_clock.js?v=20260930_final"></script>
   <script src="js/hypergraph.js?v=20260930_final"></script>
-  <script src="js/app.js?v=20261025_devices1"></script>
+  <script src="js/app.js?v=20261027_research1"></script>
 </body>
 </html>

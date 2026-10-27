@@ -1,0 +1,56 @@
+{
+  "status": "SYNTHETIC_RESEARCH_RUN_COMPLETED_HUMAN_REVIEW_DEFERRED",
+  "completed_at": "2026-10-27T01:19:09.220476+00:00",
+  "source_hashes_checked": 20,
+  "synthetic_trajectories": 300,
+  "train_examples": 207,
+  "test_examples": 93,
+  "models_evaluated": [
+    "ClinLoop AI",
+    "Logistic regression",
+    "Gradient-boosted trees",
+    "Neural network (32,16)"
+  ],
+  "patient_overlap": 0,
+  "exact_predictor_overlap": 0,
+  "human_review_deferred_by_user": true,
+  "human_reviews_pending": 22,
+  "human_reviews_approved": 0,
+  "clinical_use_authorized": false,
+  "clinical_accuracy_established": false,
+  "runtime_signoffs_created": false,
+  "trained_models_saved_or_activated": false,
+  "real_patient_data_used": false,
+  "hospital_or_cloud_connections": false,
+  "shared_services_restarted": false,
+  "limitations": [
+    "Synthetic generator labels share assumptions with the rule engine",
+    "Patient separation is within this synthetic cohort only",
+    "No template-family, site, temporal or external clinical validation",
+    "No learned comparator can open, close or suppress a clinical task",
+    "Learned baselines use structured event features, not raw reports or images"
+  ],
+  "next_stage": "Independent source review and adjudicated clinical evaluation before patient-care use",
+  "version": "2026-10-27.research1",
+  "channel": "research-preview",
+  "clinical_files_pending": 11,
+  "software_ml_files_pending": 11,
+  "publication_scope": "Public synthetic-data research preview; no patient-care authorization",
+  "engineering_candidate_source_commit": "fe94cf93bf215c9241f6e2fa4a7cb944d1ac869e",
+  "release_verification": {
+    "tests_passed": 974,
+    "subtests_passed": 122,
+    "git_checks_passed_separately": 13,
+    "preexisting_skip": 1,
+    "existing_warnings": 4,
+    "page_width_checks_passed": 52,
+    "widths": [
+      390,
+      768,
+      1280,
+      3840
+    ],
+    "synthetic_analysis_browser_check": "passed",
+    "seeded_benchmark": "passed"
+  }
+}

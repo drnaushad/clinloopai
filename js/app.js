@@ -14,7 +14,7 @@ const CLINLOOP_I18N = {
 
   ko: {
     workflowComparison: {"title": "업무 흐름 검토 — 설계 예시", "case": "선택한 합성 예시:", "existing": "기존 업무 흐름에서 확인할 사항", "demonstrated": "ClinLoop에서 보여주는 기능", "existing1": "현재 시스템은 검사 결과와 필요한 후속 조치를 연결합니까?", "existing2": "결과 확인, 예약, 실제 진료 완료를 구분합니까?", "existing3": "담당자와 단계별 보고를 어떻게 기록합니까?", "existing4": "EMR 기능은 기관마다 다릅니다. ClinLoop는 실제 병원 업무 흐름과 비교 검증되지 않았습니다.", "demo1": "합성 사례로 규칙 기반 후속 조치 추적을 보여줍니다.", "demo2": "제안된 기한, 적용 규칙, 근거를 사람이 검토할 수 있도록 표시합니다.", "demo3": "병원 서버는 감사 기록을 지원합니다. 이 공개 페이지의 조치는 브라우저 안에서만 시뮬레이션됩니다.", "demo4": "임상 정확도와 환자에게 주는 이익은 입증되지 않았습니다.", "missing": "이 예시에 기록된 후속 조치:", "limit": "설계 비교 예시입니다. EMR보다 우수하거나 환자 결과를 개선한다는 근거가 아닙니다.", "close": "비교 닫기"},
-    platformLabel: '임상용 에디션 · 공개 데모',
+    platformLabel: '연구 미리보기 · 합성 데이터 전용',
     kpiExamples: '예시', kpiOpen: '미완료', kpiRules: '규칙',
     platformNotice: '이 공개 페이지는 합성(가상) 예시 사례만 사용 · 병원 적용은 현지 검증과 전문의 규칙 승인 후',
     brandSubtitle: '검사·영상 결과의 후속 조치 누락을 찾는 임상 안전 시스템',
@@ -95,7 +95,7 @@ const CLINLOOP_I18N = {
   },
   en: {
     workflowComparison: {"title": "Workflow review — design only", "case": "Selected synthetic example:", "existing": "Questions for the existing workflow", "demonstrated": "What ClinLoop demonstrates", "existing1": "Does the current system link results to the follow-up actions they require?", "existing2": "Does it distinguish acknowledgement, scheduling and completed care?", "existing3": "How are responsibility and escalation recorded?", "existing4": "EMR features vary. ClinLoop has not been compared with a hospital’s production workflow.", "demo1": "Synthetic cases demonstrate rule-based follow-up tracking.", "demo2": "A proposed deadline, its rule and supporting evidence are displayed for human review.", "demo3": "The hospital backend supports audit events. This public page simulates actions in the browser.", "demo4": "Clinical accuracy and patient benefit have not been established.", "missing": "Follow-up request in this example:", "limit": "This is a design comparison. It does not establish superiority over an EMR or improved patient outcomes.", "close": "Close comparison"},
-    platformLabel: 'Clinical edition · public demo',
+    platformLabel: 'Research preview · synthetic data only',
     kpiExamples: 'Examples', kpiOpen: 'Open', kpiRules: 'Rules',
     platformNotice: 'Synthetic example cases on this public page · Hospital use after local validation and specialist rule sign-off.',
     brandSubtitle: 'Finds and closes missed follow-up of clinical results',

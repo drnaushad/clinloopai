@@ -12,8 +12,8 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '20261026_stable1'
-APP_VERSION = '2026-10-26.stable1'
+VERSION = '20261027_research1'
+APP_VERSION = '2026-10-27.research1'
 VOID = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
 
 
@@ -113,7 +113,13 @@ def shell(text: str, name: str, entries: list[dict]) -> str:
             '<div class="clinloop-shell-top">' + brand + '<div class="clinloop-shell-controls" role="group" aria-label="Display and account">' + controls + '</div></div>'
             f'<nav class="{nav} clinloop-shell-links" aria-label="ClinLoop pages">' + ''.join(links) + '</nav>'
             '<div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label>'
-            '<select id="clinloop-page-picker">' + grouped + '</select></div></header>\n<!-- clinloop-shell:end -->')
+            '<select id="clinloop-page-picker">' + grouped + '</select></div>'
+            '<aside class="research-release-notice" role="note">'
+            '<span data-nav-language="en">Research preview · synthetic data only. Independent review and clinical validation pending. '
+            '<a href="validation#research-release">Review status</a></span>'
+            '<span data-nav-language="ko">연구 미리보기 · 합성 데이터 전용. 독립 검토 및 임상 검증 대기 중. '
+            '<a href="validation#research-release">검토 현황</a></span>'
+            '</aside></header>\n<!-- clinloop-shell:end -->')
 
 
 def render(text: str, name: str, entries: list[dict]) -> str:

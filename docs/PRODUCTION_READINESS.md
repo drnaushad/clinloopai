@@ -5,7 +5,13 @@ does about each need, the design decisions behind it, and what is still missing.
 document for the team, the hospital's IT and privacy officers and its regulatory adviser. It is not
 legal or regulatory advice.
 
-## 2026-10-26 integrated completion candidate — local, not published
+## 2026-10-27 public research preview
+
+Version `2026-10-27.research1` is published for synthetic-data research at the project owner’s request. Independent source review is deferred, with zero human approvals. The 20-file engine/ML candidate plus two release/navigation files remain pending; publishing them does not approve patient care. All thirteen pages display this status. The public site serves synthetic snapshots and browser-only research controls; offline learned comparators do not become clinical prediction services. Shared backend, GPU, model services and hospital integrations are not restarted or enabled by this publication.
+
+Historical checks below retain their original dates and scope. The GPU mismatch note below is a historical finding, not a current hardware diagnosis. See the current release section on the Validation evidence page for research results and unresolved disagreements.
+
+## 2026-10-26 integrated completion candidate — historical local state
 
 The previously tested clinical corrections and research comparators are combined with the
 published shared-header interface in a separate checkout. The existing shared server, production
