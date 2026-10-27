@@ -225,7 +225,7 @@ def _explicit_event_type(resource: Dict) -> Optional[str]:
 def _status(resource: Dict) -> str:
     raw = str(resource.get("status") or "").strip().lower()
     rtype = resource.get("resourceType")
-    if rtype == "ServiceRequest" and raw in {"active", "completed"}:
+    if rtype in {"ServiceRequest", "MedicationRequest"} and raw in {"active", "completed"}:
         # FHIR intent distinguishes a proposal/plan from authorization to act.
         # Even a completed plan is not evidence that an order/referral was issued.
         if resource.get("intent") not in {"order", "original-order", "reflex-order", "filler-order", "instance-order"}:
@@ -683,12 +683,14 @@ def _map_service_request(r: Dict) -> List[Tuple[str, str, Dict]]:
     details = {"order": _concept_text(r.get("code")) or None}
     if "colposcopy" in text or "질확대경" in text:
         etype = EventType.COLPOSCOPY_REFERRAL.value
-    elif _EUS.search(text):
-        etype = EventType.IMAGING_ORDER.value
-        details["requested_procedure"] = EventType.ENDOSCOPIC_ULTRASOUND.value
     elif ("biopsy" in text or "aspiration" in text or re.search(r"\bfna\b", text)
           or "조직검사" in text or "세침" in text):
         etype = EventType.BIOPSY_ORDER.value
+        if _EUS.search(text):
+            details["requested_procedure"] = EventType.ENDOSCOPIC_ULTRASOUND.value
+    elif _EUS.search(text):
+        etype = EventType.IMAGING_ORDER.value
+        details["requested_procedure"] = EventType.ENDOSCOPIC_ULTRASOUND.value
     elif "referral" in text or "3457005" in text or "consult" in text or "의뢰" in text or "협진" in text:
         etype = EventType.SPECIALIST_REFERRAL.value
     elif "imaging" in text or "363679005" in text or re.search(r"\b(ct|mri|x-ray|ultrasound)\b", text):
@@ -773,7 +775,7 @@ def _map_encounter(r: Dict) -> List[Tuple[str, str, Dict]]:
     primary_dx = re.sub(r"[^a-z0-9]+", "_", dx_text.lower()).strip("_")
     service = " ".join([_concept_text(r.get("serviceType"))]
                        + [_concept_text(t) for t in r.get("type", [])]).lower()
-    if enc_class in ("IMP", "ACUTE", "NONAC", "EMER", "OBSENC") and period.get("end"):
+    if enc_class in ("IMP", "ACUTE", "NONAC", "EMER", "OBSENC") and period.get("end") and _status(r) == "completed":
         details = {"primary_diagnosis": primary_dx, "encounter_class": enc_class,
                    "arrived_at": period.get("start"),
                    "mapping": [f"Encounter({enc_class}) end→discharge"]}
@@ -1047,6 +1049,11 @@ def _map_document_reference(r: Dict) -> List[Tuple[str, str, Dict]]:
     found = find_plans(text)
     out = []
     for i, p in enumerate(found["plans"]):
+        if p.get("calendar_months") and ts:
+            from .radiology import _calendar_due
+            anchor = normalize_timestamp(ts)
+            p["due_days"] = (_calendar_due(anchor, p["calendar_months"]) - anchor).total_seconds() / 86400
+            p["interval_days"] = p["due_days"]
         rule = p["rule_id"]
         d: Dict[str, Any] = {
             "note_type": note_type, "plan": p, "plan_label": plan_label(p), "evidence_span": p["evidence"],
@@ -1347,22 +1354,26 @@ def _derive_context(events: List[Dict]) -> None:
     def ts(e):
         return normalize_timestamp(e["timestamp"])
 
-    discharges = sorted(ts(e) for e in events if e["event_type"] == EventType.DISCHARGE.value)
+    discharges = sorted(ts(e) for e in events if e["event_type"] == EventType.DISCHARGE.value
+                        and is_fulfilling_status(e.get("status"), e.get("event_type")))
 
     # Liver imaging in a patient with HCC risk is surveillance, and starts the next interval
     risk_since = min((ts(e) for e in events if e["event_type"] == EventType.DIAGNOSIS.value
-                      and e["details"].get("hcc_risk")), default=None)
+                      and e["details"].get("hcc_risk")
+                      and is_fulfilling_status(e.get("status"), e.get("event_type"))), default=None)
     if risk_since is not None:
         for e in events:
             if e["event_type"] == EventType.LIVER_IMAGING.value and ts(e) >= risk_since \
-                    and is_fulfilling_status(e["status"]):
+                    and is_fulfilling_status(e.get("status"), e.get("event_type")):
                 e["details"]["hcc_surveillance"] = True
     _merge_ed_into_admission(events, ts)
     stays = [(normalize_timestamp(e["details"]["arrived_at"]) - timedelta(hours=12), ts(e)) for e in events
-             if e["event_type"] == EventType.DISCHARGE.value and e["details"].get("arrived_at")]
+             if e["event_type"] == EventType.DISCHARGE.value and e["details"].get("arrived_at")
+             and is_fulfilling_status(e.get("status"), e.get("event_type"))]
     # An "outpatient" encounter lasting over a day is a stay in practice (mislabelled admissions are common)
     stays += [(ts(e), normalize_timestamp(e["details"]["period_end"])) for e in events
               if e["event_type"] == EventType.FOLLOWUP_APPOINTMENT.value and e["details"].get("period_end")
+              and is_fulfilling_status(e.get("status"), e.get("event_type"))
               and normalize_timestamp(e["details"]["period_end"]) - ts(e) > timedelta(hours=24)]
     _mark_inpatient_starts(events, ts, stays)
     for e in events:          # results taken in hospital: the team at the bedside acts on them (motifs use this too)
@@ -1549,7 +1560,8 @@ def _merge_ed_into_admission(events: List[Dict], ts) -> None:
     for a ward, not for home. Its discharge is dropped when an inpatient stay began during the ED visit
     or within 12 hours of it (otherwise post-discharge rules such as R014 and R023 would fire twice).
     """
-    stays = [e for e in events if e["event_type"] == EventType.DISCHARGE.value and e["details"].get("arrived_at")]
+    stays = [e for e in events if e["event_type"] == EventType.DISCHARGE.value and e["details"].get("arrived_at")
+             and is_fulfilling_status(e.get("status"), e.get("event_type"))]
     drop = []
     for e in stays:
         start, end = normalize_timestamp(e["details"]["arrived_at"]), ts(e)

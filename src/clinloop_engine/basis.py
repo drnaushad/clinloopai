@@ -35,6 +35,13 @@ FOLLOWUP_NAMES = {
     "imaging_ct": "CT", "imaging_mri": "MRI", "imaging_ultrasound": "ultrasound", "imaging_xray": "X-ray",
     "imaging_pet": "PET-CT", "lab_result": "repeat test", "culture_result": "repeat culture",
     "patient_notification": "patient notified", "provider_review": "clinician review",
+    "colonoscopy": "colonoscopy", "breast_biopsy": "breast biopsy", "biopsy_order": "biopsy order",
+    "biopsy_result": "biopsy result", "colposcopy_referral": "colposcopy referral", "colposcopy_visit": "colposcopy visit",
+    "endoscopic_ultrasound": "endoscopic ultrasound", "echocardiogram": "echocardiogram", "liver_imaging": "liver imaging",
+    "mental_health_followup": "mental-health follow-up", "postpartum_glucose_test": "postpartum glucose test",
+    "hbv_dna_test": "HBV DNA test", "hiv_supplemental_test": "HIV supplemental test", "callback": "patient callback",
+    "imaging_order": "imaging order", "ecg": "ECG", "pathology_result": "pathology result",
+    "medication_change": "medication adjustment", "ai_finding_reviewed": "AI finding reviewed",
 }
 _QUOTE_KEYS = ("evidence_span", "plan_text", "conclusion", "interpretation")
 _MAX_QUOTE = 240
@@ -153,6 +160,12 @@ def _deadline_note_ko(line: str) -> str:
     match = re.fullmatch(r"Report interval: ([\d.]+) calendar months; due ([\d-]+) without scheduling grace", line)
     if match:
         return f"판독문 간격: 달력 기준 {match[1]}개월, 기한 {match[2]}, 추가 유예 기간 없음"
+    if line in {"same three-month nodule follow-up: earlier report or rule deadline retained",
+                "alternative nodule follow-up: earlier report or rule deadline retained"}:
+        return "동일 폐결절 추적: 판독문 또는 규칙 중 더 이른 기한을 유지하고 허용된 대체 조치를 보존함"
+    match = re.fullmatch(r"Lung-RADS interval: (\d+) calendar months; no scheduling grace added", line)
+    if match:
+        return f"Lung-RADS 간격: 달력 기준 {match[1]}개월, 추가 유예 기간 없음"
     return line
 
 
@@ -203,6 +216,8 @@ def build_ko(trigger, rule, deadline: Optional[datetime], deadline_days: float, 
             lines.append(f"아직 없음: {', '.join(step(t) for t in missing)}.")
     if status == "delayed":
         lines.append("후속 조치가 기한 이후에 이루어졌습니다.")
+    if any(f.event_type in {"biopsy_order", "imaging_order", "lab_order", "specialist_referral", "colposcopy_referral"} for f in followups):
+        lines.append("주문·의뢰 근거: 오더 또는 의뢰가 기록되었습니다. 실제 검사·시술 시행이나 결과 검토를 입증하지 않습니다.")
     if status in ("closed", "delayed"):
         lines.append("완료 범위: 이 규칙이 추적하는 조치만 확인되었습니다. 의뢰나 검사 처방만으로 진료·치료 전체의 완료를 입증하지 않습니다.")
     refs = [r for r in (rule.references or []) if isinstance(r, str) and r.strip()]
@@ -248,6 +263,8 @@ def build(trigger, rule, deadline: Optional[datetime], window: str, followups, s
             lines.append(f"Still missing: {', '.join(_step(t) for t in missing)}.")
     if status == "delayed":
         lines.append("The follow-up came after the deadline.")
+    if any(f.event_type in {"biopsy_order", "imaging_order", "lab_order", "specialist_referral", "colposcopy_referral"} for f in followups):
+        lines.append("Order/referral evidence only: a request was recorded; performance of care and review of its result are not established.")
     if status in ("closed", "delayed"):
         lines.append("Completion scope: only the step(s) tracked by this rule are established. A referral or order does not prove that the visit, procedure or overall care was completed.")
     refs = [r for r in (rule.references or []) if isinstance(r, str) and r.strip()]

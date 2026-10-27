@@ -91,7 +91,8 @@ def rule_fingerprint(rule: ObligationRule) -> str:
 # The code that turns records into obligations. A change to any of these can change which loops open.
 _DECISION_SOURCES = ("clinical_ontology.py", "fhir_ingest.py", "radiology.py", "temporal_hypergraph.py",
                      "loop_detector.py", "safety_clock.py", "motifs.py", "guideline_reports.py", "note_reader.py",
-                     "ecg.py", "report_text.py", "imaging_fhir.py", "ai_review.py", "profile.py", "second_reader.py")
+                     "ecg.py", "report_text.py", "imaging_fhir.py", "ai_review.py", "profile.py", "second_reader.py",
+                     "risk_scorer.py", "basis.py")
 
 
 def ruleset_version() -> str:

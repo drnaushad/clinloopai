@@ -7,6 +7,7 @@ This is the 'Symbolic' half of our Neuro-Symbolic architecture.
 """
 
 from enum import Enum
+from datetime import datetime
 from dataclasses import dataclass, field
 import re
 from typing import Dict, List, Optional, Tuple
@@ -405,9 +406,9 @@ OBLIGATION_RULES: List[ObligationRule] = [
         deadline_days=90.0,
         severity=Severity.HIGH,
         clinical_domain="cancer_screening",
-        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 4A] → ◇_{≤90d+grace} FOLLOWUP_CT)",
+        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 4A] → ◇_{≤3mo} FOLLOWUP_CT)",
         references=["ACR Lung-RADS v2022"],
-        evidence_note="Scheduled interval plus a grace period (25%, 7–30 days), as for R030–R033.",
+        evidence_note="Calendar-anchored interval; no additional scheduling grace.",
     ),
     ObligationRule(
         rule_id="R020",
@@ -565,9 +566,9 @@ OBLIGATION_RULES: List[ObligationRule] = [
         deadline_days=90.0,
         severity=Severity.HIGH,
         clinical_domain="radiology",
-        ltl_formula="□(RADIOLOGY_REPORT[recommend CT in T] → ◇_{≤T+grace} IMAGING_CT)",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend CT in T] → ◇_{≤T} IMAGING_CT)",
         references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
-        evidence_note=("Interval from the report plus a grace period (25%, 7–30 days). The follow-up study must cover "
+        evidence_note=("Interval from the report without additional scheduling grace. The follow-up study must cover "
                        "the body region the recommendation names (an abdominal CT covers the adrenals; a head CT does not)."),
     ),
     ObligationRule(
@@ -580,9 +581,9 @@ OBLIGATION_RULES: List[ObligationRule] = [
         deadline_days=90.0,
         severity=Severity.HIGH,
         clinical_domain="radiology",
-        ltl_formula="□(RADIOLOGY_REPORT[recommend MRI in T] → ◇_{≤T+grace} IMAGING_MRI)",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend MRI in T] → ◇_{≤T} IMAGING_MRI)",
         references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
-        evidence_note=("Interval from the report plus a grace period (25%, 7–30 days). The follow-up study must cover "
+        evidence_note=("Interval from the report without additional scheduling grace. The follow-up study must cover "
                        "the body region the recommendation names (an abdominal CT covers the adrenals; a head CT does not)."),
     ),
     ObligationRule(
@@ -595,9 +596,9 @@ OBLIGATION_RULES: List[ObligationRule] = [
         deadline_days=90.0,
         severity=Severity.HIGH,
         clinical_domain="radiology",
-        ltl_formula="□(RADIOLOGY_REPORT[recommend US in T] → ◇_{≤T+grace} IMAGING_ULTRASOUND)",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend US in T] → ◇_{≤T} IMAGING_ULTRASOUND)",
         references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558"],
-        evidence_note=("Interval from the report plus a grace period (25%, 7–30 days). The follow-up study must cover "
+        evidence_note=("Interval from the report without additional scheduling grace. The follow-up study must cover "
                        "the body region the recommendation names (an abdominal CT covers the adrenals; a head CT does not)."),
     ),
     ObligationRule(
@@ -610,10 +611,10 @@ OBLIGATION_RULES: List[ObligationRule] = [
         deadline_days=90.0,
         severity=Severity.MODERATE,
         clinical_domain="radiology",
-        ltl_formula="□(RADIOLOGY_REPORT[recommend radiograph in T] → ◇_{≤T+grace} IMAGING_XRAY)",
+        ltl_formula="□(RADIOLOGY_REPORT[recommend radiograph in T] → ◇_{≤T} IMAGING_XRAY)",
         references=["ACR Actionable Reporting Work Group, JACR 2014;11:552-558",
                     "BTS Guidelines for community-acquired pneumonia in adults (2009): repeat CXR ~6 weeks"],
-        evidence_note=("Interval from the report plus a grace period. A recommendation without an interval "
+        evidence_note=("Interval from the report without additional scheduling grace. A recommendation without an interval "
                        "uses a 30-day default. The follow-up radiograph must cover the same body region."),
     ),
     ObligationRule(
@@ -626,9 +627,9 @@ OBLIGATION_RULES: List[ObligationRule] = [
         deadline_days=182.6,
         severity=Severity.MODERATE,
         clinical_domain="cancer_screening",
-        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 3] → ◇_{≤6mo+grace} FOLLOWUP_CT)",
+        ltl_formula="□(RADIOLOGY_REPORT[Lung-RADS 3] → ◇_{≤6mo} FOLLOWUP_CT)",
         references=["ACR Lung-RADS v2022"],
-        evidence_note="Scheduled interval plus a grace period (25%, 7–30 days).",
+        evidence_note="Calendar-anchored interval; no additional scheduling grace.",
     ),
     ObligationRule(
         rule_id="R035",
@@ -673,13 +674,13 @@ OBLIGATION_RULES: List[ObligationRule] = [
         trigger_event=EventType.RADIOLOGY_REPORT,
         trigger_condition="adrenal_nodule_followup",
         required_followups=[EventType.IMAGING_CT, EventType.IMAGING_MRI],
-        deadline_days=395.25,
+        deadline_days=365.25,
         severity=Severity.MODERATE,
         clinical_domain="radiology",
         ltl_formula='□(RADIOLOGY_REPORT[adrenal 1–4 cm, indeterminate] → ◇_{≤T} (CT ∨ MRI)[adrenal])',
         references=['ACR Incidental Findings: adrenal (Mayo-Smith WW et al. JACR 2017;14:1038-1044)'],
         followup_logic="any",
-        evidence_note='1–2 cm: 12 months + grace; 2–4 cm: characterise (90 days, proposed). Benign features (adenoma ≤10 HU, myelolipoma, stable ≥1 year) are excluded. Follow-up must cover the adrenals.',
+        evidence_note='1–2 cm: 12 months; 2–4 cm: characterise (90 days, proposed). Benign features (adenoma ≤10 HU, myelolipoma, stable ≥1 year) are excluded. Follow-up must cover the adrenals.',
     ),
     ObligationRule(
         rule_id="R038",
@@ -724,7 +725,7 @@ OBLIGATION_RULES: List[ObligationRule] = [
         ltl_formula='□(RADIOLOGY_REPORT[indeterminate renal ∨ Bosniak IIF] → ◇_{≤T} (CT ∨ MRI)[kidney])',
         references=['ACR Incidental Findings: renal (Herts BR et al. JACR 2018;15:264-273)', 'Silverman SG et al. Bosniak v2019. Radiology 2019;292:475-488'],
         followup_logic="any",
-        evidence_note='Bosniak IIF: 6 months + grace; indeterminate ≥1 cm: 90 days (proposed). Simple cysts, Bosniak I–II, angiomyolipoma and lesions too small to characterise are excluded.',
+        evidence_note='Bosniak IIF: 6 months; indeterminate ≥1 cm: 90 days (proposed). Simple cysts, Bosniak I–II, angiomyolipoma and lesions too small to characterise are excluded.',
     ),
     ObligationRule(
         rule_id="R041",
@@ -733,13 +734,13 @@ OBLIGATION_RULES: List[ObligationRule] = [
         trigger_event=EventType.RADIOLOGY_REPORT,
         trigger_condition="pancreatic_cyst_followup",
         required_followups=[EventType.IMAGING_MRI, EventType.IMAGING_CT, EventType.ENDOSCOPIC_ULTRASOUND],
-        deadline_days=395.25,
+        deadline_days=365.25,
         severity=Severity.MODERATE,
         clinical_domain="radiology",
         ltl_formula='□(RADIOLOGY_REPORT[pancreatic cyst] → ◇_{≤T(size)} (MRI ∨ CT ∨ EUS)[pancreas])',
         references=['ACR Incidental Findings: pancreatic cysts (Megibow AJ et al. JACR 2017;14:911-923)'],
         followup_logic="any",
-        evidence_note='<1.5 cm: 2 years; 1.5–2.5 cm: 1 year; >2.5 cm: 6 months or EUS-FNA (each + grace). ACR also adjusts by age (≥80) and growth: specialist review required.',
+        evidence_note='<1.5 cm: 2 years; 1.5–2.5 cm: 1 year; >2.5 cm: 6 months or EUS-FNA. ACR also adjusts by age (≥80) and growth: specialist review required.',
     ),
     ObligationRule(
         rule_id="R042",
@@ -784,7 +785,7 @@ OBLIGATION_RULES: List[ObligationRule] = [
         ltl_formula='□(RADIOLOGY_REPORT[abdominal aorta ≥2.5 cm] → ◇_{≤T(diameter)} (US ∨ CT ∨ MRI)[abdominal aorta])',
         references=['ACR Incidental Findings: vascular (Khosa F et al. JACR 2013;10:789-794)', 'Chaikof EL et al. SVS AAA guidelines. J Vasc Surg 2018;67:2-77'],
         followup_logic="any",
-        evidence_note='2.5–2.9 cm 5 years; 3.0–3.4 cm 3 years; 3.5–3.9 cm 2 years; 4.0–4.4 cm 1 year; ≥4.5 cm 6 months (each + grace).',
+        evidence_note='2.5–2.9 cm 5 years; 3.0–3.4 cm 3 years; 3.5–3.9 cm 2 years; 4.0–4.4 cm 1 year; ≥4.5 cm 6 months.',
     ),
     ObligationRule(
         rule_id="R045",
@@ -849,11 +850,11 @@ OBLIGATION_RULES: List[ObligationRule] = [
         deadline_days=30.0,
         severity=Severity.MODERATE,
         clinical_domain="clinical documentation",
-        ltl_formula="□(NOTE_PLAN[repeat test X in T] → ◇_{≤T+grace} LAB_RESULT[X])",
+        ltl_formula="□(NOTE_PLAN[repeat test X in T] → ◇_{≤T} LAB_RESULT[X])",
         references=["Singh H et al. Missed follow-up of test results. JAMA Intern Med 2013;173:702-704",
                     "Joint Commission Sentinel Event Alert 47 (diagnostic error, follow-up of results)"],
         evidence_note=("Closed by a result of the same test (potassium plan → potassium result). 'Repeat labs' with no "
-                       "named test is closed by any lab result. Interval from the note plus 15% (at least 3 days); "
+                       "named test is closed by any lab result. Interval from the note without additional scheduling grace; "
                        "30 days when the note states none. Conditional, cancelled or already-done plans are not tracked."),
     ),
     ObligationRule(
@@ -869,10 +870,10 @@ OBLIGATION_RULES: List[ObligationRule] = [
         deadline_days=90.0,
         severity=Severity.HIGH,
         clinical_domain="clinical documentation",
-        ltl_formula="□(NOTE_PLAN[imaging M of region R in T] → ◇_{≤T+grace} IMAGING[M ∧ covers R])",
+        ltl_formula="□(NOTE_PLAN[imaging M of region R in T] → ◇_{≤T} IMAGING[M ∧ covers R])",
         references=["Callen JL et al. Failure to follow-up test results for ambulatory patients. J Gen Intern Med 2012;27:1334-48"],
         evidence_note=("Closed only by a study of the same modality that covers the region the note names. Interval from "
-                       "the note plus the radiology grace period; 90 days when the note states none."),
+                       "the note without additional scheduling grace; 90 days when the note states none."),
     ),
     ObligationRule(
         rule_id="R050",
@@ -900,7 +901,7 @@ OBLIGATION_RULES: List[ObligationRule] = [
         deadline_days=30.0,
         severity=Severity.MODERATE,
         clinical_domain="clinical documentation",
-        ltl_formula="□(NOTE_PLAN[follow-up in T] → ◇_{≤T+grace} FOLLOWUP_APPOINTMENT)",
+        ltl_formula="□(NOTE_PLAN[follow-up in T] → ◇_{≤T} FOLLOWUP_APPOINTMENT)",
         references=["Joint Commission Sentinel Event Alert 47 (diagnostic error, follow-up)"],
         evidence_note="Closed by a follow-up appointment that took place. Booked-but-not-attended visits do not count.",
     ),
@@ -1277,7 +1278,7 @@ MONITORING_WINDOW_DAYS: Dict[str, float] = {
 }
 
 
-def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
+def get_deadline_days(rule: ObligationRule, details: Dict, anchor: Optional[datetime] = None) -> float:
     """Deadline for one triggered obligation, applying finding/drug-specific windows."""
     # Report-specific deadline decided from the patient's context (radiology.decide_obligations)
     per_rule = details.get("rule_deadline_days") if isinstance(details, dict) else None
@@ -1289,7 +1290,7 @@ def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
     if rule.rule_id == "R003":
         try:
             if float(details.get("nodule_size_mm", 0)) > FLEISCHNER_LARGE_NODULE_MM:
-                return FLEISCHNER_LARGE_NODULE_DAYS
+                return ((_calendar_interval_days(anchor, 3)) if anchor else FLEISCHNER_LARGE_NODULE_DAYS)
         except (TypeError, ValueError):
             pass
     if rule.rule_id == "R010":
@@ -1304,7 +1305,15 @@ def get_deadline_days(rule: ObligationRule, details: Dict) -> float:
             return interval
         except (KeyError, TypeError, ValueError):
             pass
+    calendar_months = {"R019": 3, "R034": 6, "R037": 12, "R041": 12}.get(rule.rule_id)
+    if anchor is not None and calendar_months is not None:
+        return _calendar_interval_days(anchor, calendar_months)
     return rule.deadline_days
+
+
+def _calendar_interval_days(anchor: datetime, months: int) -> float:
+    from .radiology import _calendar_due
+    return (_calendar_due(anchor, months) - anchor).total_seconds() / 86400
 
 
 RADIOLOGIST_REC_RULES = {"R030", "R031", "R032", "R033"}
@@ -1333,14 +1342,21 @@ def is_fulfilling_status(status: Optional[str], event_type: Optional[str] = None
     This allowlist also protects direct event imports that bypass that adapter.
     """
     norm = re.sub(r"[\s_]+", "-", str(status or "").strip().lower())
-    if event_type is not None and norm in {"final", "amended", "corrected", "appended"}:
-        # Finalisation of a result is not evidence of a completed visit/procedure.
-        # FHIR adapters already normalise resource-specific completion to completed.
+    if norm == "completed":
+        return True
+    if norm in {"final", "amended", "corrected", "appended"}:
         return event_type in {"lab_result", "followup_lab", "imaging_result", "radiology_report",
-                              "pathology_result", "culture_result", "biopsy_result", "inr_recheck",
-                              "hba1c_recheck", "bp_check", "postpartum_glucose_test", "hcv_rna_test",
-                              "hiv_supplemental_test", "hbv_dna_test", "ecg", "colonoscopy_finding"}
-    return norm in {"completed", "finished", "fulfilled", "final", "amended", "corrected", "appended"}
+                             "pathology_result", "culture_result", "biopsy_result", "inr_recheck",
+                             "hba1c_recheck", "bp_check", "postpartum_glucose_test", "hcv_rna_test",
+                             "hiv_supplemental_test", "hbv_dna_test", "ecg", "colonoscopy_finding",
+                             "echocardiogram", "liver_imaging", "imaging_ct", "imaging_mri",
+                             "imaging_ultrasound", "imaging_xray", "imaging_pet", "followup_ct"}
+    visits = {"followup_appointment", "referral_visit", "colposcopy_visit", "mental_health_followup"}
+    if norm == "finished":
+        return event_type in visits | {"discharge"}
+    if norm == "fulfilled":
+        return event_type in visits
+    return False
 
 
 def format_window(days: float) -> str:

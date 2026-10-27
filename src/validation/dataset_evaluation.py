@@ -104,6 +104,10 @@ def prepare_openi(root: Path, out: Path, sample: int = 100, seed: int = 42) -> D
     return manifest
 
 
+class CheckpointProvenanceError(ValueError):
+    """A frozen study checkpoint changed; the entire study must be invalidated."""
+
+
 def _predict_model(text: str, name: str, expected_digest: str) -> Dict:
     """Bind each accepted study prediction to a checkpoint before and after inference."""
     from ..clinloop_engine import local_llm_engine as engine
@@ -111,7 +115,7 @@ def _predict_model(text: str, name: str, expected_digest: str) -> Dict:
     from ..clinloop_engine.second_reader import read_report
     expected = {'model': name, 'digest': expected_digest}
     if checkpoint_identity(name) != expected:
-        raise ValueError('Study checkpoint changed or unavailable')
+        raise CheckpointProvenanceError('Study checkpoint changed or unavailable')
 
     def model(prompt, instruction):
         return engine.generate_clinical_text(prompt, model=name, temperature=0.0,
@@ -119,7 +123,7 @@ def _predict_model(text: str, name: str, expected_digest: str) -> Dict:
 
     prediction = read_report(text, model)
     if checkpoint_identity(name) != expected or (prediction.get('available') and prediction.get('model') != name):
-        raise ValueError('Study checkpoint changed or unavailable')
+        raise CheckpointProvenanceError('Study checkpoint changed or unavailable')
     # Dropped/invalid quotes are abstentions, never a clean negative report.
     if prediction.get('verification_incomplete'):
         return {'available': False, 'items': [], 'dropped': prediction.get('dropped', 0)}
@@ -128,8 +132,10 @@ def _predict_model(text: str, name: str, expected_digest: str) -> Dict:
 
 def predict_study(out: Path, selected: List[str]) -> Dict:
     from ..clinloop_engine import local_llm_engine as engine
-    from ..clinloop_engine.second_reader import PROMPT, SYSTEM_PROMPT
+    from ..clinloop_engine.second_reader import prompt_digest
     from ..clinloop_engine.model_registry import checkpoint_identity
+    if (out/'study_invalidated.json').exists():
+        raise CheckpointProvenanceError('Study invalidated; use a new study output directory')
     # A credentialed report must never be sent through the public tunnel or a cloud model.
     if urlparse(engine.OLLAMA_BASE_URL).hostname not in {'localhost', '127.0.0.1', '::1'}:
         raise ValueError('This runner requires Ollama on loopback on the approved local machine')
@@ -146,7 +152,7 @@ def predict_study(out: Path, selected: List[str]) -> Dict:
     source = Path(__file__).resolve().parents[1]/'clinloop_engine'
     fingerprint = digest(''.join(str(p.relative_to(source))+digest(p.read_text()) for p in sorted(source.rglob('*.py'))) + digest(Path(__file__).read_text()) + digest(Path(__file__).with_name('report_validation.py').read_text()))
     frozen = {'records_sha256': manifest['records_sha256'], 'source_sha256': fingerprint,
-              'prompt_sha256': digest(SYSTEM_PROMPT+PROMPT),
+              'prompt_sha256': prompt_digest(),
               'models': {m: identities[m]['digest'] for m in selected}}
     provenance = out/'prediction_provenance.json'
     if provenance.exists() and json.loads(provenance.read_text()) != frozen:
@@ -182,6 +188,12 @@ def predict_study(out: Path, selected: List[str]) -> Dict:
                         result.update(available=prediction['available'],
                                       action=bool(prediction['items']) if prediction['available'] else None,
                                       items=prediction['items'], dropped=prediction.get('dropped', 0))
+                except CheckpointProvenanceError:
+                    (out/'accuracy.json').unlink(missing_ok=True)
+                    provenance.unlink(missing_ok=True)
+                    (out/'study_invalidated.json').write_text(json.dumps({
+                        'reason': 'checkpoint_provenance_changed', 'comparison_metrics_allowed': False})+'\n')
+                    raise
                 except Exception:
                     # No exception text, source identifier, patient values or report text in logs.
                     result.update(available=False, action=None, failure='processing_failed')
@@ -247,6 +259,8 @@ def metrics(pairs: List) -> Dict:
 def score_study(out: Path) -> Dict:
     # A failed rescore must not leave an earlier accuracy claim looking current.
     (out/'accuracy.json').unlink(missing_ok=True)
+    if (out/'study_invalidated.json').exists():
+        raise CheckpointProvenanceError('Study invalidated; comparison metrics are unavailable')
     records = json.loads((out/'records.json').read_text())
     manifest = json.loads((out/'manifest.json').read_text())
     if digest((out/'records.json').read_text()) != manifest['records_sha256']:

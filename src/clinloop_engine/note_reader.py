@@ -351,6 +351,21 @@ def _plan(kind: str, target: Optional[str], s: str, extra: Optional[Dict[str, An
     plan = {"kind": kind, "target": target, "interval_days": days, "interval_stated": stated,
             "interval_text": words, "due_days": due, "rule_id": RULE_FOR[kind], "evidence": s.strip()[:300],
             "tracked": True, "reason": None, "_at": at}
+    months = None
+    for match in _INTERVAL.finditer(words or ""):
+        unit = (match.group("u") or match.group("u2") or "").lower()
+        number = (max(float(match.group("n")), float(match.group("n2") or match.group("n")))
+                  if match.group("n") else float(_NUM_WORDS.get(re.sub(r"\s+", " ", match.group("w").lower()), 1)))
+        if unit in {"mo", "mos", "month", "months", "개월", "달", "y", "yr", "yrs", "year", "years", "년"}:
+            value = number * (12 if _UNIT[unit] == YEAR else 1)
+            if value.is_integer():
+                months = int(value)
+        break
+    if words and re.search(r"next month|다음\s*달", words, re.I):
+        months = 1
+    elif words and re.search(r"next year", words, re.I):
+        months = 12
+    plan["calendar_months"] = months
     plan.update(extra or {})
     return plan
 

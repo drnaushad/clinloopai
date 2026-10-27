@@ -97,7 +97,7 @@ class TestGuidelineVersions(unittest.TestCase):
             os.unlink(f.name)
 
     def test_cha2ds2_va_variant(self):
-        events = [{"event_type": "diagnosis", "timestamp": "2026-01-01T00:00:00",
+        events = [{"event_type": "diagnosis", "status": "completed", "timestamp": "2026-01-01T00:00:00",
                    "details": {"diagnosis": "Hypertension", "codes": ["I10"]}}]
         ctx = {"birth_date": datetime(1958, 1, 1), "sex": "female"}
         self.assertEqual(cha2ds2_vasc(events, ctx, datetime(2026, 6, 1))["score"], 3)

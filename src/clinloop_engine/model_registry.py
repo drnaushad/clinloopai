@@ -44,8 +44,8 @@ def configured(role: Dict[str, Any]) -> str:
 
 def prompt_version() -> str:
     """Short hash of the second reader's prompt, so an evaluation names the exact prompt it measured."""
-    from .second_reader import PROMPT, SYSTEM_PROMPT
-    return "sr-" + hashlib.sha256((SYSTEM_PROMPT + "\n" + PROMPT).encode("utf-8")).hexdigest()[:12]
+    from .second_reader import prompt_digest
+    return "sr-" + prompt_digest()[:12]
 
 
 def _installed(base: str) -> Optional[Dict[str, Dict[str, Any]]]:
@@ -54,7 +54,9 @@ def _installed(base: str) -> Optional[Dict[str, Dict[str, Any]]]:
         data = _ollama_json("GET", "/api/tags", timeout=5, base=base)
         if not isinstance(data.get("models"), list):
             return None
-        return {m["name"]: m for m in data["models"] if isinstance(m, dict) and isinstance(m.get("name"), str)}
+        rows = [m for m in data["models"] if isinstance(m, dict) and isinstance(m.get("name"), str)]
+        names = [m["name"] for m in rows]
+        return {m["name"]: m for m in rows if names.count(m["name"]) == 1}
     except (requests.RequestException, ValueError, OSError):
         return None
 

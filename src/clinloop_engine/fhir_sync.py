@@ -211,7 +211,7 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
                     history = history + second_reader.second_read_patient(store, pid, history, budget=budget, now=now)
                 except Exception as e:
                     logger.warning("Second reader failed for a patient: %s", type(e).__name__)
-            events_by_patient, warnings = bundle_to_events(history)
+            events_by_patient, warnings = bundle_to_events(history, evaluation_time=now)
             warnings += record_warnings
             n_warnings += len(warnings)
             strata = patient_strata(history)

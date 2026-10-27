@@ -1234,7 +1234,7 @@ def fleischner(n: Dict[str, Any], ctx: Dict[str, Any], prior: List[Dict[str, Any
         if size <= 8:
             days, rng = (6 * MONTH, "3–6 months") if multiple else (12 * MONTH, "6–12 months")
         else:
-            days, rng = (6 * MONTH, "3–6 months") if multiple else (FLEISCHNER_LARGE_NODULE_DAYS, "3 months, PET/CT or tissue sampling")
+            days, rng = (6 * MONTH, "3–6 months") if multiple else ((_calendar_due(when, 3) - when).total_seconds() / 86400, "3 months, PET/CT or tissue sampling")
     elif typ == "ggn":
         if not multiple and size < 6:
             notes.append(f"{label}: no routine follow-up")
@@ -1245,7 +1245,7 @@ def fleischner(n: Dict[str, Any], ctx: Dict[str, Any], prior: List[Dict[str, Any
             notes.append(f"{label}: no routine follow-up")
             return {"action": "none", "days": None, "notes": notes, "review": None}
         if not multiple and (n.get("solid_component_mm") or 0) >= 6:
-            days, rng = FLEISCHNER_LARGE_NODULE_DAYS, "3 months (solid component ≥6 mm: highly suspicious)"
+            days, rng = (_calendar_due(when, 3) - when).total_seconds() / 86400, "3 months (solid component ≥6 mm: highly suspicious)"
         else:
             days, rng = 6 * MONTH, "3–6 months"
     days = _nominal_calendar_days(days, when)
@@ -1493,6 +1493,11 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
         if rec and d.get("lung_rads") and rec["recommended_modality"] == "ct":
             rec_tracked = False
             mapping.append("Lung-RADS rule tracks this CT: recommendation not tracked separately")
+        screening_months = {"3": ("R034", 6), "4A": ("R019", 3)}.get(str(d.get("lung_rads")))
+        if screening_months:
+            rule_id, months = screening_months
+            deadlines[rule_id] = (_calendar_due(when, months) - when).total_seconds() / 86400
+            mapping.append(f"Lung-RADS interval: {months} calendar months; no scheduling grace added")
 
         # 1. Lung nodule (Fleischner) — not for screening LDCT with a Lung-RADS category
         n = rad.get("lung_nodule")
@@ -1513,15 +1518,20 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
             elif decision["action"] == "followup":
                 rec_ct = rec_tracked and rec["recommended_modality"] == "ct"
                 rec_deadline = rec["recommended_interval_days"] if rec_ct else None
+                biopsy_choice = rad.get("biopsy_recommendation") or {}
+                alternative = (biopsy_choice.get("alternative") and
+                               (not biopsy_choice.get("regions") or _overlaps(["lung"], biopsy_choice["regions"])))
                 same_three_month_track = (rec_ct and rec.get("recommended_calendar_months") == 3
-                                          and decision["days"] == FLEISCHNER_LARGE_NODULE_DAYS)
-                if same_three_month_track:
+                                          and decision["days"] == (_calendar_due(when, 3) - when).total_seconds() / 86400)
+                preserve_alternatives = rec_ct and (same_three_month_track or alternative)
+                if preserve_alternatives:
                     # Keep the established nodule task (including its permitted
                     # tissue-sampling alternatives), using the earlier real due
                     # date. Calendar conversion must not create duplicate tasks.
                     decision["days"] = min(decision["days"], rec_deadline)
-                    mapping.append("same three-month nodule follow-up: earlier report or rule deadline retained")
-                if rec_ct and rec["recommended_interval_stated"] and rec_deadline < decision["days"]:
+                    mapping.append("same three-month nodule follow-up: earlier report or rule deadline retained" if same_three_month_track
+                                   else "alternative nodule follow-up: earlier report or rule deadline retained")
+                if rec_ct and not preserve_alternatives and rec["recommended_interval_stated"] and rec_deadline < decision["days"]:
                     mapping.append("radiologist interval is tighter than Fleischner: tracked as R030")
                 else:
                     add("R003", "incidental_nodule_ge_6mm", decision["days"], regs=["lung", "chest"],
@@ -1579,8 +1589,9 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
                 regions[REC_RULE[rec["recommended_modality"]]] = rec["regions"]
             spans.append(rec["evidence_span"])
         elif tirads_followup:
-            d.update(recommended_modality="ultrasound", recommended_interval_days=round(tirads_followup["ultrasound_followup"], 1),
+            d.update(recommended_modality="ultrasound", recommended_interval_days=round(_nominal_calendar_days(tirads_followup["ultrasound_followup"], when), 1),
                      recommended_interval_stated=False)
+            mapping.append("Deadline source: proposed default or guideline interval, not a report-stated deadline; clinician review required")
             regions["R032"] = ["thyroid"]
 
         # 4. Tissue sampling advised (R036), unless another rule already covers that finding
@@ -1593,7 +1604,9 @@ def decide_obligations(events: List[Dict[str, Any]], ctx_base: Dict[str, Any]) -
                 governed = next((rule for rule, regs in covered_organs
                                  if not b_regions or _overlaps(b_regions, regs)), None)
             if not governed and biopsy.get("alternative") and rec_tracked:
-                governed = REC_RULE[rec["recommended_modality"]]
+                # A CT-only rule cannot stand in for tissue sampling. Keep the
+                # alternative visible for human task-level adjudication.
+                reviews["R036"] = "Report describes alternative actions; clinician review of task completion required"
             if governed:
                 mapping.append(f"tissue sampling recommended: covered by {governed}")
             else:

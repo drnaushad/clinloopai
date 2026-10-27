@@ -37,7 +37,7 @@ const CLINLOOP_I18N = {
     tabHypergraph: '지식 그래프',
     tabPrivacy: '데이터 보호',
     guideTitle: 'ClinLoop AI는 무엇인가요?',
-    guideDesc: 'ClinLoop AI 임상용 에디션은 기록에 남은 후속 조치 의무(이상 검사결과, 영상 소견, 의뢰)를 추적하고, 의료진이 확인할 수 있는 근거와 함께 누락을 알려줍니다. 진단이나 치료 권고는 하지 않습니다. 이 공개 데모는 합성 예시 사례만 사용하며 환자 연락이나 병원 연동을 수행하지 않습니다.',
+    guideDesc: 'ClinLoop AI 연구 미리보기는 기록에 남은 후속 조치 의무(이상 검사결과, 영상 소견, 의뢰)를 추적하고, 의료진이 확인할 수 있는 근거와 함께 누락을 알려줍니다. 진단이나 치료 권고는 하지 않습니다. 이 공개 데모는 합성 예시 사례만 사용하며 환자 연락이나 병원 연동을 수행하지 않습니다.',
     guideSteps: '<span class="guide-step">임상 사례 선택</span> <span class="guide-arrow">➔</span> <span class="guide-step">규칙 매칭과 근거를 검토</span> <span class="guide-arrow">➔</span> <span class="guide-step">브라우저에서만 시뮬레이션</span>',
     deadlineLabel: '후속 조치 기한',
     q1Title: '발견 소견',
@@ -118,7 +118,7 @@ const CLINLOOP_I18N = {
     tabHypergraph: 'Knowledge graph',
     tabPrivacy: 'Data protection',
     guideTitle: 'What is ClinLoop AI?',
-    guideDesc: 'ClinLoop AI clinical edition tracks the follow-up obligations already in the record (abnormal results, imaging findings, referrals) and flags missed ones with a basis the clinician can check. It does not diagnose or recommend treatment. This public demo uses synthetic example cases only and does not contact patients or connect to a hospital.',
+    guideDesc: 'ClinLoop AI research preview explores tracking the follow-up obligations already in the record (abnormal results, imaging findings, referrals) and flags missed ones with a basis the clinician can check. It does not diagnose or recommend treatment. This public demo uses synthetic example cases only and does not contact patients or connect to a hospital.',
     guideSteps: '<span class="guide-step">Select a clinical case</span> <span class="guide-arrow">➔</span> <span class="guide-step">Review the rule match and evidence</span> <span class="guide-arrow">➔</span> <span class="guide-step">Simulate in this browser only</span>',
     deadlineLabel: 'Follow-up deadline',
     q1Title: 'Finding',
@@ -1960,7 +1960,7 @@ class ClinLoopApp {
         name: '김철수 (Kim, Chul-soo)',
         ageSex: '남성 52세',
         dept: '응급의학과 외상진료 (갈비뼈 골절 치료 후 퇴원)',
-        finding: '흉부 CT 판독 결과 우상엽(RUL)에 7.8mm 크기의 침상형 폐 결절 우연 발견 (조기 폐암 의심 소견)',
+        finding: '흉부 CT에서 우상엽(RUL) 7.8mm 침상형 폐 결절이 우연히 보고됨 · 진단 및 관리 계획은 의료진 평가 필요',
         missed: '갈비뼈 치료만 완료되고 폐 결절에 대한 외래 예약이나 호흡기내과 협진이 누락된 채 105일 경과',
         guideline: 'Fleischner Society 2017 가이드라인 (6–8mm 고형 결절: 6–12개월 내 흉부 CT 추적, 침상형 등 고위험 형태는 더 이른 추적 고려)',
         deadline: '74일 남음 (마감일자: 2026-12-04)',
@@ -1972,7 +1972,7 @@ class ClinLoopApp {
         finding: '심방세동 뇌졸중 예방을 위해 와파린(Warfarin) 용량을 5mg에서 7.5mg으로 증량 처방',
         missed: '와파린 용량 변경 후 계획된 INR 재검이 합성 기록에서 확인되지 않음',
         guideline: '용량 변경 후 INR 모니터링은 의료진이 결정 · 적응증, 목표 범위 및 재검 시점을 확인',
-        deadline: '2일 남음 (출혈/뇌출혈 급성 위기)',
+        deadline: '예시 추적 목표 · 의료진 검토 필요',
       },
       'SC-0164': {
         name: '최민경 (Choi, Min-kyung)',
@@ -1980,7 +1980,7 @@ class ClinLoopApp {
         dept: '흉부외과 폐암 조기진단 클리닉',
         finding: '흉부 CT에서 10.8mm 폐 결절 발견 (Fleischner 가이드라인 고위험)',
         missed: '합성 기록에서 해당 추적 조치의 근거 확인 · 완치나 ClinLoop로 인한 환자 이익을 입증하지 않음',
-        guideline: 'Fleischner Society 2017 & NCCN 폐암 조기선별 가이드라인 준수 완료',
+        guideline: '합성 기록의 추적 조치 예시 · 적용 지침과 완료 범위는 의료진 검토 필요',
         deadline: '완료됨 (Closed Loop)',
       },
       'SC-0083': {
@@ -1990,7 +1990,7 @@ class ClinLoopApp {
         finding: '퇴원 48시간 후 시행된 혈액배양 검사에서 녹농균(Pseudomonas aeruginosa) 균혈증 양성 보고',
         missed: '퇴원 환자에게 양성 배양 결과가 유선 통보되지 않고 EMR 결과조회함에 미확인 상태로 3일간 방치',
         guideline: '병원 위급 결과 통보 절차에 따른 긴급 의료진 검토와 의사소통 · 치료는 담당 의료진이 결정',
-        deadline: '1일 남음 (패혈성 쇼크 골든타임 임박)',
+        deadline: '예시 추적 목표 · 의료진 검토 필요',
       }
     };
 
@@ -2020,7 +2020,7 @@ class ClinLoopApp {
         finding: 'Warfarin dosage titrated from 5.0mg to 7.5mg daily for stroke prophylaxis',
         missed: 'The synthetic record does not show the planned INR recheck after a warfarin dose change',
         guideline: 'Clinician-directed INR monitoring after a dose change; confirm the indication, target range and recheck timing',
-        deadline: '2 Days Remaining (Acute hemorrhage/stroke crisis)',
+        deadline: 'Example tracking target; clinician review required',
       },
       'SC-0164': {
         name: 'Choi, Min-kyung',
@@ -2028,7 +2028,7 @@ class ClinLoopApp {
         dept: 'Thoracic Surgery Early Lung Nodule Surveillance',
         finding: 'Incidental 10.8mm lung nodule detected on chest CT (Fleischner High-Risk)',
         missed: 'The synthetic record contains follow-up evidence for this tracked step; this does not establish cure or a benefit caused by ClinLoop',
-        guideline: 'Fleischner Society 2017 & NCCN Early Lung Screening Compliance',
+        guideline: 'Synthetic follow-up example; applicable guidance and completion scope require clinician review',
         deadline: 'Fulfilled (Closed Loop)',
       },
       'SC-0083': {
@@ -2038,7 +2038,7 @@ class ClinLoopApp {
         finding: 'Blood culture drawn at ED shows Pseudomonas aeruginosa bacteremia 48h post-discharge',
         missed: 'Critical positive lab result left unacknowledged in EMR inbox; patient not phoned or recalled for 3 days',
         guideline: 'Urgent clinician review and communication under the hospital critical-result protocol; management is decided by the treating team',
-        deadline: '1 Day Remaining (Imminent septic shock golden hour)',
+        deadline: 'Example tracking target; clinician review required',
       }
     };
 
@@ -2152,53 +2152,32 @@ class ClinLoopApp {
     const evText = document.getElementById('cf-evidence-text');
     if (evText) evText.textContent = 'No survival outcome model exists; nothing is estimated.';
 
-    // Render neglected steps
-    const negContainer = document.getElementById('cf-neglected-steps');
-    if (negContainer && cf.neglected_path) {
-      negContainer.innerHTML = '';
-      cf.neglected_path.forEach(step => {
-        const item = document.createElement('div');
-        item.className = 'cf-step';
-        item.innerHTML = `
-          <div class="cf-step-time">${step.time}</div>
-          <div class="cf-step-body">
-            <div class="cf-step-title-row">
-              <span class="cf-step-state">${step.state}</span>
-              <span class="cf-step-stage stage-danger">${step.stage}</span>
-            </div>
-            <div class="cf-step-desc">${step.desc}</div>
-            <div class="cf-step-meta">
-              <span>${this.currentLang === 'ko' ? '예시 · 모델 예측 아님' : 'Illustration only · not a model prediction'}</span>
-            </div>
-          </div>
-        `;
-        negContainer.appendChild(item);
-      });
+    for (const [id, steps, danger] of [
+      ['cf-neglected-steps', cf.neglected_path, true],
+      ['cf-intervened-steps', cf.intervened_path, false]
+    ]) {
+      const container = document.getElementById(id);
+      if (!container || !Array.isArray(steps)) continue;
+      container.replaceChildren(...steps.map(step => this.renderCounterfactualStep(step, danger)));
     }
+  }
 
-    // Render intervened steps
-    const intContainer = document.getElementById('cf-intervened-steps');
-    if (intContainer && cf.intervened_path) {
-      intContainer.innerHTML = '';
-      cf.intervened_path.forEach(step => {
-        const item = document.createElement('div');
-        item.className = 'cf-step';
-        item.innerHTML = `
-          <div class="cf-step-time">${step.time}</div>
-          <div class="cf-step-body">
-            <div class="cf-step-title-row">
-              <span class="cf-step-state">${step.state}</span>
-              <span class="cf-step-stage stage-success">${step.stage}</span>
-            </div>
-            <div class="cf-step-desc">${step.desc}</div>
-            <div class="cf-step-meta">
-              <span>${this.currentLang === 'ko' ? '예시 · 모델 예측 아님' : 'Illustration only · not a model prediction'}</span>
-            </div>
-          </div>
-        `;
-        intContainer.appendChild(item);
-      });
-    }
+  renderCounterfactualStep(step, danger) {
+    const make = (tag, cls, text) => {
+      const node = document.createElement(tag); node.className = cls;
+      if (text != null) node.textContent = String(text);
+      return node;
+    };
+    const item = make('div', 'cf-step');
+    const body = make('div', 'cf-step-body');
+    const title = make('div', 'cf-step-title-row');
+    title.append(make('span', 'cf-step-state', step.state),
+      make('span', 'cf-step-stage ' + (danger ? 'stage-danger' : 'stage-success'), step.stage));
+    const meta = make('div', 'cf-step-meta');
+    meta.append(make('span', '', this.currentLang === 'ko' ? '예시 · 모델 예측 아님' : 'Illustration only · not a model prediction'));
+    body.append(title, make('div', 'cf-step-desc', step.desc), meta);
+    item.append(make('div', 'cf-step-time', step.time), body);
+    return item;
   }
 
   updateStandardsView() {
@@ -2455,7 +2434,7 @@ class ClinLoopApp {
       { name: '전화번호', regex: /01[016789]-?\d{3,4}-?\d{4}/g, replace: '[전화번호 삭제]', type: 'strip' },
       { name: 'Email', regex: /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g, replace: '[이메일 삭제]', type: 'strip' },
       { name: 'URL', regex: /https?:\/\/[^\s]+/g, replace: '[URL 삭제]', type: 'strip' },
-      { name: 'IP 주소', regex: /(?:\d{1,3}\.){3}\d{1,3}/g, replace: '[IP 삭제]', type: 'strip' },
+      { name: 'IP 주소', regex: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g, replace: '[IP 삭제]', type: 'strip' },
       { name: '날짜', regex: /(19|20)\d{2}[-\/\.]\d{2}[-\/\.]\d{2}/g, replace: (m) => m.slice(0,4) + '년', type: 'generalize' },
       { name: '한국어 날짜', regex: /\d{4}년\s*\d{1,2}월\s*\d{1,2}일/g, replace: (m) => m.slice(0,4) + '년', type: 'generalize' },
     ];
@@ -2532,7 +2511,7 @@ class ClinLoopApp {
 이메일: minjun.kim@hospital.ac.kr
 주소: 경기도 수원시 팔달구
 CT 소견 (2024-03-15): 우하엽 14mm 간유리음영 결절 발견
-진단: 악성화 위험 42.1% (Fleischner 2017 고위험)`;
+합성 소견: 폐 결절 · 악성 위험은 추정하지 않음; 의료진 검토 필요`;
         input.dispatchEvent(new Event('input'));
       });
     }

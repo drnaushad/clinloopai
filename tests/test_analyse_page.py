@@ -122,7 +122,7 @@ class TestBrowserCallPath(unittest.TestCase):
         self.assertEqual(r["active_loops"], 1)
         d = r["detections"][0]
         self.assertEqual((d["patient_id"], d["rule_id"], d["status"]), ("PASTE-1", "R003", "open"))
-        self.assertEqual(d["deadline"], "2026-05-30T00:00:00")  # 90 days; no hidden grace
+        self.assertEqual(d["deadline"], "2026-06-01T00:00:00")  # three calendar months; no hidden grace
         self.assertIn("followup_ct", d["missing"])
         self.assertTrue(any("9 mm solid nodule" in b for b in d["basis"]))
         # Default evaluation time is now

@@ -119,6 +119,12 @@ class BenchmarkSuite:
         scores = {"ClinLoop AI": [p["predicted_risk"] for p in predictions]}
         predicted = {"ClinLoop AI": cl_labels}
         metrics = {"ClinLoop AI": self._calculate_metrics(y_true, cl_labels, scores["ClinLoop AI"], "ClinLoop AI")}
+        positives = sum(y_true)
+        metrics["ClinLoop AI"]["sensitivity_including_abstention_as_miss"] = (
+            sum(y and predicted and not row["predicted_abstain"]
+                for y, predicted, row in zip(y_true, cl_labels, predictions)) / positives if positives else None)
+        metrics["ClinLoop AI"]["coverage_without_abstention"] = sum(not p["predicted_abstain"] for p in predictions) / len(predictions)
+        metrics["ClinLoop AI"]["sensitivity_scope"] = "Triage recall includes referral to human review; autonomous recall excludes abstentions"
         for name, result in learned.items():
             scores[name] = result["scores"]
             predicted[name] = [score >= 0.5 for score in result["scores"]]

@@ -81,8 +81,11 @@ class TestStatusesAndRules(unittest.TestCase):
         for status in ("requested", "ordered", "waitlist", "preliminary", "partial", "in progress",
                        "in_progress", "unknown"):
             self.assertFalse(is_fulfilling_status(status), status)
-        for status in ("completed", "final", "fulfilled"):
-            self.assertTrue(is_fulfilling_status(status), status)
+        self.assertTrue(is_fulfilling_status("completed"))
+        self.assertTrue(is_fulfilling_status("final", "lab_result"))
+        self.assertTrue(is_fulfilling_status("fulfilled", "followup_appointment"))
+        self.assertFalse(is_fulfilling_status("final"))
+        self.assertFalse(is_fulfilling_status("fulfilled"))
 
     def test_r005_accepts_colposcopy_and_r015_needs_a_culture(self):
         rules = {r.rule_id: r for r in OBLIGATION_RULES}

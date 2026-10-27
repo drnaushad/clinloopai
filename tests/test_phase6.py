@@ -79,7 +79,7 @@ class TestBasis(unittest.TestCase):
     def test_long_deadlines_show_a_date_and_review_reason_is_clinical(self):
         r003 = next(b for b in self.d["R003"].basis if b.startswith("Rule R003"))
         self.assertRegex(r003, r"by \d{4}-\d{2}-\d{2} \(")                    # no false clock time
-        self.assertIn("(90 days)", r003)  # no scheduling grace after the stated tracking interval
+        self.assertIn("(91 days)", r003)  # April 1 → July 1, three calendar months without grace
         self.assertNotIn("Culture Bacteria identified", self.d["R006"].basis[0])   # code text and display not repeated
         r022 = next(b for b in self.d["R022"].basis if b.startswith("Rule R022"))
         self.assertRegex(r022, r"by \d{4}-\d{2}-\d{2} \d{2}:\d{2} \(1 hour\)")   # a one-hour window keeps the time

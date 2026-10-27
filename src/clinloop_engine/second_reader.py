@@ -133,12 +133,18 @@ def _norm(text: str) -> str:
     return re.sub(r"\s+", " ", text or "").strip().lower()
 
 
+def prompt_digest() -> str:
+    """One unambiguous prompt identity shared by registry, cache and study runner."""
+    value = json.dumps([SYSTEM_PROMPT, PROMPT], ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
 def reader_contract() -> str:
     """Reader code/prompt/name contract; checkpoint identity is bound separately."""
     with open(__file__, "rb") as source:
         code = source.read()
     name = os.environ.get("CLINLOOP_SECOND_READER_MODEL", "medgemma:27b")
-    return hashlib.sha256(code + (SYSTEM_PROMPT + PROMPT + name).encode()).hexdigest()
+    return hashlib.sha256(code + (prompt_digest() + name).encode()).hexdigest()
 
 
 def local_model() -> Optional[Callable[[str, str], Dict[str, Any]]]:
@@ -203,7 +209,7 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],
     if not isinstance(parsed.get("items"), list):
         return {"available": False, "reason": "answer was not the expected JSON", "items": [], "model": out.get("model")}
     from .report_text import sentence, affirmed
-    haystack, items, seen, dropped, not_actionable = _norm(clean), [], set(), 0, 0
+    haystack, items, positions, dropped, not_actionable = _norm(clean), [], {}, 0, 0
     for it in parsed["items"]:
         if not isinstance(it, dict) or it.get("category") not in CATEGORIES:
             dropped += 1
@@ -214,8 +220,6 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],
             continue
         if it["category"] != "critical_finding" and _NOT_ACTIONABLE.search(quote) and not _definite_advice(quote):
             not_actionable += 1                # the quote itself says "not needed", "if indicated" or routine screening
-            continue
-        if it["category"] in seen:
             continue
         # Match against original source positions, preserving the preceding "no"
         # and other context. Normalised containment alone is not interpretation.
@@ -235,11 +239,16 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],
                   else "Source words matched only; clinical interpretation requires clinician review.")
         # Do not promote the model's free-text medical rationale to verified evidence.
         evidence = contexts[0] if not ambiguous and len(contexts[0]) <= 300 else matches[0].group(0)
-        seen.add(it["category"])
-        items.append({"category": it["category"], "quote": evidence[:300], "reason": reason,
+        candidate = {"category": it["category"], "quote": evidence[:300], "reason": reason,
                       "source_context": [c[:1000] for c in contexts[:2]], "source_occurrences": len(matches),
                       "context_flagged": contextual, "source_ambiguous": ambiguous,
-                      "human_review_required": True})
+                      "human_review_required": True}
+        index = positions.get(it["category"])
+        if index is None:
+            positions[it["category"]] = len(items)
+            items.append(candidate)
+        elif (items[index]["context_flagged"] or items[index]["source_ambiguous"]) and not (contextual or ambiguous):
+            items[index] = candidate  # A flagged first quote must not suppress affirmed advice.
     return {"available": True, "model": out.get("model"), "items": items, "dropped": dropped,
             "not_actionable": not_actionable, "verification_incomplete": bool(dropped),
             "human_review_required": True}
@@ -302,7 +311,7 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],
     lookback = lookback_days if lookback_days is not None else int(os.environ.get("CLINLOOP_SECOND_READER_LOOKBACK_DAYS", "30"))
     reports = []
     for r in resources:
-        if r.get("resourceType") != "DiagnosticReport" or r.get("status") not in ("final", "amended", "corrected"):
+        if r.get("resourceType") != "DiagnosticReport" or r.get("status") not in ("final", "amended", "corrected", "appended"):
             continue
         # Never inherit the caller's patient identity for an unbound report.
         if _ref_id(r.get("subject")) != patient_id or not r.get("id"):
@@ -328,7 +337,7 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],
         return []
     contract = reader_contract()
     # What the rules already opened, per report
-    events, _ = bundle_to_events(resources)
+    events, _ = bundle_to_events(resources, evaluation_time=now)
     opened: Dict[str, Set[str]] = {}
     for d in ClinLoopDetector(evaluation_time=now).process_patient("second-reader", patient_id, events.get(patient_id, [])):
         m = re.match(r"DiagnosticReport/([^:]+):", str(d.trigger_event_id))

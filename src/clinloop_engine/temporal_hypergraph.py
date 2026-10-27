@@ -218,6 +218,11 @@ class DynamicTemporalHypergraph:
             seen = self.nodes.get(node_id)
             if seen is not None:
                 if seen.event_type == evt["event_type"] and seen.timestamp == self._parse_timestamp(evt["timestamp"]):
+                    if seen.status != (evt.get("status") or "unknown"):
+                        # Without source revisions neither conflicting copy is authoritative.
+                        seen.status = "unknown"
+                        seen.details = {**seen.details, "duplicate_status_conflict": True,
+                                        "review_note_all": "Conflicting duplicate event statuses; human review required"}
                     continue                        # the same event sent twice: one event, one obligation
                 n = 2                               # a different event that reuses the id keeps its own node
                 while f"{node_id}#{n}" in self.nodes:
@@ -397,6 +402,17 @@ class DynamicTemporalHypergraph:
             # A preliminary result does (a preliminary critical value is real).
             if str(node.status or "").strip().lower().replace(" ", "-").replace("_", "-") in VOID_STATUSES:
                 continue
+            if node.timestamp > self.evaluation_time:
+                continue
+            result_types = {"lab_result", "culture_result", "pathology_result", "radiology_report",
+                            "ecg", "ai_finding", "second_reader_flag"}
+            if not is_fulfilling_status(node.status, node.event_type):
+                # Preliminary/uncertain results need review; unissued plans and
+                # scheduled procedures do not establish a triggering act.
+                if node.status not in {"pending", "unknown"} or node.event_type not in result_types:
+                    continue
+                if node.status == "unknown":
+                    node.details.setdefault("review_note_all", "Trigger completion status unknown; human review required")
 
             # Infer every trigger condition and collect their rules (once each)
             matching_rules: List[ObligationRule] = []
@@ -408,7 +424,7 @@ class DynamicTemporalHypergraph:
 
             for rule in matching_rules:
                 # Check if follow-up nodes exist
-                deadline_days = get_deadline_days(rule, node.details)
+                deadline_days = get_deadline_days(rule, node.details, anchor=node.timestamp)
                 deadline = node.timestamp + timedelta(days=deadline_days)
                 followup_nodes = self._find_followup_nodes(
                     node, rule.required_followups, deadline, nodes_list, rule
@@ -451,7 +467,7 @@ class DynamicTemporalHypergraph:
                 not_done = [
                     f"{n.event_type} [{n.status}] on {n.timestamp.date().isoformat()}"
                     for n in nodes_list
-                    if n.event_type in required_values and n.timestamp > node.timestamp
+                    if n.event_type in required_values and node.timestamp < n.timestamp <= self.evaluation_time
                     and not is_fulfilling_status(n.status, n.event_type)
                 ]
                 if not_done:

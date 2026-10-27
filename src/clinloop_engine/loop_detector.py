@@ -111,7 +111,8 @@ class ClinLoopDetector:
         Returns:
             List of LoopDetection objects, sorted by risk priority
         """
-        if any(not isinstance(event, dict) or event.get("patient_id") != patient_id for event in events):
+        if (not isinstance(patient_id, str) or not patient_id.strip()
+                or any(not isinstance(event, dict) or event.get("patient_id") != patient_id for event in events)):
             raise ValueError("Patient trajectory contains an unresolved or mixed patient identity")
         # Step 1: Build the temporal hypergraph
         graph = DynamicTemporalHypergraph(evaluation_time=self.evaluation_time)
@@ -154,7 +155,7 @@ class ClinLoopDetector:
             risk_assessments.append(assessment)
 
             # Determine final status
-            if assessment.should_abstain:
+            if assessment.should_abstain and he.status == LoopStatus.OPEN.value:
                 final_status = LoopStatus.ABSTAIN.value
             else:
                 final_status = he.status

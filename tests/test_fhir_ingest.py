@@ -117,7 +117,7 @@ class TestFHIRMappingRules(unittest.TestCase):
 
     def test_monitoring_lab_after_drug_change_fulfils_r010(self):
         events, _ = bundle_to_events([
-            {"resourceType": "MedicationRequest", "id": "m", "status": "active",
+            {"resourceType": "MedicationRequest", "id": "m", "status": "active", "intent": "order",
              "subject": {"reference": "Patient/P"}, "authoredOn": "2026-03-01T09:00:00Z",
              "medicationCodeableConcept": {"text": "Lithium carbonate 300 mg"}},
             {"resourceType": "Observation", "id": "o", "status": "final",

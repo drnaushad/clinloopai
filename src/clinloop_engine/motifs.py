@@ -68,6 +68,14 @@ def _num(v) -> Optional[float]:
         return None
 
 
+def _supported_diagnosis(e: Dict[str, Any]) -> bool:
+    """Do not use explicitly uncertain or refuted diagnoses as established context."""
+    return (e["event_type"] == EventType.DIAGNOSIS.value
+            and is_fulfilling_status(e.get("status"), e.get("event_type"))
+            and (e.get("details") or {}).get("verification") not in
+            {"unconfirmed", "provisional", "differential", "refuted", "entered-in-error"})
+
+
 def _age(ctx: Dict[str, Any], when: datetime) -> Optional[float]:
     b = ctx.get("birth_date")
     return (when - b).days / 365.25 if b else None
@@ -169,7 +177,7 @@ def pattern_creatinine(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: L
     # On dialysis creatinine rises between sessions by design: the AKI algorithm does not apply
     # (NICE NG148; NHS England AKI algorithm excludes renal replacement therapy)
     # (a dialysis session counts for 90 days, so a later kidney transplant is watched again)
-    rrt = [e for e in events if e["event_type"] == EventType.DIAGNOSIS.value and e["details"].get("renal_replacement")]
+    rrt = [e for e in events if _supported_diagnosis(e) and e["details"].get("renal_replacement")]
 
     def on_rrt(when: datetime) -> bool:
         return any(_t(r) <= when and (not r["details"].get("dialysis_session") or when - _t(r) <= timedelta(days=90))
@@ -224,7 +232,7 @@ def pattern_creatinine(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: L
 # ── R054 AF without an anticoagulation decision ─────────────────────────────
 
 def cha2ds2_vasc(events: List[Dict[str, Any]], ctx: Dict[str, Any], when: datetime) -> Dict[str, Any]:
-    dx = [e for e in events if e["event_type"] == EventType.DIAGNOSIS.value and _t(e) <= when]
+    dx = [e for e in events if _supported_diagnosis(e) and _t(e) <= when]
     items, score = [], 0
     for key, pts, prefixes, rx in _CHA2DS2:
         hit = next((e for e in dx if any(str(c).startswith(prefixes) for c in (e["details"].get("codes") or []))
@@ -259,7 +267,7 @@ def pattern_af(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict
     (e.g. hypertension added in 2026), and the 65th and 75th birthdays, up to now.
     """
     from .safety_clock import utc_now
-    af = sorted((e for e in events if e["event_type"] == EventType.DIAGNOSIS.value
+    af = sorted((e for e in events if _supported_diagnosis(e)
                  and e["details"].get("verification") not in ("unconfirmed", "provisional", "differential", "refuted")
                  and not _UNCERTAIN.search(e["details"].get("diagnosis") or "")
                  and (_AF.search(e["details"].get("diagnosis") or "")
@@ -268,7 +276,7 @@ def pattern_af(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict
         return
     first = af[0]
     now = normalize_timestamp(ctx["evaluation_time"]) if ctx.get("evaluation_time") else utc_now()
-    candidates = {_t(first)} | {_t(e) for e in events if e["event_type"] == EventType.DIAGNOSIS.value and _t(e) > _t(first)}
+    candidates = {_t(first)} | {_t(e) for e in events if _supported_diagnosis(e) and _t(e) > _t(first)}
     b = ctx.get("birth_date")
     if b:
         for years in (65, 75):
@@ -328,6 +336,7 @@ def pattern_haematuria(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: L
             continue
         done = [x for x in events if when - timedelta(days=365) <= _t(x) <= when
                 and is_fulfilling_status(x.get("status"), x.get("event_type"))
+                and x["event_type"] in {EventType.SPECIALIST_REFERRAL.value, EventType.REFERRAL_VISIT.value, EventType.FOLLOWUP_APPOINTMENT.value}
                 and (x["details"] or {}).get("specialty") == "urology"]
         if done:
             continue

@@ -9,7 +9,7 @@ import hashlib
 import json
 import math
 import warnings
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
@@ -31,7 +31,7 @@ SEED = 42
 EVENT_TYPES = frozenset(e.value for e in EventType)
 CONDITIONS = frozenset(r.trigger_condition for r in OBLIGATION_RULES)
 FLAGS = frozenset({"ABNORMAL", "CRITICAL", "HIGH", "LOW", "NORMAL", "POSITIVE", "NEGATIVE"})
-OBSERVED_STATUSES = frozenset({"completed", "pending", "scheduled", "cancelled", "no_show", "unknown"})
+OBSERVED_STATUSES = frozenset({"completed", "pending", "scheduled", "cancelled", "no_show", "unknown", "ordered", "planned"})
 
 
 def event_features(scenario: Dict[str, Any], evaluation_time: datetime) -> Dict[str, float]:
@@ -59,7 +59,7 @@ def event_features(scenario: Dict[str, Any], evaluation_time: datetime) -> Dict[
         observed.append((timestamp, kind, event))
     observed.sort(key=lambda row: (row[0], row[1]))
     features = Counter({"events.total": float(len(observed))})
-    gaps = defaultdict(list)
+    gap_totals = Counter()
     for timestamp, kind, event in observed:
         features[f"event.{kind}.count"] += 1.0
         age = (when - timestamp).total_seconds() / 86400
@@ -76,12 +76,27 @@ def event_features(scenario: Dict[str, Any], evaluation_time: datetime) -> Dict[
         flag = str(details.get("flag") or "").upper()
         if flag in FLAGS:
             features[f"flag.{flag}.count"] += 1.0
-    for left, right in zip(observed, observed[1:]):
-        edge = f"transition.{left[1]}>{right[1]}"
-        features[edge + ".count"] += 1.0
-        gaps[edge].append((right[0] - left[0]).total_seconds() / 86400)
-    for edge, values in gaps.items():
-        features[edge + ".mean_gap_days"] = float(np.mean(values))
+    # Timestamp groups have no internal causal order. Encode co-occurrence
+    # symmetrically; transitions connect consecutive groups without tie bias.
+    from itertools import combinations_with_replacement, groupby
+    batches = [(timestamp, Counter(row[1] for row in rows))
+               for timestamp, rows in groupby(observed, key=lambda row: row[0])]
+    # Aggregate type multiplicities rather than expanding quadratic event pairs.
+    for timestamp, counts in batches:
+        for left, right in combinations_with_replacement(sorted(counts), 2):
+            count = counts[left] * counts[right] if left != right else counts[left] * (counts[left] - 1) // 2
+            if count:
+                features[f"cooccurrence.{left}&{right}.count"] += float(count)
+    for (left_time, left_counts), (right_time, right_counts) in zip(batches, batches[1:]):
+        gap = (right_time - left_time).total_seconds() / 86400
+        for left, left_count in left_counts.items():
+            for right, right_count in right_counts.items():
+                edge = f"transition.{left}>{right}"
+                count = left_count * right_count
+                features[edge + ".count"] += float(count)
+                gap_totals[edge] += gap * count
+    for edge, total in gap_totals.items():
+        features[edge + ".mean_gap_days"] = total / features[edge + ".count"]
     if observed:
         features["timeline.span_days"] = (observed[-1][0] - observed[0][0]).total_seconds() / 86400
     return dict(sorted(features.items()))
