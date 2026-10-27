@@ -48,7 +48,7 @@
     },
     {
       "file": "js/appnav.js",
-      "sha256": "bda1c6638da9c86f898035cf0b8d478ce2799a798ef7407bca1d708328ac8da9",
+      "sha256": "f2e40f4fbcc12871793e2db8328be68e72bc30ada3095374eca13438785ad7bf",
       "changed_hunks": [
         "@@ -12 +12 @@"
       ],
@@ -84,7 +84,7 @@
     },
     {
       "file": "scripts/build_workspace_shell.py",
-      "sha256": "e65abf44ded92271eab924e56c8a0dd54007b33620b947253b38c2c0c778b113",
+      "sha256": "553cdc272b7263782bd05fc50d742d57d97b9ef04323e236c169a38e037efb5d",
       "changed_hunks": [
         "@@ -15,2 +15,2 @@ ROOT = Path(__file__).resolve().parents[1]",
         "@@ -116 +116,7 @@ def shell(text: str, name: str, entries: list[dict]) -> str:"

@@ -188,6 +188,7 @@ html[lang^=ko] .clinloop-shell-controls #lang-opt-ko { display: none !important;
   margin: 0; padding: 12px; border: 1px solid var(--shell-border); border-radius: 10px;
   background: var(--shell-bg); color: var(--shell-text); box-shadow: 0 4px 18px #0f172a20; }
 html { scrollbar-gutter: stable; }
+.platform-status-label { box-sizing: border-box; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 body.report-loading > :is(main, footer) { visibility: hidden; }
 #report-load-status { margin: 16px clamp(16px, 1.5vw, 40px); padding: 16px;
   border: 1px solid var(--shell-border); border-radius: 10px; color: var(--shell-muted); }

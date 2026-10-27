@@ -1,4 +1,4 @@
-> **Research preview — 2026-10-27.research1.** Published for synthetic-data software evaluation with independent review deferred by the project owner. This includes unreviewed clinical safety changes and offline ML comparators. It does not authorize patient care. All human source-review decisions remain pending; no clinician signatures or runtime approvals have been created. See [the review checklist](docs/reviews/CLINICAL_ML_DRAFT_20261026.md).
+> **Research preview — 2026-10-27.research2.** Prepared for synthetic-data software evaluation with independent human review deferred. This includes unreviewed clinical safety corrections and offline ML comparators. It does not authorize patient care. All 23 source-review decisions remain pending; no clinician signatures or runtime approvals have been created. See [the review checklist](docs/reviews/CLINICAL_ML_DRAFT_20261026.md) and [GMLP evidence gaps](docs/reviews/gmlp-gap-assessment-20261027.json).
 
 <img src="icons/logo.svg" width="72" alt="ClinLoop logo: the rod of Asclepius inside a loop closed by an arrow">
 

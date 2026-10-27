@@ -12,8 +12,8 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '20261027_research1'
-APP_VERSION = '2026-10-27.research1'
+VERSION = '20261027_research2'
+APP_VERSION = '2026-10-27.research2'
 VOID = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
 
 

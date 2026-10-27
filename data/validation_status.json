@@ -79,7 +79,7 @@
       "negative_reports": 266,
       "true_negative_reports": 265,
       "deadline_eligible_reports": 456,
-      "deadlines_within_strict_reference_window": 448,
+      "deadlines_within_strict_reference_window": 447,
       "exact_mismatches": 118,
       "mismatches_with_harness_group_equivalence": 116
     },
@@ -93,7 +93,7 @@
     "folders_checked": 1206,
     "reference_reviews_complete": 0,
     "clinical_accuracy": "not established; independent clinician labels and approved external test data required",
-    "candidate_source_commit": "fe94cf93bf215c9241f6e2fa4a7cb944d1ac869e",
+    "candidate_source_commit": "9cf754e89f383e28f6684b12b7c4402f0028afca",
     "engineering_rechecked_at": "2026-10-27"
   }
 }
