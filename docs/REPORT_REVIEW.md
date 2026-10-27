@@ -55,7 +55,7 @@ The browser calls only the personal loopback gateway. That gateway uses fixed de
 | Anthropic | `https://api.anthropic.com/v1/messages` | `ANTHROPIC_API_KEY` | `CLINLOOP_RESEARCH_ANTHROPIC_MODEL` |
 | Google Gemini | `https://generativelanguage.googleapis.com/v1beta/models/MODEL:generateContent` | `GEMINI_API_KEY` | `CLINLOOP_RESEARCH_GEMINI_MODEL` |
 
-Keys are sent in vendor-specific headers, never in URL queries, public website code or
+Provider requests send keys in vendor-specific headers, never in URL queries, public website code or
 browser responses. Model IDs must be bare IDs, without `models/`, slashes, query strings or
 fragments. No model substitution, tools, conversation history or automatic retry is used.
 OpenAI requests retain `store: false` and disabled input truncation. Other providers do
@@ -67,6 +67,52 @@ Anthropic uses JSON schema output via `output_config.format`. Gemini uses
 string/array length constraints for compatibility, while the original full constraints and
 exact source quotes are still validated locally. Refusals, token-limit stops, blocked results,
 unexpected tools, missing or multiple results, and invalid evidence are rejected in full.
+
+### Guided local key setup
+
+For a form instead of terminal key entry, install the pinned API dependencies in an isolated
+Python environment and run this command from the repository:
+
+```sh
+python scripts/run_research_review.py --setup
+```
+
+1. Open `http://127.0.0.1:18127/setup` on the computer running the gateway. Copy the
+   **gateway access code** from the protected file named in the terminal; paste it into setup.
+2. Select OpenAI, Anthropic (Claude) or Google Gemini. Enter your provider API key and an
+   exact model ID supporting JSON structured output. Select **Use this provider**. Repeat
+   for another provider if needed. This only saves configuration; it makes no provider request
+   or charge and does not verify account access or model compatibility.
+3. Open `https://clinloopai.app/review`, choose **Research API**, select that same provider,
+   and enter the **gateway access code**, never the provider key. Confirm synthetic-only
+   external transmission, connect, then add a complete synthetic report and review it.
+
+OpenAI here means its GPT API, not a ChatGPT browser login. Pick a model available in your
+provider account; this tool cannot guarantee comparative accuracy from a model name.
+Links in local setup lead to official key and model documentation. API billing is managed
+by the provider. No paid provider round trip was performed in development.
+
+The setup surface is disabled unless explicitly enabled by `--setup` (or the personal
+process setting `CLINLOOP_RESEARCH_LOCAL_SETUP=1`). It accepts key changes only from
+`http://127.0.0.1:18127`, a loopback peer, the exact Host, and the separate access code.
+It cannot be configured from the public website, an unrelated origin or a remote peer.
+Credentials are never returned by status/configuration endpoints. Setup has no report input,
+external scripts, analytics, cookies or browser storage. Password fields clear after submission,
+provider changes, page exit, form clearing or ten minutes of inactivity. **Clear form** does
+not undo a submitted configuration change; check configured providers after interruptions.
+
+Keys entered in this form stay only in gateway process memory until **Forget selected
+provider** or process shutdown. Forgetting does not revoke a provider key, clear provider
+logs or erase environment-supplied credentials; those can reappear on restart. Concurrent
+configuration changes are refused during analysis. Keys are not exposed to the public page.
+An unlocked device, extensions or the gateway operator may still access memory. Clearing
+fields is not guaranteed secure memory deletion. Use one private gateway per operator.
+
+For a private remote gateway, use the existing loopback SSH tunnel below, then open the
+same local setup URL on the laptop. Phones/tablets cannot reach a computer's loopback
+address directly. Do not expose this gateway publicly to avoid this limitation.
+
+### Terminal key entry
 
 Install the repository's pinned API dependencies in an isolated environment, then run:
 

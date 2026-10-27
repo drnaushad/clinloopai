@@ -16,6 +16,16 @@ class TestPrivateWorkspace(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('# pass 21', result.stdout)
 
+    @unittest.skipUnless(shutil.which('node'), 'Personal API setup checks require Node.js')
+    def test_personal_api_setup(self):
+        """Run credential lifecycle, origin and stale-request checks in Python-driven CI."""
+        root = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            ['node', 'tests/test_research_setup_ui.cjs'],
+            cwd=root, capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     @unittest.skipUnless(shutil.which('node'), 'Structured report checks require Node.js')
     def test_structured_report_workflow(self):
         """Run source, transport, race and byte-budget regressions in Python-driven CI too."""

@@ -1,7 +1,7 @@
 """Explicitly opt-in loopback gateway for SYNTHETIC provider research only.
 
 Not mounted on the clinical API; no hospital database or patient-data access.
-Keys stay in this process environment. No request/response content is logged.
+Keys stay in this personal process. No request/response content is logged.
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ import requests
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field, StrictBool
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +36,19 @@ SYSTEM = (
 ERROR = 'Research request could not be verified. No analysis accepted; human review required.'
 PROVIDERS = {'openai': 'OpenAI', 'anthropic': 'Anthropic (Claude)', 'gemini': 'Google Gemini'}
 Provider = Literal['openai', 'anthropic', 'gemini']
+
+
+class ProviderSetup(BaseModel):
+    """Credentials accepted only by the opt-in, loopback setup surface."""
+    model_config = ConfigDict(extra='forbid', strict=True)
+    provider: Provider
+    api_key: str = Field(min_length=16, max_length=512, pattern=r'^[!-~]+$', repr=False)
+    model: str = Field(min_length=1, max_length=160, pattern=r'^[A-Za-z0-9._-]+$')
+
+
+class ForgetProvider(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    provider: Provider
 
 
 class Finding(BaseModel):
@@ -185,6 +198,8 @@ def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:
                 config['model'] and (not re.fullmatch(r'[A-Za-z0-9._-]{1,160}', config['model']) or re.match(r'(?:sk-|AIza)', config['model'], re.I))):
             raise ValueError('Invalid provider configuration or model identifier.')
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    setup_enabled = settings.get('local_setup') is True
+    setup_origin = 'http://127.0.0.1:18127'
     gate = threading.Lock()
     calls: list[float] = []
     session = transport or requests.Session()
@@ -193,7 +208,20 @@ def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:
 
     @app.middleware('http')
     async def boundary(request: Request, call_next):
-        if request.headers.get('host') not in {'127.0.0.1:18127', 'localhost:18127'} or request.headers.get('origin') != origin:
+        host = request.headers.get('host')
+        supplied_origin = request.headers.get('origin')
+        setup_path = request.url.path in {'/setup', '/setup.js', '/setup.css', '/review/configure', '/review/forget'}
+        local_setup = (setup_enabled and host == '127.0.0.1:18127' and
+                       request.client is not None and request.client.host == '127.0.0.1')
+        setup_read = request.url.path in {'/setup', '/setup.js', '/setup.css'} and request.method == 'GET'
+        if setup_path:
+            allowed = local_setup and (supplied_origin == setup_origin or (setup_read and supplied_origin is None))
+        else:
+            local_status_read = (local_setup and supplied_origin is None and
+                                 request.method == 'GET' and request.url.path == '/review/status')
+            allowed = (host in {'127.0.0.1:18127', 'localhost:18127'} and
+                       (supplied_origin == origin or (local_setup and supplied_origin == setup_origin) or local_status_read))
+        if not allowed:
             return JSONResponse({'detail': 'Origin or local host not allowed.'}, status_code=403)
         # Stream and cap before JSON parsing; also handles chunked bodies.
         body = bytearray()
@@ -205,6 +233,10 @@ def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:
         result = await call_next(request)
         result.headers['Cache-Control'] = 'no-store'
         result.headers['Referrer-Policy'] = 'no-referrer'
+        result.headers['X-Content-Type-Options'] = 'nosniff'
+        result.headers['X-Frame-Options'] = 'DENY'
+        if setup_path:
+            result.headers['Content-Security-Policy'] = "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'"
         return result
 
     app.add_middleware(CORSMiddleware, allow_origins=[origin], allow_methods=['GET', 'POST'],
@@ -218,6 +250,41 @@ def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:
         supplied = request.headers.get('authorization', '').encode('utf-8')
         if not hmac.compare_digest(supplied, ('Bearer ' + token).encode('utf-8')):
             raise HTTPException(401, 'Local gateway access code required.')
+
+    @app.get('/setup')
+    def setup_page():
+        return Response((ROOT / 'src/research_setup/setup.html').read_text(), media_type='text/html')
+
+    @app.get('/setup.js')
+    def setup_script():
+        return Response((ROOT / 'src/research_setup/setup.js').read_text(), media_type='text/javascript')
+
+    @app.get('/setup.css')
+    def setup_style():
+        return Response((ROOT / 'src/research_setup/setup.css').read_text(), media_type='text/css')
+
+    @app.post('/review/configure', dependencies=[Depends(authorize)])
+    def configure(req: ProviderSetup):
+        if re.match(r'(?:sk-|AIza)', req.model, re.I):
+            raise HTTPException(422, 'Enter a model ID, not a credential.')
+        if not gate.acquire(blocking=False):
+            raise HTTPException(429, 'Research gateway busy. Try setup after the active request finishes.')
+        try:
+            configs[req.provider] = {'api_key': req.api_key, 'model': req.model}
+            return {'provider': req.provider, 'model': req.model, 'configured': True,
+                    'credential_checked_with_provider': False, 'retention': 'gateway process memory only'}
+        finally:
+            gate.release()
+
+    @app.post('/review/forget', dependencies=[Depends(authorize)])
+    def forget(req: ForgetProvider):
+        if not gate.acquire(blocking=False):
+            raise HTTPException(429, 'Research gateway busy. Try setup after the active request finishes.')
+        try:
+            configs[req.provider] = {'api_key': '', 'model': ''}
+            return {'provider': req.provider, 'configured': False}
+        finally:
+            gate.release()
 
     @app.get('/review/status', dependencies=[Depends(authorize)])
     def status():
@@ -233,13 +300,13 @@ def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:
             raise HTTPException(403, 'Synthetic research and external API consent required.')
         if not req.text.strip() or len(req.text.encode('utf-8')) > 6000:
             raise HTTPException(422, 'Use 1–6000 UTF-8 bytes; no silent truncation.')
-        config = configs[req.provider]
-        model = config['model']
-        if not config['api_key'] or not model:
-            raise HTTPException(503, 'Configure the selected provider key and model on your own research server. No fallback used.')
         if not gate.acquire(blocking=False):
             raise HTTPException(429, 'Research gateway busy.')
         try:
+            config = dict(configs[req.provider])
+            model = config['model']
+            if not config['api_key'] or not model:
+                raise HTTPException(503, 'Configure the selected provider key and model on your own research server. No fallback used.')
             now = time.monotonic()
             calls[:] = [t for t in calls if now - t < 3600]
             if len(calls) >= 12:
@@ -275,6 +342,7 @@ def main() -> None:
                     'anthropic': {'api_key': os.environ.get('ANTHROPIC_API_KEY', ''), 'model': os.environ.get('CLINLOOP_RESEARCH_ANTHROPIC_MODEL', '')},
                     'gemini': {'api_key': os.environ.get('GEMINI_API_KEY', ''), 'model': os.environ.get('CLINLOOP_RESEARCH_GEMINI_MODEL', '')}},
                 'token': os.environ.get('CLINLOOP_RESEARCH_GATEWAY_TOKEN', ''),
+                'local_setup': os.environ.get('CLINLOOP_RESEARCH_LOCAL_SETUP') == '1',
                 'origin': os.environ.get('CLINLOOP_RESEARCH_WEB_ORIGIN', 'https://clinloopai.app')}
     try:
         app = create_app(settings)

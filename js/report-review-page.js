@@ -58,7 +58,7 @@
       local.clear(true);research.clear();connected=false;$('gateway-code').value='';
       const message=!setupLoaded?'Report review setup could not be loaded. Refresh this page and check your connection.':
         mode==='local'?'Could not connect to local Ollama. Confirm the local-model checkbox, that Ollama is running on this browser’s device, and that https://clinloopai.app is an allowed origin. Allow local-network access if your browser prompts; an embedded browser may block it. See Local connection instructions.':
-        api.PROVIDERS[provider]+' research gateway connection failed. Check your local gateway, the selected provider configuration and the gateway access code.';
+        api.PROVIDERS[provider]+' research gateway connection failed. Check your local gateway, the selected provider configuration and the gateway access code. Add or update your provider key in Personal API setup on your computer; no key belongs on this public page.';
       status(message+' No report sent.');
     }}
     finally{if(current===epoch){busy=false;sync();}}
