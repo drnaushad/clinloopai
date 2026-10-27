@@ -52,15 +52,17 @@ def build(root: Path, base: str) -> Dict[str, Any]:
         rows.append({'file': name, 'sha256': hashlib.sha256(target.read_bytes()).hexdigest() if target.is_file() else None,
                      'changed_hunks': hunks, 'requires_clinician': path.name in CLINICAL,
                      'reviewer': None, 'reviewer_role': None, 'reviewed_at': None,
+                     'review_origin': 'unassigned', 'human_review_attested': False,
+                     'independence_attested': False, 'identity_verification_reference': None,
                      'decision': 'pending', 'line_by_line_review_complete': False, 'notes': []})
-    return {'format_version': 1, 'base_commit': base, 'files': rows,
+    return {'format_version': 2, 'base_commit': base, 'files': rows,
             'software_tests_do_not_approve_clinical_use': True,
             'runtime_rule_signoffs_created': False}
 
 
 def verify(packet: Dict[str, Any], root: Path, base: str) -> Dict[str, Any]:
     expected = build(root, base)
-    if (packet.get('format_version') != 1 or packet.get('base_commit') != base
+    if (packet.get('format_version') != 2 or packet.get('base_commit') != base
             or packet.get('runtime_rule_signoffs_created') is not False
             or packet.get('software_tests_do_not_approve_clinical_use') is not True
             or not isinstance(packet.get('files'), list) or not expected['files']
@@ -78,10 +80,18 @@ def verify(packet: Dict[str, Any], root: Path, base: str) -> Dict[str, Any]:
             reviewer = row.get('reviewer')
             role = row.get('reviewer_role')
             if (not isinstance(reviewer, str) or len(reviewer.strip()) < 3
-                    or reviewer.strip().casefold() in {'none', 'pending', 'unknown', 'chatgpt', 'codex', 'ai assistant'}
+                    or reviewer.strip().casefold() in {'none', 'pending', 'unknown', 'chatgpt', 'codex', 'gemini', 'ai assistant'}
+                    or 'senior medicine ai scientist' in reviewer.casefold()
                     or role not in {'clinician', 'ml_researcher', 'software_engineer'}
                     or (source['requires_clinician'] and role != 'clinician')):
                 raise ReviewError('An accountable human reviewer with the appropriate role is required')
+            reference = row.get('identity_verification_reference')
+            if (row.get('review_origin') not in {'human', 'ai_assisted_human'}
+                    or row.get('human_review_attested') is not True
+                    or row.get('independence_attested') is not True
+                    or not isinstance(reference, str) or not reference.strip()
+                    or reference.strip().casefold() in {'none', 'pending', 'unknown', 'later', 'not verified'}):
+                raise ReviewError('Human review attestations and an identity verification reference are required')
             try:
                 when = datetime.fromisoformat(row['reviewed_at'].replace('Z', '+00:00'))
                 if when.tzinfo is None or when > datetime.now(timezone.utc):
@@ -96,7 +106,7 @@ def verify(packet: Dict[str, Any], root: Path, base: str) -> Dict[str, Any]:
     return {'status': status, 'files': len(decisions), 'approved': decisions.count('approved'),
             'pending': decisions.count('pending'), 'changes_requested': decisions.count('changes_requested'),
             'clinical_use_authorized': False, 'runtime_rule_signoffs_created': False,
-            'qualification_check': 'Reviewer qualifications and independence require external human verification'}
+            'qualification_check': 'Attestations and reference presence checked; identity, qualifications and independence require external human verification'}
 
 
 def main() -> None:

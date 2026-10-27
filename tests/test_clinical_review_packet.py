@@ -33,6 +33,8 @@ def approved(packet):
     for row in packet['files']:
         row.update(reviewer='Synthetic human reviewer', reviewer_role='clinician',
                    reviewed_at=(datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
+                   review_origin='human', human_review_attested=True,
+                   independence_attested=True, identity_verification_reference='synthetic-fixture:verification-1',
                    decision='approved', line_by_line_review_complete=True)
     return packet
 
@@ -45,6 +47,10 @@ def test_generated_packet_is_pending_and_never_authorizes_care(draft):
     assert result['pending'] == 1
     assert not result['clinical_use_authorized']
     assert packet['files'][0]['requires_clinician']
+    assert packet['format_version'] == 2
+    assert packet['files'][0]['review_origin'] == 'unassigned'
+    assert packet['files'][0]['human_review_attested'] is False
+    assert packet['files'][0]['identity_verification_reference'] is None
 
 
 def test_complete_receipts_do_not_become_clinical_validation(draft):
@@ -98,3 +104,32 @@ def test_invalid_human_receipts_and_scope_tampering_fail_closed(draft, changes):
     packet['files'][0].update(changes)
     with pytest.raises(ReviewError):
         verify(packet, root, base)
+
+
+@pytest.mark.parametrize('changes', [
+    {'review_origin':'ai_generated'}, {'review_origin':'gemini'}, {'review_origin':None},
+    {'human_review_attested':False}, {'human_review_attested':'true'},
+    {'independence_attested':False}, {'independence_attested':1},
+    {'identity_verification_reference':None}, {'identity_verification_reference':'later'},
+    {'reviewer':'Gemini'},
+    {'reviewer':'Dr. Senior Medicine AI Scientist (Clinical Safety & Medical Informatics Review)'},
+])
+def test_ai_receipts_or_missing_human_attestations_cannot_complete_review(draft,changes):
+    root,base,_=draft
+    packet=approved(build(root,base));packet['files'][0].update(changes)
+    with pytest.raises(ReviewError):verify(packet,root,base)
+
+
+def test_legacy_review_requires_fresh_explicit_attestations(draft):
+    root,base,_=draft
+    packet=approved(build(root,base));packet['format_version']=1
+    with pytest.raises(ReviewError):verify(packet,root,base)
+
+
+def test_ai_assistance_requires_an_accountable_human_and_does_not_verify_credentials(draft):
+    root,base,_=draft
+    packet=approved(build(root,base));packet['files'][0]['review_origin']='ai_assisted_human'
+    result=verify(packet,root,base)
+    assert result['status']=='REVIEW_RECORDS_COMPLETE_NOT_CLINICAL_VALIDATION'
+    assert 'external human verification' in result['qualification_check']
+    assert result['clinical_use_authorized'] is False

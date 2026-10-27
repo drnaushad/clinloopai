@@ -1,13 +1,17 @@
 # Production readiness: what is in place, what is not
 
-ClinLoop is the clinical-use edition (core profile by default), not yet validated at a hospital. This page lists what a hospital pilot needs, what the code already
+ClinLoop is a research candidate (core profile by default), not yet validated at a hospital. This page lists what a hospital pilot needs, what the code already
 does about each need, the design decisions behind it, and what is still missing. It is a working
 document for the team, the hospital's IT and privacy officers and its regulatory adviser. It is not
 legal or regulatory advice.
 
-## 2026-10-27 public research preview
+## 2026-10-27 local research candidate and review provenance
 
-Version `2026-10-27.research1` is published for synthetic-data research at the project owner’s request. Independent source review is deferred, with zero human approvals. The 20-file engine/ML candidate plus two release/navigation files remain pending; publishing them does not approve patient care. All thirteen pages display this status. The public site serves synthetic snapshots and browser-only research controls; offline learned comparators do not become clinical prediction services. Shared backend, GPU, model services and hospital integrations are not restarted or enabled by this publication.
+Version `2026-10-27.research1` was prepared and uploaded to a separate preview branch; publication to main and the live website was not completed. The corrected candidate remains local. Independent source review is deferred, with zero human approvals. The 22-file engine/ML/release packet now also covers the review-tool provenance correction, for 23 pending source files. Candidate pages display research-preview status; this does not describe a newly deployed public release. Offline learned comparators do not become clinical prediction services. No shared backend, GPU, model service or hospital integration was restarted or enabled.
+
+The supplied Gemini conversation duplicates the returned source review and is AI-generated review input, not evidence of an identifiable human's approval. Review schema v2 requires a human or AI-assisted-human origin, explicit personal-review and independence attestations, and a reference to identity/qualification verification held by the responsible team. The checker validates field presence and source binding; it does not authenticate a person or verify a licence. AI findings remain useful engineering input outside the human approval record. All new review records default to pending.
+
+The [GMLP evidence and gap tracker](reviews/gmlp-gap-assessment-20261027.json) maps the candidate to all ten 2025 IMDRF principles linked by FDA. Its statuses are engineering assessments, not certification or a regulatory determination. Representative clinical evaluation, reference adjudication, clinician workflow testing and operational monitoring evidence remain incomplete.
 
 Historical checks below retain their original dates and scope. The GPU mismatch note below is a historical finding, not a current hardware diagnosis. See the current release section on the Validation evidence page for research results and unresolved disagreements.
 
