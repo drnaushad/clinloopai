@@ -15,3 +15,9 @@ css/styles.backup.css
 tests
 src/tests
 docs
+!docs/
+docs/*
+!docs/reviews/
+docs/reviews/*
+!docs/reviews/RETURNED_REVIEW_CORRECTIONS_20261027.md
+!docs/reviews/gmlp-gap-assessment-20261027.json

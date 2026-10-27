@@ -59,3 +59,37 @@ def test_navigation_exists_before_javascript_without_duplicate_controls(page):
     assert html.index('js/display-start.js') < html.index('<body')
     assert html.index('data-static-shell="true"') < html.index('id="clinloop-page-picker"')
     assert parsed.ids['workspace' if page in {'private', 'review'} else 'clinloop-workspace'] == 1
+
+
+class MenuGroups(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.groups = []
+        self.options = []
+        self.current_group = None
+        self.in_option_group = False
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if 'clinloop-nav-group' in a.get('class', '').split():
+            self.current_group = []
+            self.groups.append(self.current_group)
+        if tag == 'a' and 'app-nav-link' in a.get('class', '').split():
+            self.current_group.append(a['href'])
+        if tag == 'optgroup':
+            self.options.append([])
+            self.in_option_group = True
+        if tag == 'option' and self.in_option_group:
+            self.options[-1].append(a['value'])
+    def handle_endtag(self, tag):
+        if tag == 'optgroup':
+            self.in_option_group = False
+
+
+@pytest.mark.parametrize('page', ['index', 'worklist', 'patient', 'quality', 'governance', 'pilot', 'imaging', 'analyse', 'reports', 'review', 'private', 'validation', 'deployment'])
+def test_desktop_and_phone_menus_offer_identical_groups_and_destinations(page):
+    parsed = MenuGroups()
+    parsed.feed((ROOT / (page + '.html')).read_text())
+    normalize = lambda href: '/' if href == './' else '/' + href
+    assert len(parsed.groups) == len(parsed.options) == 3
+    assert [[normalize(href) for href in group] for group in parsed.groups] == parsed.options
+    assert [len(group) for group in parsed.groups] == [8, 3, 2]

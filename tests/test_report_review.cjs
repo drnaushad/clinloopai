@@ -60,13 +60,13 @@ test('local structured review sends original text only to an inspected local mod
   const body=JSON.parse(calls.at(-1).options.body);assert.deepEqual(body.format,schema);assert.equal(body.prompt,TEXT);assert.equal(body.options.temperature,0);
 });
 function page({localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>validate(REVIEW,TEXT),localConnect=async()=>['synthetic'],researchConnect=async()=> 'synthetic-api',schemaFetch=async()=>ok({type:'object'})}={}){
-  const ids=['mode','provider','provider-destination','provider-consent','local-options','research-options','connect','disconnect','status','model','report','report-file','analyze','local-address','research-address','gateway-code','local-confirm','research-confirm','report-type','complete-confirm','result','sample','clear'];
+  const ids=['mode','provider','provider-destination','provider-consent','local-options','research-options','connect','disconnect','status','model','report','report-file','analyze','local-address','research-address','gateway-code','local-confirm','research-confirm','report-type','complete-confirm','result','sample','clear','report-budget','review-readiness'];
   const el={},events={},windowEvents={},calls=[];
   for(const id of ids)el[id]={value:'',checked:false,children:[],files:[],addEventListener:(n,f)=>{events[id+':'+n]=f;},replaceChildren(...xs){this.children=xs;},append(...xs){this.children.push(...xs);}};
   el.mode.value='local';el.provider.value='openai';el['local-address'].value='http://127.0.0.1:11434';el['research-address'].value='http://127.0.0.1:18127';el['report-type'].value='radiology-text';
   const api=require('../js/report-review.js');
   const context={document:{getElementById:id=>el[id],createElement:()=>({children:[],append(...xs){this.children.push(...xs);}}),addEventListener(){}},
-    Option:function(text,value){this.text=text;this.value=value;},fetch:schemaFetch,setInterval(){},Date,TextDecoder,
+    Option:function(text,value){this.text=text;this.value=value;},fetch:schemaFetch,setInterval(){},Date,TextDecoder,TextEncoder,
     window:{fetch:async()=>ok({type:'object'}),addEventListener:(n,f)=>{windowEvents[n]=f;},
       ClinLoopPrivate:{Workspace:class{clear(v){calls.push(['localClear',v]);}async connect(){calls.push(['localConnect']);return localConnect();}async run(){calls.push(['localRun']);return localRun();}}},
       ClinLoopReportReview:{...api,Research:class{clear(){calls.push(['researchClear']);}async connect(){calls.push(['researchConnect']);return researchConnect();}async run(){calls.push(['researchRun']);return researchRun();}}}}};
@@ -174,7 +174,8 @@ test('pending file load clears old results and prevents analysis until the compl
   p.el['report-file'].files=[{name:'synthetic.txt',size:TEXT.length,arrayBuffer:()=>new Promise(r=>release=r)}];
   const task=p.events['report-file:change']();assert.equal(p.el.report.value,'');assert(p.el.analyze.disabled);assert(!p.el.result.textContent.includes('OLD RESULT'));
   await p.events['analyze:click']();assert(!p.calls.some(c=>c[0]==='localRun'));
-  release(new TextEncoder().encode(TEXT).buffer);await task;assert.equal(p.el.report.value,TEXT);assert(!p.el.analyze.disabled);assert.equal(p.el['complete-confirm'].checked,false);
+  release(new TextEncoder().encode(TEXT).buffer);await task;assert.equal(p.el.report.value,TEXT);assert(p.el.analyze.disabled);assert.equal(p.el['complete-confirm'].checked,false);
+  p.el['complete-confirm'].checked=true;p.events['complete-confirm:change']();assert(!p.el.analyze.disabled);
 });
 test('a source edit during inference cannot display an answer for the earlier report',async()=>{
   let release;const p=page({localRun:()=>new Promise(r=>release=r)});await p.events['connect:click']();p.el.report.value=TEXT;p.el['complete-confirm'].checked=true;
@@ -212,4 +213,33 @@ test('linked recommendation is not duplicated; negated recommendations remain hu
 test('a quote that drops the preceding negation is not accepted as present',()=>{
  const text='SYNTHETIC CT: No pleural effusion is identified.';
  assert.throws(()=>validate({findings:[{quote:'pleural effusion',assertion:'present',follow_up_quote:'',deadline_quote:''}],missing_context:[]},text),/negation conflict/);
+});
+
+
+test('readiness follows connection, complete source, confirmation and subsequent edits',async()=>{
+ const p=page();assert(p.el.analyze.disabled);assert.match(p.el['review-readiness'].textContent,/step 1/);
+ await p.events['connect:click']();assert(p.el.analyze.disabled);assert.match(p.el['review-readiness'].textContent,/step 2/);
+ p.events['sample:click']();assert(p.el.analyze.disabled);assert.match(p.el['review-readiness'].textContent,/confirm/);
+ p.el['complete-confirm'].checked=true;p.events['complete-confirm:change']();assert(!p.el.analyze.disabled);
+ p.el.report.value=TEXT;p.events['report:input']();assert(p.el.analyze.disabled);assert(!p.el['complete-confirm'].checked);
+ assert(!p.calls.some(c=>c[0].endsWith('Run')));
+});
+test('multibyte budget rejects a complete oversized source without silently truncating it',async()=>{
+ const p=page();await p.events['connect:click']();
+ p.el.report.value='가'.repeat(2001);p.events['report:input']();
+ p.el['complete-confirm'].checked=true;p.events['complete-confirm:change']();
+ assert.equal(p.el['report-budget'].textContent,'6003 / 6000 UTF-8 bytes');assert(p.el.analyze.disabled);
+ assert.match(p.el['review-readiness'].textContent,/do not remove clinical context/);
+ await p.events['analyze:click']();assert(!p.calls.some(c=>c[0].endsWith('Run')));assert.equal(p.el.report.value.length,2001);
+ p.events['clear:click']();assert.equal(p.el['report-budget'].textContent,'0 / 6000 UTF-8 bytes');assert(p.el.analyze.disabled);
+});
+
+
+test('the report entry does not let the browser silently cut a long paste at a character limit',()=>{
+ for(const [page,id] of [['review','report'],['private','prompt']]){
+  const html=fs.readFileSync(require.resolve('../'+page+'.html'),'utf8');
+  const textarea=html.match(new RegExp('<textarea[^>]*id="'+id+'"[^>]*>'))[0];
+  assert(!/maxlength/i.test(textarea));
+ }
+ const html=fs.readFileSync(require.resolve('../review.html'),'utf8');assert.match(html,/aria-describedby="source-limit report-budget"/);
 });

@@ -1,7 +1,7 @@
 {
   "status": "SYNTHETIC_RESEARCH_RUN_COMPLETED_HUMAN_REVIEW_DEFERRED",
   "completed_at": "2026-10-27T01:19:09.220476+00:00",
-  "source_hashes_checked": 23,
+  "source_hashes_checked": 24,
   "synthetic_trajectories": 300,
   "train_examples": 207,
   "test_examples": 93,
@@ -14,7 +14,7 @@
   "patient_overlap": 0,
   "exact_predictor_overlap": 0,
   "human_review_deferred_by_user": true,
-  "human_reviews_pending": 23,
+  "human_reviews_pending": 24,
   "human_reviews_approved": 0,
   "clinical_use_authorized": false,
   "clinical_accuracy_established": false,
@@ -31,36 +31,38 @@
     "Learned baselines use structured event features, not raw reports or images"
   ],
   "next_stage": "Independent source review and adjudicated clinical evaluation before patient-care use",
-  "version": "2026-10-27.research2",
+  "version": "2026-10-27.usability1",
   "channel": "research-preview",
   "clinical_files_pending": 11,
-  "software_ml_files_pending": 12,
+  "software_ml_files_pending": 13,
   "publication_scope": "Public synthetic-data research preview; no patient-care authorization",
-  "engineering_candidate_source_commit": "f3ed2fc424350aa59df51d4a4a7fb24e9ca40cdd",
+  "engineering_candidate_source_commit": "66d04888a850129d0a4b0da4431065a8575ed944",
   "release_verification": {
-    "engine_tests_passed": 1056,
-    "subtests_passed": 122,
+    "container_tests_passed": 1071,
     "review_tool_git_tests_passed_separately": 26,
+    "tests_passed_combined": 1097,
+    "subtests_passed": 122,
+    "container_skipped": 27,
     "preexisting_skip": 1,
     "existing_warnings": 4,
     "seeded_benchmark": "passed",
-    "full_engine_evidence_commit": "9cf754e89f383e28f6684b12b7c4402f0028afca",
-    "review_tool_evidence_commit": "f3ed2fc424350aa59df51d4a4a7fb24e9ca40cdd",
-    "tests_passed": 1056,
-    "git_checks_passed_separately": 26,
-    "container_skipped": 27,
-    "page_width_checks_passed": 52,
+    "page_width_theme_checks_passed": 156,
     "actual_css_widths": [
       320,
       768,
-      1280,
-      2409
+      1024,
+      1150,
+      1151,
+      3840
     ],
-    "synthetic_analysis_browser_check": "passed: R003, 91 calendar days, due 2026-07-01",
-    "browser_viewport_limit": "3840 CSS pixels not tested; browser cap with existing zoom limited widest CSS viewport to 2409"
+    "clean_container_menu_routes_passed": 13,
+    "container_startup_evidence_resources_passed": 5,
+    "container_exposure_boundaries_passed": 3,
+    "paid_provider_calls_tested": false,
+    "real_patient_accuracy_tested": false
   },
   "review_schema_version": 2,
   "gmlp_gap_assessment": "docs/reviews/gmlp-gap-assessment-20261027.json",
   "ai_generated_review_records_imported_as_human": false,
-  "engineering_rechecked_at": "2026-10-27T06:01:54+00:00"
+  "engineering_rechecked_at": "2026-10-27T06:40:00.843886+00:00"
 }

@@ -48,9 +48,30 @@
     },
     {
       "file": "js/appnav.js",
-      "sha256": "f2e40f4fbcc12871793e2db8328be68e72bc30ada3095374eca13438785ad7bf",
+      "sha256": "e13843db8aac643b830d523244d47f19c80b808fc7a826cb2a9dc33c9248d0b7",
       "changed_hunks": [
         "@@ -12 +12 @@"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "js/report-review-page.js",
+      "sha256": "fade765d18ce9ef8d9fd9007cafe42d895bac3b657bba7c6e9bb8ca9dab3455a",
+      "changed_hunks": [
+        "@@ -14,2 +14,2 @@",
+        "@@ -17,0 +18,11 @@",
+        "@@ -105 +116,2 @@",
+        "@@ -109,0 +122 @@"
       ],
       "requires_clinician": false,
       "reviewer": null,
@@ -84,10 +105,15 @@
     },
     {
       "file": "scripts/build_workspace_shell.py",
-      "sha256": "553cdc272b7263782bd05fc50d742d57d97b9ef04323e236c169a38e037efb5d",
+      "sha256": "31aa13b839ee3b202a1929e563b0898b16c9bc356aee9077762accb191592bd9",
       "changed_hunks": [
         "@@ -15,2 +15,2 @@ ROOT = Path(__file__).resolve().parents[1]",
-        "@@ -116 +116,7 @@ def shell(text: str, name: str, entries: list[dict]) -> str:"
+        "@@ -98 +98 @@ def shell(text: str, name: str, entries: list[dict]) -> str:",
+        "@@ -104,2 +103,0 @@ def shell(text: str, name: str, entries: list[dict]) -> str:",
+        "@@ -106,0 +105,2 @@ def shell(text: str, name: str, entries: list[dict]) -> str:",
+        "@@ -110,0 +111,28 @@ def shell(text: str, name: str, entries: list[dict]) -> str:",
+        "@@ -114 +142 @@ def shell(text: str, name: str, entries: list[dict]) -> str:",
+        "@@ -116 +144,7 @@ def shell(text: str, name: str, entries: list[dict]) -> str:"
       ],
       "requires_clinician": false,
       "reviewer": null,

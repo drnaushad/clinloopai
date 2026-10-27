@@ -11,10 +11,21 @@
     const label=api.PROVIDERS[$('provider').value];
     $('provider-destination').textContent=label;$('provider-consent').textContent=label;
     $('connect').disabled=locked||connected;
-    for(const id of ['report','report-file','analyze','model'])$(id).disabled=!connected||locked;
-    $('report-type').disabled=locked;$('complete-confirm').disabled=locked;
+    for(const id of ['report','report-file','model'])$(id).disabled=!connected||locked;
+    $('report-type').disabled=locked;$('complete-confirm').disabled=!connected||locked;
     for(const id of ['local-address','research-address','gateway-code','local-confirm','research-confirm'])$(id).disabled=connected||locked;
     $('sample').disabled=!connected||locked;
+    const bytes=new TextEncoder().encode($('report').value).length;
+    $('report-budget').textContent=bytes+' / 6000 UTF-8 bytes';
+    let valid=false;
+    try{api.validText($('report').value,$('report-type').value);valid=true;}catch(_){}
+    $('analyze').disabled=!connected||locked||!valid||!$('complete-confirm').checked;
+    $('review-readiness').textContent=!connected?'Connect a model in step 1 to enable source entry.':
+      loading?'Loading source. Wait for the complete file.':busy?'Review in progress. Wait for source checks.':
+      bytes>6000?'Report exceeds 6000 UTF-8 bytes. Use a complete report within the limit; do not remove clinical context to fit.':
+      !valid?'Add a complete synthetic report in step 2.':!$('complete-confirm').checked?
+      'Check the complete report and confirm it above to enable Review report.':
+      'Ready to review. Compare every returned suggestion with the original report.';
   }
   function clear(disconnect=true){
     epoch++;sourceVersion++;local.clear(disconnect);research.clear();busy=false;loading=false;
@@ -102,11 +113,13 @@
     catch(_){if(current===epoch&&version===sourceVersion){$('report').value='';$('result').textContent='No review yet.';status('File not accepted. Use a complete UTF-8 .txt report up to 6000 bytes; no partial report was loaded.');}}
     finally{if(current===epoch&&version===sourceVersion){loading=false;sync();}}
   });
-  function sourceChanged(){sourceVersion++;$('complete-confirm').checked=false;$('result').textContent='Source changed. Review again.';status('Source or model changed. Review again.');}
+  function sourceChanged(){sourceVersion++;$('complete-confirm').checked=false;$('result').textContent='Source changed. Review again.';status('Source or model changed. Review again.');sync();}
+  $('complete-confirm').addEventListener('change',sync);
   $('report').addEventListener('input',sourceChanged);$('report-type').addEventListener('change',sourceChanged);$('model').addEventListener('change',sourceChanged);
   $('sample').addEventListener('click',()=>{
     sourceVersion++;$('report-type').value='radiology-text';$('complete-confirm').checked=false;$('result').textContent='No review yet.';
     $('report').value='SYNTHETIC REPORT — fictional adult. CT chest: A 6 mm pulmonary nodule is present. No pleural effusion. Recommend comparison with prior imaging. No comparison study is supplied. No follow-up interval is specified.';
+    status('Synthetic example loaded. Check completeness before reviewing.');sync();
   });
   for(const name of ['pointerdown','keydown','input'])document.addEventListener(name,()=>{lastActivity=Date.now();},{passive:true});
   setInterval(()=>{if(Date.now()-lastActivity>=600000){clear(true);lastActivity=Date.now();}},10000);

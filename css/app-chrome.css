@@ -150,6 +150,23 @@ html[lang^=ko] .clinloop-shell-controls #lang-opt-ko { display: none !important;
   display: inline-flex; align-items: center; flex: 0 0 auto; min-height: 44px; padding: 8px 12px; border-radius: 8px; }
 .clinloop-shell-links a[aria-current=page] { color: var(--shell-accent) !important; background: var(--shell-soft) !important; }
 .clinloop-shell-links a:hover { background: var(--shell-soft); }
+.clinloop-nav-group { flex: 1 1 240px; min-width: 0; padding: 4px 12px 4px 0; }
+.clinloop-nav-group:first-child { flex-grow: 2; flex-basis: 520px; }
+.clinloop-nav-group + .clinloop-nav-group { border-left: 1px solid var(--shell-border); padding-left: 12px; }
+.clinloop-nav-group-label { display: block; padding: 0 12px 4px; color: var(--shell-muted);
+  font: 600 .75rem/1.4 var(--font-body); }
+.clinloop-nav-group-links { display: flex; flex-wrap: wrap; gap: 4px; }
+.clinloop-shell-links a[aria-current=page] { box-shadow: inset 0 -3px var(--shell-accent); }
+.clinloop-workflow-guide { margin-top: 8px; color: var(--shell-text); }
+.clinloop-workflow-guide > summary { cursor: pointer; min-height: 44px; box-sizing: border-box;
+  padding: 10px 12px; border-radius: 8px; font: 600 .875rem/1.5 var(--font-body); }
+.clinloop-workflow-guide > summary:hover { background: var(--shell-soft); }
+.clinloop-workflow-guide > summary:focus-visible { outline: 3px solid var(--shell-accent); outline-offset: 2px; }
+.clinloop-workflow-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; padding: 8px 0; }
+.clinloop-workflow-grid > div { min-width: 0; padding: 12px; border: 1px solid var(--shell-border); border-radius: 8px; }
+.clinloop-workflow-grid a { display: inline-flex; align-items: center; min-height: 44px;
+  color: var(--shell-accent); font: 600 .9rem/1.4 var(--font-body); }
+.clinloop-workflow-grid p { margin: 4px 0 0; color: var(--shell-muted); font: 400 .85rem/1.5 var(--font-body); overflow-wrap: anywhere; }
 .clinloop-shell :is(a, button, select):focus-visible { outline: 3px solid var(--shell-accent); outline-offset: 2px; }
 .clinloop-shell-mobile { display: none; }
 .research-release-notice { margin: 10px 0 0; padding: 8px 12px; border: 1px solid var(--shell-accent);

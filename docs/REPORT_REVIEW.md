@@ -3,6 +3,27 @@
 This feature is a synthetic-only draft. It does not make the public website a hospital-ready
 patient-data system, validate a model or change the follow-up engine's clinical scope.
 
+## Finding the right workspace
+
+Every page offers the same 13 destinations in the same three groups: Clinical workspace,
+Research, and Evidence and setup. Phones and tablets use a labelled page selector; larger
+screens show those groups as links. The current destination stays selected after resizing
+and Back/Forward. The keyboard-operable **Choose a workflow** disclosure explains the
+input requirements and links directly to report review, follow-up examples, imaging workflow
+information and measured validation evidence. English/Korean pages translate this guidance;
+workspaces currently supporting English only retain English content.
+
+Report review shows its UTF-8 byte count and the next required step. Review remains disabled
+until a model is connected, the complete source is valid and the operator confirms completeness.
+Editing the source or changing model/category clears earlier output and the confirmation.
+The counter measures bytes rather than characters; it never truncates an oversized report.
+Do not remove clinical context simply to meet a size limit.
+
+The container includes all menu pages, the report-review schema, SMART sandbox pages and the
+two public evidence documents linked by Validation. Its web root does not expose the full
+repository or the internal source-review packet. CI smoke checks exercise every clean menu
+route and startup resources, rather than relying solely on the cockpit loading.
+
 ## Local LLM pathway
 
 Open `review.html`, select the local pathway, and connect your own loopback Ollama with cloud

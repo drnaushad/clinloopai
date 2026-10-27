@@ -12,8 +12,8 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '20261027_research2'
-APP_VERSION = '2026-10-27.research2'
+VERSION = '20261027_workflows1'
+APP_VERSION = '2026-10-27.usability1'
 VOID = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
 
 
@@ -95,25 +95,53 @@ def shell(text: str, name: str, entries: list[dict]) -> str:
         controls = appearance()
         if button:
             controls = '<div role="group" data-shell-account="">' + controls + parser.raw(button) + '</div>'
-    links = []
+    links = [[], [], []]
     groups = [[], [], []]
     for index, entry in enumerate(entries):
         route = '/' if entry['page'] == 'index' else '/' + entry['page']
         current = ' aria-current="page"' if entry['page'] == name else ''
         en, ko = html.escape(entry['en']), html.escape(entry['ko'])
-        links.append(f'<a class="app-nav-link" href="{entry["href"]}" data-label-en="{en}" data-label-ko="{ko}"{current}>'
-                     f'<span data-nav-language="en">{en}</span><span data-nav-language="ko">{ko}</span></a>')
         group = 0 if index < 8 else 1 if index < 11 else 2
+        links[group].append(f'<a class="app-nav-link" href="{entry["href"]}" data-label-en="{en}" data-label-ko="{ko}"{current}>'
+                     f'<span data-nav-language="en">{en}</span><span data-nav-language="ko">{ko}</span></a>')
         selected = ' selected' if entry['page'] == name else ''
         groups[group].append(f'<option value="{route}"{selected}>{en}</option>')
     grouped = ''.join(f'<optgroup label="{label}">{"".join(options)}</optgroup>' for label, options in zip(
         ['Clinical workspace', 'Research', 'Evidence and setup'], groups))
+    desktop = ''.join(
+        f'<div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-{i}">'
+        f'<span class="clinloop-nav-group-label" id="nav-group-{i}">'
+        f'<span data-nav-language="en">{en}</span><span data-nav-language="ko">{ko}</span></span>'
+        f'<div class="clinloop-nav-group-links">{"".join(items)}</div></div>'
+        for i, (en, ko, items) in enumerate(zip(
+            ['Clinical workspace', 'Research', 'Evidence and setup'],
+            ['진료 작업 공간', '연구', '검증 및 설정'], links)))
+    workflows = [
+        ('review', 'Review report text', '보고서 텍스트 검토',
+         'Complete synthetic text or .txt, up to 6000 UTF-8 bytes. Connect your local model or a research API gateway; check each source quote.',
+         '완전한 합성 텍스트 또는 .txt, UTF-8 최대 6000바이트. 로컬 모델 또는 연구 API 게이트웨이에 연결하고 각 원문 인용을 확인하세요.'),
+        ('analyse', 'Try follow-up detection', '후속 조치 탐지 체험',
+         'Start with a synthetic example, a FHIR .json bundle or radiology/pathology report text. The browser demo needs no model connection.',
+         '합성 예제, FHIR .json 번들 또는 영상·병리 보고서 텍스트로 시작하세요. 브라우저 데모는 모델 연결이 필요 없습니다.'),
+        ('imaging', 'Explore document and imaging workflows', '문서 및 영상 작업 흐름 살펴보기',
+         'PDF, scans, DICOM and images require a separate approved local installation and validated extraction or imaging models. Public controls are demonstrations.',
+         'PDF, 스캔, DICOM 및 영상에는 별도로 승인된 로컬 설치와 검증된 추출·영상 모델이 필요합니다. 공개 화면은 시연용입니다.'),
+        ('validation', 'Check evidence and limitations', '검증 근거 및 한계 확인',
+         'See measured results, supported tasks and pending reviews before choosing a workflow or comparing models. Universal clinical accuracy is not established.',
+         '작업 흐름 선택이나 모델 비교 전에 측정 결과, 지원 작업 및 검토 현황을 확인하세요. 모든 임상 작업에 대한 정확도는 입증되지 않았습니다.'),
+    ]
+    guide = ('<details class="clinloop-workflow-guide"><summary>'
+             '<span data-nav-language="en">Choose a workflow</span><span data-nav-language="ko">작업 흐름 선택</span>'
+             '</summary><div class="clinloop-workflow-grid">' + ''.join(
+                 f'<div><a href="{href}"><span data-nav-language="en">{en}</span><span data-nav-language="ko">{ko}</span></a>'
+                 f'<p><span data-nav-language="en">{desc}</span><span data-nav-language="ko">{translation}</span></p></div>'
+                 for href, en, ko, desc, translation in workflows) + '</div></details>')
     nav = 'workspace-nav' if name in {'private', 'review'} else 'app-nav'
     return ('<!-- clinloop-shell:start -->\n<header class="clinloop-shell" data-static-shell="true">'
             '<div class="clinloop-shell-top">' + brand + '<div class="clinloop-shell-controls" role="group" aria-label="Display and account">' + controls + '</div></div>'
-            f'<nav class="{nav} clinloop-shell-links" aria-label="ClinLoop pages">' + ''.join(links) + '</nav>'
+            f'<nav class="{nav} clinloop-shell-links" aria-label="ClinLoop pages">' + desktop + '</nav>'
             '<div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label>'
-            '<select id="clinloop-page-picker">' + grouped + '</select></div>'
+            '<select id="clinloop-page-picker">' + grouped + '</select></div>' + guide +
             '<aside class="research-release-notice" role="note">'
             '<span data-nav-language="en">Research preview · synthetic data only. Independent review and clinical validation pending. '
             '<a href="validation#research-release">Review status</a></span>'
