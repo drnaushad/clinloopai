@@ -47,7 +47,7 @@ def condition(icd, text):
 
 
 def referral(when, text="Urology referral"):
-    return {"resourceType": "ServiceRequest", "id": "ref", "status": "completed", "authoredOn": when,
+    return {"resourceType": "ServiceRequest", "id": "ref", "status": "completed", "intent": "order", "authoredOn": when,
             "code": {"text": text}, "subject": {"reference": "Patient/P"}}
 
 

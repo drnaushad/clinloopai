@@ -225,6 +225,11 @@ def _explicit_event_type(resource: Dict) -> Optional[str]:
 def _status(resource: Dict) -> str:
     raw = str(resource.get("status") or "").strip().lower()
     rtype = resource.get("resourceType")
+    if rtype == "ServiceRequest" and raw in {"active", "completed"}:
+        # FHIR intent distinguishes a proposal/plan from authorization to act.
+        # Even a completed plan is not evidence that an order/referral was issued.
+        if resource.get("intent") not in {"order", "original-order", "reflex-order", "filler-order", "instance-order"}:
+            return "unknown"
     if rtype == "Condition":
         # Condition uses clinicalStatus, not a top-level status. It supplies context.
         known = {"active", "recurrence", "relapse", "remission", "resolved", "inactive"}

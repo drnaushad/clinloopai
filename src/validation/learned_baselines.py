@@ -7,6 +7,7 @@ LLM, an image interpreter or a calibrated clinical risk model.
 """
 import hashlib
 import json
+import math
 import warnings
 from collections import Counter, defaultdict
 from datetime import datetime
@@ -86,6 +87,14 @@ def event_features(scenario: Dict[str, Any], evaluation_time: datetime) -> Dict[
     return dict(sorted(features.items()))
 
 
+def _predictor_signature(values: Dict) -> str:
+    """Canonical numeric vector: absent features and explicit zero both encode zero."""
+    if not isinstance(values, dict) or any(not isinstance(k, str) or type(v) not in (int, float)
+                                          or not math.isfinite(v) for k, v in values.items()):
+        raise ValueError("Research predictors must be finite named numeric values")
+    return json.dumps({k: float(v) for k, v in values.items() if v != 0}, sort_keys=True, allow_nan=False)
+
+
 def grouped_split(scenarios: List[Dict], features: List[Dict], test_size: float = 0.3) -> Tuple[np.ndarray, np.ndarray, Dict]:
     """Keep patients and exact predictor duplicates in the same connected group.
 
@@ -107,7 +116,7 @@ def grouped_split(scenarios: List[Dict], features: List[Dict], test_size: float 
         pid = row.get("patient_id")
         if not isinstance(pid, str) or not pid.strip():
             raise ValueError("Research cohort requires explicit patient groups")
-        fingerprint = hashlib.sha256(json.dumps(values, sort_keys=True, allow_nan=False).encode()).hexdigest()
+        fingerprint = hashlib.sha256(_predictor_signature(values).encode()).hexdigest()
         for seen, key in ((seen_patients, pid), (seen_features, fingerprint)):
             if key in seen:
                 parents[find(i)] = find(seen[key])
@@ -119,7 +128,7 @@ def grouped_split(scenarios: List[Dict], features: List[Dict], test_size: float 
     train, test = next(GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=SEED).split(features, groups=groups))
     train_patients = {scenarios[i]["patient_id"] for i in train}
     test_patients = {scenarios[i]["patient_id"] for i in test}
-    signature = lambda i: json.dumps(features[i], sort_keys=True, allow_nan=False)
+    signature = lambda i: _predictor_signature(features[i])
     duplicate_overlap = len({signature(i) for i in train} & {signature(i) for i in test})
     if train_patients & test_patients or duplicate_overlap:
         raise ValueError("Research partition leakage detected")

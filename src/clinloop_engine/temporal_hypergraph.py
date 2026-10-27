@@ -452,7 +452,7 @@ class DynamicTemporalHypergraph:
                     f"{n.event_type} [{n.status}] on {n.timestamp.date().isoformat()}"
                     for n in nodes_list
                     if n.event_type in required_values and n.timestamp > node.timestamp
-                    and not is_fulfilling_status(n.status)
+                    and not is_fulfilling_status(n.status, n.event_type)
                 ]
                 if not_done:
                     hyperedge.evidence_chain.append(
@@ -465,7 +465,7 @@ class DynamicTemporalHypergraph:
                     f"{n.event_type} at {n.timestamp.isoformat()}"
                     for n in nodes_list
                     if n is not node and n.event_type in required_values and n.timestamp == node.timestamp
-                    and is_fulfilling_status(n.status)
+                    and is_fulfilling_status(n.status, n.event_type)
                 ]
                 if same_time and hyperedge.status != LoopStatus.CLOSED.value:
                     hyperedge.evidence_chain.append(
@@ -482,7 +482,7 @@ class DynamicTemporalHypergraph:
                         for n in nodes_list
                         if n.event_type in required_values and _region_checked(n)
                         and node.timestamp < n.timestamp <= self.evaluation_time
-                        and is_fulfilling_status(n.status) and not _region_ok(required_regions, n)
+                        and is_fulfilling_status(n.status, n.event_type) and not _region_ok(required_regions, n)
                     ]
                     if wrong_region:
                         hyperedge.evidence_chain.append(
@@ -531,7 +531,7 @@ class DynamicTemporalHypergraph:
                 continue
             if node.timestamp > self.evaluation_time:
                 continue
-            if not is_fulfilling_status(node.status):
+            if not is_fulfilling_status(node.status, node.event_type):
                 continue
             if node.patient_id != trigger.patient_id:
                 continue

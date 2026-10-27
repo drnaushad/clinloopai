@@ -104,9 +104,32 @@ def prepare_openi(root: Path, out: Path, sample: int = 100, seed: int = 42) -> D
     return manifest
 
 
+def _predict_model(text: str, name: str, expected_digest: str) -> Dict:
+    """Bind each accepted study prediction to a checkpoint before and after inference."""
+    from ..clinloop_engine import local_llm_engine as engine
+    from ..clinloop_engine.model_registry import checkpoint_identity
+    from ..clinloop_engine.second_reader import read_report
+    expected = {'model': name, 'digest': expected_digest}
+    if checkpoint_identity(name) != expected:
+        raise ValueError('Study checkpoint changed or unavailable')
+
+    def model(prompt, instruction):
+        return engine.generate_clinical_text(prompt, model=name, temperature=0.0,
+                                             max_tokens=600, system_prompt=instruction)
+
+    prediction = read_report(text, model)
+    if checkpoint_identity(name) != expected or (prediction.get('available') and prediction.get('model') != name):
+        raise ValueError('Study checkpoint changed or unavailable')
+    # Dropped/invalid quotes are abstentions, never a clean negative report.
+    if prediction.get('verification_incomplete'):
+        return {'available': False, 'items': [], 'dropped': prediction.get('dropped', 0)}
+    return prediction
+
+
 def predict_study(out: Path, selected: List[str]) -> Dict:
     from ..clinloop_engine import local_llm_engine as engine
-    from ..clinloop_engine.second_reader import PROMPT, SYSTEM_PROMPT, read_report
+    from ..clinloop_engine.second_reader import PROMPT, SYSTEM_PROMPT
+    from ..clinloop_engine.model_registry import checkpoint_identity
     # A credentialed report must never be sent through the public tunnel or a cloud model.
     if urlparse(engine.OLLAMA_BASE_URL).hostname not in {'localhost', '127.0.0.1', '::1'}:
         raise ValueError('This runner requires Ollama on loopback on the approved local machine')
@@ -116,17 +139,15 @@ def predict_study(out: Path, selected: List[str]) -> Dict:
     manifest = json.loads((out/'manifest.json').read_text())
     if digest((out/'records.json').read_text()) != manifest['records_sha256']:
         raise ValueError('Study input has changed')
-    with engine.requests.get(engine.OLLAMA_BASE_URL+'/api/tags', timeout=10) as response:
-        response.raise_for_status()
-        available = {m['name']: m for m in response.json()['models']}
-    if any(name not in available for name in selected):
-        raise ValueError('A requested study model is not installed; no fallback is allowed')
+    identities = {name: checkpoint_identity(name) for name in selected}
+    if any(identity is None for identity in identities.values()):
+        raise ValueError('A requested local study checkpoint is unavailable; no fallback is allowed')
     # Freeze inputs, executable decision code and prompt; model digest prevents silent replacement.
     source = Path(__file__).resolve().parents[1]/'clinloop_engine'
     fingerprint = digest(''.join(str(p.relative_to(source))+digest(p.read_text()) for p in sorted(source.rglob('*.py'))) + digest(Path(__file__).read_text()) + digest(Path(__file__).with_name('report_validation.py').read_text()))
     frozen = {'records_sha256': manifest['records_sha256'], 'source_sha256': fingerprint,
               'prompt_sha256': digest(SYSTEM_PROMPT+PROMPT),
-              'models': {m: available[m]['digest'] for m in selected}}
+              'models': {m: identities[m]['digest'] for m in selected}}
     provenance = out/'prediction_provenance.json'
     if provenance.exists() and json.loads(provenance.read_text()) != frozen:
         raise ValueError('Code, prompt or model changed; use a new study output directory')
@@ -155,12 +176,9 @@ def predict_study(out: Path, selected: List[str]) -> Dict:
                                       deadline_days={k:v for k,v in prediction['deadline_days'].items() if k in rules})
                     else:
                         model_text = 'Study: ' + record['study'] + '\n' + record['conclusion']
-                        if len(model_text) > 6000:
+                        if len(model_text.encode('utf-8')) > 6000:
                             raise ValueError('Input would be truncated')
-                        def model(prompt, instruction, name=system):
-                            return engine.generate_clinical_text(prompt, model=name, temperature=0.0,
-                                                                 max_tokens=600, system_prompt=instruction)
-                        prediction = read_report(model_text, model)
+                        prediction = _predict_model(model_text, system, frozen['models'][system])
                         result.update(available=prediction['available'],
                                       action=bool(prediction['items']) if prediction['available'] else None,
                                       items=prediction['items'], dropped=prediction.get('dropped', 0))
@@ -227,6 +245,8 @@ def metrics(pairs: List) -> Dict:
 
 
 def score_study(out: Path) -> Dict:
+    # A failed rescore must not leave an earlier accuracy claim looking current.
+    (out/'accuracy.json').unlink(missing_ok=True)
     records = json.loads((out/'records.json').read_text())
     manifest = json.loads((out/'manifest.json').read_text())
     if digest((out/'records.json').read_text()) != manifest['records_sha256']:
@@ -294,7 +314,9 @@ def score_study(out: Path) -> Dict:
     deadlines = []
     for rid, ref in refs.items():
         if len(ref['rules']) == 1 and ref['bounds']:
-            p = predictions.get((rid,'rules'),{}); value = p.get('deadline_days',{}).get(next(iter(ref['rules'])))
+            p = predictions.get((rid,'rules'),{})
+            value = (p.get('deadline_days',{}).get(next(iter(ref['rules'])))
+                     if p.get('available') is True and p.get('action') is True else None)
             deadlines.append(value is not None and ref['bounds'][0] <= value <= ref['bounds'][1])
     result = {'task':'report-level need for any in-scope follow-up; not finding-level or outcome accuracy',
               'reference':'two declared clinician reviewers, third-person adjudication of disagreements',

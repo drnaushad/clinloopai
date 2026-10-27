@@ -87,6 +87,9 @@ class BenchmarkSuite:
         import sklearn
         from .governance import ruleset_version
 
+        keys = [s.get("scenario_id") for s in self.scenarios]
+        if any(not isinstance(key, str) or not key.strip() for key in keys) or len(set(keys)) != len(keys):
+            raise ValueError("Research cohort requires unique nonempty scenario keys")
         if any(s.get("ground_truth_status") not in {"open", "closed", "delayed"} for s in self.scenarios):
             raise ValueError("Research cohort requires explicit binary-evaluable reference statuses")
         features = [event_features(s, self.evaluation_time) for s in self.scenarios]

@@ -1326,13 +1326,20 @@ NON_FULFILLING_STATUSES = frozenset({
 })
 
 
-def is_fulfilling_status(status: Optional[str]) -> bool:
+def is_fulfilling_status(status: Optional[str], event_type: Optional[str] = None) -> bool:
     """Require affirmative completion evidence; missing/unmapped statuses stay open.
 
     FHIR resource-specific statuses are normalised by the ingestion adapter first.
     This allowlist also protects direct event imports that bypass that adapter.
     """
     norm = re.sub(r"[\s_]+", "-", str(status or "").strip().lower())
+    if event_type is not None and norm in {"final", "amended", "corrected", "appended"}:
+        # Finalisation of a result is not evidence of a completed visit/procedure.
+        # FHIR adapters already normalise resource-specific completion to completed.
+        return event_type in {"lab_result", "followup_lab", "imaging_result", "radiology_report",
+                              "pathology_result", "culture_result", "biopsy_result", "inr_recheck",
+                              "hba1c_recheck", "bp_check", "postpartum_glucose_test", "hcv_rna_test",
+                              "hiv_supplemental_test", "hbv_dna_test", "ecg", "colonoscopy_finding"}
     return norm in {"completed", "finished", "fulfilled", "final", "amended", "corrected", "appended"}
 
 

@@ -85,7 +85,7 @@ def _derived(anchor: Dict[str, Any], name: str, condition: str, rule: str, days:
 
 def _labs(events: List[Dict[str, Any]], analyte: str) -> List[Dict[str, Any]]:
     return sorted((e for e in events if e["event_type"] == EventType.LAB_RESULT.value
-                   and (e["details"] or {}).get("analyte") == analyte and is_fulfilling_status(e.get("status"))
+                   and (e["details"] or {}).get("analyte") == analyte and is_fulfilling_status(e.get("status"), e.get("event_type"))
                    and _num((e["details"] or {}).get("value")) is not None), key=_t)
 
 
@@ -128,7 +128,7 @@ def pattern_ida(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dic
             if age is None or sex not in ("male", "female") or (sex == "male" and age < 18) or (sex == "female" and age < 50):
                 continue      # premenopausal women: menstrual loss is the usual cause; men ≥ 18 and women ≥ 50 per BSG
             done = [e for e in events if when - timedelta(days=365) <= _t(e) <= when
-                    and is_fulfilling_status(e.get("status"))      # a cancelled colonoscopy is no work-up
+                    and is_fulfilling_status(e.get("status"), e.get("event_type"))      # a cancelled colonoscopy is no work-up
                     and (e["event_type"] == EventType.COLONOSCOPY.value
                          or ((e["details"] or {}).get("specialty") == "gastroenterology"
                              and e["event_type"] in (EventType.SPECIALIST_REFERRAL.value, EventType.REFERRAL_VISIT.value)))]
@@ -280,7 +280,7 @@ def pattern_af(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict
     score_name = "CHA₂DS₂-VA" if af_score_variant() == "cha2ds2_va" else "CHA₂DS₂-VASc"
     for when in sorted(t for t in candidates if _t(first) <= t <= now):
         on_oac = [m for m in events if m["event_type"] == EventType.MEDICATION_CHANGE.value
-                  and m["details"].get("anticoagulant") and is_fulfilling_status(m.get("status")) and _t(m) <= when]
+                  and m["details"].get("anticoagulant") and is_fulfilling_status(m.get("status"), m.get("event_type")) and _t(m) <= when]
         if on_oac:
             return
         s = cha2ds2_vasc(events, ctx, when)
@@ -315,7 +315,7 @@ def _rbc_positive(e: Dict[str, Any]) -> bool:
 
 def pattern_haematuria(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: List[Dict[str, Any]]) -> None:
     pos = sorted((e for e in events if e["event_type"] == EventType.LAB_RESULT.value
-                  and (e["details"] or {}).get("analyte") == "urine_rbc" and is_fulfilling_status(e.get("status"))
+                  and (e["details"] or {}).get("analyte") == "urine_rbc" and is_fulfilling_status(e.get("status"), e.get("event_type"))
                   and _rbc_positive(e)), key=_t)
     last: Optional[datetime] = None
     for i, e in enumerate(pos):
@@ -327,7 +327,7 @@ def pattern_haematuria(events: List[Dict[str, Any]], ctx: Dict[str, Any], out: L
         if age is None or age < 35:
             continue
         done = [x for x in events if when - timedelta(days=365) <= _t(x) <= when
-                and is_fulfilling_status(x.get("status"))
+                and is_fulfilling_status(x.get("status"), x.get("event_type"))
                 and (x["details"] or {}).get("specialty") == "urology"]
         if done:
             continue
@@ -378,7 +378,7 @@ def pattern_nodule_growth(events: List[Dict[str, Any]], ctx: Dict[str, Any], out
     does not call it growing (e.g. "stable 8 mm nodule", previously 6 mm, or 6 → 7 → 8 mm over three scans).
     """
     reports = sorted((e for e in events if e["event_type"] == EventType.RADIOLOGY_REPORT.value
-                      and is_fulfilling_status(e.get("status"))
+                      and is_fulfilling_status(e.get("status"), e.get("event_type"))
                       and ((e["details"] or {}).get("radiology") or {}).get("lung_nodules")), key=_t)
     chains: List[List[Dict[str, Any]]] = []          # each: [{"size_mm", "lobe", "side", "time", "event", "nodule"}]
     for rep in reports:

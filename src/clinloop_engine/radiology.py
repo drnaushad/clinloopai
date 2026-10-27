@@ -49,8 +49,10 @@ def _calendar_due(when: datetime, months: int) -> datetime:
 
 def _nominal_calendar_days(days: float, when: datetime) -> float:
     """Convert known month-based guideline intervals at their actual anchor date."""
-    for months in (6, 12, 24):
-        if abs(days - months * MONTH) < 0.01:
+    intervals = [(months * MONTH, months) for months in (6, 12, 24)]
+    intervals += [(years * YEAR, int(years * 12)) for years in (0.5, 1, 2, 3, 5)]
+    for nominal, months in intervals:
+        if abs(days - nominal) < 0.01:
             return (_calendar_due(when, months) - when).total_seconds() / 86400
     return days
 

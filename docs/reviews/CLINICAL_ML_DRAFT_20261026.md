@@ -1,6 +1,6 @@
 # Clinical/ML draft review — 26 October 2026
 
-Status: unpublished clinical behavior prepared for source review on a draft branch. No clinical approvals have been recorded. The released website remains on `main`.
+Status: unreleased clinical behavior prepared for source review on a draft branch. No clinical approvals have been recorded. The released website remains on `main`. The 27 October engineering corrections and remaining requirements are recorded in [the PR58 deep review](PR58_DEEP_REVIEW_20261027.md); the refreshed packet contains 20 pending source reviews.
 
 This branch carries the remaining clinical safety drafts, source provenance checks, patient/duplicate-separated synthetic ML comparators, dataset evaluation tooling and regression tests. Previously published interface, report-review, Epic and SMART/HAPI changes are preserved.
 
@@ -22,7 +22,7 @@ python scripts/clinical_review_packet.py --base aadad952cd68715e24735f0412b3034c
 
 The checker returns exit status 2 while review is pending. Clinical accuracy and hospital readiness remain unestablished.
 
-## Engineering verification of this rebased candidate
+## Engineering verification of the 26 October candidate, before the follow-up review
 
 - Offline regression suite: 933 passed, 122 subtests passed, 14 skipped and four existing warnings.
 - The 13 Git-dependent review-tool tests passed separately on the host; one pre-existing skip remains.

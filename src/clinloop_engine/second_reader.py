@@ -295,21 +295,25 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],
         silent = mode() == "silent" or not allows("second_reader")
     elif not allows("second_reader"):
         silent = True
-    from .fhir_ingest import bundle_to_events, patient_names
+    from .fhir_ingest import bundle_to_events, patient_names, _ref_id
     from .loop_detector import ClinLoopDetector
     from .safety_clock import normalize_timestamp, utc_now
-    now = now or utc_now()
+    now = normalize_timestamp(now or utc_now())
     lookback = lookback_days if lookback_days is not None else int(os.environ.get("CLINLOOP_SECOND_READER_LOOKBACK_DAYS", "30"))
     reports = []
     for r in resources:
         if r.get("resourceType") != "DiagnosticReport" or r.get("status") not in ("final", "amended", "corrected"):
+            continue
+        # Never inherit the caller's patient identity for an unbound report.
+        if _ref_id(r.get("subject")) != patient_id or not r.get("id"):
             continue
         kind, text = _report_kind(r), (r.get("conclusion") or "").strip()
         when = r.get("effectiveDateTime") or r.get("issued")
         if not kind or not text or not when:
             continue
         try:
-            if normalize_timestamp(when) < now - timedelta(days=lookback):
+            report_time = normalize_timestamp(when)
+            if report_time < now - timedelta(days=lookback) or report_time > now:
                 continue
         except (ValueError, TypeError):
             continue
@@ -335,7 +339,8 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],
     for r, kind, text in reports:
         context = {"reader": contract, "checkpoint": identity, "text": text, "kind": kind,
                    "status": r.get("status"), "date": r.get("effectiveDateTime") or r.get("issued"),
-                   "code": r.get("code"), "subject": r.get("subject"), "names": names}
+                   "code": r.get("code"), "subject": r.get("subject"), "names": names,
+                   "silent": silent, "tracked_rules": sorted(opened.get(r["id"], set()))}
         digest = hashlib.sha256(json.dumps(context, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
         key = f"{patient_id}|{r['id']}"
         if identity is not None and _checkpoint(model) != identity:
@@ -368,9 +373,12 @@ def second_read_patient(store, patient_id: str, resources: List[Dict[str, Any]],
             store.add_external_resource(res, "second-reader", "second-reader", "system",
                                         summary=f"{CATEGORIES[item['category']]['en']}: \"{item['quote'][:120]}\"")
             flags.append(res)
-        store.set_second_read(key, patient_id, digest, "read", items=len(result["items"]), flags=len(new),
-                              model=result.get("model") or "", detail=json.dumps({"checkpoint": identity,
-                              "cache_reuse_allowed": identity is not None}, sort_keys=True), now=now)
+        incomplete = bool(result.get("verification_incomplete"))
+        detail = ("Source verification incomplete; human review required" if incomplete else
+                  json.dumps({"checkpoint": identity, "cache_reuse_allowed": identity is not None}, sort_keys=True))
+        store.set_second_read(key, patient_id, digest, "failed" if incomplete else "read",
+                              items=len(result["items"]), flags=len(new), model=result.get("model") or "",
+                              detail=detail, now=now)
     return flags
 
 

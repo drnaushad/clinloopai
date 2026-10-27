@@ -111,6 +111,8 @@ class ClinLoopDetector:
         Returns:
             List of LoopDetection objects, sorted by risk priority
         """
+        if any(not isinstance(event, dict) or event.get("patient_id") != patient_id for event in events):
+            raise ValueError("Patient trajectory contains an unresolved or mixed patient identity")
         # Step 1: Build the temporal hypergraph
         graph = DynamicTemporalHypergraph(evaluation_time=self.evaluation_time)
         graph.build_from_patient_trajectory(events)
