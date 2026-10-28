@@ -63,7 +63,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
   main > :not(section) { grid-column: 1 / -1; margin-block: 0; }
   main > section { margin: 0; }
-  main > section:last-of-type, .review-results { grid-column: 1 / -1; }
+  main > section:last-of-type, .review-results, #session-privacy { grid-column: 1 / -1; }
 }
 @media (max-width: 900px) {
   .workspace-nav { flex-wrap: nowrap; }
@@ -80,3 +80,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 .review-source #report-file { border: 2px dashed var(--accent); background: var(--soft); padding: 12px; }
 .review-source #report-file::file-selector-button { border: 1px solid var(--accent); border-radius: 6px; padding: 8px 12px; background: var(--surface); color: var(--text); }
+#study-workflow [data-nav-language=ko] { display: none; }
+html[lang^=ko] #study-workflow [data-nav-language=en] { display: none; }
+html[lang^=ko] #study-workflow [data-nav-language=ko] { display: inline; }

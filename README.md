@@ -935,3 +935,11 @@ Choose a fresh private output path. Only fixed synthetic fixtures are sent; no p
 cloud fallback is supported. A valid 64-hex checkpoint digest is required, and identity is checked
 again after evaluation. These source/format and exact-fixture scores are not clinical accuracy.
 See [report review](docs/REPORT_REVIEW.md) for error metrics and modality limits.
+
+### Offline report study coordinator
+
+For institution-approved deidentified research, the offline tool prepares separate blinded
+reference worksheets and scores frozen outputs across the six supported text categories.
+It performs no inference or network calls; real-patient approval and diagnostic accuracy are
+not established. Start with the synthetic example and follow the
+[study instructions](docs/REPORT_REVIEW.md#offline-report-study-coordination).

@@ -404,3 +404,109 @@ synthetic-only; real-patient processing still requires institutional approval an
 
 Implementation references: [pdfplumber text extraction](https://github.com/jsvine/pdfplumber#extracting-text),
 [pydicom file reading](https://pydicom.github.io/pydicom/stable/reference/generated/pydicom.filereader.dcmread.html).
+
+## Offline report study coordination
+
+The public website remains a synthetic research preview. The offline coordinator prepares
+reference worksheets and scores frozen, source-bound model outputs. It makes **no network or
+model calls**, enables no hospital service and grants no data access or clinical approval.
+A proposed hospital or university does not establish institutional permission, an ethics
+decision, clinical oversight or completed validation. Each site needs its own applicable
+permissions and documented oversight.
+
+### Start with synthetic data
+
+Use a private directory **outside every Git checkout**, on a suitably protected computer.
+Run these commands with Node.js 22 or later from the ClinLoop source checkout. This coordinator
+is a source-checkout tool, not a new website endpoint or a bundled container CLI.
+The following paths are examples. On Unix the tool creates study directories with mode 700
+and files with mode 600. On Windows, the institution must set equivalent access controls.
+
+```bash
+node scripts/report_study.cjs --action example --out /private/study-example.json
+node scripts/report_study.cjs --action prepare --input /private/study-example.json --out /private/study-01
+node scripts/report_study.cjs --action score --study /private/study-01 --out /private/study-01/pending-summary.json
+```
+
+The example contains six developer-authored synthetic text categories and replayed fixture
+outputs, not new model inference. Reviewer worksheets start blank and metrics remain null.
+Do not enter fictitious reviewers to obtain a score. Unit-test reviewer identifiers are test
+fixtures only. Choose a new study/output filename; existing files are never overwritten.
+
+### Approved deidentified research data
+
+The coordinator must first obtain and externally verify institutional permission for the
+private environment, data use, applicable ethics arrangements, intended study and clinical
+oversight. Permission is not provided by this program, the public website, an API key, a
+local LLM or an AI assistant. Selecting `approved-deidentified-research` is only the
+operator's declaration; the software does not deidentify records or authenticate approvals.
+Keep records outside source control and shared/public storage. Students and other users
+receive only the access and supervision authorized by the institution.
+
+Use the example JSON structure with `data_kind: "approved-deidentified-research"`, replacing
+the synthetic governance references with genuine opaque references to separately held
+institutional records: `institution_ref`, `protocol_ref`, `ethics_ref`,
+`data_permission_ref`, `clinical_lead_ref`, plus `permission_attested: true`.
+Use `NOT_APPLICABLE` only where the institution has documented that determination.
+Do not put credentials, patient identifiers, staff names or approval documents in these fields.
+
+For each report, supply a unique opaque `C0001`-style case ID and `G0001`-style patient-group
+pseudonym; preserve the same group for the same patient across sites. `partition` is
+`development` or `evaluation`. Duplicate normalized reports and declared patient-group overlap
+across partitions are rejected. These checks do not discover undeclared duplicates, related
+records, training exposure or incorrect pseudonyms. Only evaluation reports are scored.
+
+Supply complete, checked report text with original units, ranges, dates, addenda and negation
+in one of the existing six categories. Limits are 1000 records, 16 MB input JSON and 6000
+UTF-8 bytes per report. Images, waveforms and DICOM pixels cannot enter this evaluator; PDF/OCR
+and DICOM report extraction need separate source verification before text evaluation.
+`other-text` is an organizational category, not validation of every medical specialty/language.
+
+Freeze actual outputs produced separately in the institution's approved workflow **before**
+reference review. The coordinator records the actual software commit, prompt/schema/configuration
+SHA-256 values, model ID and model revision/checkpoint. These are declared provenance, not proof
+that a remote provider used that checkpoint or retained no data. No new real-data inference is
+performed by this tool. Cloud processing needs the institution's explicit data-processing
+arrangements and approval; this update does not enable it on the public gateway.
+
+Each `prediction` is `{status: "accepted", review: {findings: [...], missing_context: [...]}}`,
+`{status: "rejected"}`, or `{status: "unrun"}`. Findings follow the existing exact-source
+quote/assertion/follow-up/deadline schema. Unsupported or malformed accepted outputs reject
+preparation; never remove failed cases to improve the measured score. A different model/config
+requires a separately frozen run using the same independently reviewed evaluation cohort.
+
+### Independent reference review and scoring
+
+Preparation writes `sealed.json`, `manifest.json`, `reviewer_1.json`, `reviewer_2.json`
+and `adjudication.json`. Two reviewers see separately ordered worksheets without predictions.
+The coordinator must distribute them separately and protect the sealed outputs; file separation
+alone does not prevent someone with access to the whole directory seeing predictions or other
+reviewers' labels. Reviewers inspect the original report as well as the extracted text.
+
+Each actual reviewer records their opaque `reviewer_ref`, clinician or clinical-specialist
+role, `verification_ref` to externally verified identity/qualifications, human or
+AI-assisted-human origin, independence from development and personal-review attestations.
+Completed records set `complete: true` and `findings` to the reviewed source-based tuples;
+`[]` is an explicit reviewed empty extraction reference, not a diagnosis of normality.
+Incomplete records retain `complete: false, findings: null`. Never replace incomplete review
+with AI-generated approval. The program checks fields, not a licence or actual independence.
+
+Disagreement needs a distinct adjudicator. **All metrics are withheld** until every evaluation
+record has complete independent references and any disagreements are resolved. Changing the
+frozen source, provenance, reference-source fields or evaluator code invalidates the packet.
+SHA binding detects accidental edits against the manifest; it does not protect against a
+person deliberately replacing both data and manifest. Keep a protected institutional copy.
+
+The aggregate output excludes report text, quotations, case/patient/reviewer IDs, institution
+references and model metadata. It reports category/language counts, rejected/unrun cases,
+accepted coverage and exact verbatim tuple agreement. It is **not** report-level diagnostic
+sensitivity/specificity, clinical validation, confidence intervals or authorization for care.
+Patient dependence, subgroup sample size, clinical equivalence of alternate references,
+missed medical findings and real workflow outcomes require an appropriate study analysis.
+Even aggregate small-cell results may require disclosure review before sharing.
+
+Before deployment, the responsible team still needs representative independent clinical
+evaluation, clinician workflow assessment and appropriate monitoring and approvals. This
+engineering package supports those activities; it does not certify completion. See
+[FDA's GMLP resource](https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/good-machine-learning-practice-medical-device-development-guiding-principles)
+and the existing [readiness tracker](PRODUCTION_READINESS.md).
