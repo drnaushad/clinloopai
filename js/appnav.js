@@ -102,7 +102,7 @@
       }
       if (!nav.getAttribute('aria-label')) nav.setAttribute('aria-label', ko ? 'ClinLoop 화면' : 'ClinLoop pages');
       var existing = Array.from(nav.querySelectorAll('a.app-nav-link'));
-      var complete = existing.length === PAGES.length && existing.every(function (a, i) { return a.getAttribute('href') === PAGES[i].href; });
+      var complete = existing.length === PAGES.length && existing.every(function (a, i) { return a.getAttribute('href').replace(/\?lang=(?:en|ko)$/, '') === PAGES[i].href; });
       if (complete) existing.forEach(function (a, i) {
         var p = PAGES[i], label = ko ? p.ko : p.en;
         if (!a.hasAttribute('data-label-en') && a.textContent !== label) a.textContent = label;

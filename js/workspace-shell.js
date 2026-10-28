@@ -8,7 +8,7 @@
 
   function route(href) {
     if (typeof href !== 'string') return null;
-    var path = href.replace(/^\.\//, '/');
+    var path = href.replace(/\?lang=(?:en|ko)$/, '').replace(/^\.\//, '/');
     if (path.charAt(0) !== '/') path = '/' + path;
     path = path.replace(/\/index\.html$/, '/').replace(/\.html$/, '');
     return ROUTES.indexOf(path) >= 0 ? path : null;
@@ -150,7 +150,7 @@
     }
     picker.addEventListener('change', function () {
       var next = destination(picker.value, win.location.pathname);
-      if (next) win.location.assign(next);
+      if (next) win.location.assign(next + '?lang=' + (doc.documentElement.lang.indexOf('ko') === 0 ? 'ko' : 'en'));
       else picker.value = route(win.location.pathname) || '/';
     });
     sync();

@@ -113,7 +113,7 @@ for(const account of [false,true])test((account?'clinical':'isolated')+' shell p
   const mobile=shell.children.at(-1),label=mobile.children[0],picker=mobile.children[1];
   assert.equal(label.textContent,'Go to page');assert.equal(picker.value,'/review');
   picker.events.change();assert.deepEqual(f.assigned,[]);
-  picker.value='/private';picker.events.change();assert.deepEqual(f.assigned,['/private']);
+  picker.value='/private';picker.events.change();assert.deepEqual(f.assigned,['/private?lang=en']);
   f.doc.documentElement.lang='ko';f.observers.at(-1)();assert.equal(label.textContent,'화면 이동');assert.equal(picker.value,'/review');
   mount(f.doc,f.win);assert.equal(f.body.children.filter(e=>e.className==='clinloop-shell').length,1);
 });

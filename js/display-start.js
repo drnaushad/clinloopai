@@ -24,6 +24,12 @@
         if (requestedLanguage === 'en' || requestedLanguage === 'ko') language = requestedLanguage;
       }
     }
+    // Language is a display preference only. Isolated workspaces read no storage;
+    // a known language query can follow navigation without carrying session data.
+    if (win.URLSearchParams) {
+      var displayLanguage = new win.URLSearchParams(win.location.search).get('lang');
+      if (displayLanguage === 'en' || displayLanguage === 'ko') language = displayLanguage;
+    }
     html.setAttribute('data-theme', theme);
     if (html.lang !== language) html.lang = language;
   }

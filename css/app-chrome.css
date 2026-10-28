@@ -138,11 +138,15 @@ html[lang^=ko] .clinloop-shell [data-nav-language=ko] { display: inline; }
   background: var(--action-bg) !important; color: var(--action-fg) !important; }
 .clinloop-shell-controls :is(button.active, button[aria-pressed=true]) {
   background: var(--action-bg) !important; color: var(--action-fg) !important; }
-/* The cockpit uses the same single destination-language button as the other pages. */
-.clinloop-shell-controls .prominent-lang-pill :is(button.active, button[aria-pressed=true]) { display: none; }
+/* Both languages remain visible with the same controls on every workspace. */
+.clinloop-shell [data-legacy-language] { display: none !important; }
 .clinloop-shell-controls .prominent-lang-pill button { display: inline-flex !important; }
+.clinloop-shell-controls .prominent-lang-pill button { background:transparent !important; color:var(--shell-muted) !important; }
 html:not([lang^=ko]) .clinloop-shell-controls #lang-opt-en,
-html[lang^=ko] .clinloop-shell-controls #lang-opt-ko { display: none !important; }
+html[lang^=ko] .clinloop-shell-controls #lang-opt-ko { background:var(--action-bg) !important; color:var(--action-fg) !important; }
+.clinloop-shell-controls [data-language]::before { content: ""; width: 18px; height: 13px; flex: 0 0 18px; background-size: contain; background-repeat: no-repeat; background-position: center; }
+.clinloop-shell-controls [data-language=en]::before { background-image: url('../icons/flag-us.svg'); }
+.clinloop-shell-controls [data-language=ko]::before { background-image: url('../icons/flag-kr.svg'); }
 .clinloop-shell > .clinloop-shell-links { display: flex; align-items: center; flex-wrap: wrap;
   justify-content: flex-start !important; width: 100%; max-width: 100%; gap: 4px; padding: 8px 0 0;
   margin: 0; border: 0; overflow-x: auto; }
@@ -225,3 +229,5 @@ body.report-loading > :is(main, footer) { visibility: hidden; }
 @media print {
   .clinloop-shell, .cockpit-tools, .shell-skip { display: none !important; }
 }
+/* Explain preserved source language without competing with the page task. */
+.source-language-note { font-size:.9rem; color:var(--shell-muted); padding:.6rem .8rem; border-left:3px solid var(--shell-accent); overflow-wrap:anywhere; }

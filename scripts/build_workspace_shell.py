@@ -12,7 +12,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '20261027_workflows1'
+VERSION = '20261028_languages1'
 APP_VERSION = '2026-10-27.usability1'
 VOID = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
 
@@ -84,6 +84,12 @@ def appearance() -> str:
             '<button type="button" aria-pressed="false"><span data-nav-language="en">Dark</span><span data-nav-language="ko">다크</span></button></div>')
 
 
+def languages() -> str:
+    return ('<div class="prominent-lang-pill" role="group" aria-label="Language">'
+            '<button type="button" id="lang-opt-en" data-language="en" aria-pressed="true">English</button>'
+            '<button type="button" id="lang-opt-ko" data-language="ko" aria-pressed="false">한국어</button></div>')
+
+
 def shell(text: str, name: str, entries: list[dict]) -> str:
     parser = Spans(text)
     if name == 'index':
@@ -94,7 +100,12 @@ def shell(text: str, name: str, entries: list[dict]) -> str:
         button = parser.find(ident='btn-lang')
         controls = appearance()
         if button:
-            controls = '<div role="group" data-shell-account="">' + controls + parser.raw(button) + '</div>'
+            legacy = re.sub(r'<button\b', '<button hidden data-legacy-language="true"', parser.raw(button), count=1)
+            # Re-rendering must not accumulate duplicate presentation attributes.
+            legacy = re.sub(r'(?: hidden data-legacy-language="true"){2,}', ' hidden data-legacy-language="true"', legacy)
+            controls = '<div role="group" data-shell-account="">' + controls + legacy + languages() + '</div>'
+        else:
+            controls += languages()
     links = [[], [], []]
     groups = [[], [], []]
     for index, entry in enumerate(entries):
@@ -180,8 +191,7 @@ def render(text: str, name: str, entries: list[dict]) -> str:
     text = re.sub(r'<body([^>]*)>', lambda m: '<body' + (
         re.sub(r'class="([^"]*)"', lambda c: 'class="clinloop-page ' + c[1] + '"', m[1])
         if 'class=' in m[1] else ' class="clinloop-page"' + m[1]) + '>', text, count=1)
-    languages = 'en ko' if name in {'index', 'worklist', 'patient', 'quality', 'governance', 'pilot', 'imaging', 'analyse'} else 'en'
-    attributes = f' data-workspace="{name}" data-language-options="{languages}"'
+    attributes = f' data-workspace="{name}" data-language-options="en ko"'
     if name in {'private', 'review'}:
         attributes += ' data-isolated-session="true"'
     text = re.sub(r'<html([^>]*)>', lambda m: '<html' + m[1] + attributes + '>', text, count=1)

@@ -10,8 +10,24 @@ Research, and Evidence and setup. Phones and tablets use a labelled page selecto
 screens show those groups as links. The current destination stays selected after resizing
 and Back/Forward. The keyboard-operable **Choose a workflow** disclosure explains the
 input requirements and links directly to report review, follow-up examples, imaging workflow
-information and measured validation evidence. English/Korean pages translate this guidance;
-workspaces currently supporting English only retain English content.
+information and measured validation evidence. All thirteen menu workspaces provide the same English/Korean language controls, including
+Report review, Personal workspace, Live report reader, Validation evidence and International setup.
+The mobile page selector and desktop groups follow the selected interface language.
+
+Language is presentation only. The interface translator touches explicitly marked application
+labels, help, errors and statuses. It never translates source reports, model responses,
+quoted evidence, prompts, input values, units, rule IDs or model identifiers. A visible note
+explains why source evidence can remain in a different language. Switching language does not
+rerun a model, clear a report, change its type or model, or reset its completeness confirmation.
+English/Korean UI copy is engineering-reviewed; this is not clinical language validation.
+
+Display language follows main-menu navigation as `?lang=en` or `?lang=ko`, including the
+phone selector and Back/Forward. Only known menu routes and safe document anchors receive
+this preference; authentication fields or other query parameters are not propagated to
+navigation links. Isolated workspaces read no browser storage for language and retain their
+existing session-clearing behavior. Ordinary clinical pages keep their existing optional
+display preference. Standalone SMART pages and the separate local provider-key setup are
+not part of the thirteen menu workspaces and currently retain their existing language scope.
 
 Report review shows its UTF-8 byte count and the next required step. Review remains disabled
 until a model is connected, the complete source is valid and the operator confirms completeness.

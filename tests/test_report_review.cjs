@@ -65,7 +65,7 @@ function page({localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>val
   for(const id of ids)el[id]={value:'',checked:false,children:[],files:[],addEventListener:(n,f)=>{events[id+':'+n]=f;},replaceChildren(...xs){this.children=xs;},append(...xs){this.children.push(...xs);}};
   el.mode.value='local';el.provider.value='openai';el['local-address'].value='http://127.0.0.1:11434';el['research-address'].value='http://127.0.0.1:18127';el['report-type'].value='radiology-text';
   const api=require('../js/report-review.js');
-  const context={document:{getElementById:id=>el[id],createElement:()=>({children:[],append(...xs){this.children.push(...xs);}}),addEventListener(){}},
+  const context={document:{getElementById:id=>el[id],createTextNode:text=>({textContent:text}),createElement:()=>({children:[],append(...xs){this.children.push(...xs);}}),addEventListener(){}},
     Option:function(text,value){this.text=text;this.value=value;},fetch:schemaFetch,setInterval(){},Date,TextDecoder,TextEncoder,
     window:{fetch:async()=>ok({type:'object'}),addEventListener:(n,f)=>{windowEvents[n]=f;},
       ClinLoopPrivate:{Workspace:class{clear(v){calls.push(['localClear',v]);}async connect(){calls.push(['localConnect']);return localConnect();}async run(){calls.push(['localRun']);return localRun();}}},

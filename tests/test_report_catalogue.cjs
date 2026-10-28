@@ -1,9 +1,10 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const ui={set:(e,v)=>{e.textContent=v;},source:(e,v)=>{e.textContent=v;},reset:()=>{}};
 const html=fs.readFileSync(require.resolve('../reports.html'),'utf8');
 function harness(){
  const nodes={},buttons=['A','B'].map(id=>({dataset:{id},setAttribute(k,v){this[k]=v;}})),pending={};
- const context={document:{querySelectorAll:()=>buttons},$:id=>nodes[id]||(nodes[id]={textContent:'',replaceChildren(){},append(){}}),getReport:p=>new Promise((resolve,reject)=>pending[p.split('/').pop()]={resolve,reject}),el:()=>({append(){}}),showReport(){},showModel(){},liveBackend:'https://synthetic.invalid'};
+ const context={ui,label:()=>({append(){}}),document:{querySelectorAll:()=>buttons},$:id=>nodes[id]||(nodes[id]={textContent:'',replaceChildren(){},append(){}}),getReport:p=>new Promise((resolve,reject)=>pending[p.split('/').pop()]={resolve,reject}),el:()=>({append(){}}),showReport(){},showModel(){},liveBackend:'https://synthetic.invalid'};
  vm.createContext(context);vm.runInContext('let current=null,caseEpoch=0,liveBusy=false;'+html.slice(html.indexOf('async function openCase(id)'),html.indexOf('$("live").addEventListener')),context);
  const reply=id=>({ok:true,json:async()=>({id,title:'Synthetic '+id,text:id,rules:[],model_reading:{items:[]},model:{}})});
  return {context,nodes,buttons,pending,reply};
@@ -25,7 +26,7 @@ test('current failed request clears stale state and hides live action',async()=>
 });
 test('unavailable model reading clears previous provenance',()=>{
  const nodes={modelmeta:{textContent:'OLD PROVENANCE'},model:{replaceChildren(){},append(){}},modelheading:{}};
- const c={$:id=>nodes[id],el:()=>({})};vm.createContext(c);vm.runInContext(html.slice(html.indexOf('function showModel('),html.indexOf('async function openCase(')),c);
+ const c={ui,label:()=>({}),$:id=>nodes[id],el:()=>({})};vm.createContext(c);vm.runInContext(html.slice(html.indexOf('function showModel('),html.indexOf('async function openCase(')),c);
  c.showModel({available:false,reason:'Unavailable'},{name:'synthetic'});assert.equal(nodes.modelmeta.textContent,'');
 });
 test('optional model discovery is bounded and does not gate catalogue loading',async()=>{
@@ -37,7 +38,7 @@ test('optional model discovery is bounded and does not gate catalogue loading',a
  // Execute the actual initialization with a never-resolving optional connection.
  let catalogueRequested=false;
  const init=html.slice(html.indexOf('(async () => {'),html.indexOf('</script>', html.indexOf('(async () => {')));
- const boot={connectLiveModel:()=>new Promise(()=>{}),getReport:async()=>{catalogueRequested=true;return {ok:true,json:async()=>({note:'Synthetic',cases:[]})};},$:()=>({replaceChildren(){},append(){},setAttribute(){}}),document:{body:{classList:{remove(){}}}}};
+ const boot={ui,connectLiveModel:()=>new Promise(()=>{}),getReport:async()=>{catalogueRequested=true;return {ok:true,json:async()=>({note:'Synthetic',cases:[]})};},$:()=>({replaceChildren(){},append(){},setAttribute(){}}),document:{body:{classList:{remove(){}}}}};
  vm.createContext(boot);await vm.runInContext(init,boot);assert(catalogueRequested);
 });
 test('static snapshot disables unsupported input forms without changing hospital mode',()=>{

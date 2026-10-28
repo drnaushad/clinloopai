@@ -1,5 +1,7 @@
 (function () {
   'use strict';
+  const ui=(typeof window !== 'undefined' && window.ClinLoopUI)||{set:(e,v)=>{e.textContent=v;},source:(e,v)=>{e.textContent=v;},reset:()=>{}};
+  const placeholder=()=>{const option=new Option('Connect first','');ui.set(option,'Connect first');return option;};
   const byId = id => document.getElementById(id);
   const status = byId('status');
   let lastActivity = Date.now();
@@ -8,9 +10,9 @@
     if (event.type === 'cleared') {
       uiEpoch += 1;
       byId('prompt').value = '';
-      byId('answer').textContent = 'No response yet.';
+      ui.set(byId('answer'), 'No response yet.');
       if (!event.connected) {
-        byId('model').replaceChildren(new Option('Connect first', ''));
+        byId('model').replaceChildren(placeholder());
         byId('local-only').checked = false;
       }
       sync();
@@ -18,10 +20,10 @@
     if (event.type === 'connected') {
       byId('local-only').checked = true;
       byId('model').replaceChildren(...event.models.map(name => new Option(name, name)));
-      status.textContent = 'Connected directly to your loopback Ollama. Conversation history is not saved by this page.';
+      ui.set(status, 'Connected directly to your loopback Ollama. Conversation history is not saved by this page.');
       lastActivity = Date.now();
     }
-    if (event.type === 'answer') byId('answer').textContent = event.text;
+    if (event.type === 'answer') ui.source(byId('answer'), event.text);
   });
   function sync() {
     const connected = Boolean(workspace.address && workspace.models.length);
@@ -34,18 +36,18 @@
     event.preventDefault();
     const operation = workspace.connect(byId('endpoint').value, byId('local-only').checked);
     const current = uiEpoch;
-    status.textContent = 'Connecting to your own Ollama…'; sync();
-    try { await operation; } catch (error) { if (current === uiEpoch) status.textContent = error.message; }
+    ui.set(status, 'Connecting to your own Ollama…'); sync();
+    try { await operation; } catch (error) { if (current === uiEpoch) ui.set(status, error.message); }
     if (current === uiEpoch) sync();
   });
   byId('run').addEventListener('click', async () => {
     const current = uiEpoch;
-    byId('answer').textContent = 'Waiting for your local model…';
+    ui.set(byId('answer'), 'Waiting for your local model…');
     const operation = workspace.run(byId('model').value, byId('prompt').value);
-    status.textContent = 'Processing locally. The response will be unverified.'; sync();
-    try { await operation; if (current === uiEpoch) status.textContent = 'Local response received. No conversation history saved.'; }
+    ui.set(status, 'Processing locally. The response will be unverified.'); sync();
+    try { await operation; if (current === uiEpoch) ui.set(status, 'Local response received. No conversation history saved.'); }
     catch (error) {
-      if (current === uiEpoch) { byId('answer').textContent = 'No verified response available.'; status.textContent = error.message; }
+      if (current === uiEpoch) { ui.set(byId('answer'), 'No verified response available.'); ui.set(status, error.message); }
     }
     if (current === uiEpoch) sync();
   });
@@ -54,7 +56,7 @@
   });
   function clear(disconnect) {
     workspace.clear(disconnect);
-    status.textContent = disconnect ? 'Disconnected. Workspace cleared.' : 'Conversation cleared. Your model connection is still available.';
+    ui.set(status, disconnect ? 'Disconnected. Workspace cleared.' : 'Conversation cleared. Your model connection is still available.');
   }
   byId('clear').addEventListener('click', () => clear(false));
   byId('disconnect').addEventListener('click', () => clear(true));

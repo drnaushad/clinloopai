@@ -2,7 +2,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const {start}=require('../js/display-start.js');
 function environment({isolated=false,theme=null,language=null,deviceDark=false,deviceLanguage='en',page='worklist',blocked=false,search=''}={}){
- const attrs={'data-workspace':page,'data-language-options':page==='deployment'?'en':'en ko',...(isolated?{'data-isolated-session':'true'}:{})},reads=[];
+ const attrs={'data-workspace':page,'data-language-options':'en ko',...(isolated?{'data-isolated-session':'true'}:{})},reads=[];
  const html={lang:'en',getAttribute:key=>attrs[key]||null,setAttribute:(key,value)=>{attrs[key]=value;}};
  const win={matchMedia:()=>({matches:deviceDark}),navigator:{language:deviceLanguage},URLSearchParams,location:{search}};
  Object.defineProperty(win,'localStorage',{get(){if(isolated)throw Error('Isolated page touched storage');if(blocked)throw Error('Blocked');return {getItem(key){reads.push(key);assert(['clinloop_theme','clinloop_lang'].includes(key));return key==='clinloop_theme'?theme:language;}};}});
@@ -21,7 +21,7 @@ test('blocked preference storage leaves device appearance usable',()=>{
 });
 test('only supported languages and validated cockpit display URL options are applied',()=>{
  const e=environment({page:'index',theme:'dark',language:'ko',search:'?theme=light&lang=en'});start(e.doc,e.win);assert.equal(e.attrs['data-theme'],'light');assert.equal(e.html.lang,'en');
- const english=environment({page:'deployment',language:'ko'});start(english.doc,english.win);assert.equal(english.html.lang,'en');assert.deepEqual(english.reads,['clinloop_theme']);
+ const english=environment({page:'deployment',language:'ko'});start(english.doc,english.win);assert.equal(english.html.lang,'ko');assert.deepEqual(english.reads,['clinloop_theme','clinloop_lang']);
  const device=environment({deviceLanguage:'ko-KR'});start(device.doc,device.win);assert.equal(device.html.lang,'ko');
 });
 async function update(version,{reject=false}={}){
@@ -50,7 +50,7 @@ async function readerStartup({failure=false,empty=false}={}){
  const source=html.slice(html.lastIndexOf('(async () => {'),html.indexOf('</script>',html.lastIndexOf('(async () => {')));
  const nodes=Object.fromEntries(['list','note','clinloop-workspace','report-load-status'].map(id=>[id,{textContent:'',hidden:false,replaceChildren(){},append(){},setAttribute(k,v){this[k]=v;}}]));
  let release;const reading=new Promise(resolve=>{release=resolve;});const removed=[];
- const context={connectLiveModel:async()=>{},getReport:async()=>{if(failure)throw Error('offline');return {ok:true,json:async()=>({note:'Synthetic catalogue',cases:empty?[]:[{id:'synthetic',title:'Example',language:'en',teaches:'Example'}]})};},$:id=>nodes[id],el:()=>({dataset:{},append(){},addEventListener(){}}),openCase:()=>reading,document:{body:{classList:{remove:name=>removed.push(name)}}}};
+ const context={ui:{set:(e,v)=>{e.textContent=v;},source:(e,v)=>{e.textContent=v;},reset:()=>{}},connectLiveModel:async()=>{},getReport:async()=>{if(failure)throw Error('offline');return {ok:true,json:async()=>({note:'Synthetic catalogue',cases:empty?[]:[{id:'synthetic',title:'Example',language:'en',teaches:'Example'}]})};},$:id=>nodes[id],el:()=>({dataset:{},append(){},addEventListener(){}}),openCase:()=>reading,document:{body:{classList:{remove:name=>removed.push(name)}}}};
  const done=vm.runInNewContext(source,context);await new Promise(resolve=>setImmediate(resolve));
  return {done,release,removed,nodes};
 }
@@ -61,3 +61,5 @@ test('report startup remains busy until the first saved case completes',async()=
 test('report startup reveals recoverable errors and empty catalogues instead of remaining hidden',async()=>{
  for(const options of [{failure:true},{empty:true}]){const e=await readerStartup(options);await e.done;assert.deepEqual(e.removed,['report-loading']);assert.equal(e.nodes['report-load-status'].hidden,true);if(options.failure)assert.match(e.nodes.list.textContent,/unavailable/);}
 });
+
+test('isolated pages carry only an explicit display language without reading preferences',()=>{const e=environment({isolated:true,search:'?lang=ko'});start(e.doc,e.win);assert.equal(e.html.lang,'ko');assert.deepEqual(e.reads,[]);});
