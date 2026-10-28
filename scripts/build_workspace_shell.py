@@ -129,14 +129,14 @@ def shell(text: str, name: str, entries: list[dict]) -> str:
             ['진료 작업 공간', '연구', '검증 및 설정'], links)))
     workflows = [
         ('review', 'Review report text', '보고서 텍스트 검토',
-         'Complete synthetic text or .txt, up to 6000 UTF-8 bytes. Connect your local model or a research API gateway; check each source quote.',
-         '완전한 합성 텍스트 또는 .txt, UTF-8 최대 6000바이트. 로컬 모델 또는 연구 API 게이트웨이에 연결하고 각 원문 인용을 확인하세요.'),
+         'Load TXT in your browser or import PDF, scans, photos and DICOM through your personal gateway. Check the complete source before model review (6000 UTF-8 bytes).',
+         'TXT는 브라우저에서, PDF·스캔·사진·DICOM은 개인 게이트웨이에서 불러옵니다. 모델 검토(UTF-8 6000바이트) 전에 전체 원문을 확인하세요.'),
         ('analyse', 'Try follow-up detection', '후속 조치 탐지 체험',
          'Start with a synthetic example, a FHIR .json bundle or radiology/pathology report text. The browser demo needs no model connection.',
          '합성 예제, FHIR .json 번들 또는 영상·병리 보고서 텍스트로 시작하세요. 브라우저 데모는 모델 연결이 필요 없습니다.'),
         ('imaging', 'Explore document and imaging workflows', '문서 및 영상 작업 흐름 살펴보기',
-         'PDF, scans, DICOM and images require a separate approved local installation and validated extraction or imaging models. Public controls are demonstrations.',
-         'PDF, 스캔, DICOM 및 영상에는 별도로 승인된 로컬 설치와 검증된 추출·영상 모델이 필요합니다. 공개 화면은 시연용입니다.'),
+         'DICOM image pixels, medical images and waveforms need a separate validated imaging workflow. The public Imaging page shows local-installation demonstrations.',
+         'DICOM 화소, 의료영상 및 파형에는 별도로 검증된 영상 작업 흐름이 필요합니다. 공개 영상 화면은 로컬 설치 기능을 시연합니다.'),
         ('validation', 'Check evidence and limitations', '검증 근거 및 한계 확인',
          'See measured results, supported tasks and pending reviews before choosing a workflow or comparing models. Universal clinical accuracy is not established.',
          '작업 흐름 선택이나 모델 비교 전에 측정 결과, 지원 작업 및 검토 현황을 확인하세요. 모든 임상 작업에 대한 정확도는 입증되지 않았습니다.'),

@@ -78,3 +78,5 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     --border: #334155; --accent: #7dd3fc; --soft: #153449; --notice: #382c14; --notice-edge: #fbbf24; }
   button { background: #0369a1; border-color: #0369a1; }
 }
+.review-source #report-file { border: 2px dashed var(--accent); background: var(--soft); padding: 12px; }
+.review-source #report-file::file-selector-button { border: 1px solid var(--accent); border-radius: 6px; padding: 8px 12px; background: var(--surface); color: var(--text); }

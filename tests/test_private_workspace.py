@@ -35,3 +35,10 @@ class TestPrivateWorkspace(unittest.TestCase):
             cwd=root, capture_output=True, text=True, timeout=30,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'File import checks require Node.js')
+    def test_local_file_import_transport(self):
+        root = Path(__file__).resolve().parents[1]
+        result = subprocess.run(['node', 'tests/test_report_file_import.cjs'], cwd=root,
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

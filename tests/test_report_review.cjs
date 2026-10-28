@@ -59,8 +59,8 @@ test('local structured review sends original text only to an inspected local mod
   assert.equal(calls.length,3);for(const c of calls)assert.equal(new URL(c.url).origin,'http://localhost:11434');
   const body=JSON.parse(calls.at(-1).options.body);assert.deepEqual(body.format,schema);assert.equal(body.prompt,TEXT);assert.equal(body.options.temperature,0);
 });
-function page({search='',localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>validate(REVIEW,TEXT),localConnect=async()=>['synthetic'],researchConnect=async()=> 'synthetic-api',schemaFetch=async()=>ok({type:'object'})}={}){
-  const ids=['mode','provider','provider-destination','provider-consent','local-options','research-options','connect','disconnect','status','model','report','report-file','analyze','local-address','research-address','gateway-code','local-confirm','research-confirm','report-type','complete-confirm','result','sample','clear','report-budget','review-readiness','choose-local','choose-openai','choose-anthropic','choose-gemini','connection-summary','personal-setup-link'];
+function page({search='',fileRun=null,localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>validate(REVIEW,TEXT),localConnect=async()=>['synthetic'],researchConnect=async()=> 'synthetic-api',schemaFetch=async()=>ok({type:'object'})}={}){
+  const ids=['mode','provider','provider-destination','provider-consent','local-options','research-options','connect','disconnect','status','model','report','report-file','analyze','local-address','research-address','gateway-code','local-confirm','research-confirm','report-type','complete-confirm','result','sample','clear','report-budget','review-readiness','choose-local','choose-openai','choose-anthropic','choose-gemini','connection-summary','personal-setup-link','check-source','load-file','file-address','file-code','file-confirm','ocr-language','file-preview'];
   const el={},events={},windowEvents={},calls=[];
   for(const id of ids)el[id]={value:'',checked:false,children:[],files:[],attrs:{},setAttribute(k,v){this.attrs[k]=v;},addEventListener:(n,f)=>{events[id+':'+n]=f;},replaceChildren(...xs){this.children=xs;},append(...xs){this.children.push(...xs);}};
   el.mode.value='local';el.provider.value='openai';el['local-address'].value='http://127.0.0.1:11434';el['research-address'].value='http://127.0.0.1:18127';el['report-type'].value='radiology-text';
@@ -70,6 +70,7 @@ function page({search='',localRun=async()=>JSON.stringify(REVIEW),researchRun=as
     window:{URLSearchParams,location:{search},fetch:async()=>ok({type:'object'}),addEventListener:(n,f)=>{windowEvents[n]=f;},
       ClinLoopPrivate:{Workspace:class{clear(v){calls.push(['localClear',v]);}async connect(){calls.push(['localConnect']);return localConnect();}async run(){calls.push(['localRun']);return localRun();}}},
       ClinLoopReportReview:{...api,Research:class{clear(){calls.push(['researchClear']);}async connect(){calls.push(['researchConnect']);return researchConnect();}async run(){calls.push(['researchRun']);return researchRun();}}}}};
+  if(fileRun)context.window.ClinLoopFileImport={kind:require('../js/report-file-import.js').kind,Importer:class{clear(){}async run(){return fileRun();}}};
   vm.runInNewContext(fs.readFileSync(require.resolve('../js/report-review-page.js'),'utf8'),context);
   return{el,events,windowEvents,calls};
 }
@@ -217,7 +218,7 @@ test('a quote that drops the preceding negation is not accepted as present',()=>
 
 
 test('readiness follows connection, complete source, confirmation and subsequent edits',async()=>{
- const p=page();assert(p.el.analyze.disabled);assert.match(p.el['review-readiness'].textContent,/step 1/);
+ const p=page();assert(p.el.analyze.disabled);assert.match(p.el['review-readiness'].textContent,/load and check/);
  await p.events['connect:click']();assert(p.el.analyze.disabled);assert.match(p.el['review-readiness'].textContent,/step 2/);
  p.events['sample:click']();assert(p.el.analyze.disabled);assert.match(p.el['review-readiness'].textContent,/confirm/);
  p.el['complete-confirm'].checked=true;p.events['complete-confirm:change']();assert(!p.el.analyze.disabled);
@@ -270,4 +271,35 @@ test('setup return hints select only known providers without accepting secrets o
   assert(!p.calls.some(x=>/Connect|Run/.test(x[0])));
  }
  for(const provider of ['unknown','__proto__','https://foreign.test'])assert.equal(page({search:'?provider='+provider}).el.mode.value,'local');
+});
+
+test('source upload, paste and sample work before model connection without inference',()=>{
+ const p=page();assert.equal(p.el.report.disabled,false);assert.equal(p.el['report-file'].disabled,false);assert.equal(p.el.sample.disabled,false);
+ p.events['sample:click']();assert.match(p.el.report.value,/SYNTHETIC/);p.events['check-source:click']();assert.match(p.el.status.textContent,/size and format check passed/);
+ assert.equal(p.el.analyze.disabled,true);assert(!p.calls.some(x=>/Run|Connect/.test(x[0])));
+});
+test('loading a UTF-8 file does not require an LLM and preserves all source text',async()=>{
+ const p=page();p.el['report-file'].files=[{name:'synthetic.txt',size:Buffer.byteLength(TEXT),arrayBuffer:async()=>new TextEncoder().encode(TEXT).buffer}];
+ await p.events['report-file:change']();assert.equal(p.el.report.value,TEXT);assert.equal(p.el.analyze.disabled,true);assert.equal(p.el['complete-confirm'].checked,false);
+ assert(!p.calls.some(x=>/Run|Connect/.test(x[0])));
+});
+
+function importedDoc(changes={}){return {text:TEXT,kind:'pdf',pages:[{number:1,text:TEXT,method:'pdf-text'}],page_count:1,sha256:'0'.repeat(64),text_review_allowed:true,...changes};}
+test('DICOM image and incomplete SR imports cannot enter text analysis even after confirmation',async()=>{
+ for(const kind of ['dicom-image','dicom-sr']){
+  const p=page({fileRun:async()=>importedDoc({kind,text_review_allowed:false})});await p.events['connect:click']();
+  p.el['report-file'].files=[{name:'synthetic.dcm',size:200}];await p.events['load-file:click']();
+  assert.equal(p.el.report.value,TEXT);assert.equal(p.el['complete-confirm'].disabled,true);p.el['complete-confirm'].checked=true;await p.events['analyze:click']();
+  assert(!p.calls.some(x=>x[0]==='localRun'||x[0]==='researchRun'));
+ }
+});
+test('a long imported document is previewed intact and never silently trimmed for a model',async()=>{
+ const text='x'.repeat(7000),p=page({fileRun:async()=>importedDoc({text,pages:[{number:1,text,method:'pdf-text'}]})});
+ p.el['report-file'].files=[{name:'synthetic.pdf',size:500}];await p.events['report-file:change']();
+ assert.equal(p.el.report.value.length,7000);assert.equal(p.el.analyze.disabled,true);assert.match(p.el['review-readiness'].textContent,/exceeds 6000/);
+ assert(!p.calls.some(x=>/Run|Connect/.test(x[0])));
+});
+test('clearing during binary import prevents a late document from restoring its source or preview',async()=>{
+ let finish;const pending=new Promise(r=>finish=r),p=page({fileRun:()=>pending});p.el['report-file'].files=[{name:'synthetic.pdf',size:500}];
+ const task=p.events['report-file:change']();p.events['disconnect:click']();finish(importedDoc());await task;assert.equal(p.el.report.value,'');assert.equal(p.el['file-preview'].children.length,0);
 });

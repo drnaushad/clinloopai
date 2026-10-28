@@ -23,9 +23,10 @@ values; changing provider deliberately clears source, prior results and transmis
 The personal setup page now offers the same English/Korean choices without browser storage.
 Both languages describe the same credential lifecycle. Setup still makes no paid provider call,
 and a configured model has not thereby been verified for availability or clinical accuracy.
-The public report workflow accepts the existing six text categories and UTF-8 `.txt` input,
-not every file format or medical modality. PDF/scans/images/DICOM/waveforms require the separate
-approved extraction or modality workflow. No clinical rules or model prompts changed.
+The public report workflow organizes six text categories. TXT loads in the browser; PDF,
+scan/photo and DICOM report imports use the personal local gateway described below.
+Diagnostic image pixels and waveforms require a separate validated modality workflow.
+No clinical rules or model prompts changed.
 
 ## Finding the right workspace
 
@@ -193,9 +194,9 @@ API round trip must be recorded separately before claiming that an account/model
 
 Six text categories: laboratory, radiology, pathology, ECG report text, discharge summary
 and other health-report text. Categories organize extraction and do not establish specialty
-accuracy. This preview accepts complete UTF-8 text/.txt up to 6000 bytes. It rejects PDF,
-scanned images, DICOM and waveforms; those need approved extraction/modality-specific models
-and separate validation. Nothing is silently truncated.
+accuracy. The model receives complete UTF-8 text up to 6000 bytes. TXT is read directly;
+PDF/scans/photos/DICOM reports require the local import and manual source-check stage below.
+Diagnostic pixels and waveforms do not enter these text adapters. Nothing is silently truncated.
 
 The model supplies source quotes with present/negated/uncertain/historical labels, explicitly
 stated follow-up quotes, quoted timing and missing context. Every quote must occur exactly
@@ -357,3 +358,49 @@ The earlier two-case CPU pilot was rescored under schema 2 without new inference
 changed reference expectations. Its 22 unrun cases remain unrun. Rescoring an old run neither improves
 the model nor establishes clinical performance. Model availability, schema/source rejection and lack
 of independent labels remain open requirements.
+
+## Local file import (28 October 2026)
+
+Report review now permits loading, pasting, **Load selected file**, a synthetic example and
+**Check input** before connecting an LLM. Check input verifies only supported text type and
+size; it does not check clinical accuracy, completeness or OCR correctness. Model review still
+requires the selected connection, transmission consent and the original completeness check.
+
+- TXT: strict UTF-8, read directly in browser memory, maximum 6000 bytes.
+- PDF: complete page-by-page text extraction; scanned/image-bearing pages use local OCR.
+- PNG/JPEG/TIFF: local English or Korean/English OCR, including every TIFF frame.
+- DICOM Part 10: structured-report text, original numeric values/units, and encapsulated PDF
+  extraction. Incomplete SR and SR with unsupported referenced/spatial content stay preview-only.
+- Diagnostic DICOM images: upload and modality inspection only. Pixel interpretation is not
+  passed to text LLMs. No waveform/image diagnostic capability or universal accuracy is asserted.
+
+For binary files, start the updated personal gateway using
+`python scripts/run_research_review.py --setup`. Install the existing pinned API requirements
+with `python -m pip install -r requirements-api.txt -c requirements.lock` in its own environment.
+Tesseract and the selected language data must also be installed; the existing container includes
+English and Korean. No provider key is needed for importing. Open **Local file tools** in Report
+review, enter the loopback address and its separate gateway access code, and explicitly approve
+synthetic local processing. Choose a file, or retry with **Load selected file** after setup.
+No shared gateway or paid provider request is started by loading a file.
+
+Binary files are limited to 5 MB, 20 pages/frames, 12 million pixels per page/frame and 48 million
+rendered pixels per operation. Every page must produce readable text. Files beyond any bound or
+with a failed page are rejected as a whole. Extracted preview text is capped at 120 KB, while
+model review remains capped at 6000 UTF-8 bytes. Nothing is silently truncated to fit. Do not
+remove context merely to meet the limit; use an approved installation with appropriate capacity.
+
+The parent process authenticates exact origins and loopback peers before accepting a larger
+body. A separate local worker has a 90-second wall limit and, on Unix, CPU/memory limits.
+Parser diagnostics are discarded rather than logged. Import has no provider transport or
+patient registry and keeps no report history. Tesseract can create temporary files in the
+operator's local temporary directory. Browser cancellation invalidates late results but does
+not prove that a submitted worker or its OCR child has already stopped. Clear, provider changes,
+page exit and inactivity erase the browser workspace; none guarantee secure memory deletion.
+
+Compare every extracted page, value, unit, negation, date and addendum with the original before
+confirming. Model source checks compare against this extracted/corrected text, not pixels in
+the original PDF or scan. No de-identification guarantee is made. The public preview remains
+synthetic-only; real-patient processing still requires institutional approval and validation.
+
+Implementation references: [pdfplumber text extraction](https://github.com/jsvine/pdfplumber#extracting-text),
+[pydicom file reading](https://pydicom.github.io/pydicom/stable/reference/generated/pydicom.filereader.dcmread.html).

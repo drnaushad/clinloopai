@@ -6,11 +6,15 @@ Keys stay in this personal process. No request/response content is logged.
 from __future__ import annotations
 
 import hmac
+import base64
+import binascii
 import json
 import os
 import re
 import threading
 import time
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Dict, Literal
 
@@ -44,6 +48,17 @@ SYSTEM = (
 ERROR = 'Research request could not be verified. No analysis accepted; human review required.'
 PROVIDERS = {'openai': 'OpenAI', 'anthropic': 'Anthropic (Claude)', 'gemini': 'Google Gemini'}
 Provider = Literal['openai', 'anthropic', 'gemini']
+MAX_FILE_BYTES = 5 * 1024 * 1024
+MAX_FILE_BODY = ((MAX_FILE_BYTES + 2) // 3) * 4 + 2048
+
+
+class FileImport(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
+    extension: Literal['pdf', 'png', 'jpg', 'jpeg', 'tif', 'tiff', 'dcm']
+    content_base64: str = Field(min_length=4, max_length=MAX_FILE_BODY, repr=False)
+    ocr_language: Literal['eng', 'kor+eng'] = 'eng'
+    synthetic_only: StrictBool
+    local_processing_allowed: StrictBool
 
 
 class ProviderSetup(BaseModel):
@@ -232,10 +247,19 @@ def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:
         if not allowed:
             return JSONResponse({'detail': 'Origin or local host not allowed.'}, status_code=403)
         # Stream and cap before JSON parsing; also handles chunked bodies.
+        file_request = request.url.path == '/review/files/import'
+        if file_request:
+            supplied = request.headers.get('authorization', '').encode('utf-8')
+            if not hmac.compare_digest(supplied, ('Bearer ' + token).encode('utf-8')):
+                return JSONResponse({'detail': 'Local gateway access code required.'}, status_code=401)
+            file_local = (setup_enabled and host in {'127.0.0.1:18127', 'localhost:18127'} and
+                          request.client is not None and request.client.host == '127.0.0.1')
+            if not file_local:
+                return JSONResponse({'detail': 'Start your personal gateway with --setup to enable local file processing.'}, status_code=403)
         body = bytearray()
         async for chunk in request.stream():
             body.extend(chunk)
-            if len(body) > 16000:
+            if len(body) > (MAX_FILE_BODY if file_request else 16000):
                 return JSONResponse({'detail': 'Input too large.'}, status_code=413)
         request._body = bytes(body)
         result = await call_next(request)
@@ -305,6 +329,41 @@ def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:
         return {'mode': 'synthetic-research-only', 'provider': 'openai',
                 'configured': entries[0]['configured'], 'model': entries[0]['model'], 'providers': entries,
                 'input': 'report text only', 'clinical_use': False}
+
+    @app.post('/review/files/import', dependencies=[Depends(authorize)])
+    def import_file(req: FileImport):
+        if req.synthetic_only is not True or req.local_processing_allowed is not True:
+            raise HTTPException(403, 'Confirm synthetic local file processing first.')
+        try:
+            content = base64.b64decode(req.content_base64, validate=True)
+        except (ValueError, binascii.Error):
+            raise HTTPException(422, 'Invalid file encoding.') from None
+        if not content or len(content) > MAX_FILE_BYTES:
+            raise HTTPException(413, 'Use a non-empty file up to 5 MB.')
+        if not gate.acquire(blocking=False):
+            raise HTTPException(429, 'Personal gateway busy. Try after the current operation finishes.')
+        try:
+            # No filenames, credentials or report text in command arguments or parser logs.
+            # The worker has CPU/memory bounds; timeout terminates the direct worker.
+            child_env = {name: os.environ[name] for name in
+                         ['PATH', 'SYSTEMROOT', 'WINDIR', 'LANG', 'LC_ALL', 'TESSDATA_PREFIX', 'TMPDIR', 'TEMP', 'TMP']
+                         if name in os.environ}
+            result = subprocess.run([sys.executable, '-m', 'src.research_file_import', req.extension, req.ocr_language],
+                                    input=content, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                    timeout=90, cwd=ROOT, env=child_env, check=False)
+            if result.returncode or len(result.stdout) > 600_000:
+                raise ValueError('worker-failed')
+            value = json.loads(result.stdout)
+            if value.get('ok') is not True:
+                # Worker details are a fixed application message, never parser exceptions.
+                raise HTTPException(422, value.get('detail', 'File could not be read completely.'))
+            return value['document']
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(422, 'File could not be read completely. No partial document was loaded.') from None
+        finally:
+            gate.release()
 
     @app.post('/review/analyze', dependencies=[Depends(authorize)])
     def analyze(req: Input):

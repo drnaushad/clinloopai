@@ -5,6 +5,8 @@
   const $=id=>document.getElementById(id), api=window.ClinLoopReportReview;
   const local=new window.ClinLoopPrivate.Workspace(window.fetch.bind(window));
   const research=new api.Research(window.fetch.bind(window));
+  const fileImporter=window.ClinLoopFileImport?new window.ClinLoopFileImport.Importer(window.fetch.bind(window)):null;
+  let importedDocument=null;
   let connected=false,busy=false,loading=false,epoch=0,sourceVersion=0,lastActivity=Date.now(),schema=null;
   function status(text){ui.set($('status'), text);}
   function syncChoices(){
@@ -27,28 +29,36 @@
     const label=api.PROVIDERS[$('provider').value];
     ui.set($('provider-destination'), label);ui.set($('provider-consent'), label);
     $('connect').disabled=locked||connected;
-    for(const id of ['report','report-file','model'])$(id).disabled=!connected||locked;
-    $('report-type').disabled=locked;$('complete-confirm').disabled=!connected||locked;
+    for(const id of ['report','report-file'])$(id).disabled=locked;
+    $('model').disabled=!connected||locked;
+    $('report-type').disabled=locked;$('complete-confirm').disabled=locked||!$('report').value.trim()||(importedDocument&&!importedDocument.text_review_allowed);
     for(const id of ['local-address','research-address','gateway-code','local-confirm','research-confirm'])$(id).disabled=connected||locked;
-    $('sample').disabled=!connected||locked;
+    $('sample').disabled=locked;
+    for(const id of ['file-address','file-code','file-confirm','ocr-language'])if($(id))$(id).disabled=locked;
     const bytes=new TextEncoder().encode($('report').value).length;
     ui.set($('report-budget'), bytes+' / 6000 UTF-8 bytes');
     let valid=false;
     try{api.validText($('report').value,$('report-type').value);valid=true;}catch(_){}
-    $('analyze').disabled=!connected||locked||!valid||!$('complete-confirm').checked;
-    ui.set($('review-readiness'), !connected?'Connect a model in step 1 to enable source entry.':
-      loading?'Loading source. Wait for the complete file.':busy?'Review in progress. Wait for source checks.':
+    const blocked=importedDocument&&!importedDocument.text_review_allowed;
+    $('analyze').disabled=!connected||locked||!valid||!$('complete-confirm').checked||blocked;
+    if($('check-source'))$('check-source').disabled=locked;
+    if($('load-file'))$('load-file').disabled=locked;
+    ui.set($('review-readiness'), loading?'Loading source. Wait for the complete file.':busy?'Review in progress. Wait for source checks.':
+      blocked?'DICOM preview only. Non-text or incomplete content cannot enter text analysis.':
       bytes>6000?'Report exceeds 6000 UTF-8 bytes. Use a complete report within the limit; do not remove clinical context to fit.':
+      !connected?'You can load and check a report now. Connect a model before selecting Review report.':
       !valid?'Add a complete synthetic report in step 2.':!$('complete-confirm').checked?
       'Check the complete report and confirm it above to enable Review report.':
       'Ready to review. Compare every returned suggestion with the original report.');
   }
   function clear(disconnect=true){
-    epoch++;sourceVersion++;local.clear(disconnect);research.clear();busy=false;loading=false;
+    epoch++;sourceVersion++;local.clear(disconnect);research.clear();if(fileImporter)fileImporter.clear();busy=false;loading=false;importedDocument=null;
     // Research clear removes its bearer code: reconnect is required in that pathway.
     if(disconnect||$('mode').value==='research')connected=false;
     $('report').value='';$('report-file').value='';$('result').replaceChildren();ui.set($('result'), 'No review yet.');
     $('gateway-code').value='';$('complete-confirm').checked=false;
+    if($('file-code'))$('file-code').value='';if($('file-confirm'))$('file-confirm').checked=false;
+    if($('file-preview'))$('file-preview').replaceChildren();
     if(!connected){$('model').replaceChildren(placeholder());$('local-confirm').checked=false;$('research-confirm').checked=false;}
     status(connected?'Report cleared. Local model connection retained.':'Disconnected. Session cleared.');sync();
   }
@@ -118,7 +128,7 @@
     const current=epoch,version=sourceVersion;const text=$('report').value,type=$('report-type').value,model=$('model').value;
     $('result').replaceChildren();
     try {
-      api.validText(text,type);if(!$('complete-confirm').checked)throw new Error('Check the complete synthetic report before reviewing.');
+      api.validText(text,type);if((importedDocument&&!importedDocument.text_review_allowed)||!$('complete-confirm').checked)throw new Error('Check the complete synthetic report before reviewing.');
       busy=true;status('Reviewing. No result is accepted until its source quotes are checked.');sync();
       let review;
       if($('mode').value==='local'){
@@ -130,22 +140,51 @@
     }catch(error){if(current===epoch){ui.set($('result'), 'No analysis accepted. Review the original report with a clinician.');status(error.message || 'Review failed.');}}
     finally{if(current===epoch){busy=false;sync();}}
   });
-  $('report-file').addEventListener('change',async()=>{
+  async function loadSelectedFile(){
+    if(busy||loading)return;
     const current=epoch,version=++sourceVersion,file=$('report-file').files[0];$('complete-confirm').checked=false;
-    if(!file)return;
+    if(!file)return;importedDocument=null;if($('file-preview'))$('file-preview').replaceChildren();
     loading=true;$('report').value='';ui.set($('result'), 'Loading new source. No review yet.');status('Loading new source. Analysis is paused.');sync();
-    try {api.validateFile(file.name,file.size);const buffer=await file.arrayBuffer();const text=new TextDecoder('utf-8',{fatal:true}).decode(buffer);
-      api.validText(text,$('report-type').value);if(current===epoch&&version===sourceVersion){$('report').value=text;ui.set($('result'), 'New source loaded. No review yet.');status('New source loaded. Check completeness before reviewing.');}}
-    catch(_){if(current===epoch&&version===sourceVersion){$('report').value='';ui.set($('result'), 'No review yet.');status('File not accepted. Use a complete UTF-8 .txt report up to 6000 bytes; no partial report was loaded.');}}
+    try {
+      const ext=window.ClinLoopFileImport?window.ClinLoopFileImport.kind(file.name,file.size):'txt';let text;
+      if(ext==='txt'){
+        api.validateFile(file.name,file.size);const buffer=await file.arrayBuffer();text=new TextDecoder('utf-8',{fatal:true}).decode(buffer);api.validText(text,$('report-type').value);
+      }else{
+        if($('file-options'))$('file-options').open=true;
+        if(!fileImporter)throw Error('Local file tools unavailable.');
+        const data=await fileImporter.run(file,$('file-address').value,$('file-code').value,$('file-confirm').checked,$('ocr-language').value);
+        if(current!==epoch||version!==sourceVersion)return;
+        importedDocument=data;text=data.text;
+        const box=$('file-preview');box.replaceChildren();
+        const heading=document.createElement('p');ui.set(heading,'Imported locally. Check every page, number, unit and date against the original. No model was called.');box.append(heading);
+        const meta=document.createElement('p');meta.textContent=data.kind+' · '+data.page_count+' · SHA-256 '+data.sha256;box.append(meta);
+        if(data.kind.startsWith('dicom-')){
+          const notice=document.createElement('p');ui.set(notice,data.kind==='dicom-image'?
+            'DICOM image imported for inspection only. Pixel interpretation is not supported by text models.':
+            !data.text_review_allowed?'DICOM report is incomplete or contains non-text content. Preview only; text analysis is blocked.':
+            'DICOM report text extracted. Check all values, units and context against the original. No pixels were analyzed.');box.append(notice);
+        }
+        for(const page of data.pages){const detail=document.createElement('details'),summary=document.createElement('summary'),pre=document.createElement('pre');ui.set(summary,'Source page '+page.number+' · '+page.method);pre.textContent=page.text;detail.append(summary,pre);box.append(detail);}
+      }
+      if(current===epoch&&version===sourceVersion){$('report').value=text;ui.set($('result'), 'New source loaded. No review yet.');status(importedDocument&&!importedDocument.text_review_allowed?'DICOM preview only. Non-text or incomplete content cannot enter text analysis.':'New source loaded. Check completeness before reviewing.');}
+    }
+    catch(_){if(current===epoch&&version===sourceVersion){$('report').value='';importedDocument=null;ui.set($('result'), 'No review yet.');status('File import failed. TXT loads in this browser. For PDF, image or DICOM, start your updated personal gateway with --setup, check its access code and confirm local processing. No partial source was loaded.');}}
     finally{if(current===epoch&&version===sourceVersion){loading=false;sync();}}
-  });
+  }
+  $('report-file').addEventListener('change',loadSelectedFile);
+  if($('load-file'))$('load-file').addEventListener('click',loadSelectedFile);
   function sourceChanged(){sourceVersion++;$('complete-confirm').checked=false;ui.set($('result'), 'Source changed. Review again.');status('Source or model changed. Review again.');sync();}
   $('complete-confirm').addEventListener('change',sync);
   $('report').addEventListener('input',sourceChanged);$('report-type').addEventListener('change',sourceChanged);$('model').addEventListener('change',sourceChanged);
   $('sample').addEventListener('click',()=>{
-    sourceVersion++;$('report-type').value='radiology-text';$('complete-confirm').checked=false;ui.set($('result'), 'No review yet.');
+    sourceVersion++;importedDocument=null;if($('file-preview'))$('file-preview').replaceChildren();$('report-type').value='radiology-text';$('complete-confirm').checked=false;ui.set($('result'), 'No review yet.');
     $('report').value='SYNTHETIC REPORT — fictional adult. CT chest: A 6 mm pulmonary nodule is present. No pleural effusion. Recommend comparison with prior imaging. No comparison study is supplied. No follow-up interval is specified.';
     status('Synthetic example loaded. Check completeness before reviewing.');sync();
+  });
+  if($('check-source'))$('check-source').addEventListener('click',()=>{
+    try{api.validText($('report').value,$('report-type').value);if(importedDocument&&!importedDocument.text_review_allowed)throw Error('blocked');
+      status('Input size and format check passed. This does not verify extraction, completeness or medical accuracy. Check the original before confirming.');
+    }catch(_){status('Input check did not pass. Use complete readable text within 6000 UTF-8 bytes; DICOM image or incomplete SR needs its own workflow. Nothing was sent.');}sync();
   });
   for(const name of ['pointerdown','keydown','input'])document.addEventListener(name,()=>{lastActivity=Date.now();},{passive:true});
   setInterval(()=>{if(Date.now()-lastActivity>=600000){clear(true);lastActivity=Date.now();}},10000);
