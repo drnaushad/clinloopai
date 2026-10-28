@@ -38,3 +38,42 @@ class TestFHIRResponseSafety(unittest.TestCase):
             result=check_connection(c)
         self.assertFalse(result['ok'])
         self.assertFalse(result['types']['Patient']['readable'])
+
+
+class TestFHIRTokenRefresh(unittest.TestCase):
+    def test_search_refresh_closes_rejected_response(self):
+        session = Mock(headers={}, auth=Mock())
+        rejected, success = Mock(status_code=401), Mock(status_code=200)
+        session.get.side_effect = [rejected, success]
+        client = FHIRClient('https://example.org/fhir', session=session)
+        self.assertIs(client._get('https://example.org/fhir/Patient'), success)
+        rejected.close.assert_called_once()
+        session.auth.invalidate.assert_called_once()
+        self.assertEqual(session.get.call_count, 2)
+
+    def test_bulk_refresh_closes_rejected_response_and_retries_only_once(self):
+        session = Mock(headers={}, auth=Mock())
+        rejected, still_rejected = Mock(status_code=401), Mock(status_code=401)
+        session.request.side_effect = [rejected, still_rejected]
+        client = BulkFHIRClient('https://example.org/fhir', session=session)
+        self.assertIs(client._request('GET', 'https://example.org/status/synthetic'), still_rejected)
+        rejected.close.assert_called_once()
+        session.auth.invalidate.assert_called_once()
+        self.assertEqual(session.request.call_count, 2)
+
+
+class TestOAuthErrorPrivacy(unittest.TestCase):
+    def test_untrusted_oauth_error_field_is_never_echoed(self):
+        from src.clinloop_engine.smart_auth import SMARTBackendAuth, SMARTAuthError
+        for error in ('SYNTHETIC_PRIVATE_TEXT', {'patient': 'SYNTHETIC_PRIVATE'}, None):
+            session = Mock()
+            response = Mock(status_code=400)
+            response.json.return_value = {'error': error, 'error_description': 'SYNTHETIC_PRIVATE'}
+            session.post.return_value = response
+            auth = SMARTBackendAuth('https://example.org/fhir', 'synthetic-client',
+                                    client_secret='synthetic-secret', token_url='https://example.org/token',
+                                    scope='system/Patient.read', session=session)
+            with self.assertRaises(SMARTAuthError) as raised:
+                auth.token()
+            self.assertIn('HTTP 400', str(raised.exception))
+            self.assertNotIn('SYNTHETIC_PRIVATE', str(raised.exception))

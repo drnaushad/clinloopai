@@ -260,3 +260,28 @@ edit the range, regenerate the lock (command at the top of the file), run the te
 | Separate review of clinical-logic changes | One author can change a rule and its tests | Require a clinician reviewer on `clinical_ontology.py`, `radiology.py`, `fhir_ingest.py`, `motifs.py`, `guideline_reports.py`, `note_reader.py` and outreach code (e.g. GitHub CODEOWNERS) |
 | Access-log review | Records exist; nobody is prompted to look at them | Periodic review report for the privacy officer |
 | Database | SQLite suits one server; no replication | PostgreSQL for multi-server deployments |
+
+
+### Document extraction and FHIR report coverage (2026-10-28 engineering correction)
+
+The legacy private document extractor now rejects PDFs over 20 pages, processes every TIFF
+frame, checks each PDF page for scanned content, enforces rendering/text bounds and applies
+20-second timeouts to individual OCR calls. Missing OCR, unreadable pages, parser errors or
+limit violations fail the whole extraction rather than return a partial report. The parsed
+impression no longer silently stops at 4,000 characters. Existing extraction access recording,
+source hashing and clinician confirmation remain required. Uploaded files are still not
+retained by this workflow. Bounds do not validate OCR correctness; compare all pages with the
+original. This legacy path is not the isolated 5 MB research-gateway worker: its file limit
+remains 20 MB, with 12 million pixels per rendered page/frame, 48 million total input/rendered
+pixels, 20 pages/frames, and 120,000 UTF-8 bytes of extracted text. Oversized documents need
+an approved alternative workflow, not arbitrary splitting that loses report context.
+
+FHIR feed success measures ingestion availability. New coverage counters distinguish plain
+conclusions, coded summaries, attachments, linked results and missing summaries. They do not
+establish diagnostic accuracy, a complete hospital record or completed follow-up. The public
+Epic sandbox's two PDF attachment HTTP 400 failures remain unresolved after format checks.
+See `FHIR_CONNECTION.md` for the dated aggregate findings and integration limitations.
+
+These engineering corrections do not supply the pending independent clinical/ML reviews,
+institutional study authorization, real-patient validation, incremental Epic testing or an
+approved private deployment. No clinical guideline thresholds or model prompts were changed.

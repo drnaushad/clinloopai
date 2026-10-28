@@ -6,7 +6,7 @@ or as a phone photo. ClinLoop reads it into text, finds the study, the date
 and the impression, and creates a FHIR DiagnosticReport that runs through
 the same report-reading logic as the hospital's own reports.
 
-  * PDF with a text layer → text extracted directly (exact)
+  * PDF with a text layer → text extracted directly (check against the original)
   * scanned PDF or image  → OCR with Tesseract (kor+eng), with a confidence score
 
 Because OCR and outside formats can be wrong, every loop created from an
@@ -19,6 +19,7 @@ import hashlib
 import io
 import re
 import shutil
+import warnings
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -27,6 +28,9 @@ from .imaging_fhir import CLINLOOP_TAG_SYSTEM, OCR_CONFIDENCE_URL
 MAX_BYTES = 20 * 1024 * 1024
 MAX_PAGES = 20
 OCR_LANGS = "kor+eng"
+MAX_PIXELS = 12_000_000
+MAX_TOTAL_PIXELS = 48_000_000
+MAX_TEXT_BYTES = 120_000
 
 
 class DocumentError(ValueError):
@@ -44,51 +48,91 @@ def ocr_available() -> bool:
 def _ocr_image(img) -> Tuple[str, Optional[float]]:
     import pytesseract
     from PIL import ImageOps
+    if img.width * img.height > MAX_PIXELS:
+        raise DocumentError("Image exceeds the pixel limit")
     img = ImageOps.grayscale(img)
     if img.width < 1500:                      # small photos/scans read better upscaled
         scale = 1500 / max(1, img.width)
+        if int(img.width * scale) * int(img.height * scale) > MAX_PIXELS:
+            raise DocumentError("Image exceeds the pixel limit after resizing")
         img = img.resize((int(img.width * scale), int(img.height * scale)))
     img = ImageOps.autocontrast(img)
-    text = pytesseract.image_to_string(img, lang=OCR_LANGS, config="--psm 6")
-    data = pytesseract.image_to_data(img, lang=OCR_LANGS, config="--psm 6", output_type=pytesseract.Output.DICT)
+    text = pytesseract.image_to_string(img, lang=OCR_LANGS, config="--psm 6", timeout=20)
+    data = pytesseract.image_to_data(img, lang=OCR_LANGS, config="--psm 6", output_type=pytesseract.Output.DICT, timeout=20)
     conf = [float(c) for c, w in zip(data["conf"], data["text"]) if str(w).strip() and float(c) >= 0]
     return text, (sum(conf) / len(conf) if conf else None)
 
 
 def extract_text(content: bytes, filename: str = "") -> Dict[str, Any]:
-    """Text of a PDF or image: {"text", "method": "pdf-text"|"ocr", "confidence", "pages"}."""
+    """Read every page/frame, or fail explicitly; never return a partial report.
+
+    The 20 MB legacy upload allowance is unchanged. Rendering and OCR are bounded
+    separately, and OCR confidence is not an estimate of clinical accuracy.
+    """
     if not content:
         raise DocumentError("Empty file")
     if len(content) > MAX_BYTES:
         raise DocumentError(f"File larger than {MAX_BYTES // (1024 * 1024)} MB")
-    is_pdf = content[:5] == b"%PDF-" or filename.lower().endswith(".pdf")
-    if is_pdf:
-        import pdfplumber
-        try:
+    results, methods, pixels = [], [], 0
+
+    def add(text: str, confidence: Optional[float], method: str) -> None:
+        if not text.strip():
+            raise DocumentError("A page has no readable text; no partial report was loaded")
+        results.append((text, confidence))
+        methods.append(method)
+        if len("\n".join(t for t, _ in results).encode("utf-8")) > MAX_TEXT_BYTES:
+            raise DocumentError("Extracted text exceeds the limit; nothing was truncated")
+
+    def render_budget(width: int, height: int) -> None:
+        nonlocal pixels
+        pixels += width * height
+        if width * height > MAX_PIXELS or pixels > MAX_TOTAL_PIXELS:
+            raise DocumentError("Document exceeds the rendering limit; no partial report was loaded")
+
+    try:
+        if content[:5] == b"%PDF-" or filename.lower().endswith(".pdf"):
+            import pdfplumber
             with pdfplumber.open(io.BytesIO(content)) as pdf:
-                pages = pdf.pages[:MAX_PAGES]
-                texts = [(p.extract_text() or "") for p in pages]
-                if sum(len(t.strip()) for t in texts) >= 40 * max(1, len(pages)) * 0.5:
-                    return {"text": "\n".join(texts), "method": "pdf-text", "confidence": None, "pages": len(pages)}
-                if not ocr_available():
-                    raise DocumentError("This PDF is a scan without text; OCR (Tesseract) is not installed on the server")
-                results = [_ocr_image(p.to_image(resolution=300).original) for p in pages]
-        except DocumentError:
-            raise
-        except Exception as e:  # malformed PDF
-            raise DocumentError(f"Could not read the PDF: {type(e).__name__}") from e
-    else:
-        if not ocr_available():
-            raise DocumentError("OCR (Tesseract) is not installed on the server")
-        from PIL import Image, UnidentifiedImageError
-        try:
-            img = Image.open(io.BytesIO(content))
-        except UnidentifiedImageError as e:
-            raise DocumentError("Not a PDF or an image file") from e
-        results = [_ocr_image(img)]
-    confs = [c for _, c in results if c is not None]
-    return {"text": "\n".join(t for t, _ in results), "method": "ocr",
-            "confidence": round(sum(confs) / len(confs), 1) if confs else None, "pages": len(results)}
+                if not 1 <= len(pdf.pages) <= MAX_PAGES:
+                    raise DocumentError("PDF exceeds the page limit; no partial report was loaded")
+                for page in pdf.pages:
+                    text = page.extract_text() or ""
+                    # A searchable header must not hide scanned findings below it.
+                    if page.images or not text.strip():
+                        if not ocr_available():
+                            raise DocumentError("A page needs OCR; Tesseract is not installed")
+                        render_budget(int(page.width * 200 / 72), int(page.height * 200 / 72))
+                        text, confidence = _ocr_image(page.to_image(resolution=200).original)
+                        add(text, confidence, "ocr")
+                    else:
+                        add(text, None, "pdf-text")
+        else:
+            from PIL import Image, ImageOps
+            if not ocr_available():
+                raise DocumentError("OCR (Tesseract) is not installed on the server")
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", Image.DecompressionBombWarning)
+                with Image.open(io.BytesIO(content)) as image:
+                    if image.format not in {"PNG", "JPEG", "TIFF"}:
+                        raise DocumentError("Use a PDF, PNG, JPEG or TIFF report")
+                    if not 1 <= getattr(image, "n_frames", 1) <= MAX_PAGES:
+                        raise DocumentError("Image exceeds the frame limit; nothing was truncated")
+                    for index in range(getattr(image, "n_frames", 1)):
+                        image.seek(index)
+                        render_budget(image.width, image.height)
+                        frame = ImageOps.exif_transpose(image.copy())
+                        text, confidence = _ocr_image(frame)
+                        add(text, confidence, "ocr")
+        confs = [c for _, c in results if c is not None]
+        return {"text": "\n".join(t for t, _ in results),
+                "method": "ocr" if "ocr" in methods else "pdf-text",
+                "confidence": round(sum(confs) / len(confs), 1) if confs else None,
+                "pages": len(results)}
+    except DocumentError:
+        raise
+    except Exception:
+        # Parser/OCR errors can contain filenames and source text; never expose them.
+        raise DocumentError("Could not read the complete document; check the original") from None
 
 
 # ── Parsing a report ────────────────────────────────────────────────────────
@@ -247,7 +291,7 @@ def parse_report(text: str) -> Dict[str, Any]:
     if sections.get("recommendation") and sections["recommendation"] not in conclusion:
         conclusion += "\n" + sections["recommendation"]
     conclusion = re.sub(r"\s*\n\s*", " ", conclusion).strip()
-    return {"title": clean_title(title), "date": _find_date(text), "conclusion": conclusion[:4000],
+    return {"title": clean_title(title), "date": _find_date(text), "conclusion": conclusion,
             "section": "impression" if "impression" in sections else "findings" if "findings" in sections else "whole text",
             "pathology": bool(_PATHOLOGY.search(text)) and not _MODALITY_WORDS.search(title or "")}
 

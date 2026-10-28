@@ -88,14 +88,50 @@ Group id, a system-level export (`<base>/$export`) is requested. An export not r
 In this mode, `--check` reports whether the server declares `$export` and whether login works; it
 does not start an export.
 
-**Epic public sandbox compatibility (verified 2026-10-26).** A guarded, isolated run
-exported 2,662 synthetic resources for 7 patients and mapped 995 events, with 7 mapping warnings. Authentication,
-file retrieval, worklist authorization and audit-chain checks passed. All nine DiagnosticReport
-records lacked plain-text conclusions, so this does not establish report-text interpretation
-accuracy. Seven reports advertised HTML or PDF attachments, which were not downloaded or interpreted.
-This check covered the initial full export; incremental exports and `_since` support were not verified.
-ImagingStudy was denied by the current application registration; excluding it and
-using Epic’s default output format eliminated the server-reported export errors.
+**Epic public sandbox compatibility (retested 2026-10-28).** An isolated,
+read-only public synthetic-group export authenticated successfully, downloaded all 11 output
+files and imported 2,806 resources for 7 patients into an in-memory store. Mapping produced
+1,017 events and 11 warning messages. Worklist authorization and both audit chains passed;
+the export job's cleanup request was accepted. This shared sandbox changes over time: these
+counts are a dated transport check, not a fixed clinical benchmark.
+
+All nine DiagnosticReports lacked plain-text conclusions. In the mutually exclusive coverage
+categories, two carried coded conclusions, two had only attachments, four had only linked
+results, and one had neither a summary, usable attachment nor linked result. Seven reports
+advertised an HTML or PDF attachment (including reports counted in other categories). Both
+PDF Binary URLs returned HTTP 400 with native PDF, FHIR JSON and explicit `_format=json`
+requests. No PDF text was extracted. The generic OperationOutcome indicated processing/format
+issues; the underlying server cause is unresolved. Do not guess replacement identifiers,
+change patients, broaden permissions or infer a normal report from this failure.
+
+The export contained 252 DocumentReferences: 123 had links without inline text candidates,
+and none had inline plain-text/HTML data. These fields describe input representation, not
+verified document completeness. Eleven per-patient mapping warning messages were categorized
+as seven missing-timestamp messages and four unknown-status messages. A message may summarize
+multiple affected records; these are **not** counts of individual invalid resources.
+
+This check covered the initial full export; incremental exports and `_since` support were not
+verified. ImagingStudy remains excluded under the existing application permission profile;
+no registration permissions were expanded. Native/FHIR Binary representation rules are
+specified by [HL7 FHIR R4 Binary](https://hl7.org/fhir/R4/binary.html). Epic's
+[API specifications](https://fhir.epic.com/Specifications?api=10137) describe the applicable
+Binary service; the current sandbox failure still needs investigation with Epic or the
+hospital integration team. No diagnostic accuracy or real-patient readiness is established.
+
+**Transport health and report coverage are separate.** Successful FHIR sync results now include
+fixed aggregate `coverage` counters. Each run's counts are persisted with the ingest run and
+recorded in the hash-chained audit log. The Worklist shows a compact English/Korean coverage
+panel with expandable limitations when the latest successful run supplies these counters.
+Counts cover the full histories of the **changed patients evaluated in that run**, not every
+patient in the hospital. An unchanged run evaluates zero histories. Old snapshots and older
+ingest rows have no coverage measurement; the UI does not manufacture one.
+
+`with_conclusion` and `document_reference_inline_text` indicate field presence only, not that
+all content was valid or successfully interpreted. Remote report attachments are **not**
+automatically retrieved, converted into conclusions or used to close loops. Lab reports may
+carry their results in linked Observations rather than narrative conclusions. Review the
+original records, mapping warnings and required resource coverage with hospital IT before
+interpreting an empty worklist.
 
 For a separately approved deployment with that same permission profile, prepare:
 

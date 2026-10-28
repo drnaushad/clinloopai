@@ -97,6 +97,7 @@ class BulkFHIRClient(FHIRClient):
                 raise FHIRSyncError(f"FHIR login failed: {e}") from None
             invalidate = getattr(self.session.auth, "invalidate", None)
             if resp.status_code == 401 and invalidate and attempt == 0:
+                resp.close()
                 invalidate()
                 continue
             return resp

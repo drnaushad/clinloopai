@@ -176,6 +176,12 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       <div id="gov" class="feed" role="status"></div>
     </div>
 
+    <section id="coverage" class="feed" aria-label="Report coverage" hidden>
+      <strong id="coverage-summary" role="status" aria-live="polite"></strong>
+      <p data-i18n="coverageHelp"></p>
+      <details><summary data-i18n="coverageDetails"></summary><p id="coverage-detail"></p></details>
+    </section>
+
     <section class="kpis" aria-label="Summary">
       <div class="card kpi"><div class="v" id="k-active">–</div><div class="l" data-i18n="kActive"></div></div>
       <div class="card kpi"><div class="v" id="k-overdue">–</div><div class="l" data-i18n="kOverdue"></div></div>
@@ -240,6 +246,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       rateTitle: '그룹별 미완결률', byRule: '규칙', byLanguage: '언어', byAge: '연령대', bySex: '성별',
       rateHelp: '기한이 지난 루프 1,000건당 기한 내 종결되지 않은 건수입니다. 그룹 간 차이가 있다면 누군가를 놓치고 있다는 뜻입니다.',
       footer: 'ClinLoop AI · 규칙이 판단하고, 사람이 조치하며, 모든 행위는 감사 기록됩니다.',
+      coverageHelp: '데이터 수신 성공이 모든 판독문을 읽었다는 뜻은 아닙니다.',
+      coverageDetails: '범위 및 경고 확인',
+      coverageSummary: (c, n) => `판독문 범위 · 환자 ${n}명 · 판독문 ${c.diagnostic_reports}건 · 첨부파일 포함 ${c.reports_with_attachments}건 · 매핑 경고 메시지 ${c.mapping_warning_messages}건`,
+      coverage: (c, n) => `최근 평가한 환자 ${n}명의 전체 기록: 판독문 ${c.diagnostic_reports}건 중 결론 텍스트 포함 ${c.with_conclusion}건, 첨부파일만 있는 판독문 ${c.attachment_only}건, 연결 문서만 있는 문서 참조 ${c.document_reference_linked_only}건, 매핑 경고 메시지 ${c.mapping_warning_messages}건. 첨부파일은 자동으로 읽지 않습니다. 수신 성공이나 빈 작업 목록은 정상 결과 또는 진료 완료를 뜻하지 않습니다. 원본과 데이터 범위를 확인하세요.`,
       feed: { OK: (h) => `데이터 수신 정상 · 마지막 수신 ${h}시간 전`, STALE: (h) => `⚠ 데이터 수신 중단: 마지막 정상 수신 ${h ?? '–'}시간 전. 작업 목록이 불완전할 수 있습니다.`,
               FAILING: () => '⚠ 데이터 연동 실패: 최근 3회 수신이 모두 실패했습니다. 작업 목록이 불완전할 수 있습니다.',
               NEVER: () => '⚠ 아직 수신된 임상 데이터가 없습니다.' },
@@ -288,6 +298,10 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       rateTitle: 'Open-loop rate by group', byRule: 'Rule', byLanguage: 'Language', byAge: 'Age group', bySex: 'Sex',
       rateHelp: 'Loops not closed within their guideline window, per 1,000 loops past deadline. Groups should not differ; if they do, someone is being missed.',
       footer: 'ClinLoop AI · Rules decide, people act, every action is audited.',
+      coverageHelp: 'Transport success does not mean every report was read.',
+      coverageDetails: 'Coverage details and limitations',
+      coverageSummary: (c, n) => `Report coverage · ${n} patients · ${c.diagnostic_reports} reports · ${c.reports_with_attachments} with attachments · ${c.mapping_warning_messages} mapping warning messages`,
+      coverage: (c, n) => `Full histories of ${n} patients evaluated in the latest run: ${c.diagnostic_reports} reports; ${c.with_conclusion} with conclusion text; ${c.attachment_only} attachment-only reports; ${c.document_reference_linked_only} linked-only document references; ${c.mapping_warning_messages} mapping warning messages. Attachments are not read automatically. A successful feed or empty worklist does not establish normal results or completed care. Check original records and dataset coverage.`,
       feed: { OK: (h) => `Data feed OK · last received ${h} h ago`, STALE: (h) => `⚠ Data feed silent: last successful update ${h ?? '–'} h ago. The worklist may be incomplete.`,
               FAILING: () => '⚠ Data feed failing: the last 3 updates all failed. The worklist may be incomplete.',
               NEVER: () => '⚠ No clinical data has been received yet.' },
@@ -573,6 +587,13 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       const fs = feed.status;
       $('feed').className = `feed ${fs === 'OK' ? 'ok' : 'alarm'}`;
       $('feed').textContent = window.CLINLOOP_DEMO && window.CLINLOOP_DEMO.static ? t().snapshotFeed(feed.last_success ? fmtDate(feed.last_success) : t().dateUnavailable) : t().feed[fs](feed.hours_since_success);
+      const latestRun = (feed.recent_runs || [])[0];
+      const coverage = latestRun && latestRun.ok && latestRun.coverage;
+      $('coverage').hidden = !coverage;
+      $('coverage-summary').textContent = coverage ? t().coverageSummary(coverage, latestRun.patients) : '';
+      $('coverage-detail').textContent = coverage ? t().coverage(coverage, latestRun.patients) : '';
+      if (coverage) $('coverage').setAttribute('aria-label', document.documentElement.lang === 'ko' ? '판독문 범위' : 'Report coverage');
+      if (coverage) $('coverage').style.background = 'var(--moderate-soft)';
       if (wl.governance) {
         const g = wl.governance;
         $('gov').className = `feed ${g.rules_approved === g.rules_total && g.critical_findings_list === 'approved' ? 'ok' : ''}`;

@@ -186,8 +186,13 @@ class SMARTBackendAuth(requests.auth.AuthBase):
         except requests.RequestException as e:
             raise SMARTAuthError(f"Token endpoint unreachable ({type(e).__name__})") from None
         if r.status_code != 200:
-            try:     # OAuth error codes are safe to show; descriptions may echo request details
-                err = r.json().get("error", "")
+            try:     # Only standard codes are safe: even `error` can echo source data.
+                body = r.json()
+                err = body.get("error", "") if isinstance(body, dict) else ""
+                allowed = {"invalid_request", "invalid_client", "invalid_grant", "unauthorized_client",
+                           "unsupported_grant_type", "invalid_scope", "server_error", "temporarily_unavailable"}
+                if not isinstance(err, str) or err not in allowed:
+                    err = ""
             except ValueError:
                 err = ""
             raise SMARTAuthError(f"Token request refused: HTTP {r.status_code}{' ' + err if err else ''}")

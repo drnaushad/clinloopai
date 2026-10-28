@@ -112,7 +112,8 @@ CREATE TABLE IF NOT EXISTS ingest_runs (
     patients INTEGER DEFAULT 0,
     events INTEGER DEFAULT 0,
     warnings INTEGER DEFAULT 0,
-    error TEXT
+    error TEXT,
+    coverage TEXT
 );
 CREATE TABLE IF NOT EXISTS outreach_messages (
     id TEXT PRIMARY KEY,
@@ -350,6 +351,9 @@ class LoopStore:
             cols = {r["name"] for r in self._db.execute("PRAGMA table_info(image_scan_studies)")}
             if "instances" not in cols:
                 self._db.execute("ALTER TABLE image_scan_studies ADD COLUMN instances INTEGER")
+            ingest_cols = {r["name"] for r in self._db.execute("PRAGMA table_info(ingest_runs)")}
+            if "coverage" not in ingest_cols:
+                self._db.execute("ALTER TABLE ingest_runs ADD COLUMN coverage TEXT")
             loop_cols = {r["name"] for r in self._db.execute("PRAGMA table_info(loops)")}
             if "ruleset_version" not in loop_cols:
                 self._db.execute("ALTER TABLE loops ADD COLUMN ruleset_version TEXT")
@@ -1127,12 +1131,18 @@ class LoopStore:
 
     # ── data feed: ingest runs, sync cursor, silence alarm ───────────────────
     def record_ingest(self, source: str, actor: str, ok: bool, patients: int = 0, events: int = 0,
-                      warnings: int = 0, error: Optional[str] = None, now: Optional[datetime] = None) -> None:
+                      warnings: int = 0, error: Optional[str] = None, now: Optional[datetime] = None,
+                      coverage: Optional[Dict] = None) -> None:
+        from .fhir_coverage import safe_coverage
+        coverage_json = json.dumps(safe_coverage(coverage), sort_keys=True) if coverage is not None else None
         with self._lock:
             self._db.execute(
-                "INSERT INTO ingest_runs (ts, source, actor, ok, patients, events, warnings, error) "
-                "VALUES (?,?,?,?,?,?,?,?)",
-                ((now or utc_now()).isoformat(), source, actor, int(ok), patients, events, warnings, error))
+                "INSERT INTO ingest_runs (ts, source, actor, ok, patients, events, warnings, error, coverage) "
+                "VALUES (?,?,?,?,?,?,?,?,?)",
+                ((now or utc_now()).isoformat(), source, actor, int(ok), patients, events, warnings, error, coverage_json))
+            if coverage is not None:
+                self._audit(actor, "system", "ingest_coverage", None,
+                            {"source": source, "patients": patients, "coverage": json.loads(coverage_json)})
             if not ok:
                 self._audit(actor, "system", "ingest_failed", None, {"source": source, "error": error})
             self._db.commit()
@@ -1345,6 +1355,9 @@ class LoopStore:
         with self._lock:
             last_ok = self._db.execute("SELECT * FROM ingest_runs WHERE ok=1 ORDER BY id DESC LIMIT 1").fetchone()
             recent = [dict(r) for r in self._db.execute("SELECT * FROM ingest_runs ORDER BY id DESC LIMIT 3")]
+        for run in recent:
+            raw = run.pop("coverage", None)
+            run["coverage"] = json.loads(raw) if raw else None
         hours = None
         if last_ok:
             hours = round((now - datetime.fromisoformat(last_ok["ts"])).total_seconds() / 3600, 2)

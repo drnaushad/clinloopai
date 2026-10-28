@@ -41,6 +41,7 @@ import requests
 from .fhir_ingest import _patient_id, bundle_to_events, patient_strata, superseded_reports
 from .loop_detector import ClinLoopDetector, hospital_detector, lapse_after_death
 from .loop_store import LoopStore
+from .fhir_coverage import empty_coverage, report_coverage, merge_coverage
 from .safety_clock import utc_now
 from .smart_auth import SMARTAuthError, SMARTBackendAuth, auth_from_env
 
@@ -101,6 +102,7 @@ class FHIRClient:
             raise FHIRSyncError(f"FHIR login failed: {e}") from None
         invalidate = getattr(self.session.auth, "invalidate", None)
         if resp.status_code == 401 and invalidate:      # token revoked or expired early: log in again, once
+            resp.close()
             invalidate()
             try:
                 resp = self.session.get(url, timeout=self.timeout, allow_redirects=False)
@@ -201,6 +203,7 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
         store.note_patients(patients)          # the denominator for rates per 1,000 patients
         detector = hospital_detector(now)
         n_events, n_warnings, counts = 0, 0, {"new": 0, "updated": 0, "resolved_by_engine": 0}
+        coverage = empty_coverage()
         from . import second_reader
         budget = {"left": int(os.environ.get("CLINLOOP_SECOND_READER_MAX", "20"))}
         for pid in sorted(patients):
@@ -214,6 +217,7 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
             events_by_patient, warnings = bundle_to_events(history, evaluation_time=now)
             warnings += record_warnings
             n_warnings += len(warnings)
+            merge_coverage(coverage, report_coverage(history, warnings))
             strata = patient_strata(history)
             for p, events in events_by_patient.items():
                 n_events += len(events)
@@ -224,15 +228,23 @@ def sync_once(store: LoopStore, client: FHIRClient, source: str = "fhir-sync",
             # Loops a preliminary report opened move to its final version
             store.supersede_sources(superseded_reports(history), actor=source)
         store.record_ingest(source, source, ok=True, patients=len(patients), events=n_events,
-                            warnings=n_warnings, now=now)
+                            warnings=n_warnings, now=now, coverage=coverage)
         if newest:
             store.set_cursor(source, newest)
         return {"ok": True, "since": since, "patients": len(patients), "events": n_events,
-                "warnings": n_warnings, "loops": counts, "cursor": newest or since}
+                "warnings": n_warnings, "coverage": coverage, "loops": counts, "cursor": newest or since}
     except (FHIRSyncError, requests.RequestException, ValueError) as e:
-        logger.error("FHIR sync failed: %s", e)
-        store.record_ingest(source, source, ok=False, error=str(e), now=now)
-        return {"ok": False, "since": since, "error": str(e)}
+        import re
+        http = re.search(r"\bHTTP (\d{3})\b", str(e)) if isinstance(e, FHIRSyncError) else None
+        error = "FHIR sync failed" + (f": HTTP {http.group(1)}" if http else f" ({type(e).__name__})")
+        oauth = re.search(r"Token request refused: HTTP (\d{3})(?: (invalid_client|invalid_grant|invalid_scope|invalid_request|unauthorized_client|unsupported_grant_type))?(?:$|\s)", str(e)) if isinstance(e, FHIRSyncError) else None
+        if oauth:
+            error = f"Token request refused: HTTP {oauth.group(1)}" + (f" {oauth.group(2)}" if oauth.group(2) else "")
+        if isinstance(e, FHIRSyncError) and str(e).startswith("Bulk export not ready after "):
+            error = "Bulk export not ready; cancelled"
+        logger.error("%s", error)
+        store.record_ingest(source, source, ok=False, error=error, now=now)
+        return {"ok": False, "since": since, "error": error}
 
 
 def check_connection(client: FHIRClient, now: Optional[datetime] = None) -> Dict:
