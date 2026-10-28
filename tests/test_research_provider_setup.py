@@ -98,6 +98,41 @@ def test_setup_assets_allow_direct_navigation_but_no_secrets_or_frame_embedding(
     assert c.post('/review/configure', json=config()).status_code == 403  # No-Origin mutations refused.
 
 
+def test_local_setup_bundle_supports_language_and_nonsecret_handoff_without_external_scripts():
+    c, transport = setup_client()
+    c.headers.pop('Origin')
+    html = c.get('/setup?provider=anthropic&lang=ko').text
+    script = c.get('/setup.js').text
+    assert 'data-isolated-session="true"' in html
+    assert 'id="lang-opt-en"' in html and 'id="lang-opt-ko"' in html
+    assert 'ClinLoopInterfaceCopy' in script and 'ClinLoopUI' in script
+    assert 'private-workspace' not in script  # No model transport or report input in key setup.
+    assert 'provider=' in script and 'key=do-not-import' not in script
+    assert KEY not in script and TOKEN not in script
+    transport.post.assert_not_called()
+
+
+def test_setup_bundle_and_schema_resolve_in_packaged_web_layout(monkeypatch, tmp_path):
+    import shutil
+    from src import research_report_gateway as gateway
+    root = gateway.ROOT
+    for name in ['js/interface-copy.js', 'js/interface-language.js',
+                 'js/language-controls.js', 'data/report_review_schema.json']:
+        destination = tmp_path / 'web' / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(root / name, destination)
+    destination = tmp_path / 'src/research_setup/setup.js'
+    destination.parent.mkdir(parents=True)
+    shutil.copyfile(root / 'src/research_setup/setup.js', destination)
+    monkeypatch.setattr(gateway, 'ROOT', tmp_path)
+    assert json.loads(gateway.web_asset('data/report_review_schema.json').read_text()) == gateway.SCHEMA
+    c, transport = setup_client()
+    response = c.get('/setup.js')
+    assert response.status_code == 200 and 'ClinLoopUI' in response.text
+    assert KEY not in response.text and TOKEN not in response.text
+    transport.post.assert_not_called()
+
+
 def test_configuration_refused_while_analysis_uses_the_selected_key():
     c, transport = setup_client()
     assert c.post('/review/configure', json=config()).status_code == 200

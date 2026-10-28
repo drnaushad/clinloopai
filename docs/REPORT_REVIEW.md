@@ -3,6 +3,30 @@
 This feature is a synthetic-only draft. It does not make the public website a hospital-ready
 patient-data system, validate a model or change the follow-up engine's clinical scope.
 
+## Simple model selection (28 October 2026)
+
+Start at **Report review** and choose **Local LLM**, **OpenAI**, **Anthropic / Claude**, or
+**Google / Gemini**. The default is local Ollama. Choosing a provider does not connect,
+configure credentials, send report text or call a provider.
+
+For an external API, start your personal gateway once with
+`python scripts/run_research_review.py --setup`, then choose **Add API key on this computer**.
+The local setup page opens with the selected provider and interface language. Enter the
+separate gateway access code, your provider API key and an exact supported model ID there.
+**Open ClinLoop Report review** returns with that provider selected. Enter the gateway access
+code, confirm synthetic transmission, connect, add a complete report and check each source quote.
+Keys are entered only on the loopback setup page; no provider key belongs in the public site.
+Only the provider name and interface language travel in these links. Query parameters cannot
+supply credentials, reports, model IDs or gateway endpoints. Language switching preserves field
+values; changing provider deliberately clears source, prior results and transmission consent.
+
+The personal setup page now offers the same English/Korean choices without browser storage.
+Both languages describe the same credential lifecycle. Setup still makes no paid provider call,
+and a configured model has not thereby been verified for availability or clinical accuracy.
+The public report workflow accepts the existing six text categories and UTF-8 `.txt` input,
+not every file format or medical modality. PDF/scans/images/DICOM/waveforms require the separate
+approved extraction or modality workflow. No clinical rules or model prompts changed.
+
 ## Finding the right workspace
 
 Every page offers the same 13 destinations in the same three groups: Clinical workspace,

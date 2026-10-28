@@ -1,13 +1,18 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
+  const ui=window.ClinLoopUI||{set:(el,text)=>{el.textContent=text;}};
   const providers = {
     openai: {label: 'OpenAI', key: 'https://platform.openai.com/settings/organization/api-keys', models: 'https://developers.openai.com/api/docs/models'},
     anthropic: {label: 'Anthropic (Claude)', key: 'https://platform.claude.com/settings/keys', models: 'https://platform.claude.com/docs/en/about-claude/models/overview'},
     gemini: {label: 'Google Gemini', key: 'https://aistudio.google.com/api-keys', models: 'https://ai.google.dev/gemini-api/docs/models'}
   };
   let busy = false, epoch = 0, lastActivity = Date.now(), controller = null;
-  function message(text) { $('status').textContent = text; }
+  function message(text) { ui.set($('status'),text); }
+  function returnLink(){
+    const link=$('open-review');
+    if(link)link.href='https://clinloopai.app/review?provider='+$('provider').value+'&lang='+(document.documentElement.lang==='ko'?'ko':'en');
+  }
   function lock(value) {
     busy = value;
     for (const id of ['check', 'save', 'forget', 'provider', 'model', 'key', 'code', 'confirm']) $(id).disabled = value;
@@ -22,6 +27,7 @@
     $('key').value = ''; $('model').value = ''; $('confirm').checked = false;
     const p = providers[$('provider').value];
     $('key-link').href = p.key; $('model-link').href = p.models;
+    returnLink();
     message('Selected ' + p.label + '. Enter its model ID and API key. No provider request sent.');
   }
   async function request(path, body, code) {
@@ -57,7 +63,7 @@
       $('providers').replaceChildren();
       for (const item of result.providers || []) {
         const li = document.createElement('li');
-        li.textContent = providers[item.id].label + ': ' + (item.configured ? item.model + ' — configured, not provider-verified' : 'not configured');
+        ui.set(li,providers[item.id].label + ': ' + (item.configured ? item.model + ' — configured, not provider-verified' : 'not configured'));
         $('providers').append(li);
       }
       message(action === 'save' ? 'Provider configured in gateway memory. No API call or charge was made. Continue to Report review with your gateway access code.' : action === 'forget' ? 'Selected provider forgotten by this gateway. No provider credential was revoked.' : 'Configuration loaded. No provider API request made.');
@@ -74,5 +80,10 @@
   window.addEventListener('pageshow', event => { if (event.persisted) clear(); });
   for (const name of ['pointerdown', 'keydown', 'input']) document.addEventListener(name, () => { lastActivity = Date.now(); }, {passive: true});
   setInterval(() => { if (Date.now() - lastActivity >= 600000) { clear(); lastActivity = Date.now(); } }, 10000);
+  if(window.URLSearchParams){
+    const requested=new window.URLSearchParams(window.location.search).get('provider');
+    if(Object.prototype.hasOwnProperty.call(providers,requested))$('provider').value=requested;
+  }
+  if(window.MutationObserver)new window.MutationObserver(returnLink).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   selection();
 })();

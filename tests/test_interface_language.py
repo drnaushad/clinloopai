@@ -19,7 +19,7 @@ def test_every_page_has_one_visible_choice_per_language_and_updated_assets(page)
  assert p.html['data-language-options']=='en ko'
  for ident in ['lang-opt-en','lang-opt-ko']:
   assert len(p.ids[ident])==1 and 'hidden' not in p.ids[ident][0]
- assert 'js/interface-copy.js?v=20261028_languages1' in text
+ assert 'js/interface-copy.js?v=20261028_onboarding1' in text
  assert 'js/interface-language.js?v=20261028_languages1' in text
  if page in ['review','private']:assert p.html['data-isolated-session']=='true'
 @pytest.mark.skipif(not shutil.which('node'),reason='Node required for interface-language checks')

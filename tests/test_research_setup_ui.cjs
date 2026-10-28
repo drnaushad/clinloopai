@@ -1,12 +1,12 @@
 'use strict';
 const {test}=require('node:test'), assert=require('node:assert/strict'), fs=require('node:fs'), vm=require('node:vm');
 const CODE='synthetic_gateway_code_'+'x'.repeat(32), KEY='synthetic-provider-secret-not-real';
-function page(fetcher){
- const ids=['provider','code','key','model','confirm','check','save','forget','clear','status','providers','key-link','model-link'];
+function page(fetcher,search=''){
+ const ids=['provider','code','key','model','confirm','check','save','forget','clear','status','providers','key-link','model-link','open-review'];
  const el={},events={},win={},timers=[],intervals=[],calls=[];
  for(const id of ids)el[id]={value:'',checked:false,disabled:false,children:[],addEventListener:(n,f)=>events[id+':'+n]=f,replaceChildren(){this.children=[];},append(x){this.children.push(x);}};
  el.provider.value='openai';
- const context={document:{getElementById:id=>el[id],createElement:()=>({}),addEventListener(){}},window:{addEventListener:(n,f)=>win[n]=f},
+ const context={document:{documentElement:{lang:'en'},getElementById:id=>el[id],createElement:()=>({}),addEventListener(){}},window:{URLSearchParams,location:{search},addEventListener:(n,f)=>win[n]=f},
   location:{origin:'http://127.0.0.1:18127'},AbortController,Date,
   setTimeout:f=>{timers.push(f);return timers.length;},clearTimeout(){},setInterval:f=>intervals.push(f),
   fetch:async(path,opts)=>{calls.push({path,opts});return fetcher?fetcher(path,opts):{ok:true,json:async()=>({providers:[{id:'openai',configured:true,model:'synthetic-text-model'}]})};}};
@@ -57,4 +57,13 @@ test('old timeout cannot abort a newer setup request after form clearing',async(
  p.events['clear:click']();p.fill();const second=p.events['save:click']();
  p.timers[0]();assert.equal(p.calls[1].opts.signal.aborted,false);
  p.events['clear:click']();release({ok:true,json:async()=>({})});await Promise.all([first,second]);
+});
+
+test('setup handoff accepts only a known provider hint and never imports query credentials',()=>{
+ for(const provider of ['openai','anthropic','gemini']){
+  const p=page(null,'?provider='+provider+'&key=do-not-import&code=do-not-import&model=do-not-import');
+  assert.equal(p.el.provider.value,provider);assert.equal(p.el.key.value,'');assert.equal(p.el.code.value,'');assert.equal(p.el.model.value,'');
+  assert.equal(p.el['open-review'].href,'https://clinloopai.app/review?provider='+provider+'&lang=en');assert.equal(p.calls.length,0);
+ }
+ for(const provider of ['unknown','__proto__'])assert.equal(page(null,'?provider='+provider).el.provider.value,'openai');
 });

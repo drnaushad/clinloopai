@@ -22,7 +22,15 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field, StrictBool
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA = json.loads((ROOT / 'data/report_review_schema.json').read_text())
+
+
+def web_asset(relative: str) -> Path:
+    """Resolve fixed public UI assets in source checkouts and packaged containers."""
+    source = ROOT / relative
+    return source if source.is_file() else ROOT / 'web' / relative
+
+
+SCHEMA = json.loads(web_asset('data/report_review_schema.json').read_text())
 TYPES = Literal['laboratory', 'radiology-text', 'pathology-text', 'ecg-report-text', 'discharge-summary', 'other-text']
 SYSTEM = (
     'Extract only synthetic health-report facts into the supplied schema. Never diagnose, prescribe, '
@@ -257,7 +265,11 @@ def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:
 
     @app.get('/setup.js')
     def setup_script():
-        return Response((ROOT / 'src/research_setup/setup.js').read_text(), media_type='text/javascript')
+        # Same-origin UI assets only. Keys and model responses never enter this bundle.
+        paths = [web_asset('js/' + name) for name in
+                 ['interface-copy.js', 'interface-language.js', 'language-controls.js']]
+        paths.append(ROOT / 'src/research_setup/setup.js')
+        return Response(';\n'.join(path.read_text() for path in paths), media_type='text/javascript')
 
     @app.get('/setup.css')
     def setup_style():

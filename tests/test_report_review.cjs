@@ -59,15 +59,15 @@ test('local structured review sends original text only to an inspected local mod
   assert.equal(calls.length,3);for(const c of calls)assert.equal(new URL(c.url).origin,'http://localhost:11434');
   const body=JSON.parse(calls.at(-1).options.body);assert.deepEqual(body.format,schema);assert.equal(body.prompt,TEXT);assert.equal(body.options.temperature,0);
 });
-function page({localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>validate(REVIEW,TEXT),localConnect=async()=>['synthetic'],researchConnect=async()=> 'synthetic-api',schemaFetch=async()=>ok({type:'object'})}={}){
-  const ids=['mode','provider','provider-destination','provider-consent','local-options','research-options','connect','disconnect','status','model','report','report-file','analyze','local-address','research-address','gateway-code','local-confirm','research-confirm','report-type','complete-confirm','result','sample','clear','report-budget','review-readiness'];
+function page({search='',localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>validate(REVIEW,TEXT),localConnect=async()=>['synthetic'],researchConnect=async()=> 'synthetic-api',schemaFetch=async()=>ok({type:'object'})}={}){
+  const ids=['mode','provider','provider-destination','provider-consent','local-options','research-options','connect','disconnect','status','model','report','report-file','analyze','local-address','research-address','gateway-code','local-confirm','research-confirm','report-type','complete-confirm','result','sample','clear','report-budget','review-readiness','choose-local','choose-openai','choose-anthropic','choose-gemini','connection-summary','personal-setup-link'];
   const el={},events={},windowEvents={},calls=[];
-  for(const id of ids)el[id]={value:'',checked:false,children:[],files:[],addEventListener:(n,f)=>{events[id+':'+n]=f;},replaceChildren(...xs){this.children=xs;},append(...xs){this.children.push(...xs);}};
+  for(const id of ids)el[id]={value:'',checked:false,children:[],files:[],attrs:{},setAttribute(k,v){this.attrs[k]=v;},addEventListener:(n,f)=>{events[id+':'+n]=f;},replaceChildren(...xs){this.children=xs;},append(...xs){this.children.push(...xs);}};
   el.mode.value='local';el.provider.value='openai';el['local-address'].value='http://127.0.0.1:11434';el['research-address'].value='http://127.0.0.1:18127';el['report-type'].value='radiology-text';
   const api=require('../js/report-review.js');
-  const context={document:{getElementById:id=>el[id],createTextNode:text=>({textContent:text}),createElement:()=>({children:[],append(...xs){this.children.push(...xs);}}),addEventListener(){}},
+  const context={document:{documentElement:{lang:'en'},getElementById:id=>el[id],createTextNode:text=>({textContent:text}),createElement:()=>({children:[],append(...xs){this.children.push(...xs);}}),addEventListener(){}},
     Option:function(text,value){this.text=text;this.value=value;},fetch:schemaFetch,setInterval(){},Date,TextDecoder,TextEncoder,
-    window:{fetch:async()=>ok({type:'object'}),addEventListener:(n,f)=>{windowEvents[n]=f;},
+    window:{URLSearchParams,location:{search},fetch:async()=>ok({type:'object'}),addEventListener:(n,f)=>{windowEvents[n]=f;},
       ClinLoopPrivate:{Workspace:class{clear(v){calls.push(['localClear',v]);}async connect(){calls.push(['localConnect']);return localConnect();}async run(){calls.push(['localRun']);return localRun();}}},
       ClinLoopReportReview:{...api,Research:class{clear(){calls.push(['researchClear']);}async connect(){calls.push(['researchConnect']);return researchConnect();}async run(){calls.push(['researchRun']);return researchRun();}}}}};
   vm.runInNewContext(fs.readFileSync(require.resolve('../js/report-review-page.js'),'utf8'),context);
@@ -242,4 +242,32 @@ test('the report entry does not let the browser silently cut a long paste at a c
   assert(!/maxlength/i.test(textarea));
  }
  const html=fs.readFileSync(require.resolve('../review.html'),'utf8');assert.match(html,/aria-describedby="source-limit report-budget"/);
+});
+
+test('provider choices never connect automatically and invalidate prior source and consent',()=>{
+ const p=page();
+ for(const provider of ['openai','anthropic','gemini']){
+  p.el.report.value=TEXT;p.el['gateway-code'].value=CODE;p.el['research-confirm'].checked=true;
+  p.events['choose-'+provider+':click']();
+  assert.equal(p.el.mode.value,'research');assert.equal(p.el.provider.value,provider);
+  assert.equal(p.el.report.value,'');assert.equal(p.el['gateway-code'].value,'');assert.equal(p.el['research-confirm'].checked,false);
+  assert.equal(p.el['choose-'+provider].attrs['aria-pressed'],'true');
+  assert.equal(p.el['personal-setup-link'].href,'http://127.0.0.1:18127/setup?provider='+provider+'&lang=en');
+ }
+ p.events['choose-local:click']();assert.equal(p.el.mode.value,'local');
+ assert(!p.calls.some(x=>/Connect|Run/.test(x[0])));
+});
+test('choosing the already active provider preserves the source without another request',()=>{
+ const p=page();p.events['choose-anthropic:click']();p.el.report.value=TEXT;p.el['gateway-code'].value=CODE;
+ p.events['choose-anthropic:click']();assert.equal(p.el.report.value,TEXT);assert.equal(p.el['gateway-code'].value,CODE);
+ assert(!p.calls.some(x=>/Connect|Run/.test(x[0])));
+});
+test('setup return hints select only known providers without accepting secrets or endpoints',()=>{
+ for(const provider of ['openai','anthropic','gemini']){
+  const p=page({search:'?provider='+provider+'&gateway-code=do-not-import&report=do-not-import&address=https://foreign.test'});
+  assert.equal(p.el.mode.value,'research');assert.equal(p.el.provider.value,provider);
+  assert.equal(p.el['gateway-code'].value,'');assert.equal(p.el.report.value,'');assert.equal(p.el['research-address'].value,'http://127.0.0.1:18127');
+  assert(!p.calls.some(x=>/Connect|Run/.test(x[0])));
+ }
+ for(const provider of ['unknown','__proto__','https://foreign.test'])assert.equal(page({search:'?provider='+provider}).el.mode.value,'local');
 });

@@ -7,7 +7,21 @@
   const research=new api.Research(window.fetch.bind(window));
   let connected=false,busy=false,loading=false,epoch=0,sourceVersion=0,lastActivity=Date.now(),schema=null;
   function status(text){ui.set($('status'), text);}
+  function syncChoices(){
+    const selected=$('mode').value==='local'?'local':$('provider').value;
+    for(const choice of ['local','openai','anthropic','gemini']){
+      const button=$('choose-'+choice);
+      if(button)button.setAttribute('aria-pressed',String(choice===selected));
+    }
+    const summary=$('connection-summary');
+    if(summary)ui.set(summary, selected==='local'?
+      'Local LLM selected. Connect your Ollama; no provider API key is needed.':
+      api.PROVIDERS[selected]+' selected. Add its API key in Personal API setup, then connect your gateway.');
+    const link=$('personal-setup-link');
+    if(link)link.href='http://127.0.0.1:18127/setup?provider='+$('provider').value+'&lang='+(document.documentElement.lang==='ko'?'ko':'en');
+  }
   function sync(){
+    syncChoices();
     const locked=busy||loading;
     $('local-options').hidden=$('mode').value!=='local';$('research-options').hidden=$('mode').value!=='research';
     const label=api.PROVIDERS[$('provider').value];
@@ -40,6 +54,16 @@
   }
   $('mode').addEventListener('change',()=>clear(true));
   $('provider').addEventListener('change',()=>clear(true));
+  for(const choice of ['local','openai','anthropic','gemini']){
+    const button=$('choose-'+choice);
+    if(button)button.addEventListener('click',()=>{
+      const mode=choice==='local'?'local':'research';
+      if($('mode').value===mode&&(mode==='local'||$('provider').value===choice))return;
+      $('mode').value=mode;if(mode==='research')$('provider').value=choice;
+      clear(true); // An explicit provider change invalidates consent, source and pending results.
+    });
+  }
+  if(window.MutationObserver)new window.MutationObserver(syncChoices).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   $('disconnect').addEventListener('click',()=>clear(true));$('clear').addEventListener('click',()=>clear(false));
   $('connect').addEventListener('click',async()=>{
     if(busy||loading||connected)return;
@@ -126,5 +150,12 @@
   for(const name of ['pointerdown','keydown','input'])document.addEventListener(name,()=>{lastActivity=Date.now();},{passive:true});
   setInterval(()=>{if(Date.now()-lastActivity>=600000){clear(true);lastActivity=Date.now();}},10000);
   window.addEventListener('pagehide',()=>clear(true));window.addEventListener('pageshow',event=>{if(event.persisted)clear(true);});
+  // Non-secret link hints only; never accept credentials, report text or arbitrary endpoints.
+  if(window.URLSearchParams){
+    const requested=new window.URLSearchParams(window.location.search).get('provider');
+    if(Object.prototype.hasOwnProperty.call(api.PROVIDERS,requested)){
+      $('mode').value='research';$('provider').value=requested;
+    }
+  }
   clear(true);
 })();
