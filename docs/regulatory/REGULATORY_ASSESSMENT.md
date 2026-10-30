@@ -14,12 +14,16 @@ medical device, feature by feature, and where that position is weakest. It assum
 | Korea (first market) | Medical Devices Act and its enforcement rules; Digital Medical Products Act (in force from January 2025); MFDS guidance on whether software is a medical device, on medical device software approval and review, and on AI-based medical devices, including its guidance on generative-AI medical devices (January 2025),
 which applies to the language-model features if they are ever proposed for clinical use (they are off
 in the core profile, §5); Personal Information Protection Act; Medical Service Act (electronic medical records) |
-| United States (design test) | FD&C Act §520(o)(1)(E) (21st Century Cures Act); FDA guidance *Clinical Decision Support Software* (September 2022) |
+| United States (design test) | FD&C Act §520(o)(1)(E) (21st Century Cures Act); [FDA final guidance *Clinical Decision Support Software* (January 2026)](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software) |
 | European Union (not targeted) | MDR 2017/745 Annex VIII rule 11; MDCG 2019-11. Rule 11 classifies most decision-support software as at least class IIa, so the non-device argument below would **not** carry over |
 
 The specialist should confirm in particular how MFDS treats software that only reminds staff of
 guideline-based follow-up from record data, and whether it would consider the time-limited rules in
 §4 a different case.
+
+## Current-source review, 29 October 2026
+
+The FDA source above was checked on 29 October 2026. It replaces this document's September 2022 reference. The feature positions below remain **unapproved design hypotheses**, not FDA, MFDS or EU determinations. A research label, quoted output, silent mode or local hosting does not itself establish exclusion from device regulation. Review each implemented function, actual intended use, output, user and workflow with the relevant jurisdiction's specialist before clinical deployment. The 2026 guidance retains four statutory criteria and revises examples; its guidance history records January corrections. The existing feature table has not received a qualified regulatory re-assessment against every current example. [FDA source and full guidance](https://www.fda.gov/media/109618/download).
 
 ## 2. The test applied
 
@@ -58,8 +62,8 @@ Three rules have a one-hour window:
 | R035 | A critical imaging finding has a documented communication within 1 hour | **Next-day documentation audit** |
 | R057 | A critical imaging-AI finding on an unread study is read within 60 minutes | **Off** (needs imaging AI) |
 
-FDA guidance treats software that drives a time-critical decision as failing criterion 3, because
-the professional has no time to review the basis. The argument for keeping R022 and R035:
+The current FDA guidance includes time-critical software examples that fail criteria 3 or 4.
+How this applies depends on the complete function and intended use; a retrospective label alone is insufficient. The argument for keeping R022 and R035:
 
 - they do not ask for a clinical decision. They check, after the fact, that the hospital's existing
   critical-result call was documented. The decision (what to do about the result) was already made
@@ -74,7 +78,7 @@ urgent alert. If the specialist judges that this brings the product into device 
 options were (a) keep them, labelled as a documentation audit shown only to the quality team the
 next day, or (b) turn them off in the core profile.
 
-**Decision (clinical lead, October 2026): option (a).** In the core profile (`profile.audit_rules()`):
+**Implemented design choice (clinical-lead approval not evidenced by the blank sign-off table): option (a).** In the core profile (`profile.audit_rules()`):
 
 - the engine still evaluates R022 and R035 and records each loop, its rule-set version and its audit
   trail;

@@ -7,7 +7,7 @@ identifiers it has no pattern for (for example names in free text), so its outpu
 de-identified in the legal sense until reviewed; it has not been independently validated.
 Not used by the clinical pipeline (ClinLoop sends no patient data to external AI services).
 """
-import re, hashlib, secrets, logging
+import re, hashlib, secrets, logging, threading
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -20,17 +20,22 @@ HIPAA_18_FIELDS = ["name","geo","dates","phone","fax","email","ssn","mrn",
 PIPA_ADDITIONAL_FIELDS = ["jumin_no","passport_no","alien_reg_no","driver_license","kakao_id"]
 
 PHI_PATTERNS = {
-    "jumin_no": re.compile(r"\b\d{6}-[1-4]\d{6}\b"),
-    "phone_kr":  re.compile(r"\b01[016789]-?\d{3,4}-?\d{4}\b"),
-    "phone_intl":re.compile(r"\+?\d[\d\s\-\(\)]{7,15}\d"),
+    "jumin_no": re.compile(r"(?<!\d)\d{6}\s*[-‐‑–]?\s*[1-8]\d{6}(?!\d)"),
+    "phone_kr":  re.compile(r"\b01[016789][ .-]?\d{3,4}[ .-]?\d{4}\b"),
+    "phone_intl":re.compile(r"\+\d{1,3}[ .-]?\(?\d{1,4}\)?(?:[ .-]?\d{2,4}){2,3}\b|"
+                             r"\(\d{3}\)[ .-]?\d{3}[ .-]?\d{4}\b|"
+                             r"\b\d{3}[.-]\d{3}[.-]\d{4}\b|\b0\d{1,2}[ .-]\d{3,4}[ .-]\d{4}\b"),
     "email":     re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Z|a-z]{2,}\b"),
-    "mrn":       re.compile(r"(?:\bMRN|\bmrn|차트번호|등록번호)[-:#\s]*[A-Z0-9\-]{4,20}\b"),
+    "mrn":       re.compile(r"(?:\bMRN|차트번호|등록번호)[-:#\s]*[A-Z0-9\-]{4,64}\b", re.I),
     "date_kr":   re.compile(r"\d{4}년\s*\d{1,2}월\s*\d{1,2}일"),
-    "date_iso":  re.compile(r"\b(19|20)\d{2}[-/\.]\d{2}[-/\.]\d{2}\b"),
+    "date_iso":  re.compile(r"\b(19|20)\d{2}[-/\.]\d{1,2}[-/\.]\d{1,2}\b"),
+    "date_mdy": re.compile(r"\b\d{1,2}[/.]\d{1,2}[/.]((?:19|20)\d{2})\b"),
     "ip_address":re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
     "url":       re.compile(r"https?://[^\s]+"),
     # Korean street / lot addresses: "...로 123", "...길 45", "...동 12-3"
-    "address_kr":re.compile(r"[가-힣]+(?:로|길)\s*\d+(?:-\d+)?|[가-힣]+동\s*\d+(?:-\d+)?(?:번지)?"),
+    "address_kr":re.compile(r"(?:(?:[가-힣]+(?:특별자치시|특별시|광역시|특별자치도|도|시|군|구|읍|면))\s+){0,5}"
+                             r"(?:[가-힣0-9·]+(?:로|길)\s*\d+(?:-\d+)?|[가-힣]+동\s*\d+(?:-\d+)?(?:번지)?)"
+                             r"(?:\s+\d+(?:동|층|호)){0,3}"),
 }
 
 def _generalize_age(age: int) -> str:
@@ -45,37 +50,61 @@ def _generalize_date(s: str) -> str:
     return "[날짜 삭제]"
 
 class PseudonymLedger:
+    """One in-memory linkage context, not anonymisation or a persistent key service.
+
+    Raw identifiers and the reverse map remain sensitive on this local process.
+    Different ledgers deliberately produce different pseudonyms. A prefix is part
+    of the identity namespace; a name and an MRN must never collide by value alone.
+    """
     def __init__(self):
-        self._salt = secrets.token_hex(16)
-        self._ledger: Dict[str,str] = {}
-        self._reverse: Dict[str,str] = {}
-    def pseudonymize(self, val: str, prefix="PT") -> str:
-        if val in self._ledger: return self._ledger[val]
-        digest = hashlib.sha256((self._salt+val).encode()).hexdigest()[:8].upper()
-        p = f"{prefix}-{digest}"
-        self._ledger[val]=p; self._reverse[p]=val
-        return p
-    def reverse_lookup(self, p: str) -> Optional[str]:
-        return self._reverse.get(p)
+        self._salt = secrets.token_hex(32)
+        self._ledger: Dict[Tuple[str, str], str] = {}
+        self._reverse: Dict[str, str] = {}
+        self._lock = threading.RLock()
+
+    def pseudonymize(self, val: str, prefix: str = "PT") -> str:
+        key = (prefix, val)
+        with self._lock:
+            if key not in self._ledger:
+                digest = hashlib.sha256((self._salt + "|" + prefix + "|" + val).encode()).hexdigest()[:24].upper()
+                pseudonym = f"{prefix}-{digest}"
+                self._ledger[key] = pseudonym
+                self._reverse[pseudonym] = val
+            return self._ledger[key]
+
+    def reverse_lookup(self, pseudonym: str) -> Optional[str]:
+        with self._lock:
+            return self._reverse.get(pseudonym)
+
     @property
-    def ledger_size(self): return len(self._ledger)
+    def ledger_size(self) -> int:
+        with self._lock:
+            return len(self._ledger)
 
 class PHIDeidentifier:
-    """HIPAA Safe Harbor + Korean PIPA de-identification before any cloud LLM call."""
+    """Pattern-only research helper for flat records; never authorizes cloud egress."""
     def __init__(self):
         self.ledger = PseudonymLedger()
 
     def deidentify_patient(self, patient: Dict[str,Any]) -> Tuple[Dict[str,Any], Dict[str,Any]]:
+        if not isinstance(patient, dict) or "resourceType" in patient or "entry" in patient:
+            raise ValueError("FHIR bundles/resources are not supported by the flat-record privacy helper")
         safe, log = {}, {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "salt_hash": hashlib.sha256(self.ledger._salt.encode()).hexdigest()[:12],
             "substitutions": [], "phi_fields_removed": [],
-            "compliance": ["HIPAA Safe Harbor 45 CFR §164.514(b)","Korean PIPA Article 23-24"],
+            "reference_frameworks": ["HIPAA Safe Harbor 45 CFR §164.514(b)","Korean PIPA Article 23-24"],
         }
 
         # 1. Name → pseudonym
         name = patient.get("name") or patient.get("patient_name") or patient.get("성명")
-        pname = self.ledger.pseudonymize(str(name or "UNKNOWN"), "PT")
+        mrn = patient.get("mrn") or patient.get("patient_id") or patient.get("차트번호")
+        # Names are not unique patient identifiers. Missing identity creates a
+        # record-local reference, never one shared UNKNOWN patient.
+        stable_identity = bool(mrn)
+        identity = str(mrn) if stable_identity else secrets.token_hex(24)
+        pname = self.ledger.pseudonymize(identity, "PT")
+        log["stable_identity_available"] = stable_identity
         safe["patient_ref"] = pname
         if name: log["phi_fields_removed"].append("name"); log["substitutions"].append({"field":"name","pseudonym":pname})
 
@@ -98,7 +127,6 @@ class PHIDeidentifier:
             log["phi_fields_removed"].append("jumin_no"); log["substitutions"].append({"field":"jumin_no","action":"removed"})
 
         # 6. MRN → pseudonym
-        mrn = patient.get("mrn") or patient.get("patient_id") or patient.get("차트번호")
         if mrn:
             pmrtn = self.ledger.pseudonymize(str(mrn),"MRN")
             safe["case_ref"] = pmrtn; log["phi_fields_removed"].append("mrn")
@@ -130,18 +158,29 @@ class PHIDeidentifier:
         # structured record (relatives, other patients) or unusual address
         # formats, so this is only a gate against *known* identifier patterns.
         log["residual_identifiers"] = residual
-        log["safe_to_send_cloud"] = not residual
+        log["known_pattern_check_passed"] = not residual
+        log["human_review_required"] = True
+        log["safe_to_send_cloud"] = False
         log["limitations"] = ("Free-text names not present in the structured record are not detected; "
                               "human review is required before any external transmission.")
         return safe, log
 
+    @staticmethod
+    def _known_pattern(value: str):
+        if re.search(r"[가-힣]", value):
+            return re.compile(r"(?<!\w)" + re.escape(value) +
+                              r"(?=$|[^\w]|(?:님|씨)?(?:은|는|이|가|의|을|를)?(?=$|[^\w]))")
+        return re.compile(r"(?<!\w)" + re.escape(value) + r"(?!\w)")
+
     def _scrub_text(self, text: str, known: Optional[Dict[str,str]] = None) -> Tuple[str,list]:
         subs = []
         # The patient's own name / MRN, replaced by their pseudonyms
-        for value, pseudonym in (known or {}).items():
-            if value and len(value) >= 2 and value in text:
-                text = text.replace(value, pseudonym)
-                subs.append({"field":"embedded_known_identifier","action":"pseudonymized_in_text"})
+        for value, pseudonym in sorted((known or {}).items(), key=lambda item: len(item[0]), reverse=True):
+            if value and len(value) >= 2:
+                pattern = self._known_pattern(value)
+                text, count = pattern.subn(lambda _: pseudonym, text)
+                if count:
+                    subs.append({"field":"embedded_known_identifier","action":"pseudonymized_in_text"})
         # Order matters: structured patterns (dates, MRNs) before the broad
         # international-phone pattern, which would otherwise swallow them.
         for name, pat in [("jumin","jumin_no"),("mrn","mrn"),("email","email"),("url","url"),
@@ -151,6 +190,9 @@ class PHIDeidentifier:
                 subs.append({"field":f"embedded_{name}","action":"removed_in_text"})
         if PHI_PATTERNS["date_iso"].search(text):
             text = PHI_PATTERNS["date_iso"].sub(lambda m: _generalize_date(m.group(0)), text)
+            subs.append({"field":"embedded_date","action":"year_only_in_text"})
+        if PHI_PATTERNS["date_mdy"].search(text):
+            text = PHI_PATTERNS["date_mdy"].sub(lambda m: m.group(1) + "년", text)
             subs.append({"field":"embedded_date","action":"year_only_in_text"})
         if PHI_PATTERNS["date_kr"].search(text):
             text = PHI_PATTERNS["date_kr"].sub(lambda m: m.group(0).split("년")[0] + "년", text)
@@ -163,7 +205,7 @@ class PHIDeidentifier:
 
     def _residual_identifiers(self, text: str, known: Dict[str,str]) -> List[str]:
         """Identifier patterns still present after scrubbing (should be empty)."""
-        found = ["known_identifier" for v in known if v and len(v) >= 2 and v in text]
+        found = ["known_identifier" for v in known if v and len(v) >= 2 and self._known_pattern(v).search(text)]
         for pat in ["jumin_no","mrn","email","url","ip_address","phone_kr","phone_intl","date_kr","address_kr"]:
             if PHI_PATTERNS[pat].search(text):
                 found.append(pat)
@@ -172,23 +214,27 @@ class PHIDeidentifier:
     def build_llm_prompt(self, safe_patient: Dict[str,Any], task: str) -> str:
         c = safe_patient.get("clinical",{})
         lines = [
-            "[CLINLOOP AI — DE-IDENTIFIED CLINICAL CONTEXT | HIPAA Safe Harbor Active]",
+            "[CLINLOOP AI — PATTERN-SCRUBBED RESEARCH CONTEXT | HUMAN PRIVACY REVIEW REQUIRED]",
             f"Case Reference: {safe_patient.get('case_ref','ANON')} (pseudonym only; real identity on-premise)",
             f"Patient: {safe_patient.get('age_group','')}, {safe_patient.get('gender','')}",
             "",
         ] + [f"- {k}: {v}" for k,v in c.items() if v] + [
             "", f"Clinical Task: {task}", "",
-            "IMPORTANT: Do NOT request or infer personal identifiers. Respond on de-identified context only.",
+            "IMPORTANT: Do NOT request or infer personal identifiers. This pattern-scrubbed context is unverified; human privacy review is required.",
         ]
         return "\n".join(lines)
 
     def audit_summary(self) -> Dict[str,Any]:
         return {
             "engine": "ClinLoop AI PHI De-identifier v1.0",
-            "standards": ["HIPAA Safe Harbor 45 CFR §164.514(b)","Korean PIPA Articles 23-24","ISO 29101:2018"],
-            "phi_categories_covered": len(HIPAA_18_FIELDS)+len(PIPA_ADDITIONAL_FIELDS),
-            "on_premise_only": True,
-            "cloud_egress": "De-identified clinical context only — zero raw PHI",
+            "reference_frameworks": ["HIPAA Safe Harbor 45 CFR §164.514(b)","Korean PIPA Articles 23-24","ISO 29101:2018"],
+            "listed_identifier_categories": len(HIPAA_18_FIELDS)+len(PIPA_ADDITIONAL_FIELDS),
+            "pattern_categories": len(PHI_PATTERNS),
+            "independently_validated": False,
+            "human_review_required": True,
+            "ledger_storage": "In-process sensitive linkage; not an encrypted or persistent identity service",
+            "external_transmission_authorized": False,
+            "cloud_egress": "Not authorized by this helper; independent human privacy review required",
         }
 
 _deidentifier: Optional[PHIDeidentifier] = None

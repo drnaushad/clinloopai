@@ -27,6 +27,73 @@ They do not prove that false closure is impossible or that all defects have been
 "clinically equivalent" grouping is broad action-group agreement, not clinician-adjudicated equivalence.
 Do not use this page as a clinical performance claim, diagnostic guarantee, or evidence of patient benefit.
 
+## Accuracy-harness iteration (2026-10-30; local clinical draft)
+
+The recovery baseline `f7c81f741f93d3d613351c541ec4892e16f9c30d` was rerun from a
+preserved checkout before comparing this iteration. Its 753 **exposed synthetic regression**
+reports produced 635 exact rule sets, 466/582 matched expected obligations and 466/503 matched
+predictions (116 missed and 37 extra rule expectations). Strict deadline agreement was 447/456
+**conditional on a matching rule**. Its 60 exposed timelines produced 35 exact status sets and
+53/78 matched rule-status comparisons, with no false closure observed in those particular cases.
+These denominators describe different tasks and must not be combined into a single accuracy claim.
+
+The historical report extraction score includes alerts referred to human review. A separate,
+conservative autonomous score abstains the whole report when any detection requests review:
+326/753 baseline reports were accepted, 427 required review, and 62/582 expected obligations
+were matched without such a report-level abstention. This is a description of software coverage
+on incomplete synthetic context, not a clinical performance estimate or a reason to lower
+review thresholds. Unavailable, unrun and review-required outputs remain in the eligible
+reference denominator; they are separate from accepted negative results.
+
+`src/validation/accuracy_harness.py` now accepts an explicit all-eligible reference cohort,
+including reports with no reference obligations (`expected_rules: []`). Every externally
+enumerated eligible ID must appear exactly once, every reference must be explicit and known,
+and each prediction must declare `accepted`, `review_required`, `unavailable` or `unrun`.
+It provides report-level positive/negative/abstention confusion counts, per-rule TP/FP/FN/TN,
+per-type and language counts, exact agreement, obligation micro precision/recall/F1, and
+longitudinal false-closure/status counts. Rule-presence scoring still collapses repeated
+instances of the same rule: it does not measure lesion-level or multi-obligation cardinality.
+
+Patient-cluster bootstrap intervals are available only when the intake includes declared patient
+groups. They resample whole patients, retaining all their reports, with an explicit seed and
+replicate count. These declarations do not authenticate identities or clinical independence.
+The legacy report/timeline fixtures have no authentic patient grouping, so their patient-cluster
+intervals are **withheld**; fixture IDs are not substituted for patient IDs. Optional full
+`development_records` provenance rejects shared declared patient groups or normalized duplicate
+text across development/evaluation partitions. Template-family, site and temporal leakage still
+require a study-specific protocol and external verification.
+
+The older chart-review frame contains only engine-detected obligations. Its API and CLI explicitly
+refuse an `end_to_end` target, because missed obligations outside that frame are unobservable.
+Its retained conditional status estimates remain useful for a different question. Weighted cluster
+intervals require declared groups and do not fully model the two-stage sampling design. An entire
+stratum without a retained reference is flagged as unsupported for a population estimate.
+
+Reproducible counts-only commands (always choose a new output path):
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 PYTHONHASHSEED=42 python tests/report_eval/run_frozen_evaluation.py --source-root /path/to/frozen-checkout --output /path/to/new-counts.json
+PYTHONDONTWRITEBYTECODE=1 PYTHONHASHSEED=42 python tests/report_eval/run_metamorphic.py --source-root /path/to/frozen-checkout --output /path/to/new-invariants.json
+```
+
+The frozen runner records the commit, dirty state, source and fixture SHA-256 fingerprints,
+and withholds comparison metrics if decision source changes during the run. Historical triage,
+conservative autonomous extraction, legacy timeline status and review-aware timeline status are
+reported separately. No existing reference labels are modified.
+
+The metamorphic definition was frozen before comparing the candidate. It checks FHIR resource
+order, consistent identifier renaming, equivalent UTC-offset representations, and an unrelated
+patient's presence across all 753 exposed reports. The baseline matched all 753 cases under each
+of these four transformations. These are engineering invariants; they do not add independent
+medical reference labels. Other new parser and graph challenges in this iteration are synthetic
+development challenges. No untouched external clinician-adjudicated validation cohort has been added.
+
+This evaluation design follows the reporting emphasis on explicit data partitions, reference
+standards, uncertainty and subgroups in [TRIPOD+AI](https://pmc.ncbi.nlm.nih.gov/articles/PMC11019967/)
+and independent test data/reference standards in [IMDRF GMLP](https://www.imdrf.org/documents/good-machine-learning-practice-medical-device-development-guiding-principles).
+Clinical utility and human workflow safety still require an appropriately governed clinical
+study; see [DECIDE-AI](https://pmc.ncbi.nlm.nih.gov/articles/PMC9116198/).
+
 ## Integrated rerun (2026-10-26; local draft)
 
 The combined candidate was rerun without relabelling the existing 753 report fixtures or 60
@@ -461,8 +528,7 @@ The stand-in model was the smallest hosted model available, not a hospital's loc
 
 ## Limits
 
-- **Synthetic data:** all reports are synthetic. The real-style sets imitate hospital reports, but a
-  hospital's own reports are the real test.
+- **Evidence populations:** the authored fixture sets are synthetic. The Open-i report-text exercise above uses public reports with AI-reviewed labels and development exposure; it is not independent clinical validation. A hospital's own reports need clinician-adjudicated, patient-separated testing.
 - **Each writer has their own habits:** three independent case writers were used. Every new writer
   still found new wording, so a hospital's own reports will too.
 - **A rule-based reader has a long tail:** it reads what it has been taught. A practical safety net is
@@ -472,3 +538,8 @@ The stand-in model was the smallest hosted model available, not a hospital's loc
   - a retrospective chart review on the hospital's own reports, against two specialists, with κ;
   - shadow-mode operation;
   - sign-off of each rule (`governance.html`).
+
+
+## Candidate evidence review, 29 October 2026
+
+See [the source-bound evaluation and release plan](reviews/EVIDENCE_REVIEW_20261029.md). Passing software tests, successful FHIR connections, synthetic holdout results and source quote matching are different endpoints; none establishes patient benefit. The report-sheet scorer now rejects duplicate report IDs, labels its reference limitations and states the independence assumption behind Wilson intervals. The chart-review scorer rejects duplicate/mismatched keys, nonfinite weights and ambiguous prediction classes, and exposes review coverage and exclusion assumptions. Its current bootstrap remains loop-stratified, **not patient-clustered**; end-to-end detection sensitivity is still unmeasured. Offline exports use private file creation and refuse to overwrite an existing output. No clinical thresholds changed in this review.

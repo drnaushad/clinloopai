@@ -35,6 +35,7 @@ from typing import Any, Dict, List, Optional
 import requests
 
 from .imaging_fhir import imaging_study_resource
+from .transport_safety import origin, bounded_json
 
 logger = logging.getLogger("clinloop.pacs")
 
@@ -65,7 +66,11 @@ def _uid(value: str) -> str:
 
 
 def _value(item: Dict[str, Any], tag: str, many: bool = False):
-    values = (item.get(tag) or {}).get("Value") or []
+    if not isinstance(item, dict) or not isinstance(item.get(tag, {}), dict):
+        raise PACSError("DICOM metadata is malformed")
+    values = item.get(tag, {}).get("Value", [])
+    if not isinstance(values, list):
+        raise PACSError("DICOM metadata values are malformed")
     if many:
         return [v for v in values if v not in (None, "")]
     v = values[0] if values else None
@@ -78,24 +83,34 @@ class DICOMwebClient:
     def __init__(self, base_url: str, token: Optional[str] = None, timeout: float = 30.0,
                  session: Optional[requests.Session] = None):
         self.base = base_url.rstrip("/")
+        try:
+            origin(self.base)
+        except ValueError:
+            raise PACSError("PACS endpoint is invalid") from None
         self.session = session or requests.Session()
+        if session is None:
+            self.session.trust_env = False
         self.timeout = timeout
         self.headers = {"Accept": "application/dicom+json"}
         if token:
             self.headers["Authorization"] = f"Bearer {token}"
 
     def _get(self, path: str, params: Dict[str, Any]) -> List[Dict[str, Any]]:
-        r = self.session.get(f"{self.base}{path}", params=params, headers=self.headers, timeout=self.timeout)
-        if r.status_code == 204:
-            return []
-        if r.status_code != 200:
-            raise PACSError(f"QIDO-RS {path} → HTTP {r.status_code}")
+        r = self.session.get(f"{self.base}{path}", params=params, headers=self.headers, timeout=self.timeout,
+                             allow_redirects=False, stream=True)
         try:
-            data = r.json()
-        except ValueError as e:
-            raise PACSError(f"QIDO-RS {path}: not JSON") from e
-        if not isinstance(data, list):
-            raise PACSError(f"QIDO-RS {path}: unexpected response (not a list of studies)")
+            if r.status_code == 204:
+                return []
+            if r.status_code != 200:
+                raise PACSError(f"QIDO-RS request failed: HTTP {r.status_code}")
+            try:
+                data = bounded_json(r, 8 * 1024 * 1024)
+            except (ValueError, UnicodeError):
+                raise PACSError("QIDO-RS response is unreadable or exceeds the size limit") from None
+        finally:
+            r.close()
+        if not isinstance(data, list) or len(data) > 10000 or any(not isinstance(item, dict) for item in data):
+            raise PACSError("QIDO-RS response is not a bounded metadata list")
         return data
 
     def _study(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -190,16 +205,18 @@ class DICOMwebClient:
         headers = {k: v for k, v in self.headers.items() if k != "Accept"}
         headers["Accept"] = 'multipart/related; type="application/dicom"; transfer-syntax=*'
         r = self.session.get(f"{self.base}/studies/{_uid(study_uid)}/series/{_uid(series_uid)}/instances/{_uid(instance_uid)}",
-                             headers=headers, timeout=self.timeout, stream=True)
-        if r.status_code != 200:
-            raise PACSError(f"WADO-RS instance → HTTP {r.status_code}")
-        body = bytearray()
-        for chunk in r.iter_content(1024 * 1024):
-            body += chunk
-            if len(body) > max_bytes:
-                r.close()
-                raise PACSError("WADO-RS instance larger than the size limit: not retrieved")
-        return _first_dicom_part(bytes(body), r.headers.get("Content-Type", ""))
+                             headers=headers, timeout=self.timeout, stream=True, allow_redirects=False)
+        try:
+            if r.status_code != 200:
+                raise PACSError(f"WADO-RS instance request failed: HTTP {r.status_code}")
+            body = bytearray()
+            for chunk in r.iter_content(1024 * 1024):
+                body += chunk
+                if len(body) > max_bytes:
+                    raise PACSError("WADO-RS instance larger than the size limit: not retrieved")
+            return _first_dicom_part(bytes(body), r.headers.get("Content-Type", ""))
+        finally:
+            r.close()
 
     def studies(self, pacs_patient_id: str) -> List[Dict[str, Any]]:
         """Study labels for one patient (with each study's series body parts), as plain dicts."""
@@ -212,13 +229,13 @@ class DICOMwebClient:
             if not study:
                 continue
             returned = _value(item, TAG["patient_id"])
-            if returned is not None and str(returned) != pacs_patient_id:
-                logger.error("PACS returned a study of another PatientID for a query: study skipped")
+            if not isinstance(returned, str) or returned != pacs_patient_id:
+                logger.error("PACS study lacks verified patient identity: study skipped")
                 continue
             try:   # body part lives at series level
                 study["series"] = self.series(study["study_uid"])
             except PACSError as e:
-                logger.warning("Series query failed for a study: %s", e)
+                logger.warning("Series query failed for a study (%s)", type(e).__name__)
             if not study["modalities"]:
                 study["modalities"] = sorted({s["modality"] for s in study["series"] if s["modality"]})
             out.append(study)

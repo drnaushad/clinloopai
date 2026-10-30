@@ -705,7 +705,9 @@ class TestPrivacyAndAgentRegressions(unittest.TestCase):
         for identifier in ("김민수", "12345678", "3월 5일", "010-1234-5678", "테헤란로 123"):
             self.assertNotIn(identifier, text)
         self.assertIn("8.5 mm", text)
-        self.assertTrue(log["safe_to_send_cloud"])
+        self.assertTrue(log["known_pattern_check_passed"])
+        self.assertFalse(log["safe_to_send_cloud"])
+        self.assertTrue(log["human_review_required"])
 
     def test_outreach_blocks_definitive_diagnosis(self):
         from unittest.mock import patch
@@ -721,12 +723,17 @@ class TestPrivacyAndAgentRegressions(unittest.TestCase):
         self.assertIn("unsupported_claim_blocked_fallback_used", draft.safety_flags)
         self.assertTrue(draft.requires_human_review)
 
-    def test_evidence_agent_uses_reported_nodule_size(self):
+    def test_static_reference_library_does_not_masquerade_as_verified_evidence(self):
+        from unittest.mock import patch
         from src.clinloop_engine.evidence_agent import run_evidence_synthesis
-        small = run_evidence_synthesis("Incidental 7 mm nodule on CT")
-        large = run_evidence_synthesis("Incidental 14 mm nodule on CT")
-        self.assertEqual(small[0].temporal_expression, "180 days")
-        self.assertEqual(large[0].temporal_expression, "90 days")
+        # Query parameters still use the reported size; static lookup output
+        # cannot establish a verified clinical deadline or patient applicability.
+        with patch("src.clinloop_engine.evidence_agent.handle_biomcp", return_value={
+                "status": "static_unverified", "guideline_text": "SYNTHETIC_UNVERIFIED", "derived_t_crit": 180}) as library:
+            self.assertEqual(run_evidence_synthesis("Incidental 7 mm nodule on CT"), [])
+            library.assert_called_with("biomcp_query_fleischner", {"nodule_size_mm": 7.0})
+            self.assertEqual(run_evidence_synthesis("Incidental 14 mm nodule on CT"), [])
+            library.assert_called_with("biomcp_query_fleischner", {"nodule_size_mm": 14.0})
         self.assertEqual(run_evidence_synthesis("Incidental nodule, size not reported"), [])
 
     def test_fhir_timestamp_is_valid_iso(self):

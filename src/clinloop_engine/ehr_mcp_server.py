@@ -43,14 +43,15 @@ def handle_call_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
     if name == "ehr_query_encounters":
         pid = arguments.get("patient_id")
         limit = arguments.get("limit", 5)
-        logger.info(f"Mock EHR: Querying up to {limit} encounters for patient {pid}")
+        logger.info("Mock EHR: Querying encounters (limit=%s)", limit)
         
         # Simulated response from an Epic/Cerner database
         return {
+            "simulated": True, "ehr_connected": False, "clinical_use": False,
             "content": [
                 {
                     "type": "text",
-                    "text": f"Found 2 recent encounters for {pid}:\n"
+                    "text": "Synthetic example encounters; no patient chart was queried:\n"
                             "1. 2026-08-14: ER Visit (Abdominal Pain). Discharged to home.\n"
                             "2. 2026-08-15: Radiology (CT Abdomen/Pelvis w/ contrast)."
                 }
@@ -62,17 +63,17 @@ def handle_call_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         task_type = arguments.get("task_type")
         priority = arguments.get("priority", "routine")
         
-        logger.info(f"Mock EHR: Pushing {task_type} (Priority: {priority}) for patient {pid}")
+        logger.info("Mock EHR: Task requested")
         
         return {
+            "simulated": True, "transmitted": False, "ehr_connected": False,
             "content": [
                 {
                     "type": "text",
-                    "text": f"Successfully pushed FHIR ServiceRequest for {task_type} to Epic EHR. "
-                            f"Task ID: SR-99214-EHR. Priority set to {priority}."
+                    "text": "Synthetic task preview only. No EHR is connected; no order or task was transmitted."
                 }
             ]
         }
         
     else:
-        raise ValueError(f"Unknown EHR MCP tool: {name}")
+        raise ValueError("Unknown EHR mock tool")

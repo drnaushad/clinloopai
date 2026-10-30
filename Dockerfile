@@ -66,11 +66,12 @@ COPY icons ./web/icons
 COPY demo/examples ./web/demo/examples
 COPY demo/api ./web/demo/api
 COPY public-models.json ./web/
-COPY data/validation_status.json data/deployment_modules.json data/research_release_status.json data/report_review_schema.json ./web/data/
+COPY data/validation_status.json data/deployment_modules.json data/research_release_status.json data/report_review_schema.json data/engineering_release_status.json ./web/data/
 COPY data/cases.json data/fhir_example_bundle.json data/radiology_test_bundle.json ./web/data/
 COPY smart ./web/smart
 # Only the two public evidence documents linked from Validation; never copy all docs.
-COPY docs/reviews/RETURNED_REVIEW_CORRECTIONS_20261027.md docs/reviews/gmlp-gap-assessment-20261027.json ./web/docs/reviews/
+COPY docs/reviews/RETURNED_REVIEW_CORRECTIONS_20261027.md docs/reviews/gmlp-gap-assessment-20261027.json docs/reviews/EVIDENCE_REVIEW_20261029.md ./web/docs/reviews/
+COPY docs/releases/20261030.md ./web/docs/releases/
 
 # Unprivileged user; state on a mounted volume
 RUN useradd --system --uid 10001 --home-dir /var/lib/clinloop clinloop \

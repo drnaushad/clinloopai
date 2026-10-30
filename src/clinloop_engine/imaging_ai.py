@@ -39,6 +39,7 @@ import hashlib
 import io
 import json
 import logging
+import math
 import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -120,7 +121,11 @@ def qa_checks(ds, summary: Dict[str, Any], expected_patient_ids: List[str],
     """Non-diagnostic safety checks. 'critical' means the image must not be filed to this patient."""
     checks: List[Dict[str, str]] = []
     pid = _get(ds, "PatientID")
-    if expected_patient_ids:
+    if (not isinstance(expected_patient_ids, list) or not expected_patient_ids
+            or any(not isinstance(value, str) or not value.strip() for value in expected_patient_ids)):
+        checks.append({"level": "critical", "code": "patient_identity_unverifiable",
+                       "message": "No valid patient identifiers are available for matching. Nothing was analysed or filed."})
+    else:
         if not pid:
             checks.append({"level": "critical", "code": "no_patient_id",
                            "message": "The image has no PatientID, so it cannot be verified to belong to this patient. "
@@ -184,7 +189,7 @@ def _safe_preview(img: Optional[np.ndarray]) -> Optional[str]:
     try:
         return preview_png(img)
     except Exception as e:          # a preview must never stop the analysis
-        logger.warning("Preview failed: %s", e)
+        logger.warning("Preview failed (%s)", type(e).__name__)
         return None
 
 
@@ -442,13 +447,22 @@ class VisionLanguageModel(ImagingModel):
                 continue
             present = f.get("present")
             if isinstance(present, str):
-                present = present.strip().lower() in ("true", "yes", "1", "present")
-            try:
-                conf = float(f["confidence"]) if f.get("confidence") is not None else None
-            except (TypeError, ValueError):
-                conf = None
-            if conf is not None and not 0 <= conf <= 1:
-                conf = None
+                word = present.strip().lower()
+                if word not in {"true", "yes", "1", "present", "false", "no", "0", "absent"}:
+                    raise ImagingError("Invalid model finding flag; human review required")
+                present = word in {"true", "yes", "1", "present"}
+            elif not isinstance(present, bool):
+                raise ImagingError("Invalid model finding flag; human review required")
+            conf = f.get("confidence")
+            if conf is not None:
+                if isinstance(conf, bool) or not isinstance(conf, (int, float, str)):
+                    raise ImagingError("Invalid model probability; human review required")
+                try:
+                    conf = float(conf)
+                except ValueError:
+                    raise ImagingError("Invalid model probability; human review required") from None
+                if not math.isfinite(conf) or not 0 <= conf <= 1:
+                    raise ImagingError("Invalid model probability; human review required")
             findings.append({"label": AI_FINDINGS[key]["en"], "score": conf, "positive": bool(present), "finding_key": key})
         description = str(parsed.get("description") or "").strip()[:1500]
         return {"findings": findings, "description": description, "dropped": dropped,
@@ -518,15 +532,32 @@ def _findings(raw: List[Dict[str, Any]], model: ImagingModel, summary: Dict[str,
     """A model's raw findings → (findings for display, one FHIR Observation per positive finding type)."""
     by_key: Dict[str, Dict[str, Any]] = {}
     findings = []
+    if not isinstance(raw, list):
+        raise ImagingError("Model findings must be a list; human review required")
     for f in raw:
-        try:
-            score = float(f["score"]) if f.get("score") is not None else None
-        except (TypeError, ValueError):
-            score = None
+        if not isinstance(f, dict) or not isinstance(f.get("label"), str) or not f["label"].strip():
+            raise ImagingError("Malformed model finding; human review required")
+        score = f.get("score")
+        if score is not None:
+            if isinstance(score, bool) or not isinstance(score, (int, float, str)):
+                raise ImagingError("Invalid model probability; human review required")
+            try:
+                score = float(score)
+            except ValueError:
+                raise ImagingError("Invalid model probability; human review required") from None
+            if not math.isfinite(score) or not 0 <= score <= 1:
+                raise ImagingError("Invalid model probability; human review required")
         positive = f.get("positive")
         if isinstance(positive, str):
-            positive = positive.strip().lower() in ("true", "1", "yes", "positive", "pos")
-        if positive is None and isinstance(score, (int, float)):
+            word = positive.strip().lower()
+            if word not in {"true", "1", "yes", "positive", "pos", "false", "0", "no", "negative", "neg"}:
+                raise ImagingError("Invalid model finding flag; human review required")
+            positive = word in {"true", "1", "yes", "positive", "pos"}
+        elif positive is not None and not isinstance(positive, bool):
+            raise ImagingError("Invalid model finding flag; human review required")
+        if positive is None:
+            if score is None:
+                raise ImagingError("Model finding has no score or flag; human review required")
             positive = score >= model.threshold
         key = f.get("finding_key") or ai_finding_key(f["label"], summary["regions"])
         findings.append({"label": f["label"], "score": score, "positive": bool(positive), "finding_key": key})
@@ -556,8 +587,20 @@ def _study_resource(summary: Dict[str, Any], patient_id: str, source: str) -> Di
 
 
 def _when(summary: Dict[str, Any]) -> str:
-    return (dicom_datetime(summary["study_date"], summary["study_time"], summary["tz_offset"])
-            or datetime.now(timezone.utc).replace(tzinfo=None).replace(microsecond=0).isoformat())
+    """Acquisition time, or inference bookkeeping only when acquisition date is missing.
+
+    Explicit invalid metadata must not silently turn into a current acquisition.
+    The FHIR ImagingStudy itself retains missing acquisition timing separately.
+    """
+    date, time, offset = summary.get("study_date"), summary.get("study_time"), summary.get("tz_offset")
+    acquired = dicom_datetime(date, time, offset)
+    if acquired:
+        return acquired
+    # A dummy date validates explicitly supplied TM/offset without guessing an
+    # acquisition date. Missing dates retain the existing bookkeeping behavior.
+    if date or not dicom_datetime("20000101", time, offset):
+        raise ImagingError("DICOM acquisition timing is invalid; verify the original before analysis or filing")
+    return datetime.now(timezone.utc).replace(tzinfo=None).replace(microsecond=0).isoformat()
 
 
 def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optional[List[str]] = None,
@@ -568,6 +611,11 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
     summary = dicom_summary(ds)
     qa = qa_checks(ds, summary, expected_patient_ids if expected_patient_ids is not None else [patient_id],
                    expected_modality)
+    # A wrong or unverifiable patient is refused before decoding pixels, preview,
+    # model discovery or inference (including vendor transport).
+    if any(check["level"] == "critical" for check in qa):
+        return {"summary": summary, "qa": qa, "models": [], "filed": False,
+                "resources": [], "preview": None, "sha256": hashlib.sha256(content).hexdigest()}
     img = None
     if summary["has_pixels"]:
         try:
@@ -588,21 +636,24 @@ def analyze_dicom(content: bytes, patient_id: str, expected_patient_ids: Optiona
         if reason:
             model_results.append({**info, "ran": False, "reason": reason, "findings": []})
             continue
+        extra: Dict[str, Any] = {}
         try:
             raw = model.predict(ds, img, content)
-            extra: Dict[str, Any] = {}
             if isinstance(raw, dict):           # a vision-language model: findings plus a draft description
                 extra = {"description": raw.get("description") or "", "dropped": raw.get("dropped") or [],
                          "unparsed": bool(raw.get("unparsed")),
                          "description_note": "AI-generated text, unverified: shown for review, not stored"}
-                raw = raw.get("findings") or []
+                if not isinstance(raw.get("findings"), list) or raw.get("unparsed"):
+                    raise ImagingError("Model response is incomplete; human review required")
+                raw = raw["findings"]
+            # Validate every finding before producing any observations from this model.
+            findings, obs = _findings(raw, model, summary, patient_id, study_ref, when,
+                                      "imaging-ai" if source == "dicom-upload" else source)
         except Exception as e:
-            logger.warning("Imaging model %s failed: %s", model.name, e)
-            model_results.append({**info, "ran": False, "reason": f"failed: {type(e).__name__}", "findings": []})
+            logger.warning("Imaging model failed (%s)", type(e).__name__)
+            model_results.append({**info, **extra, "ran": False,
+                                  "reason": f"failed: {type(e).__name__}; human review required", "findings": []})
             continue
-        # One observation per finding type: the strongest of the labels that mean it (e.g. "Nodule", "Mass")
-        findings, obs = _findings(raw, model, summary, patient_id, study_ref, when,
-                                  "imaging-ai" if source == "dicom-upload" else source)
         observations.extend(obs)
         model_results.append({**info, "ran": True, "findings": findings, **extra})
 
@@ -656,11 +707,11 @@ def analyze_series(contents: List[bytes], patient_id: str, expected_patient_ids:
             continue
         try:
             raw = model.predict_series(contents)
+            findings, obs = _findings(raw, model, summary, patient_id, study_ref, when, source)
         except Exception as e:
             logger.warning("Imaging model %s failed on a series: %s", model.name, type(e).__name__)
             model_results.append({**info, "ran": False, "reason": f"failed: {type(e).__name__}", "findings": []})
             continue
-        findings, obs = _findings(raw, model, summary, patient_id, study_ref, when, source)
         observations.extend(obs)
         model_results.append({**info, "ran": True, "findings": findings, "images": len(contents)})
     return {"summary": summary, "qa": [], "models": model_results, "filed": True,
@@ -735,5 +786,6 @@ def parse_dicom_sr(content: bytes) -> Dict[str, Any]:
                                               _get(ds, "SoftwareVersions") if isinstance(_get(ds, "SoftwareVersions"), str) else None])) or "imaging AI (DICOM SR)",
             "study_uid": _get(ds, "StudyInstanceUID"), "patient_id": _get(ds, "PatientID"),
             "study_date": _get(ds, "StudyDate") or _get(ds, "ContentDate"), "study_time": _get(ds, "StudyTime"),
+            "tz_offset": _get(ds, "TimezoneOffsetFromUTC"),
             # An SR lists what the product detected: a finding without a usable score is still a detection
             "findings": [{**f, "positive": True if f.get("score") is None else None} for f in findings]}

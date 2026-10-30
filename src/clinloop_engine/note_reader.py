@@ -469,32 +469,52 @@ def llm_suggestions(note: str, found: List[Dict[str, Any]], names: Optional[List
     from .profile import allows
     if not allows("note_llm_suggestions"):
         return {"available": False, "reason": "off in the core profile (outside the intended use)", "suggestions": []}
-    text = scrub_identifiers(plan_text(note)[0], names)[:4000]
+    text = scrub_identifiers(plan_text(note)[0], names)
+    if not text.strip() or len(text) > 4000:
+        return {"available": False, "reason": "Note section is empty or exceeds supported length; human review required",
+                "suggestions": []}
     prompt = ("List every concrete follow-up the clinician plans in this note (tests to repeat, imaging, referrals, "
               "follow-up visits). Ignore plans that are conditional, cancelled or already done. Answer with JSON only: "
               '{"plans": [{"kind": "lab|imaging|referral|visit", "target": "...", "interval": "...", "quote": "exact words"}]}'
               "\n\nNOTE:\n" + text)
-    out = generate_clinical_text(prompt, temperature=0.0, max_tokens=500,
-                                 system_prompt="You extract follow-up plans from clinical notes. Quote the note exactly. "
-                                               "Never invent plans that are not written.")
-    if out.get("error") or not out.get("text"):
-        return {"available": False, "reason": out.get("error") or "no answer", "suggestions": []}
+    try:
+        out = generate_clinical_text(prompt, temperature=0.0, max_tokens=500,
+                                     system_prompt="You extract follow-up plans from clinical notes. Quote the note exactly. "
+                                                   "Never invent plans that are not written.")
+    except Exception:
+        out = None
+    if not isinstance(out, dict) or out.get("error") or not isinstance(out.get("text"), str) or out.get("done") is False:
+        return {"available": False, "reason": "Model request failed or returned an incomplete answer; human review required", "suggestions": []}
     from .imaging_ai import _json_object
     parsed = _json_object(out["text"])
-    have = {(p["kind"], p.get("target")) for p in found}
-    suggestions = []
-    for p in parsed.get("plans") or []:
-        if not isinstance(p, dict) or p.get("kind") not in RULE_FOR:
+    if not isinstance(parsed.get("plans"), list):
+        return {"available": False, "reason": "Model answer lacks a plans array; human review required", "suggestions": []}
+    norm = lambda value: " ".join(value.split()).casefold().strip(" .;")
+    have = {(p["kind"], p.get("target"), norm(p.get("evidence") or "")) for p in found}
+    suggestions, seen, dropped = [], set(), 0
+    for p in parsed["plans"]:
+        if (not isinstance(p, dict) or not isinstance(p.get("kind"), str) or p["kind"] not in RULE_FOR
+                or not isinstance(p.get("target", ""), str) or len(p.get("target", "")) > 120
+                or (p.get("interval") is not None and (not isinstance(p["interval"], str) or len(p["interval"]) > 120))):
+            dropped += 1
             continue
-        quote = str(p.get("quote") or "").strip()
-        if not quote or quote.lower() not in text.lower():
+        quote = p.get("quote")
+        quote = quote.strip() if isinstance(quote, str) else ""
+        if not 4 <= len(quote) <= 300 or norm(quote) not in norm(text):
+            dropped += 1
             continue                          # a suggestion must quote the note: no invented plans
         target = (analyte_of(str(p.get("target"))) if p["kind"] == "lab" else
                   _first_key(MODALITIES, str(p.get("target"))) if p["kind"] == "imaging" else
                   specialty_of(str(p.get("target"))) if p["kind"] == "referral" else None)
-        if (p["kind"], target) in have:
+        if (p["kind"], target, norm(quote)) in have:
             continue
+        key = (p["kind"], norm(quote))
+        if key in seen:
+            continue
+        seen.add(key)
         suggestions.append({"kind": p["kind"], "target": target or p.get("target"), "interval": p.get("interval"),
-                            "quote": quote[:300]})
-    return {"available": True, "model": out.get("model"), "suggestions": suggestions,
+                            "quote": quote})
+    return {"available": bool(suggestions) or dropped == 0, "complete": dropped == 0,
+            "dropped": dropped, "model": out.get("model"), "suggestions": suggestions,
+            "reason": "Some model items failed verification; human review required" if dropped else None,
             "note": "AI suggestions for review: not tracked unless a person adds them to the plan"}

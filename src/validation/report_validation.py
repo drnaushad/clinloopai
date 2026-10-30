@@ -157,6 +157,9 @@ def score(rows: Sequence[Dict]) -> Dict:
         raise ValueError("No completed reference labels. Blank labels are not negatives; use explicit NONE.")
     if any(not str(r.get("expected_rules") or "").strip() for r in labelled):
         raise ValueError("Completed references require rule IDs or explicit NONE")
+    identifiers = [r.get("report_id") for r in labelled]
+    if any(not isinstance(rid, str) or not rid.strip() for rid in identifiers) or len(set(identifiers)) != len(identifiers):
+        raise ValueError("Completed references require distinct nonempty report IDs")
     for row in labelled:
         expected = _parse_rules(row.get("expected_rules", ""))
         predicted, notes = predict(row)
@@ -181,6 +184,10 @@ def score(rows: Sequence[Dict]) -> Dict:
     fn = sum(c["fn"] for c in per_rule.values())
     sens, ppv = wilson(tp, tp + fn), wilson(tp, tp + fp)
     return {"reports": len(labelled), "eligible_reports": len(rows),
+            "task": "report-to-rule agreement; not clinical outcome or end-to-end follow-up accuracy",
+            "interval_scope": "Wilson intervals assume independent observations; patient independence is not established by this sheet",
+            "reference_scope": "declared completed labels; clinician identity, independent double review and adjudication are not verified by this tool",
+            "clinical_validation_established": False,
             "excluded_incomplete": len(rows) - len(labelled), "exact_agreement": exact,
             "overall": {"tp": tp, "fp": fp, "fn": fn, "sensitivity": sens[0], "sensitivity_95ci": sens[1:],
                         "ppv": ppv[0], "ppv_95ci": ppv[1:]},
@@ -217,7 +224,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if args.sample and len(rows) > args.sample:
             import random
             rows = sorted(random.Random(args.seed).sample(rows, args.sample), key=lambda r: r["report_id"])
-        with open(args.out, "w", newline="", encoding="utf-8") as f:
+        with os.fdopen(os.open(args.out, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=SHEET_FIELDS)
             w.writeheader()
             w.writerows(rows)
@@ -229,7 +236,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     result = score(rows)
     _print_summary(result)
     if args.out:
-        with open(args.out, "w", encoding="utf-8") as f:
+        with os.fdopen(os.open(args.out, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=1)
     return 0
 

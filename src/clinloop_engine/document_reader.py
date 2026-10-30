@@ -20,7 +20,7 @@ import io
 import re
 import shutil
 import warnings
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from .imaging_fhir import CLINLOOP_TAG_SYSTEM, OCR_CONFIDENCE_URL
@@ -45,17 +45,25 @@ def ocr_available() -> bool:
     return shutil.which("tesseract") is not None
 
 
+def _ocr_dimensions(width: int, height: int) -> Tuple[int, int]:
+    """Budget the actual raster that Tesseract will receive after resizing."""
+    if width <= 0 or height <= 0 or width * height > MAX_PIXELS:
+        raise DocumentError("Image exceeds the pixel limit")
+    if width < 1500:
+        scale = 1500 / width
+        width, height = int(width * scale), int(height * scale)
+    if width * height > MAX_PIXELS:
+        raise DocumentError("Image exceeds the pixel limit after resizing")
+    return width, height
+
+
 def _ocr_image(img) -> Tuple[str, Optional[float]]:
     import pytesseract
     from PIL import ImageOps
-    if img.width * img.height > MAX_PIXELS:
-        raise DocumentError("Image exceeds the pixel limit")
+    dimensions = _ocr_dimensions(img.width, img.height)
     img = ImageOps.grayscale(img)
-    if img.width < 1500:                      # small photos/scans read better upscaled
-        scale = 1500 / max(1, img.width)
-        if int(img.width * scale) * int(img.height * scale) > MAX_PIXELS:
-            raise DocumentError("Image exceeds the pixel limit after resizing")
-        img = img.resize((int(img.width * scale), int(img.height * scale)))
+    if dimensions != img.size:               # small photos/scans read better upscaled
+        img = img.resize(dimensions)
     img = ImageOps.autocontrast(img)
     text = pytesseract.image_to_string(img, lang=OCR_LANGS, config="--psm 6", timeout=20)
     data = pytesseract.image_to_data(img, lang=OCR_LANGS, config="--psm 6", output_type=pytesseract.Output.DICT, timeout=20)
@@ -85,6 +93,10 @@ def extract_text(content: bytes, filename: str = "") -> Dict[str, Any]:
 
     def render_budget(width: int, height: int) -> None:
         nonlocal pixels
+        try:
+            width, height = _ocr_dimensions(width, height)
+        except DocumentError:
+            raise DocumentError("Document exceeds the rendering limit; no partial report was loaded") from None
         pixels += width * height
         if width * height > MAX_PIXELS or pixels > MAX_TOTAL_PIXELS:
             raise DocumentError("Document exceeds the rendering limit; no partial report was loaded")
@@ -119,8 +131,10 @@ def extract_text(content: bytes, filename: str = "") -> Dict[str, Any]:
                         raise DocumentError("Image exceeds the frame limit; nothing was truncated")
                     for index in range(getattr(image, "n_frames", 1)):
                         image.seek(index)
-                        render_budget(image.width, image.height)
+                        if image.width * image.height > MAX_PIXELS:
+                            raise DocumentError("Image exceeds the pixel limit")
                         frame = ImageOps.exif_transpose(image.copy())
+                        render_budget(frame.width, frame.height)
                         text, confidence = _ocr_image(frame)
                         add(text, confidence, "ocr")
         confs = [c for _, c in results if c is not None]
@@ -141,11 +155,13 @@ def extract_text(content: bytes, filename: str = "") -> Dict[str, Any]:
 # recommended." and "결과적으로 …" are sentences, not headings)
 _SECTION = re.compile(
     r"^\s*(?P<name>impressions?|conclusions?|opinion|findings|technique|comparison|clinical (?:history|information|indication)|"
-    r"history|indication|recommendations?|결론|판독\s*결과|판독\s*소견|판독소견|소견|결과|진단|검사\s*소견|임상\s*정보|"
+    r"history|indication|recommendations?|addendum|corrected\s+(?:report|impression)|correction(?:\s+note)?|"
+    r"추가\s*판독|수정\s*판독|정정\s*판독|결론|판독\s*결과|판독\s*소견|판독소견|소견|결과|진단|검사\s*소견|임상\s*정보|"
     r"비교|기법|권고|추천)\s*(?:[:：]\s*(?P<rest>.*)|-\s+(?P<rest2>.*)|$)", re.I | re.M)
 _IMPRESSION = re.compile(r"impression|conclusion|opinion|결론|판독\s*결과|진단", re.I)
 _FINDINGS = re.compile(r"findings|판독\s*소견|판독소견|소견|검사\s*소견|결과", re.I)
 _RECOMMEND = re.compile(r"recommendation|권고|추천", re.I)
+_AMENDMENT = re.compile(r"addendum|corrected\s+(?:report|impression)|correction(?:\s+note)?|추가\s*판독|수정\s*판독|정정\s*판독", re.I)
 _SIGNATURE = re.compile(r"^\s*(?:electronically signed|signed by|radiologist|reading physician|dictated|판독의|판독\s*전문의|"
                         r"영상의학과\s*전문의|서명)\b.*$", re.I | re.M)
 _DATE = re.compile(r"(?P<y>(?:19|20)\d{2})\s*(?:[-./]|년)\s*(?P<m>\d{1,2})\s*(?:[-./]|월)\s*(?P<d>\d{1,2})\s*일?"
@@ -196,7 +212,7 @@ def _find_date(text: str) -> Optional[str]:
     for i, line in enumerate(lines):
         for m in _DATE.finditer(line):
             d = _date_of(m)
-            if not d or d in dob_values or d > now.replace(year=now.year + 1):
+            if not d or d in dob_values or d > now + timedelta(days=366):
                 continue
             is_label = bool(_DATE_LABEL.search(line)) or (i > 0 and _DATE_LABEL.search(lines[i - 1]) and len(line) < 60)
             (labelled if is_label else other).append(d)
@@ -262,6 +278,8 @@ def clean_title(title: Optional[str]) -> Optional[str]:
 
 def parse_report(text: str) -> Dict[str, Any]:
     """Study title, date and impression from report text (English or Korean)."""
+    if len((text or "").encode("utf-8")) > MAX_TEXT_BYTES:
+        raise DocumentError("Report text exceeds the supported limit; nothing was truncated")
     text = re.sub(r"(\w)-\n(\w)", r"\1\2", text or "")        # hyphenated line breaks
     text = re.sub(r"[ \t]+", " ", text)
     # Letter-only OCR confusions of units ("1.3 crn"); digit look-alikes are never guessed
@@ -274,25 +292,36 @@ def parse_report(text: str) -> Dict[str, Any]:
     if not title:
         title = next((ln.strip() for ln in text.splitlines()
                       if _MODALITY_WORDS.search(ln) and len(ln.strip()) < 80 and not _SECTION.match(ln)), None)
-    sections: Dict[str, str] = {}
+    sections: Dict[str, List[str]] = {}
+    source_blocks: List[str] = []
     matches = list(_SECTION.finditer(text))
     for i, sm in enumerate(matches):
         end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
         body = ((sm.group("rest") or sm.group("rest2") or "") + "\n" + text[sm.end():end]).strip()
         body = _SIGNATURE.sub("", body).strip()
         name = sm.group("name")
-        kind = ("impression" if _IMPRESSION.fullmatch(name.strip()) or _IMPRESSION.match(name) else
+        kind = ("amendment" if _AMENDMENT.fullmatch(name.strip()) else
+                "impression" if _IMPRESSION.fullmatch(name.strip()) or _IMPRESSION.match(name) else
                 "recommendation" if _RECOMMEND.match(name) else
                 "findings" if _FINDINGS.match(name) else "other")
         if body and kind != "other":
-            sections.setdefault(kind, body)
-    conclusion = sections.get("impression") or sections.get("findings") \
-        or _HEADER_LINE.sub("", _SIGNATURE.sub("", text)).strip()      # no sections: drop header/identity lines
-    if sections.get("recommendation") and sections["recommendation"] not in conclusion:
-        conclusion += "\n" + sections["recommendation"]
-    conclusion = re.sub(r"\s*\n\s*", " ", conclusion).strip()
+            sections.setdefault(kind, []).append(body)
+            source_blocks.append(f"{name.upper()}: {body}")
+    blocks, seen = [], set()
+    for kind in ("impression", "findings", "recommendation"):
+        for body in sections.get(kind, []):
+            body = re.sub(r"\s*\n\s*", " ", body).strip()
+            if body not in seen:
+                blocks.append(body if not blocks else f"{kind.upper()}: {body}")
+                seen.add(body)
+    conclusion = "\n\n".join(blocks) if blocks else _HEADER_LINE.sub("", _SIGNATURE.sub("", text)).strip()
+    if "amendment" in sections:
+        # Reordering findings/impressions can put an older statement after its
+        # correction. Keep amendment headings and source order for review.
+        conclusion = "\n\n".join(source_blocks)
     return {"title": clean_title(title), "date": _find_date(text), "conclusion": conclusion,
             "section": "impression" if "impression" in sections else "findings" if "findings" in sections else "whole text",
+            "requires_section_review": "amendment" in sections or any(len(bodies) > 1 for bodies in sections.values()),
             "pathology": bool(_PATHOLOGY.search(text)) and not _MODALITY_WORDS.search(title or "")}
 
 
@@ -308,7 +337,10 @@ def outside_report_resource(patient_id: str, content: bytes, extracted: Dict[str
     sha = hashlib.sha256(content).hexdigest()
     conclusion = scrub_identifiers(parsed["conclusion"], names)
     tags = ["outside-report", "ocr" if extracted["method"] == "ocr" else "pdf-text"]
-    if confirmed_by:
+    confirmed = bool(confirmed_by) and not parsed.get("requires_section_review")
+    if parsed.get("requires_section_review"):
+        tags.append("section-review")
+    if confirmed:
         tags.append("human-confirmed")
     when = parsed["date"] + "T00:00:00" if parsed.get("date") else None
     if not when:
@@ -326,7 +358,7 @@ def outside_report_resource(patient_id: str, content: bytes, extracted: Dict[str
         "effectiveDateTime": when,
         "conclusion": conclusion,
     }
-    if confirmed_by:
+    if confirmed:
         resource["resultsInterpreter"] = [{"display": f"Text confirmed against the original by {confirmed_by}"}]
     if extracted.get("confidence") is not None:
         resource["extension"] = [{"url": OCR_CONFIDENCE_URL, "valueDecimal": float(extracted["confidence"])}]

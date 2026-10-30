@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.public-site/
 .venv/
 venv/
 
@@ -11,6 +12,9 @@ results/
 
 # Secrets
 .env
+.env.*
+*.p12
+*.pfx
 
 # Local pilot database
 data/*.db

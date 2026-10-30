@@ -120,7 +120,7 @@ def _run(coro):
     except BioMCPError:
         raise
     except Exception as e:  # transport errors, timeouts, protocol errors
-        raise BioMCPError(f"{type(e).__name__}: {e}") from e
+        raise BioMCPError(f"BioMCP connection failed ({type(e).__name__})") from None
 
 
 def status(force: bool = False) -> Dict:
@@ -178,7 +178,7 @@ def call_tool(name: str, arguments: Dict[str, Any]) -> Dict:
     if not enabled():
         raise BioMCPDisabled(f"BioMCP is {_disabled_reason()}")
     if name not in ALLOWED_TOOLS:
-        raise BioMCPError(f"Tool '{name}' is not on ClinLoop's read-only allowlist")
+        raise BioMCPError("Tool is not on ClinLoop's read-only allowlist")
     key = f"biomcp|{name}|{json.dumps(arguments, sort_keys=True)}"
     cached = _cache.get(key, CALL_TTL)
     if cached is not None:
@@ -190,7 +190,7 @@ def call_tool(name: str, arguments: Dict[str, Any]) -> Dict:
     res = _run(_with_session(call))
     texts = [getattr(c, "text", "") for c in res.content]
     if res.isError:
-        raise BioMCPError(" ".join(texts)[:500] or f"{name} failed")
+        raise BioMCPError("BioMCP tool failed; check the service connection")
     joined = "\n".join(texts)
     try:
         data: Any = json.loads(joined)

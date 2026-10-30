@@ -251,7 +251,7 @@ edit the range, regenerate the lock (command at the top of the file), run the te
 | Gap | Why it matters | Suggested step |
 | --- | --- | --- |
 | Sandbox integration | Public SMART browser authorization and read-only HAPI synthetic source preview passed on 2026-10-26. Backend HAPI tests exposed cached history omitting new follow-ups; the no-cache correction is a tested local draft | Review/deploy the transport correction separately, repeat incremental ingestion and validate hospital-specific mapping; browser connectivity does not establish analysis accuracy |
-| Vendor Bulk FHIR run | Bulk export is tested against a stub that follows the Bulk Data specification, not yet Epic | Group-level export from the Epic sandbox with synthetic patients |
+| Vendor Bulk FHIR run | Epic public synthetic Group export passed on 2026-10-28; this verifies transport, not full report extraction or clinical accuracy. Two PDF attachment links returned HTTP 400 | Resolve attachment access with the integration team; independently validate incremental updates, deletion handling and hospital mappings |
 | Hospital identity provider run | Single sign-on is tested against a stub provider in a real browser, not yet the hospital's Keycloak / Entra ID / ADFS | Register ClinLoop as a public client (PKCE) with `https://<server>/worklist.html` as its redirect address, map groups to roles, sign in once per role |
 | Monitor thresholds | The default volume and dismissal thresholds are reasonable guesses, not tuned on real alert patterns | Run with `CLINLOOP_MONITOR=0` (report only) during the shadow pilot and set thresholds from what is seen |
 | Validation on real data | All accuracy figures are on synthetic or public data. The tools for Stages 1 and 2 are built; the studies have not been run | Ethics approval, then Stage 1 chart review and the silent run (`docs/PILOT_RUNBOOK.md`) |
@@ -285,3 +285,131 @@ See `FHIR_CONNECTION.md` for the dated aggregate findings and integration limita
 These engineering corrections do not supply the pending independent clinical/ML reviews,
 institutional study authorization, real-patient validation, incremental Epic testing or an
 approved private deployment. No clinical guideline thresholds or model prompts were changed.
+
+### Synthetic security checklist candidate (2026-10-29; not independently approved)
+
+The bounded engineering probes cover PHI patterns and identity linkage, browser-session
+cleanup, API roles, audit tampering, CDS JWT forgery/replay, concurrent acknowledgements,
+completion status integrity, report supersession and feed alarms. They use synthetic local
+fixtures, not real patients, live EHR attacks, real model inference or patient-message sends.
+Passing these probes is not a complete penetration test, privacy certification or clinical
+validation. Outreach output-guard changes remain clinical-review **drafts** under AGENTS.md.
+
+Confirmed fixes in this candidate:
+
+- The flat-record privacy helper no longer returns automatic cloud-safety approval merely
+  because its known regex patterns have disappeared. `safe_to_send_cloud` is always false;
+  `human_review_required` is true. Unknown free-text names can still remain. No external
+  transmission is authorized by this helper. Legal-framework labels are references, not
+  compliance findings or a Safe Harbor determination.
+- Known name replacements match whole identifiers, keeping words such as “Lipid” and
+  clinical measurements intact. Additional Korean/English phone, address and date formats
+  have synthetic tests. Dates are generalized to year, so this helper must not supply dates
+  for temporal clinical decisions.
+- Pseudonym namespaces are distinct; identical names with different stable identifiers do
+  not merge. Records sharing a stable MRN/patient ID link within one ledger. Missing IDs
+  get record-local references and an explicit lack-of-stable-identity flag. Names alone
+  are not used as identity keys. Different ledgers intentionally do not link. The in-memory
+  reversible ledger contains sensitive identifiers; it is not anonymous, encrypted storage
+  or a durable institutional identity service.
+- **Full FHIR-bundle de-identification is unsupported.** Passing a Bundle or FHIR resource
+  into the flat-record helper now fails explicitly rather than silently producing one
+  empty/UNKNOWN patient. A real FHIR de-identification workflow needs a separately specified,
+  validated tool preserving reference integrity across resource types, identifier systems,
+  extensions, documents and narrative content. Regex scrubbing does not provide that tool.
+- Private and Report review pages check expiry before accepting activity, model submission
+  or file import, and when resuming visibility/history. A suspended timer or an accessibility
+  click cannot renew an expired session and submit its old source. Pending work is aborted
+  and stale responses stay suppressed. Report text/results and gateway codes are cleared
+  from application state and page controls. Requests use `cache: no-store`; tests forbid
+  storage access by the private page controller. Browser/OS memory, extensions, model logs,
+  previously received server requests and forensic deletion remain outside this guarantee.
+- API bearer authentication rejects non-ASCII/oversized credentials without a server error;
+  configured local bearer secrets must be ASCII. CDS JWT authentication rejects
+  malformed/nonfinite NumericDates, empty/oversized nonces,
+  missing key IDs and incorrect token types without exposing source claims or throwing a
+  server error. Expired, unsigned, wrong-audience and untrusted-key tokens remain rejected.
+  The existing maximum token lifetime is 600 seconds with configured library skew handling;
+  this is local policy, not a claim that CDS Hooks requires that lifetime.
+- Consumed CDS nonces are stored as issuer-bound digests with expiry in the existing SQLite
+  database. A transaction prevents replay across worker connections and restarts sharing
+  that database. Replay-store failure rejects authentication. Separate server databases
+  **do not** share this protection; multi-instance deployments need one supported shared
+  replay store. Source bearer tokens and raw nonces are not persisted in this table.
+- Known internal reasoning markers are rejected by outreach draft/final-text guards.
+  Attributed and unfinished think blocks are handled conservatively by local text cleanup.
+  These filters remain incomplete; every patient message still needs clinician approval.
+
+Existing behaviors verified by the checklist include 403 for viewer/navigator outreach
+approval, hash-chain failure after out-of-band audit modification, exactly one successful
+acknowledgement without owner overwrite under contention, no closure from cancelled or
+scheduled/no-show events, owner preservation when a preliminary report is superseded, and
+STALE/FAILING feed states with throttled audit alarms. Discovery at GET `/cds-services`
+remains public; authenticated hook calls use POST `/cds-services/clinloop-open-loops`.
+
+CDS token claim/header validation follows the
+[HL7 CDS Hooks 2.0 security specification](https://cds-hooks.hl7.org/2.0/#trusting-cds-clients).
+These changes grant no new permissions, enable no real-patient public processing and provide
+no independent clinical sign-off. Deployments using a persistent database must back it up
+and test the additive replay-table migration through the normal hospital change process.
+
+### Further engineering boundary review (2026-10-29; local candidate)
+
+This review adds synthetic reproductions of malformed audit JSON, SMART discovery/token
+responses, token-endpoint redirects, malformed FHIR outcomes/paging, and OCR resize budgets.
+It is a targeted engineering review, not proof that every source file or deployment path has
+been independently reviewed. The changes remain local until separately approved for release.
+
+- Audit and access-chain verification returns false on unreadable JSON/database records
+  rather than raising a parser exception. These chains are **tamper-evident, not immutable**:
+  deleting the tail or rewriting and re-hashing the complete database needs an external
+  trusted anchor to detect. This candidate does not supply that external anchor.
+- Token requests do not follow redirects with client credentials/assertions. Token URLs
+  require HTTPS, no embedded credentials and no fragments; HTTP is permitted only for
+  loopback synthetic tests. Hospital configurations must use their approved canonical
+  token endpoint. Malformed discovery fields, non-bearer/invalid tokens and nonpositive or
+  nonfinite expiry values are rejected before caching. Token and discovery responses are
+  closed; untrusted scope/expiry content is not echoed in token-acquisition logs.
+- Malformed FHIR outcome lists/severities or paging links fail the ingestion run with a
+  generic error, leaving the cursor unchanged. Search responses close after parsing.
+  Optional resource types still have their documented optional semantics. These checks
+  do not validate every FHIR field or establish that a hospital search returns full history.
+- The legacy document budget counts the raster after OCR upscaling and EXIF orientation,
+  so small multi-frame images cannot evade the 48-million-pixel total. It still fails the
+  whole import on a limit; it never silently truncates the report. Per-call OCR timeouts
+  do not constitute a total parser/process deadline. Independent OCR/source validation
+  and deployment-level worker memory/CPU/time isolation remain necessary.
+- Biomedical-reference transport/tool errors return generic messages rather than raw
+  provider payloads or caller-supplied tool names. The mocked health-probe test now closes
+  its unused coroutine. Reference queries must still exclude patient data; error
+  sanitization is not a de-identification or outbound-data authorization mechanism.
+- Bulk imports refuse nonempty or malformed `deleted`, `link` or `outcome` manifest fields
+  that this client cannot reconcile, and require a valid timezone-qualified export instant.
+  Refusal occurs before downloading output, modifying the mirror or advancing the cursor;
+  the failed run remains visible. This is a safety stop, not implementation of deletion,
+  paginated-manifest or newer-manifest reconciliation. Deployments requiring those features
+  need a separately validated importer and recovery plan.
+
+Remaining release/hospital gates include independent source and clinician review; a
+representative, adjudicated clinical evaluation; approved private hosting and institutional
+data/study authorization; TLS, encrypted volumes/backups and institutional key management;
+an external audit anchor; incremental/deletion/reconciliation validation for each FHIR
+server; and workload-specific database/latency testing. The synthetic load probe covers CDS
+calls and audit writes only: it is not a FHIR-sync or model-inference capacity test. SQLite
+writer contention remains visible in the recorded high-percentile waits. No universal
+clinical accuracy or support for every report/image modality is established.
+
+Implementation references: [SMART Backend Services](https://hl7.org/fhir/smart-app-launch/backend-services.html),
+[FHIR Bulk Data output manifests](https://hl7.org/fhir/uv/bulkdata/en/export.html)
+and [Requests redirect behavior](https://requests.readthedocs.io/en/latest/user/quickstart/#redirection-and-history).
+
+
+## Candidate transport limits and operator review (29 October 2026)
+
+These are draft safeguards in the isolated candidate, not claims about a running server. Bulk FHIR anonymous signed downloads default to the configured FHIR origin. `CLINLOOP_FHIR_BULK_DOWNLOAD_ORIGINS` may explicitly add comma-separated HTTPS origins (origin only, with no path, query, credentials or fragment); tokens are never forwarded to these additional origins. Downloads reject redirects and ignore environment proxy configuration. Each extra origin needs an institutional trust/data-flow review.
+
+Bulk constructor defaults cap 1,000 files, 1,000,000 resources, 512 MiB decompressed total, 8 MiB per NDJSON line and a 2 MiB manifest, with a 3,600-second elapsed-time budget. The bulk timeout environment setting remains `CLINLOOP_FHIR_BULK_TIMEOUT_MINUTES=60`; resource/byte/line/file budget changes require explicit constructor configuration. FHIR search defaults cap each response at 16 MiB/10,000 entries and each search/changefeed/patient history at 100,000 resources. PACS QIDO defaults cap metadata at 8 MiB/10,000 items; WADO retains a 200 MiB object cap. Reaching a limit is a failed/incomplete import requiring review, never a clean negative or completed synchronization.
+
+Malformed timestamps, cursor regression, conflicting bulk versions, patient reassignment and missing/cross-patient imaging identity refuse import. Unsupported deletion, link and outcome content still requires reconciliation; no deletion is silently applied. HTTPS is required for external outreach webhooks; HTTP loopback is reserved for synthetic testing. Redirects are refused, environment proxies ignored, unknown provider configuration fails closed and delivery errors remain generic. Confirm these settings and downstream failures in the institution's own environment before enabling any connection or patient messaging. No service was restarted and no outbound patient message was sent during this review.
+
+The [candidate evidence plan](reviews/EVIDENCE_REVIEW_20261029.md) records the remaining independent review, representative reference data, statistical and prospective workflow requirements.

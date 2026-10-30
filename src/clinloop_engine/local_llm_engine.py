@@ -75,13 +75,16 @@ def _local_model(value: Dict[str, Any]) -> bool:
 
 # Reasoning models (e.g. DeepSeek-R1) emit their chain of thought in <think>
 # tags; it must never reach a clinician or a patient.
-_THINK = re.compile(r"<think>.*?</think>\s*", re.S | re.I)
+_THINK = re.compile(r"<\s*think\b[^>]*>.*?</\s*think\s*>\s*", re.S | re.I)
 
 
 def _strip_reasoning(text: str) -> str:
     text = _THINK.sub("", text or "")
-    if "<think>" in text.lower():          # unterminated (truncated) reasoning block
-        text = text[:text.lower().index("<think>")]
+    opening = re.search(r"<\s*think\b", text, re.I)
+    if opening:                         # truncated/unterminated reasoning block
+        text = text[:opening.start()]
+    if re.search(r"</\s*think\s*>", text, re.I):
+        return ""                       # orphan/nested block: no safe boundary
     return text.strip()
 
 
@@ -255,7 +258,8 @@ def generate_clinical_text(
         if not _local_model({"name": model}) or not isinstance(prompt, str) or not prompt.strip() or len(prompt.encode("utf-8")) > 20000:
             raise ValueError("Invalid local generation input")
         details = _ollama_json("POST", "/api/show", {"model": model}, timeout=10)
-        if (not _local_model({"name": model, **details}) or not isinstance(details.get("model_info"), dict)
+        if (details.get("name", model) != model or not _local_model({**details, "name": model})
+                or not isinstance(details.get("model_info"), dict)
                 or not details["model_info"] or not isinstance(details.get("capabilities"), list)
                 or "completion" not in details["capabilities"]):
             raise ValueError("Model locality or capability not verified")

@@ -1,7 +1,9 @@
 """
-Blind evaluation harness: each case (one report + patient context) → FHIR resources → the real ClinLoop
+Exposed synthetic regression harness: each case (one report + patient context) → FHIR resources → the real ClinLoop
 pipeline (bundle_to_events → ClinLoopDetector) → the set of rule ids it opens. Compared with the
-clinician-written expected set. Usage: python tests/report_eval/run_eval.py tests/report_eval/cases.json [dev|heldout|confirm|all] [--show]
+developer/AI-authored expected set (not independent clinician truth). Historical partition names
+are retained for reproducibility, not as a claim that fixtures remain held out.
+Usage: python tests/report_eval/run_eval.py tests/report_eval/cases.json [dev|heldout|confirm|all] [--show]
 """
 import json
 import os
@@ -78,17 +80,32 @@ def run_case(case):
     return got, days
 
 
+def validate_cases(cases):
+    """No missing reference or unknown rule is silently treated as a negative."""
+    if not isinstance(cases, list) or not cases:
+        raise ValueError("Nonempty synthetic reference cohort required")
+    ids = set()
+    for case in cases:
+        rid, rules = case.get('id'), case.get('expected_rules')
+        if not isinstance(rid, str) or not rid.strip() or rid in ids:
+            raise ValueError("Distinct nonempty synthetic case IDs required")
+        if not isinstance(rules, list) or any(not isinstance(r,str) for r in rules) or len(rules) != len(set(rules)) or set(rules)-REPORT_RULES:
+            raise ValueError("Complete explicit reference rule list required; unknown labels refused")
+        ids.add(rid)
+    return cases
+
+
 def main():
     path, which = sys.argv[1], (sys.argv[2] if len(sys.argv) > 2 else "all")
     show = "--show" in sys.argv
-    cases = [c for c in json.load(open(path)) if which == "all" or c["set"] == which]
+    cases = validate_cases([c for c in json.load(open(path)) if which == "all" or c["set"] == which])
     tp, fp, fn = Counter(), Counter(), Counter()
     exact = equiv = 0
     none_cases = none_ok = pos_cases = pos_any = 0
     window_ok = strict_window_ok = window_n = 0
     failures = []
     for c in cases:
-        exp = set(c.get("expected_rules") or []) & REPORT_RULES
+        exp = set(c["expected_rules"])
         try:
             got, days = run_case(c)
         except Exception as e:  # a crash is a failure

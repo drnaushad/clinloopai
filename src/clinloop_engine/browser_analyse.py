@@ -13,7 +13,7 @@ sync with what this module imports.
 import json
 from typing import Any, Dict, List, Optional
 
-from .fhir_ingest import _resources, bundle_to_events
+from .fhir_ingest import bundle_to_events, resolved_resources
 from .loop_detector import hospital_detector, lapse_after_death
 from .safety_clock import normalize_timestamp, utc_now
 
@@ -51,7 +51,7 @@ def analyse_bundle(bundle: Dict[str, Any], evaluation_time: Optional[str] = None
     if not isinstance(bundle, dict) or bundle.get("resourceType") != "Bundle":
         raise ValueError("Body must be a FHIR Bundle")
     when = normalize_timestamp(evaluation_time) if evaluation_time else None
-    resources = list(_resources(bundle))
+    resources = resolved_resources(bundle)
     events_by_patient, warnings = bundle_to_events(resources, evaluation_time=when)
     detector = hospital_detector(when)
     detections: List = []

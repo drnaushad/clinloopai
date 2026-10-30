@@ -45,6 +45,8 @@ services:
       # Bulk FHIR export for servers such as Epic (docs/FHIR_CONNECTION.md)
       CLINLOOP_FHIR_MODE: ${CLINLOOP_FHIR_MODE:-search}
       CLINLOOP_FHIR_GROUP_ID: ${CLINLOOP_FHIR_GROUP_ID:-}
+      # Optional exact HTTPS origins for anonymous signed bulk files; never sent the FHIR token.
+      CLINLOOP_FHIR_BULK_DOWNLOAD_ORIGINS: ${CLINLOOP_FHIR_BULK_DOWNLOAD_ORIGINS:-}
       # Hospital single sign-on for staff (src/clinloop_engine/oidc.py); needs ClinLoop served over HTTPS
       CLINLOOP_OIDC_ISSUER: ${CLINLOOP_OIDC_ISSUER:-}
       CLINLOOP_OIDC_CLIENT_ID: ${CLINLOOP_OIDC_CLIENT_ID:-}

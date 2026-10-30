@@ -120,16 +120,28 @@ class TestVisionLanguageModel(unittest.TestCase):
         answer = json.dumps({"description": "x", "findings": [
             {"key": "lung cancer stage IV", "present": True, "confidence": 0.99},
             {"key": "pneumothorax", "present": True, "confidence": 0.9},          # on a head CT
-            {"key": "intracranial_hemorrhage", "present": True, "confidence": 1.7}]})  # bad confidence
+            {"key": "intracranial_hemorrhage", "present": True, "confidence": 0.7}]})
         r = self.run_model(answer, body="HEAD", modality="CT", desc="CT BRAIN")
         m = r["models"][0]
         self.assertEqual([f["finding_key"] for f in m["findings"]], ["intracranial_hemorrhage"])
-        self.assertIsNone(m["findings"][0]["score"])
+        self.assertEqual(m["findings"][0]["score"], 0.7)
         self.assertEqual(len(m["dropped"]), 2)
+
+    def test_invalid_confidence_is_unavailable_never_a_positive_unscored_finding(self):
+        for confidence in (1.7, float("nan"), float("inf"), "not-a-probability"):
+            with self.subTest(confidence=confidence):
+                r = self.run_model(json.dumps({"description": "x", "findings": [
+                    {"key": "lung_nodule", "present": True, "confidence": confidence}]}))
+                self.assertFalse(r["models"][0]["ran"])
+                self.assertEqual(r["models"][0]["findings"], [])
+                self.assertIn("human review", r["models"][0]["reason"])
+                self.assertEqual([x["resourceType"] for x in r["resources"]], ["ImagingStudy"])
 
     def test_unparseable_answer_files_no_findings(self):
         r = self.run_model("I think there might be something in the lung.")
         self.assertTrue(r["models"][0]["unparsed"])
+        self.assertFalse(r["models"][0]["ran"])
+        self.assertIn("human review", r["models"][0]["reason"])
         self.assertEqual([x["resourceType"] for x in r["resources"]], ["ImagingStudy"])
 
     def test_research_use_finding_needs_opt_in_for_review(self):

@@ -16,6 +16,7 @@ simultaneously involves:
 """
 
 import re
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Set, Tuple
@@ -37,14 +38,14 @@ REGION_CHECKED_TYPES = {
     EventType.IMAGING_CT.value, EventType.IMAGING_MRI.value, EventType.IMAGING_ULTRASOUND.value,
     EventType.IMAGING_XRAY.value, EventType.IMAGING_PET.value, EventType.FOLLOWUP_CT.value,
 }
-# Tissue sampling is checked only when it names its site: a liver biopsy never closes a pancreatic work-up,
-# while "biopsy" with no site still counts (a person sees the evidence chain)
-SITE_CHECKED_TYPES = {EventType.BIOPSY_ORDER.value, EventType.BIOPSY_RESULT.value, EventType.BREAST_BIOPSY.value}
+# Region-specific obligations require region-specific tissue evidence. An
+# unscoped biopsy/pathology record remains visible but cannot prove completion.
+SITE_CHECKED_TYPES = {EventType.BIOPSY_ORDER.value, EventType.BIOPSY_RESULT.value,
+                      EventType.BREAST_BIOPSY.value, EventType.PATHOLOGY_RESULT.value}
 
 
 def _region_checked(node: "ClinicalNode") -> bool:
-    return node.event_type in REGION_CHECKED_TYPES or (
-        node.event_type in SITE_CHECKED_TYPES and bool(node.details.get("body_regions")))
+    return node.event_type in REGION_CHECKED_TYPES | SITE_CHECKED_TYPES
 
 
 def _required_regions(trigger: "ClinicalNode", rule: ObligationRule) -> List[str]:
@@ -86,7 +87,7 @@ def _type_ok(trigger: "ClinicalNode", rule: ObligationRule, node: "ClinicalNode"
 
 def _region_ok(required: List[str], node: "ClinicalNode") -> bool:
     """A study of unknown region does not close a region-specific loop (a clinician can close it with evidence)."""
-    covered = node.details.get("body_regions") or []
+    covered = node.details.get("body_regions") or (["breast"] if node.event_type == EventType.BREAST_BIOPSY.value else [])
     return bool(set(required) & set(covered))
 
 
@@ -99,6 +100,7 @@ class ClinicalNode:
     timestamp: datetime
     details: Dict = field(default_factory=dict)
     status: str = "unknown"
+    source: Optional[str] = None
 
     @property
     def event_enum(self) -> Optional[EventType]:
@@ -211,6 +213,17 @@ class DynamicTemporalHypergraph:
         
         Each event dict has: event_id, patient_id, event_type, timestamp, details
         """
+        # One trajectory has one patient. Validate before touching a prior graph.
+        identities = {evt.get("patient_id") for evt in events if isinstance(evt, dict)}
+        if (any(not isinstance(evt, dict) for evt in events) or len(identities) > 1
+                or any(not isinstance(pid, str) or not pid.strip() for pid in identities)):
+            raise ValueError("Patient trajectory contains an unresolved or mixed patient identity")
+        # This method rebuilds a complete history; stale follow-ups from an earlier
+        # build must not close an obligation after the record has changed.
+        self.nodes.clear()
+        self.hyperedges.clear()
+        self.graph.clear()
+        self._edge_counter = 0
         # Step 1: Create nodes
         nodes_list = []
         for evt in events:
@@ -218,23 +231,30 @@ class DynamicTemporalHypergraph:
             seen = self.nodes.get(node_id)
             if seen is not None:
                 if seen.event_type == evt["event_type"] and seen.timestamp == self._parse_timestamp(evt["timestamp"]):
+                    # A status-only conflict can remain visible as unknown. A
+                    # content/source conflict has no authoritative version and
+                    # cannot be silently discarded based on input ordering.
+                    original_details = {k: v for k, v in seen.details.items()
+                                        if k not in {"duplicate_status_conflict", "review_note_all"}}
+                    incoming_details = {k: v for k, v in (evt.get("details") or {}).items()
+                                        if k not in {"duplicate_status_conflict", "review_note_all"}}
+                    if original_details != incoming_details or seen.source != evt.get("source"):
+                        raise ValueError("Conflicting duplicate event content requires human reconciliation")
                     if seen.status != (evt.get("status") or "unknown"):
                         # Without source revisions neither conflicting copy is authoritative.
                         seen.status = "unknown"
                         seen.details = {**seen.details, "duplicate_status_conflict": True,
                                         "review_note_all": "Conflicting duplicate event statuses; human review required"}
                     continue                        # the same event sent twice: one event, one obligation
-                n = 2                               # a different event that reuses the id keeps its own node
-                while f"{node_id}#{n}" in self.nodes:
-                    n += 1
-                node_id = f"{node_id}#{n}"
+                raise ValueError("Conflicting duplicate event identity requires human reconciliation")
             node = ClinicalNode(
                 node_id=node_id,
                 patient_id=evt["patient_id"],
                 event_type=evt["event_type"],
                 timestamp=self._parse_timestamp(evt["timestamp"]),
-                details=evt.get("details") or {},
+                details=deepcopy(evt.get("details") or {}),
                 status=evt.get("status") or "unknown",
+                source=evt.get("source"),
             )
             self.nodes[node.node_id] = node
             nodes_list.append(node)
@@ -549,6 +569,10 @@ class DynamicTemporalHypergraph:
                 continue
             if not is_fulfilling_status(node.status, node.event_type):
                 continue
+            if node.details.get("review_required") is True:
+                # The mapper could not establish this fact. Retain its node for
+                # review, but do not treat an ambiguous finding as closure proof.
+                continue
             if node.patient_id != trigger.patient_id:
                 continue
             if node.event_type in required_values:
@@ -659,7 +683,10 @@ class DynamicTemporalHypergraph:
                 "followup_nodes": [n.node_id for n in he.actual_followup_nodes],
                 "status": he.status,
                 "causal_weight": round(base_weight, 2),
-                "is_overdue": he.is_overdue
+                "is_overdue": he.status == LoopStatus.OPEN.value and he.is_overdue,
+                "completed_late": he.status == LoopStatus.DELAYED.value,
+                "weight_kind": "deadline_visualization_heuristic",
+                "causality_established": False,
             })
             
         return export_data

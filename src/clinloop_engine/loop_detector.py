@@ -137,7 +137,7 @@ class ClinLoopDetector:
             if he.obligation_rule.rule_id in excluded:
                 continue
             severity = he.obligation_rule.severity
-            is_open = he.status in (LoopStatus.OPEN.value, LoopStatus.DELAYED.value)
+            is_open = he.status == LoopStatus.OPEN.value
 
             # Compute risk
             assessment = self.risk_scorer.score(
@@ -161,7 +161,9 @@ class ClinLoopDetector:
                 final_status = he.status
 
             # Build missing step description
-            if is_open:
+            if he.status == LoopStatus.DELAYED.value:
+                missing_step = f"Completed late: follow-up came after the {format_window(he.deadline_days)} deadline"
+            elif is_open:
                 fulfilled = {fn.event_type for fn in he.actual_followup_nodes}
                 missing = ([] if he.satisfied_at is not None else
                            [ft for ft in he.expected_followup_types if ft not in fulfilled])

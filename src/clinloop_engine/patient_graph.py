@@ -123,9 +123,11 @@ def _short(text: Any, n: int = 220) -> str:
 def build_patient_graph(patient_id: str, events: List[Dict[str, Any]],
                         evaluation_time: Optional[datetime] = None) -> Dict[str, Any]:
     """The knowledge graph of one patient's events (as produced by fhir_ingest.bundle_to_events)."""
+    if (not isinstance(patient_id, str) or not patient_id.strip()
+            or any(not isinstance(e, dict) or e.get("patient_id") != patient_id for e in events)):
+        raise ValueError("Patient graph contains an unresolved or mixed patient identity")
     g = DynamicTemporalHypergraph(evaluation_time=evaluation_time)
     g.build_from_patient_trajectory(events)
-    by_id = {e["event_id"]: e for e in events}
 
     nodes: List[Dict[str, Any]] = []
     for n in sorted(g.nodes.values(), key=lambda x: x.timestamp):
@@ -136,7 +138,9 @@ def build_patient_graph(patient_id: str, events: List[Dict[str, Any]],
         nodes.append({
             "id": n.node_id, "type": n.event_type, "lane": LANE_OF.get(n.event_type, "appointments"),
             "time": n.timestamp.isoformat(), "status": n.status, "label": _short(node_label(n.event_type, d), 90),
-            "detail": _short(detail), "source": (by_id.get(n.node_id) or {}).get("source"),
+            "detail": _short(detail), "source": n.source,
+            "review_required": bool(d.get("review_required") or d.get("review_note_all")),
+            "review_note": _short(d.get("review_note_all") or d.get("review_note")),
             "derived": derived, "future": n.timestamp > g.evaluation_time,
         })
 
@@ -172,12 +176,12 @@ def build_patient_graph(patient_id: str, events: List[Dict[str, Any]],
     # Direct relations: the same imaging study (study ↔ report ↔ AI finding), and AI-review derivations
     edges: List[Dict[str, Any]] = []
     study_of: Dict[str, List[str]] = {}
-    for e in events:
-        d = e.get("details") or {}
-        keys = {d.get("study_uid"), d.get("study_ref"), e.get("source") if LANE_OF.get(e["event_type"]) == "imaging" else None}
+    for node in g.nodes.values():
+        d = node.details
+        keys = {d.get("study_uid"), d.get("study_ref"), node.source if LANE_OF.get(node.event_type) == "imaging" else None}
         keys |= set((d.get("radiology") or {}).get("imaging_studies") or d.get("imaging_studies") or [])
         for k in keys - {None, ""}:
-            study_of.setdefault(str(k), []).append(e["event_id"])
+            study_of.setdefault(str(k), []).append(node.node_id)
     seen = set()
     for members in study_of.values():
         for a in members:
@@ -186,9 +190,9 @@ def build_patient_graph(patient_id: str, events: List[Dict[str, Any]],
                     seen.add((a, b))
                     edges.append({"source": a, "target": b, "kind": "same_study"})
     by_source: Dict[str, List[str]] = {}
-    for e in events:
-        if e.get("source") and e["event_id"] in g.nodes:
-            by_source.setdefault(e["source"], []).append(e["event_id"])
+    for node in g.nodes.values():
+        if node.source:
+            by_source.setdefault(node.source, []).append(node.node_id)
     for members in by_source.values():
         for other in members[1:]:          # several facts read from one record
             if (min(members[0], other), max(members[0], other)) not in seen:

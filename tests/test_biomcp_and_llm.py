@@ -106,7 +106,12 @@ class TestBioMCPGuards(unittest.TestCase):
         init = SimpleNamespace(serverInfo=SimpleNamespace(name="BioMCP", version="1"))
         with mock.patch.object(biomcp_client, "_transport", return_value={"kind": "stdio", "argv": ["biomcp"]}):
             for found, expected in ((0, "sources_unreachable"), (1, "ok")):
-                with mock.patch.object(biomcp_client, "_run", return_value=(init, ["article_searcher"], found)):
+                def completed_probe(coro):
+                    # The real _run consumes this coroutine; the test double
+                    # must close it instead of leaking an unawaited coroutine.
+                    coro.close()
+                    return init, ["article_searcher"], found
+                with mock.patch.object(biomcp_client, "_run", side_effect=completed_probe):
                     s = biomcp_client.status(force=True)
                 self.assertEqual(s["status"], expected)
         self.assertEqual(biomcp_client._count_results("[]"), 0)

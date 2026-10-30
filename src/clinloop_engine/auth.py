@@ -47,7 +47,7 @@ def _load_tokens() -> Dict[str, User]:
     tokens: Dict[str, User] = {}
     for item in filter(None, (x.strip() for x in raw.split(","))):
         parts = item.split(":")
-        if len(parts) != 3 or parts[2] not in ROLE_RANK or len(parts[0]) < 16:
+        if len(parts) != 3 or parts[2] not in ROLE_RANK or len(parts[0]) < 16 or not parts[0].isascii():
             raise RuntimeError(
                 "Invalid CLINLOOP_API_TOKENS entry: expected token:user:role "
                 f"with a token of at least 16 characters and role in {list(ROLE_RANK)}")
@@ -106,6 +106,10 @@ class NoRole(Exception):
 
 
 def authenticate(token: str) -> Optional[User]:
+    # Bearer credentials are ASCII. compare_digest(str, str) rejects Unicode
+    # with TypeError; malformed input must be an authentication failure, not 500.
+    if not isinstance(token, str) or not token.isascii() or len(token) > 16384:
+        return None
     for known, user in _TOKENS.items():
         if hmac.compare_digest(known, token):   # constant-time comparison
             return user

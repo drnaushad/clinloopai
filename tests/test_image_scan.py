@@ -5,6 +5,7 @@ A fake PACS and FHIR server hold synthetic studies (numpy images in DICOM). Synt
 """
 
 import os
+import json
 import sys
 import unittest
 from datetime import datetime, timedelta
@@ -397,8 +398,9 @@ class FakeResponse:
         return self._json
 
     def iter_content(self, n):
-        for i in range(0, len(self.content), n):
-            yield self.content[i:i + n]
+        body = json.dumps(self._json).encode() if self._json is not None else self.content
+        for i in range(0, len(body), n):
+            yield body[i:i + n]
 
     def close(self):
         pass

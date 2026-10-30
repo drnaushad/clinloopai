@@ -1,0 +1,50 @@
+# Candidate evidence review and clinical evaluation gates — 29 October 2026
+
+This is a technical research plan for the isolated recovery candidate. It does not authorize clinical care, deployment, patient outreach or publication of a clinical performance claim. The objective is reliable follow-up support with accountable human decisions. Clinical utility, novelty, comparative superiority and prevention of harm remain hypotheses.
+
+## What the current evidence supports
+
+Software regressions verify specific implemented behavior. Synthetic trajectories and report fixtures can reveal defects and check reproducibility; they do not represent an independent clinical population. The synthetic benchmark already groups patients and exact predictor duplicates, fits preprocessing only on training data, reports abstention coverage, and excludes reference-label simulators from measured comparator results. Its own limitation about shared generator/rule assumptions is material. It has no independent external, temporal or template-family validation.
+
+The report pilot freezes records, source, prompts and checkpoint digests, requires separate declared clinician identities and adjudication, and exposes model failures as abstentions. Reviewer declarations still require external identity and qualification verification. Open-i development exposure and unknown patient independence prevent treating that pilot as an untouched clinical test. The chart toolkit samples engine-detected obligations, so it cannot estimate end-to-end sensitivity to obligations the engine never detected. Its bootstrap resamples loops, not patients.
+
+Historical release JSON and report documents are evidence of prior recorded runs; their hashes, counts and dates do not automatically describe a modified candidate. Generate a fresh pending review packet and a separate dated verification record after the final source changes. Keep the public research preview synthetic-only and clearly separate the deployed site, recovered baseline and new candidate. The web reader and restricted shell initially could not access the public site. After a read-only network escalation, 13 public static HTTPS resources returned HTTP 200, with hashes saved in the separate engineering evidence directory. The homepage matches the recovered source. Deployed SMART transport, file importer, local transport, service worker and release metadata match recovered HEAD and differ from this modified candidate; the new fixes are local only. Deployed private/review controllers also differ from the recovered security candidate. No remote application changes or protected endpoint queries were made.
+
+## Current primary references and their scope
+
+- [IMDRF GMLP N88 FINAL:2025](https://www.imdrf.org/documents/good-machine-learning-practice-medical-device-development-guiding-principles) addresses representative data, independent test sets, suitable references, human interaction, transparent information and monitoring across the lifecycle. It is a guiding-principles document, not certification of this project.
+- [DECIDE-AI](https://www.nature.com/articles/s41591-022-01772-9) guides reporting of early clinical evaluation, including human factors and safety. It is relevant to a later approved local workflow study.
+- [TRIPOD+AI](https://www.bmj.com/content/385/bmj-2023-078378) addresses reporting development and evaluation of clinical prediction models. Apply it to suitable prediction components without relabelling rule agreement as patient benefit.
+- [CONSORT-AI](https://www.nature.com/articles/s41591-020-1034-x) addresses trials of interventions containing AI, including integration, use of outputs and performance errors. A later interventional trial needs its own protocol and approvals.
+- [FDA CDS final guidance, January 2026](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software) is the current source for the draft US design assessment. Existing project feature positions require qualified reassessment; no status has been granted. Korean or other local classification requires the relevant jurisdiction's review.
+
+## Proposed sequence — approvals and data remain pending
+
+| Gate | Work product required before progression | Responsible human roles | Current state |
+| --- | --- | --- | --- |
+| Exact candidate review | Frozen commit/patch and source hashes; clinical decision files reviewed line by line; independent engineering review; threat model and bounded failure tests | Clinical lead, independent engineer, security lead | Pending; AI changes remain drafts |
+| Intended use and ethics | Named population, setting, rule families, excluded uses, human ownership; written ethics/IRB and data-use determinations; jurisdiction-specific regulatory assessment | PI, institution, privacy office, regulatory specialist | Not established by this review |
+| Reference dataset | Licensed local data; source report plus available context and longitudinal records; independently enumerate warranted obligations before viewing model outputs; two qualified blinded clinicians; separate adjudicator; documented unresolved cases | Study coordinator, two clinicians, adjudicator | Pending independent reference work |
+| Locked analysis | Prespecified cohort, endpoints, thresholds and harm definitions; sample-size justification; patient/site/time separation; source/code/prompt/model/rule versions; leakage and prior-exposure audit | PI, statistician, clinical lead | Draft requirements only |
+| Retrospective evaluation | Locked systems on identical frozen inputs; all failures retained; paired comparison with the institution's actual workflow; untouched external site and later time cohort | Study team, independent analyst | No new clinical measurements made |
+| Prospective silent workflow | Approved local installation with access controls/audit; no effect on care; compare to usual care; workload, latency, ambiguity, missing data and human interaction measurements; prespecified safety stop/escalation rules | Institution, clinical safety officer, users | Not started or authorized |
+| Controlled clinical study | Approved intervention and comparator; patient/clinician communication as required; independently monitored harms and outcomes; version-controlled changes | PI, ethics/regulatory bodies, clinical team | Future work, not implied by software tests |
+
+## Prespecified endpoint contract
+
+Use separate tasks and denominators. Do not pool them into a universal accuracy percentage.
+
+1. **Finding/report extraction:** finding spans, assertions, negation, uncertainty, laterality, values, units, dates and explicit recommendation/timing quotes; score false additions, omissions, incorrect linkage and incomplete-source abstentions against adjudicated source-bound labels. Preserve input completeness and extraction/OCR errors separately.
+2. **Obligation detection:** recall/PPV per rule family and clinically justified severity, including independently identified obligations with no engine candidate. Show the cohort flow and all eligible reference positives; count unavailable analyses in an all-eligible sensitivity analysis.
+3. **Timing and status:** strict deadline agreement only where sufficient context and an applicable reference exist; correct chronology, evidence-supported closure and false closure. Missing external follow-up remains unknown; distinguish absent documentation from confirmed absent care. Report censoring, outside-care uncertainty and exclusions.
+4. **Coverage/failure:** eligible, attempted, successfully processed, abstained, unsupported, truncated/rejected and failed counts for every system; coverage versus error tradeoff, false alerts per 100 eligible reports/patients, missed positives and false closures. A conditional accuracy result always carries its all-eligible denominator.
+5. **Generalization/equity:** prespecify age, sex where appropriate, language (English, Korean, mixed/OCR separately), care setting, site, modality and rule-family strata; retain unknown subgroup values. Show counts and uncertainty, protect small-cell privacy, and avoid conclusions from underpowered strata. Use patient-clustered intervals and paired patient resampling; add site-aware analysis when appropriate. Calibration applies only to a justified probability model, not the heuristic urgency score.
+6. **Human/workflow value:** measure review time, alerts requiring action, interreviewer agreement, incorrect acceptance/rejection, fatigue, ownership handoffs and sustained completion documentation. A later approved comparative study, rather than a synthetic illustration, must establish benefit, unintended harm and any patient outcome claim.
+
+The statistician and clinical lead must set decision bounds before testing, including acceptable false-closure risk and what uncertainty blocks progression. No numerical success threshold or patient sample size is newly approved here. Any model, parser, rule, prompt or workflow change after a test is opened is a new candidate; it needs a new untouched evaluation or an explicitly exploratory result.
+
+## Engineering changes from this review
+
+SMART source previews now reject oversized/malformed conclusions rather than silently slicing off the report tail. Local file import compares the returned document hash with SHA-256 computed from the selected bytes. Both structured and free-text local model calls verify capacity before sending complete input. The service worker forwards network requests without offline replay of potentially stale clinical content and without deleting unrelated same-origin caches.
+
+Chart scoring rejects duplicate or mismatched packet/key identifiers, invalid weights and ambiguous classes. Report scoring rejects duplicate report IDs and exposes its reference/interval limitations. Validation outputs use private 0600 exclusive creation. Dataset loading refuses to manufacture synthetic evidence when requested data is missing or to assume a missing reference status means closed. These changes strengthen engineering integrity; they do not complete any clinical gate above.

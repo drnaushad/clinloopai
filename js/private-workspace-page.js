@@ -34,6 +34,7 @@
   }
   byId('connect-form').addEventListener('submit', async event => {
     event.preventDefault();
+    if (expireIfIdle()) return;
     const operation = workspace.connect(byId('endpoint').value, byId('local-only').checked);
     const current = uiEpoch;
     ui.set(status, 'Connecting to your own Ollama…'); sync();
@@ -41,6 +42,7 @@
     if (current === uiEpoch) sync();
   });
   byId('run').addEventListener('click', async () => {
+    if (expireIfIdle()) return;
     const current = uiEpoch;
     ui.set(byId('answer'), 'Waiting for your local model…');
     const operation = workspace.run(byId('model').value, byId('prompt').value);
@@ -60,10 +62,22 @@
   }
   byId('clear').addEventListener('click', () => clear(false));
   byId('disconnect').addEventListener('click', () => clear(true));
-  ['pointerdown', 'keydown', 'input'].forEach(name => document.addEventListener(name, () => { lastActivity = Date.now(); }, {passive: true}));
-  setInterval(() => { if (Date.now() - lastActivity >= 600000) { clear(true); lastActivity = Date.now(); } }, 10000);
+  function expireIfIdle() {
+    if (Date.now() - lastActivity < 600000) return false;
+    clear(true); lastActivity = Date.now(); return true;
+  }
+  // A suspended tab may not run its timer. Expire before accepting activity,
+  // otherwise the first keystroke could renew an already expired session.
+  ['pointerdown', 'keydown', 'input'].forEach(name => document.addEventListener(name, () => {
+    expireIfIdle(); lastActivity = Date.now();
+  }, {passive: true}));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) expireIfIdle(); });
+  setInterval(expireIfIdle, 10000);
   window.addEventListener('pagehide', () => clear(true));
-  window.addEventListener('pageshow', () => { lastActivity = Date.now(); sync(); });
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) clear(true); else expireIfIdle();
+    lastActivity = Date.now(); sync();
+  });
   // Do not restore form values from browser history or a duplicated tab.
   byId('prompt').value = '';
   byId('local-only').checked = false;

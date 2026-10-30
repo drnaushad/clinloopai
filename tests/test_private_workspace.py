@@ -1,5 +1,6 @@
 """Exercise isolation and loopback-only transport with synthetic fixtures."""
 import shutil
+import re
 import subprocess
 import unittest
 from pathlib import Path
@@ -10,11 +11,13 @@ class TestPrivateWorkspace(unittest.TestCase):
     def test_private_transport_and_page(self):
         root = Path(__file__).resolve().parents[1]
         result = subprocess.run(
-            ['node', 'tests/test_private_workspace.cjs'],
+            ['node', '--test-reporter=tap', 'tests/test_private_workspace.cjs'],
             cwd=root, capture_output=True, text=True, timeout=30,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn('# pass 21', result.stdout)
+        passed = re.search(r'^# pass (\d+)$', result.stdout, re.MULTILINE)
+        self.assertIsNotNone(passed, result.stdout)
+        self.assertGreaterEqual(int(passed.group(1)), 24)
 
     @unittest.skipUnless(shutil.which('node'), 'Personal API setup checks require Node.js')
     def test_personal_api_setup(self):

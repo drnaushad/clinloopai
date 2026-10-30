@@ -29,7 +29,8 @@ import requests
 
 from .clinical_ontology import get_rule_by_id
 from .patient_outreach_agent import OutreachRequest, generate_dynamic_outreach
-from .safety.agent_guard import detect_unsupported_clinical_claims
+from .safety.agent_guard import detect_unsupported_clinical_claims, contains_internal_reasoning
+from .transport_safety import secure_endpoint, bounded_json
 
 DEFAULT_OUTBOX = os.path.join(os.path.dirname(__file__), "..", "..", "data", "outbox.jsonl")
 
@@ -72,6 +73,8 @@ def check_text(text: str) -> None:
         raise OutreachNotAllowed("Message text is empty")
     if len(text) > 1000:
         raise OutreachNotAllowed("Message text is too long (max 1000 characters)")
+    if contains_internal_reasoning(text):
+        raise OutreachNotAllowed("Message contains internal reasoning markers; remove it before review")
     if detect_unsupported_clinical_claims(text):
         raise OutreachNotAllowed("Message contains a definitive clinical claim; remove it before sending")
 
@@ -85,7 +88,10 @@ class OutboxProvider:
     def send(self, message: Dict) -> str:
         ref = f"outbox-{uuid.uuid4().hex[:12]}"
         os.makedirs(os.path.dirname(os.path.abspath(self.path)), exist_ok=True)
-        with open(self.path, "a", encoding="utf-8") as f:
+        # New outboxes contain identifiers and need owner-only permissions.
+        flags = os.O_WRONLY | os.O_APPEND | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+        fd = os.open(self.path, flags, 0o600)
+        with os.fdopen(fd, "a", encoding="utf-8") as f:
             f.write(json.dumps({"ref": ref, **message}, ensure_ascii=False) + "\n")
         return ref
 
@@ -95,17 +101,39 @@ class WebhookProvider:
 
     def __init__(self, url: Optional[str] = None, timeout: float = 10.0):
         self.url = url or os.environ["CLINLOOP_OUTREACH_WEBHOOK_URL"]
+        try:
+            secure_endpoint(self.url)
+        except ValueError:
+            raise OutreachNotAllowed("Outreach webhook requires a valid HTTPS endpoint") from None
         self.timeout = timeout
 
     def send(self, message: Dict) -> str:
-        resp = requests.post(self.url, json=message, timeout=self.timeout)
-        resp.raise_for_status()
-        body = resp.json() if resp.content else {}
-        return str(body.get("ref") or body.get("id") or f"webhook-{resp.status_code}")
+        # Patient identity/text must never follow redirects or inherit a proxy.
+        with requests.Session() as session:
+            session.trust_env = False
+            with session.post(self.url, json=message, timeout=self.timeout,
+                              allow_redirects=False, stream=True) as resp:
+                if resp.status_code not in {200, 201, 202, 204}:
+                    raise OutreachNotAllowed(f"Outreach webhook refused delivery: HTTP {resp.status_code}")
+                if resp.status_code == 204:
+                    return "webhook-204"
+                try:
+                    body = bounded_json(resp, 16000)
+                except (ValueError, UnicodeError):
+                    raise OutreachNotAllowed("Outreach webhook returned an invalid acknowledgement") from None
+                if not isinstance(body, dict):
+                    raise OutreachNotAllowed("Outreach webhook returned an invalid acknowledgement")
+                ref = body.get("ref") or body.get("id")
+                if ref is not None and (not isinstance(ref, str) or not 1 <= len(ref) <= 200
+                                        or any(not (c.isascii() and (c.isalnum() or c in "-_.:")) for c in ref)):
+                    raise OutreachNotAllowed("Outreach webhook returned an invalid acknowledgement reference")
+                return ref or f"webhook-{resp.status_code}"
 
 
 def provider_from_env():
     kind = os.environ.get("CLINLOOP_OUTREACH_PROVIDER", "outbox").lower()
     if kind == "webhook":
         return WebhookProvider()
-    return OutboxProvider()
+    if kind == "outbox":
+        return OutboxProvider()
+    raise OutreachNotAllowed("Unknown outreach provider; delivery is disabled")

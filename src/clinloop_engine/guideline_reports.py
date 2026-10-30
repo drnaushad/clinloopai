@@ -54,7 +54,7 @@ _IGRA_COMPONENT = re.compile(r"minus nil|\bnil\b|mitogen|tb1|tb2|antigen tube|iu
 
 _UNCLEAR = re.compile(r"indeterminate|equivocal|borderline|inconclusive|invalid|grey ?zone|gray ?zone|"
                       r"판정\s*(?:불가|보류)|미결정|경계", re.I)
-_NEGATIVE = re.compile(r"non[- ]?reactive|\bnegative\b|not detected|undetected|\babsent\b|\bnone\b|음성|비반응", re.I)
+_NEGATIVE = re.compile(r"non[- ]?reactive|\bnegative\b|not\s+(?:detected|positive|reactive)|undetected|\babsent\b|\bnone\b|음성|비반응", re.I)
 _POSITIVE = re.compile(r"\breactive\b|\bpositive\b|\bdetected\b|양성|반응성", re.I)
 
 
@@ -66,20 +66,28 @@ _NOT_THE_RESULT = re.compile(r"\*\*.*?\*\*|\[[^\]]*\]|\((?:[^)]*?)(?:prev|prior|
 
 
 def _result_sign(value_text: str, flag: Optional[str], interp_codes: Iterable[str]) -> Optional[str]:
-    """'positive', 'negative', 'unclear' or None (no result stated): the first result word decides."""
+    """Detection polarity, keeping conflicting/indeterminate evidence for human review.
+
+    FHIR abnormal/high flags describe reference-range interpretation, not detection.
+    A normal flag likewise does not establish a negative infection screen.
+    """
     text = _NOT_THE_RESULT.sub(" ", value_text or "")
-    hits = [(m.start(), sign) for rx, sign in ((_UNCLEAR, "unclear"), (_NEGATIVE, "negative"), (_POSITIVE, "positive"))
-            for m in [rx.search(text)] if m]
-    if hits:
-        # Leftmost wins; at the same place the longer reading ("non-reactive" over "reactive") is listed first
-        return min(hits, key=lambda h: (h[0], ("unclear", "negative", "positive").index(h[1])))[1]
+    negative = list(_NEGATIVE.finditer(text))
+    signs = {"negative"} if negative else set()
+    if any(not any(n.start() <= p.start() and p.end() <= n.end() for n in negative)
+           for p in _POSITIVE.finditer(text)):
+        signs.add("positive")
     codes = {str(c).upper() for c in interp_codes}
-    if codes & {"IND", "EQV", "I"}:
+    if codes & {"NEG", "ND"}:
+        signs.add("negative")
+    if codes & {"POS", "DET"}:
+        signs.add("positive")
+    if _UNCLEAR.search(text) or codes & {"IND", "EQV", "E", "I"} or len(signs) > 1:
         return "unclear"
-    if codes & {"NEG", "N", "ND"}:
-        return "negative"
-    if codes & {"POS", "DET", "A", "AA", "H", "HH"} or flag in ("ABNORMAL", "HIGH", "CRITICAL"):
-        return "positive"
+    if signs:
+        return next(iter(signs))
+    if codes & {"A", "AA", "H", "HH"} or flag in ("ABNORMAL", "HIGH", "CRITICAL"):
+        return "unclear"
     return None
 
 
@@ -112,7 +120,7 @@ def classify_lab(codes: Iterable[str], code_text: str, value_text: str, flag: Op
             out["condition"] = "hiv_screen_reactive"
             out["mapping"].append("reactive→hiv_screen_reactive (R060)")
         elif sign == "unclear":
-            out["review_note"] = "HIV screening result is indeterminate: repeat or supplemental testing per the lab algorithm"
+            out["review_note"] = "HIV screening detection is unclear or conflicting: confirm the original result and lab algorithm"
         return out
 
     if (codes & LOINC_HBSAG or _HBSAG.search(text)) and not _HBV_ANTIBODY.search(text):
@@ -120,6 +128,8 @@ def classify_lab(codes: Iterable[str], code_text: str, value_text: str, flag: Op
         if sign == "positive":
             out["condition"] = "hbsag_positive"
             out["mapping"].append("HBsAg positive→hbsag_positive (R061)")
+        elif sign == "unclear":
+            out["review_note"] = "HBsAg detection is unclear or conflicting: confirm the original result"
         return out
 
     if codes & LOINC_IGRA or _IGRA.search(text):
@@ -130,7 +140,7 @@ def classify_lab(codes: Iterable[str], code_text: str, value_text: str, flag: Op
             out["condition"] = "tb_infection_test_positive"
             out["mapping"].append("IGRA positive→tb_infection_test_positive (R062)")
         elif sign == "unclear":
-            out["review_note"] = "IGRA indeterminate or borderline: repeat the test, or decide clinically"
+            out["review_note"] = "IGRA detection is unclear or conflicting: confirm the original result and decide clinically"
         return out
 
     if codes & LOINC_TST or _TST.search(text):

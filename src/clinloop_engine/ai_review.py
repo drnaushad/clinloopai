@@ -36,9 +36,9 @@ import re
 from datetime import timedelta
 from typing import Any, Dict, List, Optional, Set
 
-from .clinical_ontology import EventType
+from .clinical_ontology import EventType, is_fulfilling_status
 from .imaging_fhir import AI_FINDINGS
-from .radiology import expand_regions, regions_compatible
+from .radiology import expand_regions, regions_compatible, _in_history_section
 from .safety_clock import normalize_timestamp
 
 REPORT_WINDOW = timedelta(days=30)        # a report this long after the study is not "its" report
@@ -100,7 +100,8 @@ def _unread_critical(ai: Dict[str, Any], spec: Dict[str, Any], reports: List[Dic
 
 def _mentions(report: Dict[str, Any], key: str) -> Optional[re.Match]:
     text = report["details"].get("conclusion") or ""
-    return re.search(AI_FINDINGS[key]["report"], text, re.I)
+    return next((m for m in re.finditer(AI_FINDINGS[key]["report"], text, re.I)
+                 if not _in_history_section(text, m.start())), None)
 
 
 def apply_ai_review(events: List[Dict[str, Any]]) -> None:
@@ -109,10 +110,15 @@ def apply_ai_review(events: List[Dict[str, Any]]) -> None:
 
     # ImagingStudy reference → StudyInstanceUID (from the studies in the record)
     ref_uid: Dict[str, str] = {}
+    study_times: Dict[str, Any] = {}
     for e in events:
         d = e["details"]
         if e["event_type"] in IMAGING_EVENT_TYPES and d.get("study_ref") and d.get("study_uid"):
             ref_uid[d["study_ref"]] = d["study_uid"]
+        if e["event_type"] in IMAGING_EVENT_TYPES:
+            for identity in (d.get("study_ref"), d.get("study_uid")):
+                if identity:
+                    study_times[identity] = max(study_times.get(identity, ts(e)), ts(e))
 
     def report_ids(r: Dict[str, Any]) -> Set[str]:
         refs = r["details"].get("imaging_studies") or []
@@ -122,12 +128,15 @@ def apply_ai_review(events: List[Dict[str, Any]]) -> None:
         return {x for x in (d.get("study_uid"), d.get("study_ref"), ref_uid.get(d.get("study_ref") or "")) if x}
 
     reports = sorted((e for e in events if e["event_type"] == EventType.RADIOLOGY_REPORT.value
-                      and e.get("status") not in ("pending", "cancelled")), key=ts)
+                      and is_fulfilling_status(e.get("status"), e.get("event_type"))), key=ts)
 
     # One review per finding per study, whichever source(s) reported it: keep the strongest
     best: Dict[tuple, Dict[str, Any]] = {}
     for ai in (e for e in events if e["event_type"] == EventType.AI_FINDING.value):
         d = ai["details"]
+        # A voided AI result cannot suppress a valid duplicate from another source.
+        if ai.get("status") in {"cancelled", "canceled", "entered-in-error", "revoked", "draft"}:
+            continue
         key = d.get("finding_key")
         spec = AI_FINDINGS.get(key or "", {})
         notes: List[str] = d.setdefault("mapping", [])
@@ -156,9 +165,12 @@ def apply_ai_review(events: List[Dict[str, Any]]) -> None:
         notes = d["mapping"]
         study_time = normalize_timestamp(d.get("study_time") or ai["timestamp"])
         ids = ai_ids(d)
+        linked_times = [study_times[i] for i in ids if i in study_times]
+        if linked_times:
+            study_time = max(linked_times)
         regions = d.get("regions") or spec.get("regions") or []
 
-        same = [r for r in reports if ids and report_ids(r) & ids]
+        same = [r for r in reports if ids and report_ids(r) & ids and ts(r) >= study_time - CLOCK_SKEW]
         if same:
             candidates = same
         else:

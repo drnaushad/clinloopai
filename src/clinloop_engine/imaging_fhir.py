@@ -65,9 +65,16 @@ def _fhir_id(*parts: str) -> str:
 
 def _local_tz(offset: Optional[str] = None):
     """DICOM times are local: use the file's TimezoneOffsetFromUTC ('+0900'), else CLINLOOP_LOCAL_TZ."""
-    if offset and re.fullmatch(r"[+-]\d{4}", offset.strip()):
-        sign = 1 if offset.strip()[0] == "+" else -1
-        return timezone(sign * timedelta(hours=int(offset[1:3]), minutes=int(offset[3:5])))
+    if offset is not None and str(offset).strip():
+        text = str(offset).strip()
+        if not re.fullmatch(r"[+-]\d{4}", text) or text == "-0000":
+            raise ValueError("DICOM timezone offset is invalid; timing requires review")
+        hours, minutes = int(text[1:3]), int(text[3:5])
+        sign = 1 if text[0] == "+" else -1
+        total = sign * (60 * hours + minutes)
+        if minutes > 59 or not -12 * 60 <= total <= 14 * 60:
+            raise ValueError("DICOM timezone offset is invalid; timing requires review")
+        return timezone(timedelta(minutes=total))
     name = os.environ.get("CLINLOOP_LOCAL_TZ", DEFAULT_LOCAL_TZ).strip()
     if name.upper() in ("", "NONE", "NAIVE"):
         return None
@@ -75,9 +82,7 @@ def _local_tz(offset: Optional[str] = None):
         from zoneinfo import ZoneInfo
         return ZoneInfo(name)
     except Exception:
-        logging.getLogger("clinloop.imaging").error(
-            "CLINLOOP_LOCAL_TZ=%r is not a valid IANA time zone: DICOM times are read as UTC", name)
-        return None
+        raise ValueError("Configured DICOM timezone is invalid; timing requires review") from None
 
 
 def dicom_datetime(date: Optional[str], time: Optional[str] = None, tz_offset: Optional[str] = None) -> Optional[str]:
@@ -85,15 +90,17 @@ def dicom_datetime(date: Optional[str], time: Optional[str] = None, tz_offset: O
     date = (date or "").strip()
     if not re.fullmatch(r"\d{8}", date):
         return None
-    t = re.sub(r"[^\d]", "", (time or "").split(".")[0])[:6].ljust(6, "0") if time else "000000"
+    text = str(time or "").strip()
+    if text and not re.fullmatch(r"\d{2}(?:\d{2}(?:\d{2}(?:\.\d{1,6})?)?)?", text):
+        return None
+    whole, _, fraction = text.partition(".")
+    t = whole.ljust(6, "0") if text else "000000"
     try:
-        dt = datetime(int(date[:4]), int(date[4:6]), int(date[6:8]), int(t[:2]), int(t[2:4]), int(t[4:6]))
-    except ValueError:
-        try:
-            dt = datetime(int(date[:4]), int(date[4:6]), int(date[6:8]))
-        except ValueError:
-            return None          # e.g. "20260230"
-    tz = _local_tz(tz_offset)
+        dt = datetime(int(date[:4]), int(date[4:6]), int(date[6:8]), int(t[:2]), int(t[2:4]), int(t[4:6]),
+                      int(fraction.ljust(6, "0")) if fraction else 0)
+        tz = _local_tz(tz_offset)
+    except (ValueError, TypeError):
+        return None      # malformed supplied timing cannot become UTC/midnight
     return (dt.replace(tzinfo=tz) if tz else dt).isoformat()
 
 

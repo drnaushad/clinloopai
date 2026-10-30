@@ -76,6 +76,7 @@
   if(window.MutationObserver)new window.MutationObserver(syncChoices).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   $('disconnect').addEventListener('click',()=>clear(true));$('clear').addEventListener('click',()=>clear(false));
   $('connect').addEventListener('click',async()=>{
+    if(expireIfIdle())return;
     if(busy||loading||connected)return;
     const current=epoch,mode=$('mode').value,provider=$('provider').value;let setupLoaded=false;busy=true;status('Checking selected connection…');sync();
     try {
@@ -124,6 +125,7 @@
     if(!review.missing_context.length){const p=document.createElement('p');ui.set(p, 'No missing context listed by the model. This is not a completeness check.');box.append(p);}
   }
   $('analyze').addEventListener('click',async()=>{
+    if(expireIfIdle())return;
     if(!connected||busy||loading)return;
     const current=epoch,version=sourceVersion;const text=$('report').value,type=$('report-type').value,model=$('model').value;
     $('result').replaceChildren();
@@ -141,6 +143,7 @@
     finally{if(current===epoch){busy=false;sync();}}
   });
   async function loadSelectedFile(){
+    if(expireIfIdle())return;
     if(busy||loading)return;
     const current=epoch,version=++sourceVersion,file=$('report-file').files[0];$('complete-confirm').checked=false;
     if(!file)return;importedDocument=null;if($('file-preview'))$('file-preview').replaceChildren();
@@ -186,9 +189,14 @@
       status('Input size and format check passed. This does not verify extraction, completeness or medical accuracy. Check the original before confirming.');
     }catch(_){status('Input check did not pass. Use complete readable text within 6000 UTF-8 bytes; DICOM image or incomplete SR needs its own workflow. Nothing was sent.');}sync();
   });
-  for(const name of ['pointerdown','keydown','input'])document.addEventListener(name,()=>{lastActivity=Date.now();},{passive:true});
-  setInterval(()=>{if(Date.now()-lastActivity>=600000){clear(true);lastActivity=Date.now();}},10000);
-  window.addEventListener('pagehide',()=>clear(true));window.addEventListener('pageshow',event=>{if(event.persisted)clear(true);});
+  function expireIfIdle(){
+    if(Date.now()-lastActivity<600000)return false;
+    clear(true);lastActivity=Date.now();return true;
+  }
+  for(const name of ['pointerdown','keydown','input'])document.addEventListener(name,()=>{expireIfIdle();lastActivity=Date.now();},{passive:true});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)expireIfIdle();});
+  setInterval(expireIfIdle,10000);
+  window.addEventListener('pagehide',()=>clear(true));window.addEventListener('pageshow',event=>{if(event.persisted)clear(true);else expireIfIdle();});
   // Non-secret link hints only; never accept credentials, report text or arbitrary endpoints.
   if(window.URLSearchParams){
     const requested=new window.URLSearchParams(window.location.search).get('provider');

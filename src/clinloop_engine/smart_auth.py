@@ -30,13 +30,16 @@ CLI:
 
 import argparse
 import json
+import ipaddress
 import logging
+import math
 import os
 import sys
 import threading
 import time
 import uuid
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlsplit
 
 import requests
 
@@ -126,24 +129,47 @@ class SMARTBackendAuth(requests.auth.AuthBase):
         cfg: Dict[str, Any] = {}
         try:
             r = self.http.get(f"{self.fhir_base}/.well-known/smart-configuration",
-                              headers={"Accept": "application/json"}, timeout=self.timeout)
-            if r.status_code == 200:
-                cfg = r.json()
+                              headers={"Accept": "application/json"}, timeout=self.timeout, allow_redirects=False)
+            try:
+                if r.status_code == 200:
+                    decoded = r.json()
+                    if isinstance(decoded, dict):
+                        cfg = decoded
+            finally:
+                r.close()
         except (requests.RequestException, ValueError):
             pass
         if not cfg.get("token_endpoint"):
             try:
                 r = self.http.get(f"{self.fhir_base}/metadata", headers={"Accept": "application/fhir+json"},
-                                  timeout=self.timeout)
-                if r.status_code == 200:
-                    for rest in r.json().get("rest", []):
-                        for ext in (rest.get("security") or {}).get("extension", []):
-                            if ext.get("url", "").endswith("oauth-uris"):
-                                for sub in ext.get("extension", []):
-                                    if sub.get("url") == "token":
-                                        cfg["token_endpoint"] = sub.get("valueUri")
+                                  timeout=self.timeout, allow_redirects=False)
+                try:
+                    if r.status_code == 200:
+                        metadata = r.json()
+                        rest = metadata.get("rest", []) if isinstance(metadata, dict) else []
+                        if not isinstance(rest, list):
+                            raise ValueError()
+                        for entry in rest:
+                            security = entry.get("security", {}) if isinstance(entry, dict) else {}
+                            extensions = security.get("extension", []) if isinstance(security, dict) else []
+                            if not isinstance(extensions, list):
+                                raise ValueError()
+                            for ext in extensions:
+                                if isinstance(ext, dict) and str(ext.get("url", "")).endswith("oauth-uris"):
+                                    subs = ext.get("extension", [])
+                                    if not isinstance(subs, list):
+                                        raise ValueError()
+                                    for sub in subs:
+                                        if isinstance(sub, dict) and sub.get("url") == "token":
+                                            cfg["token_endpoint"] = sub.get("valueUri")
+                finally:
+                    r.close()
             except (requests.RequestException, ValueError):
                 pass
+        for field in ("capabilities", "scopes_supported"):
+            if field in cfg and (not isinstance(cfg[field], list)
+                                 or any(not isinstance(value, str) for value in cfg[field])):
+                raise SMARTAuthError("SMART discovery scope metadata is malformed")
         self._config = cfg
         return cfg
 
@@ -152,6 +178,21 @@ class SMARTBackendAuth(requests.auth.AuthBase):
         url = self._token_url or self.configuration().get("token_endpoint")
         if not url:
             raise SMARTAuthError("The FHIR server publishes no token endpoint: set CLINLOOP_FHIR_TOKEN_URL")
+        try:
+            if not isinstance(url, str):
+                raise ValueError()
+            endpoint = urlsplit(url)
+            endpoint.port                    # validate any explicit port
+            hostname = endpoint.hostname or ""
+            try:
+                loopback = ipaddress.ip_address(hostname).is_loopback
+            except ValueError:
+                loopback = hostname.lower() == "localhost"
+            if (not hostname or endpoint.username is not None or endpoint.password is not None or endpoint.fragment
+                    or not (endpoint.scheme == "https" or (endpoint.scheme == "http" and loopback))):
+                raise ValueError()
+        except (TypeError, ValueError):
+            raise SMARTAuthError("Token endpoint must be HTTPS without embedded credentials or fragments; HTTP is limited to loopback testing") from None
         return url
 
     @property
@@ -182,30 +223,45 @@ class SMARTBackendAuth(requests.auth.AuthBase):
             auth = (self.client_id, self.client_secret)       # client_secret_basic (sandboxes)
         try:
             r = self.http.post(self.token_url, data=data, auth=auth, timeout=self.timeout,
-                               headers={"Accept": "application/json"})
+                               headers={"Accept": "application/json"}, allow_redirects=False)
         except requests.RequestException as e:
             raise SMARTAuthError(f"Token endpoint unreachable ({type(e).__name__})") from None
-        if r.status_code != 200:
-            try:     # Only standard codes are safe: even `error` can echo source data.
-                body = r.json()
-                err = body.get("error", "") if isinstance(body, dict) else ""
-                allowed = {"invalid_request", "invalid_client", "invalid_grant", "unauthorized_client",
-                           "unsupported_grant_type", "invalid_scope", "server_error", "temporarily_unavailable"}
-                if not isinstance(err, str) or err not in allowed:
-                    err = ""
-            except ValueError:
-                err = ""
-            raise SMARTAuthError(f"Token request refused: HTTP {r.status_code}{' ' + err if err else ''}")
         try:
-            body = r.json()
-            token = body["access_token"]
-        except (ValueError, KeyError):
-            raise SMARTAuthError("Token endpoint answered without an access token") from None
+            if r.status_code != 200:
+                try:     # Only standard codes are safe: even `error` can echo source data.
+                    body = r.json()
+                    err = body.get("error", "") if isinstance(body, dict) else ""
+                    allowed = {"invalid_request", "invalid_client", "invalid_grant", "unauthorized_client",
+                               "unsupported_grant_type", "invalid_scope", "server_error", "temporarily_unavailable"}
+                    if not isinstance(err, str) or err not in allowed:
+                        err = ""
+                except ValueError:
+                    err = ""
+                raise SMARTAuthError(f"Token request refused: HTTP {r.status_code}{' ' + err if err else ''}")
+            try:
+                body = r.json()
+                if not isinstance(body, dict):
+                    raise ValueError()
+                token = body["access_token"]
+                lifetime = body.get("expires_in", 300)
+                token_type = body.get("token_type", "bearer")
+                if (not isinstance(token, str) or not 1 <= len(token) <= 16384 or not token.isascii()
+                        or any(ord(c) < 33 or ord(c) > 126 for c in token)
+                        or isinstance(lifetime, bool) or not isinstance(lifetime, (int, float, str))
+                        or not isinstance(token_type, str) or token_type.lower() != "bearer"):
+                    raise ValueError()
+                lifetime = float(lifetime)
+                deadline = time.time() + lifetime
+                if lifetime <= 0 or not math.isfinite(lifetime) or not math.isfinite(deadline):
+                    raise ValueError()
+            except (ValueError, KeyError, TypeError, OverflowError):
+                raise SMARTAuthError("Token endpoint returned an invalid access-token response") from None
+        finally:
+            r.close()
         self._token = token
-        self._expires_at = time.time() + float(body.get("expires_in") or 300)
-        granted = body.get("scope")
-        logger.info("FHIR access token obtained (expires in %ss%s)", body.get("expires_in"),
-                    f"; scope {granted}" if granted else "")
+        self._expires_at = deadline
+        # Even scope/expiry fields can contain source data from a broken server.
+        logger.info("FHIR access token obtained")
 
     def token(self) -> str:
         with self._lock:
