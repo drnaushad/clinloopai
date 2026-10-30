@@ -1,0 +1,82 @@
+{
+ "resourceType": "Bundle",
+ "id": "example-positive-fit",
+ "type": "collection",
+ "meta": {
+  "tag": [
+   {
+    "code": "synthetic",
+    "display": "Synthetic example: not a real patient"
+   }
+  ]
+ },
+ "entry": [
+  {
+   "fullUrl": "urn:uuid:Patient-SYN-001",
+   "resource": {
+    "resourceType": "Patient",
+    "id": "SYN-001",
+    "birthDate": "1958-03-02",
+    "gender": "male",
+    "communication": [
+     {
+      "language": {
+       "coding": [
+        {
+         "system": "urn:ietf:bcp:47",
+         "code": "ko"
+        }
+       ]
+      },
+      "preferred": true
+     }
+    ]
+   }
+  },
+  {
+   "fullUrl": "urn:uuid:Observation-fit-1",
+   "resource": {
+    "resourceType": "Observation",
+    "id": "fit-1",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "laboratory"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "29771-3",
+       "display": "Hemoglobin.gastrointestinal [Presence] in Stool by Immunologic method"
+      }
+     ],
+     "text": "Hemoglobin.gastrointestinal [Presence] in Stool by Immunologic method"
+    },
+    "subject": {
+     "reference": "Patient/SYN-001"
+    },
+    "effectiveDateTime": "2026-05-01T09:00:00+09:00",
+    "interpretation": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+        "code": "POS"
+       }
+      ]
+     }
+    ],
+    "valueCodeableConcept": {
+     "text": "Positive"
+    }
+   }
+  }
+ ]
+}

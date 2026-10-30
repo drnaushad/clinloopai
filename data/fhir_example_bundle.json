@@ -1,0 +1,553 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "id": "clinloop-synthetic-example",
+  "meta": {
+    "tag": [
+      {
+        "code": "SYNTHETIC",
+        "display": "Synthetic test data, no real patients"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-SYN-001",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "SYN-001",
+        "birthDate": "1958-03-02",
+        "gender": "male",
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "ko"
+                }
+              ]
+            },
+            "preferred": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Patient-SYN-002",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "SYN-002",
+        "birthDate": "1971-06-11",
+        "gender": "female",
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "ko"
+                }
+              ]
+            },
+            "preferred": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Patient-SYN-003",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "SYN-003",
+        "birthDate": "1949-01-20",
+        "gender": "male",
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "ko"
+                }
+              ]
+            },
+            "preferred": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Patient-SYN-004",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "SYN-004",
+        "birthDate": "1962-09-09",
+        "gender": "female",
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "vi"
+                }
+              ]
+            },
+            "preferred": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Patient-SYN-005",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "SYN-005",
+        "birthDate": "1940-12-01",
+        "gender": "male",
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "ko"
+                }
+              ]
+            },
+            "preferred": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Patient-SYN-006",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "SYN-006",
+        "birthDate": "1955-04-15",
+        "gender": "female",
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "zh"
+                }
+              ]
+            },
+            "preferred": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Patient-SYN-007",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "SYN-007",
+        "birthDate": "1966-07-07",
+        "gender": "male",
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "en"
+                }
+              ]
+            },
+            "preferred": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-fit-1",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "fit-1",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29771-3",
+              "display": "Hemoglobin.gastrointestinal [Presence] in Stool by Immunologic method"
+            }
+          ],
+          "text": "Hemoglobin.gastrointestinal [Presence] in Stool by Immunologic method"
+        },
+        "subject": {
+          "reference": "Patient/SYN-001"
+        },
+        "effectiveDateTime": "2026-05-01T09:00:00+09:00",
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "POS"
+              }
+            ]
+          }
+        ],
+        "valueCodeableConcept": {
+          "text": "Positive"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-ct-2",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "ct-2",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "text": "CT abdomen and pelvis"
+        },
+        "subject": {
+          "reference": "Patient/SYN-002"
+        },
+        "effectiveDateTime": "2026-04-01T10:00:00+09:00",
+        "conclusion": "No acute abdominal findings. Incidental 12 mm solid nodule in the right lower lobe."
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Appointment-appt-2",
+      "resource": {
+        "resourceType": "Appointment",
+        "id": "appt-2",
+        "status": "noshow",
+        "start": "2026-06-20T10:00:00+09:00",
+        "description": "Follow-up chest CT",
+        "participant": [
+          {
+            "actor": {
+              "reference": "Patient/SYN-002"
+            },
+            "status": "accepted"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-k-3",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "k-3",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2823-3",
+              "display": "Potassium [Moles/volume] in Serum or Plasma"
+            }
+          ],
+          "text": "Potassium [Moles/volume] in Serum or Plasma"
+        },
+        "subject": {
+          "reference": "Patient/SYN-003"
+        },
+        "effectiveDateTime": "2026-08-31T08:00:00+09:00",
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "HH"
+              }
+            ]
+          }
+        ],
+        "valueQuantity": {
+          "value": 6.6,
+          "unit": "mmol/L"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Communication-crit-3",
+      "resource": {
+        "resourceType": "Communication",
+        "id": "crit-3",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/SYN-003"
+        },
+        "sent": "2026-08-31T08:40:00+09:00",
+        "recipient": [
+          {
+            "reference": "Practitioner/dr-kim"
+          }
+        ],
+        "topic": {
+          "text": "Critical value: potassium 6.6"
+        },
+        "medium": [
+          {
+            "text": "phone"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-path-4",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "path-4",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "PAT"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "text": "Colon biopsy, sigmoid"
+        },
+        "subject": {
+          "reference": "Patient/SYN-004"
+        },
+        "effectiveDateTime": "2026-07-01T15:00:00+09:00",
+        "conclusion": "Negative for high-grade dysplasia in fragment A. Invasive adenocarcinoma in fragment B."
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Communication-tell-4",
+      "resource": {
+        "resourceType": "Communication",
+        "id": "tell-4",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/SYN-004"
+        },
+        "sent": "2026-07-02T11:00:00+09:00",
+        "recipient": [
+          {
+            "reference": "Patient/SYN-004"
+          }
+        ],
+        "topic": {
+          "text": "Biopsy result discussed"
+        },
+        "medium": [
+          {
+            "text": "phone"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Encounter-adm-5",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "adm-5",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "IMP"
+        },
+        "subject": {
+          "reference": "Patient/SYN-005"
+        },
+        "period": {
+          "start": "2026-07-05T20:00:00+09:00",
+          "end": "2026-07-10T11:00:00+09:00"
+        },
+        "reasonCode": [
+          {
+            "text": "Community-acquired pneumonia"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-bc-5",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "bc-5",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "600-7",
+              "display": "Bacteria identified in Blood by Culture"
+            }
+          ],
+          "text": "Bacteria identified in Blood by Culture"
+        },
+        "subject": {
+          "reference": "Patient/SYN-005"
+        },
+        "effectiveDateTime": "2026-07-12T07:00:00+09:00",
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "POS"
+              }
+            ]
+          }
+        ],
+        "valueCodeableConcept": {
+          "text": "Staphylococcus aureus growth"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:MedicationRequest-rx-6",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "rx-6",
+        "status": "active",
+        "intent": "order",
+        "subject": {
+          "reference": "Patient/SYN-006"
+        },
+        "authoredOn": "2026-08-01T09:00:00+09:00",
+        "medicationCodeableConcept": {
+          "text": "Warfarin 5 mg tablet"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-inr-6",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "inr-6",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "6301-6",
+              "display": "INR in Platelet poor plasma by Coagulation assay"
+            }
+          ],
+          "text": "INR in Platelet poor plasma by Coagulation assay"
+        },
+        "subject": {
+          "reference": "Patient/SYN-006"
+        },
+        "effectiveDateTime": "2026-08-05T09:00:00+09:00",
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "H"
+              }
+            ]
+          }
+        ],
+        "valueQuantity": {
+          "value": 2.4,
+          "unit": "{INR}"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Encounter-adm-7",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "adm-7",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "IMP"
+        },
+        "subject": {
+          "reference": "Patient/SYN-007"
+        },
+        "period": {
+          "start": "2026-07-01T03:00:00+09:00",
+          "end": "2026-07-06T10:00:00+09:00"
+        },
+        "reasonCode": [
+          {
+            "text": "Acute myocardial infarction (NSTEMI)"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Appointment-appt-7",
+      "resource": {
+        "resourceType": "Appointment",
+        "id": "appt-7",
+        "status": "fulfilled",
+        "start": "2026-07-16T14:00:00+09:00",
+        "description": "Cardiology outpatient follow-up",
+        "participant": [
+          {
+            "actor": {
+              "reference": "Patient/SYN-007"
+            },
+            "status": "accepted"
+          }
+        ]
+      }
+    }
+  ]
+}

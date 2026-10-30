@@ -1,0 +1,161 @@
+{
+  "assessment_date": "2026-10-27",
+  "assessment_type": "engineering_gap_assessment_not_certification",
+  "clinical_use_authorized": false,
+  "fda_or_imdrf_endorsement_claimed": false,
+  "source_guidance": {
+    "fda": "https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/good-machine-learning-practice-medical-device-development-guiding-principles",
+    "imdrf_2025": "https://www.imdrf.org/sites/default/files/2025-02/IMDRF_AIML%20WG_GMLP_N88%20Final.pdf"
+  },
+  "guidance_edition": "IMDRF/AIML WG/N88 FINAL:2025 (27 January 2025)",
+  "review_record_policy": {
+    "schema_version": 2,
+    "pending_files_expected": 23,
+    "human_approvals": 0,
+    "ai_generated_records_are_human_signoffs": false,
+    "attestations_are_not_identity_or_licence_authentication": true
+  },
+  "principles": [
+    {
+      "principle": 1,
+      "topic": "Intended purpose and multidisciplinary input",
+      "status": "partial",
+      "candidate_evidence": [
+        "docs/regulatory/INTENDED_USE.md",
+        "docs/reviews/clinical-ml-20261026.json"
+      ],
+      "remaining_gap": "Clinical scope and qualified human source review remain pending.",
+      "responsible_role": "Clinical lead",
+      "next_action": "Approve tracked milestones, population, workflow and accountable reviewers."
+    },
+    {
+      "principle": 2,
+      "topic": "Engineering, design and security",
+      "status": "partial",
+      "candidate_evidence": [
+        "scripts/clinical_review_packet.py",
+        "tests/test_clinical_review_packet.py",
+        "docs/regulatory/RISK_MANAGEMENT.md"
+      ],
+      "remaining_gap": "Engineering checks do not demonstrate a complete institutional quality or security process.",
+      "responsible_role": "Engineering and security leads",
+      "next_action": "Independently review source, threat model, access controls and risk traceability."
+    },
+    {
+      "principle": 3,
+      "topic": "Representative clinical datasets",
+      "status": "not_demonstrated",
+      "candidate_evidence": [
+        "docs/ACCURACY_EVALUATION.md"
+      ],
+      "remaining_gap": "Available synthetic evidence cannot establish population or subgroup performance.",
+      "responsible_role": "Clinical validation lead",
+      "next_action": "Arrange approved representative data and subgroup coverage."
+    },
+    {
+      "principle": 4,
+      "topic": "Independent test data",
+      "status": "partial",
+      "candidate_evidence": [
+        "src/validation/learned_baselines.py",
+        "src/validation/dataset_evaluation.py"
+      ],
+      "remaining_gap": "Synthetic group splitting exists; independent external clinical evaluation is absent.",
+      "responsible_role": "ML validation lead",
+      "next_action": "Freeze patient/site/time-separated cohorts and verify leakage controls."
+    },
+    {
+      "principle": 5,
+      "topic": "Appropriate reference standards",
+      "status": "pending",
+      "candidate_evidence": [
+        "src/validation/report_validation.py",
+        "docs/reviews/RETURNED_REVIEW_CORRECTIONS_20261027.md"
+      ],
+      "remaining_gap": "Developer/AI expectations and unresolved task definitions need expert adjudication.",
+      "responsible_role": "Clinical reference team",
+      "next_action": "Adjudicate source evidence, deadlines and completion milestones before scoring."
+    },
+    {
+      "principle": 6,
+      "topic": "Model suitability for intended task",
+      "status": "partial",
+      "candidate_evidence": [
+        "src/clinloop_engine/benchmark.py",
+        "src/validation/learned_baselines.py"
+      ],
+      "remaining_gap": "Easy synthetic benchmark scores cannot establish model superiority or clinical benefit.",
+      "responsible_role": "Clinical and ML leads",
+      "next_action": "Evaluate fixed checkpoints against task-specific criteria; prefer the simplest validated method."
+    },
+    {
+      "principle": 7,
+      "topic": "Clinician and AI interaction",
+      "status": "not_demonstrated",
+      "candidate_evidence": [
+        "docs/PILOT_RUNBOOK.md"
+      ],
+      "remaining_gap": "Interface tests do not establish clinician understanding, workload or reliance behavior.",
+      "responsible_role": "Human factors lead",
+      "next_action": "Observe intended users completing representative workflows and recovery tasks."
+    },
+    {
+      "principle": 8,
+      "topic": "Clinically relevant testing",
+      "status": "not_demonstrated",
+      "candidate_evidence": [
+        "docs/PILOT_RUNBOOK.md",
+        "src/validation/chart_review.py"
+      ],
+      "remaining_gap": "No independently labelled hospital cohort or supervised clinical pilot was completed.",
+      "responsible_role": "Clinical validation lead",
+      "next_action": "Predefine acceptance criteria and evaluate missed, extra, late and unsafe closures."
+    },
+    {
+      "principle": 9,
+      "topic": "Clear user information",
+      "status": "partial",
+      "candidate_evidence": [
+        "docs/PRODUCTION_READINESS.md",
+        "docs/regulatory/INTENDED_USE.md"
+      ],
+      "remaining_gap": "Research notices and evidence exist; intended-user comprehension remains untested.",
+      "responsible_role": "Product and clinical leads",
+      "next_action": "Verify input limits, model/version scope and uncertainty are understood."
+    },
+    {
+      "principle": 10,
+      "topic": "Operational monitoring and change control",
+      "status": "planned_not_validated",
+      "candidate_evidence": [
+        "docs/PILOT_RUNBOOK.md",
+        "src/clinloop_engine/governance.py"
+      ],
+      "remaining_gap": "Monitoring controls are not evidence of monitored hospital deployment.",
+      "responsible_role": "Hospital operations and ML leads",
+      "next_action": "Exercise drift detection, incident response, revalidation and rollback before activation."
+    }
+  ],
+  "received_review_provenance": {
+    "classification": "ai_generated_review_material",
+    "evidence": "Both pasted texts start with Conversation with Gemini and include its AI disclaimer. No identifiable human sign-off is supplied.",
+    "attachments_identical": true,
+    "transcript_sha256": "34575a6c3cb34174c750f5f6b4fd6dfb77e1d6daf32f1fc7a062e6fc45b43b42",
+    "reviewed_commit": "2779baaca90370e83596e832c8e011f9442ec897",
+    "returned_decisions": {
+      "approved": 6,
+      "changes_requested": 16
+    },
+    "imported_human_approvals": 0,
+    "previously_reviewed_source_files_changed_by_corrections": 16
+  },
+  "evidence_scope": {
+    "engine_and_ui_candidate_commit": "9cf754e89f383e28f6684b12b7c4402f0028afca",
+    "prior_full_offline_tests": 1056,
+    "prior_subtests": 122,
+    "latest_review_provenance_tests": 26,
+    "clinical_engine_changes_in_this_followup": false,
+    "new_inference_or_clinical_data_used": false,
+    "live_website_changed": false
+  }
+}

@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="ko" data-workspace="analyse" data-language-options="en ko">
+<head>
+<script src="js/display-start.js?v=20261028_languages1"></script>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e7490">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<title>ClinLoop Analyse Patient</title>
+<style>
+:root {
+  --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --border-strong: #cbd5e1;
+  --text: #0f172a; --muted: #475569; --dim: #556274;
+  --accent: #0369a1; --accent-soft: rgba(3,105,161,.10);
+  --critical: #be123c; --critical-soft: rgba(225,29,72,.10);
+  --high: #c2410c; --high-soft: rgba(234,88,12,.10);
+  --moderate: #854d0e; --moderate-soft: rgba(202,138,4,.12);
+  --low: #475569; --low-soft: rgba(71,85,105,.10);
+  --ok: #065f46; --ok-soft: rgba(5,150,105,.10);
+  --radius: 12px; --shadow: 0 4px 14px rgba(15,23,42,.06);
+  --font-head: 'Outfit', 'Noto Sans KR', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+    --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+    --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+    --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+    --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+    --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+    --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+    --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+  --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+  --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+  --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+  --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+  --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+  --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+  --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 64px; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; }
+header nav { display: flex; gap: 12px; align-items: center; }
+h1 { font: 800 1.6rem/1.2 var(--font-head); margin: 0; letter-spacing: -.01em; }
+h1 span { color: var(--accent); }
+.sub { color: var(--muted); margin: 4px 0 0; }
+a { color: var(--accent); font-weight: 600; }
+.banner { margin: 16px 0; padding: 10px 14px; border-radius: var(--radius); background: var(--moderate-soft);
+  border: 1px solid var(--border); font-size: .9rem; }
+.feed { margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius); font-size: .9rem; font-weight: 600;
+  border: 1px solid var(--border); }
+.feed.ok { background: var(--ok-soft); color: var(--ok); font-weight: 500; }
+.feed.alarm { background: var(--critical); color: #fff; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.connect { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 10px; padding: 14px; align-items: end; }
+label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+input, select, textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; }
+textarea { min-height: 72px; resize: vertical; }
+button { font: 600 .88rem var(--font-body); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { color: var(--critical); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+.status-line { padding: 0 14px 12px; font-size: .85rem; color: var(--muted); min-height: 1.4em; }
+.status-line.error { color: var(--critical); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+.kpi { padding: 12px 14px; }
+.kpi .v { font: 700 1.6rem/1.1 var(--font-head); font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: .8rem; color: var(--muted); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 12px; }
+.toolbar .spacer { flex: 1; }
+.loop { padding: 14px; margin-bottom: 10px; border-left: 4px solid var(--low); }
+.loop.critical { border-left-color: var(--critical); }
+.loop.high { border-left-color: var(--high); }
+.loop.moderate { border-left-color: var(--moderate); }
+.loop.closed { border-left-color: var(--ok); }
+.loop-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.loop-title { font-weight: 700; flex: 1 1 260px; margin: 0; font-size: 1rem; }
+.chip { font: 600 .72rem var(--font-mono); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.critical { background: var(--critical-soft); color: var(--critical); }
+.chip.high { background: var(--high-soft); color: var(--high); }
+.chip.moderate { background: var(--moderate-soft); color: var(--moderate); }
+.chip.low, .chip.neutral { background: var(--low-soft); color: var(--low); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.overdue { background: var(--critical); color: #fff; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: .85rem; margin: 6px 0; }
+.meta b { color: var(--text); font-weight: 600; }
+.missing { font-weight: 600; margin: 4px 0; }
+.action { color: var(--muted); font-size: .9rem; }
+details { margin-top: 8px; }
+summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
+.basis { margin: 8px 0 4px; padding-left: 1.2em; font-size: .9rem; line-height: 1.5; }
+.basis li { margin: 2px 0; }
+.evidence { font: .78rem/1.5 var(--font-mono); color: var(--muted); background: var(--bg); padding: 10px; margin-top: 6px;
+  border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+.empty { text-align: center; color: var(--muted); padding: 32px 16px; }
+.local-note { margin: 16px 0; padding: 12px 14px; border-radius: var(--radius); border: 2px solid var(--accent);
+  background: var(--accent-soft); font-weight: 600; }
+.inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.inputs .card { padding: 14px; }
+.inputs h2, .results h2 { font: 700 1.05rem/1.3 var(--font-head); margin: 0 0 8px; }
+.field { margin-bottom: 10px; }
+.field .hint { color: var(--muted); font-size: .8rem; margin: 4px 0 0; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.examples { display: flex; flex-wrap: wrap; gap: 8px; }
+.eval { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin: 0 0 12px; padding: 14px; }
+.eval .field { margin: 0; flex: 0 1 280px; }
+.results { margin-top: 8px; }
+.summary-line { margin: 0 0 12px; padding: 10px 14px; }
+.warnings { margin: 8px 0 0; padding-left: 1.2em; color: var(--muted); font-size: .85rem; }
+footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
+[hidden] { display: none !important; }
+@media (max-width: 720px) {
+  .connect { grid-template-columns: 1fr; }
+  .inputs { grid-template-columns: 1fr; }
+  .row2 { grid-template-columns: 1fr; }
+}
+</style>
+<script src="config.js"></script>
+<script src="js/demo.js?v=20261023_locale1"></script>
+<script src="js/appnav.js?v=20261028_languages1"></script>
+<link rel="stylesheet" href="css/responsive.css?v=20261023_locale1">
+<script defer src="js/language-controls.js?v=20261023_locale1"></script>
+<link rel="stylesheet" href="css/app-chrome.css?v=20261028_languages1"><script defer src="js/appearance-controls.js?v=20261027_research2"></script><script defer src="js/workspace-shell.js?v=20261028_languages1"></script><script src="js/interface-copy.js?v=20261028_files1"></script><script src="js/interface-language.js?v=20261028_languages1"></script></head>
+<body class="clinloop-page"><a class="skip-link shell-skip" href="#clinloop-workspace">Skip to workspace</a>
+<!-- clinloop-shell:start -->
+<header class="clinloop-shell" data-static-shell="true"><div class="clinloop-shell-top"><a class="clinloop-shell-brand" href="./"><img src="icons/logo.svg" alt="" width="32" height="32"><span>ClinLoop AI</span></a><div class="clinloop-shell-controls" role="group" aria-label="Display and account"><div role="group" data-shell-account=""><div class="appearance-controls" role="group" aria-label="Appearance"><button type="button" aria-pressed="true"><span data-nav-language="en">Light</span><span data-nav-language="ko">라이트</span></button><button type="button" aria-pressed="false"><span data-nav-language="en">Dark</span><span data-nav-language="ko">다크</span></button></div><button hidden data-legacy-language="true" type="button" id="btn-lang" aria-label="Language">English</button><div class="prominent-lang-pill" role="group" aria-label="Language"><button type="button" id="lang-opt-en" data-language="en" aria-pressed="true">English</button><button type="button" id="lang-opt-ko" data-language="ko" aria-pressed="false">한국어</button></div></div></div></div><nav class="app-nav clinloop-shell-links" aria-label="ClinLoop pages"><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-0"><span class="clinloop-nav-group-label" id="nav-group-0"><span data-nav-language="en">Clinical workspace</span><span data-nav-language="ko">진료 작업 공간</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="./" data-label-en="Cockpit" data-label-ko="종합 화면"><span data-nav-language="en">Cockpit</span><span data-nav-language="ko">종합 화면</span></a><a class="app-nav-link" href="worklist" data-label-en="Worklist" data-label-ko="업무 목록"><span data-nav-language="en">Worklist</span><span data-nav-language="ko">업무 목록</span></a><a class="app-nav-link" href="patient" data-label-en="Patient graph" data-label-ko="환자 그래프"><span data-nav-language="en">Patient graph</span><span data-nav-language="ko">환자 그래프</span></a><a class="app-nav-link" href="quality" data-label-en="Quality" data-label-ko="품질 지표"><span data-nav-language="en">Quality</span><span data-nav-language="ko">품질 지표</span></a><a class="app-nav-link" href="governance" data-label-en="Rule sign-off" data-label-ko="규칙 승인"><span data-nav-language="en">Rule sign-off</span><span data-nav-language="ko">규칙 승인</span></a><a class="app-nav-link" href="pilot" data-label-en="Pilot review" data-label-ko="시범 검토"><span data-nav-language="en">Pilot review</span><span data-nav-language="ko">시범 검토</span></a><a class="app-nav-link" href="imaging" data-label-en="Imaging" data-label-ko="영상"><span data-nav-language="en">Imaging</span><span data-nav-language="ko">영상</span></a><a class="app-nav-link" href="analyse" data-label-en="Analyse patient" data-label-ko="환자 분석" aria-current="page"><span data-nav-language="en">Analyse patient</span><span data-nav-language="ko">환자 분석</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-1"><span class="clinloop-nav-group-label" id="nav-group-1"><span data-nav-language="en">Research</span><span data-nav-language="ko">연구</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="reports" data-label-en="Live report reader" data-label-ko="실시간 보고서 검토"><span data-nav-language="en">Live report reader</span><span data-nav-language="ko">실시간 보고서 검토</span></a><a class="app-nav-link" href="review" data-label-en="Report review" data-label-ko="보고서 검토"><span data-nav-language="en">Report review</span><span data-nav-language="ko">보고서 검토</span></a><a class="app-nav-link" href="private" data-label-en="Personal workspace" data-label-ko="개인 작업 공간"><span data-nav-language="en">Personal workspace</span><span data-nav-language="ko">개인 작업 공간</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-2"><span class="clinloop-nav-group-label" id="nav-group-2"><span data-nav-language="en">Evidence and setup</span><span data-nav-language="ko">검증 및 설정</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="validation" data-label-en="Validation evidence" data-label-ko="검증 근거"><span data-nav-language="en">Validation evidence</span><span data-nav-language="ko">검증 근거</span></a><a class="app-nav-link" href="deployment" data-label-en="International setup" data-label-ko="국제 배포 계획"><span data-nav-language="en">International setup</span><span data-nav-language="ko">국제 배포 계획</span></a></div></div></nav><div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label><select id="clinloop-page-picker"><optgroup label="Clinical workspace"><option value="/">Cockpit</option><option value="/worklist">Worklist</option><option value="/patient">Patient graph</option><option value="/quality">Quality</option><option value="/governance">Rule sign-off</option><option value="/pilot">Pilot review</option><option value="/imaging">Imaging</option><option value="/analyse" selected>Analyse patient</option></optgroup><optgroup label="Research"><option value="/reports">Live report reader</option><option value="/review">Report review</option><option value="/private">Personal workspace</option></optgroup><optgroup label="Evidence and setup"><option value="/validation">Validation evidence</option><option value="/deployment">International setup</option></optgroup></select></div><details class="clinloop-workflow-guide"><summary><span data-nav-language="en">Choose a workflow</span><span data-nav-language="ko">작업 흐름 선택</span></summary><div class="clinloop-workflow-grid"><div><a href="review"><span data-nav-language="en">Review report text</span><span data-nav-language="ko">보고서 텍스트 검토</span></a><p><span data-nav-language="en">Load TXT in your browser or import PDF, scans, photos and DICOM through your personal gateway. Check the complete source before model review (6000 UTF-8 bytes).</span><span data-nav-language="ko">TXT는 브라우저에서, PDF·스캔·사진·DICOM은 개인 게이트웨이에서 불러옵니다. 모델 검토(UTF-8 6000바이트) 전에 전체 원문을 확인하세요.</span></p></div><div><a href="analyse"><span data-nav-language="en">Try follow-up detection</span><span data-nav-language="ko">후속 조치 탐지 체험</span></a><p><span data-nav-language="en">Start with a synthetic example, a FHIR .json bundle or radiology/pathology report text. The browser demo needs no model connection.</span><span data-nav-language="ko">합성 예제, FHIR .json 번들 또는 영상·병리 보고서 텍스트로 시작하세요. 브라우저 데모는 모델 연결이 필요 없습니다.</span></p></div><div><a href="imaging"><span data-nav-language="en">Explore document and imaging workflows</span><span data-nav-language="ko">문서 및 영상 작업 흐름 살펴보기</span></a><p><span data-nav-language="en">DICOM image pixels, medical images and waveforms need a separate validated imaging workflow. The public Imaging page shows local-installation demonstrations.</span><span data-nav-language="ko">DICOM 화소, 의료영상 및 파형에는 별도로 검증된 영상 작업 흐름이 필요합니다. 공개 영상 화면은 로컬 설치 기능을 시연합니다.</span></p></div><div><a href="validation"><span data-nav-language="en">Check evidence and limitations</span><span data-nav-language="ko">검증 근거 및 한계 확인</span></a><p><span data-nav-language="en">See measured results, supported tasks and pending reviews before choosing a workflow or comparing models. Universal clinical accuracy is not established.</span><span data-nav-language="ko">작업 흐름 선택이나 모델 비교 전에 측정 결과, 지원 작업 및 검토 현황을 확인하세요. 모든 임상 작업에 대한 정확도는 입증되지 않았습니다.</span></p></div></div></details><aside class="research-release-notice" role="note"><span data-nav-language="en">Research preview · synthetic data only. Independent review and clinical validation pending. <a href="validation#research-release">Review status</a></span><span data-nav-language="ko">연구 미리보기 · 합성 데이터 전용. 독립 검토 및 임상 검증 대기 중. <a href="validation#research-release">검토 현황</a></span></aside></header>
+<!-- clinloop-shell:end -->
+<div class="wrap" id="clinloop-workspace" role="main" tabindex="-1">
+  <header>
+
+    <div>
+      <h1><a class="brand-home" href="./" title="ClinLoop home"><svg class="brand-mark" viewBox="0 0 48 48" role="img" aria-label="ClinLoop logo: rod of Asclepius inside a closing loop"><path d="M37.6 10.4A19 19 0 1 0 43 24" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/><path d="M44.2 8.6 43.9 18.9 34 16.2Z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M24 8.6v30.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><g class="bm-serpent"><path d="M27 14.2C21.2 13.8 19 17.4 24 18.6 29 19.8 29 22.8 24 23.8 19 24.8 19 28 24 29 28 29.8 27.8 32.6 25 34.2" fill="none" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="28.6" cy="13.4" rx="3" ry="2.1" transform="rotate(-18 28.6 13.4)" stroke="none"/></g></svg></a><span data-i18n="title">Analyse patient</span></h1>
+      <p class="sub" data-i18n="subtitle"></p>
+    </div>
+
+  </header>
+
+  <div class="local-note" role="note" id="local-note" data-i18n="localNote" hidden></div>
+  <div class="banner" role="note" id="server-note" data-i18n="serverNote" hidden></div>
+
+  <section class="card" aria-label="Connection" id="connect-card" hidden>
+    <form class="connect" id="connect-form">
+      <div>
+        <label for="api-base" data-i18n="api"></label>
+        <input id="api-base" type="url" placeholder="http://localhost:8124" required>
+      </div>
+      <div>
+        <label for="token" data-i18n="token"></label>
+        <input id="token" type="password" autocomplete="off" required>
+      </div>
+      <button class="primary" type="submit" data-i18n="signin"></button>
+    </form>
+    <div class="status-line" id="status" aria-live="polite"></div>
+  </section>
+
+  <div id="app" hidden>
+    <section class="card eval" aria-label="Evaluation time">
+      <div class="field">
+        <label for="eval-time" data-i18n="evalTime"></label>
+        <input id="eval-time" type="datetime-local" aria-describedby="eval-hint">
+        <p class="hint" id="eval-hint" data-i18n="evalHint"></p>
+      </div>
+      <button type="button" id="btn-eval-now" data-i18n="evalNow"></button>
+    </section>
+
+    <div class="inputs">
+      <section class="card" aria-labelledby="h-file">
+        <h2 id="h-file" data-i18n="fileTitle"></h2>
+        <div class="field">
+          <label for="bundle-file" data-i18n="fileLabel"></label>
+          <input id="bundle-file" type="file" accept=".json,application/json,application/fhir+json" aria-describedby="file-hint">
+          <p class="hint" id="file-hint" data-i18n="fileHint"></p>
+        </div>
+        <h2 data-i18n="examplesTitle" style="margin-top:14px;"></h2>
+        <div class="examples">
+          <button type="button" class="example" data-example="lung-nodule" data-i18n="exLung"></button>
+          <button type="button" class="example" data-example="positive-fit" data-i18n="exFit"></button>
+          <button type="button" class="example" data-example="warfarin-inr" data-i18n="exInr"></button>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-paste">
+        <h2 id="h-paste" data-i18n="pasteTitle"></h2>
+        <form id="paste-form">
+          <div class="row2">
+            <div class="field">
+              <label for="paste-kind" data-i18n="pasteKind"></label>
+              <select id="paste-kind">
+                <option value="RAD" data-i18n="kindRad"></option>
+                <option value="PAT" data-i18n="kindPat"></option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="paste-date" data-i18n="pasteDate"></label>
+              <input id="paste-date" type="date" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="paste-title" data-i18n="pasteName"></label>
+            <input id="paste-title" type="text" maxlength="120" required>
+          </div>
+          <div class="field">
+            <label for="paste-text" data-i18n="pasteText"></label>
+            <textarea id="paste-text" rows="5" maxlength="20000" required></textarea>
+          </div>
+          <button class="primary" type="submit" data-i18n="pasteGo"></button>
+        </form>
+      </section>
+    </div>
+
+    <section class="results" aria-labelledby="h-results">
+      <h2 id="h-results" data-i18n="resultsTitle"></h2>
+      <div id="run-status" class="status-line" role="status" aria-live="polite" style="padding:0 0 8px;"></div>
+      <p class="workspace-empty" data-i18n="resultsEmpty"></p>
+      <div id="results" aria-live="polite" tabindex="-1"></div>
+    </section>
+  </div>
+
+  <footer data-i18n="footer"></footer>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const RANK = { viewer: 0, navigator: 1, clinician: 2, admin: 3 };
+  const MAX_BYTES = 5 * 1024 * 1024;
+  // Pinned Pyodide release (the engine runs in this browser on the public site)
+  const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
+
+  // Public website (no server) → run the engine here; a hospital's ClinLoop server → send it to the API.
+  // ?inbrowser=1 forces the in-browser engine (local testing).
+  const params = new URLSearchParams(location.search);
+  const isLocal = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  const IN_BROWSER = params.get('inbrowser') === '1'
+    || (!window.CLINLOOP_DEMO && window.CLINLOOP_API_BASE == null && !isLocal);
+
+  // ── Language ──────────────────────────────────────────────────────────────
+  const T = {
+    ko: {
+      preparing: "분석할 자료를 준비하는 중입니다…",
+      sourceChanged: "입력이 바뀌어 이전 결과를 지웠습니다. 다시 분석해 주세요.",
+      resultsEmpty: '아직 결과가 없습니다. 합성 예시를 선택하거나 보고서를 입력한 뒤 분석을 선택하세요.',
+      title: '환자 분석', subtitle: '환자 자료(FHIR 번들)나 판독지 한 건을 넣으면 엔진이 찾은 미완결 진료 루프를 보여줍니다.',
+      localNote: '이 브라우저 안에서만 실행됩니다. 어떤 자료도 외부로 전송되지 않습니다. 합성 자료만 사용하세요 — 공개 사이트에 실제 환자 정보를 넣지 마십시오.',
+      serverNote: '이 병원의 ClinLoop 서버로 자료를 보냅니다. 찾은 루프는 작업 목록에 기록되고, 모든 처리는 접근 기록에 남습니다. 자료를 불러오려면 관리자 권한이 필요합니다.',
+      api: 'ClinLoop API', token: '접근 토큰', signin: '로그인', signingIn: '로그인 중…',
+      signedIn: (u, r) => `${u}(${r})님으로 로그인했습니다.`,
+      signinFailed: (e) => `로그인 실패: ${e}. API 주소와 토큰을 확인하세요.`,
+      needAdmin: (u, r) => `${u}(${r})님으로 로그인했습니다. 환자 자료를 불러오려면 관리자 권한이 필요합니다. 관리자에게 요청하세요.`,
+      evalTime: '평가 시점', evalHint: '비워 두면 지금 시점으로 평가합니다 (이 기기의 현지 시각).', evalNow: '지금으로',
+      fileTitle: 'FHIR 번들 불러오기', fileLabel: 'FHIR R4 Bundle 파일 (.json)', fileHint: '최대 5 MB. 파일을 고르면 바로 분석합니다.',
+      examplesTitle: '예시 불러오기 (합성 환자)', exLung: '폐결절 CT', exFit: '분변잠혈 양성', exInr: '와파린·INR (종결된 루프)',
+      pasteTitle: '판독지 붙여넣기', pasteKind: '보고서 종류', kindRad: '영상 판독', kindPat: '병리 보고서',
+      pasteDate: '검사일', pasteName: '검사명 (예: CT chest)', pasteText: '판독 내용', pasteGo: '분석',
+      resultsTitle: '결과', footer: 'ClinLoop AI는 진단하지 않습니다. 결과는 의료진이 확인해야 할 후속 조치 목록입니다.',
+      loadingRuntime: '브라우저용 파이썬(Pyodide)을 불러오는 중… (처음 한 번은 수십 초 걸릴 수 있습니다)',
+      loadingPackages: '엔진에 필요한 패키지를 불러오는 중…', loadingEngine: 'ClinLoop 엔진 파일을 불러오는 중…',
+      analysing: '분석 중…', sending: '서버로 보내는 중…',
+      engineFailed: '이 브라우저에서 엔진을 불러오지 못했습니다. 네트워크 연결을 확인하고 다시 시도하세요.',
+      analyseFailed: '이 자료를 분석하지 못했습니다. FHIR R4 Bundle 형식인지 확인하세요.',
+      notJson: '파일을 읽지 못했습니다: 올바른 JSON이 아닙니다.', notBundle: 'FHIR Bundle이 아닙니다 (resourceType이 "Bundle"이어야 합니다).',
+      tooBig: '파일이 너무 큽니다 (최대 5 MB).', exampleFailed: '예시를 불러오지 못했습니다.',
+      summary: (r) => `환자 ${r.patients}명 · 이벤트 ${r.events}건 · 열린 루프 ${r.active_loops}건 · 전체 ${r.detections.length}건`,
+      evaluatedAt: (w) => `평가 시점: ${w}`,
+      none: '이 자료에서 추적할 후속 조치를 찾지 못했습니다.',
+      warnings: '처리 중 경고', ingested: (r) => `환자 ${r.patients}명, 이벤트 ${r.events}건을 처리했습니다. 신규 루프 ${r.loops.new ?? 0}건, 갱신 ${r.loops.updated ?? 0}건, 엔진이 종결 ${r.loops.resolved_by_engine ?? 0}건 · 현재 열린 루프 ${r.active_loops}건.`,
+      toWorklist: '작업 목록에서 보기 →',
+      status: { open: '열림', needs_human_review: '사람 검토 필요', closed: '종결', delayed: '지연 종결' },
+      severity: { critical: '위급', high: '높음', moderate: '중간', low: '낮음' },
+      patient: '환자', due: '기한', trigger: '계기', overdue: '기한 지남', basisTitle: '근거 (쉬운 말)', evidenceTitle: '기술적 근거',
+      rule: '규칙', source: (s) => `자료: ${s}`, srcFile: '선택한 파일', srcPaste: '붙여넣은 판독지', srcExample: '예시',
+    },
+    en: {
+      preparing: "Preparing source for analysis…",
+      sourceChanged: "Source changed. Run analysis again; the previous result has been cleared.",
+      resultsEmpty: 'No results yet. Choose a synthetic example, load a FHIR bundle, or enter a report and select Analyse.',
+      title: 'Analyse patient', subtitle: "Load a patient's data (a FHIR Bundle) or paste a single report, and see the open clinical loops the engine finds.",
+      localNote: 'Runs in this browser only. Nothing is sent anywhere. Synthetic data only — do not load real patient information on the public site.',
+      serverNote: "Data goes to this hospital's ClinLoop server. Loops found are recorded on the worklist and every load is recorded in the access log. Loading data needs the admin role.",
+      api: 'ClinLoop API', token: 'Access token', signin: 'Sign in', signingIn: 'Signing in…',
+      signedIn: (u, r) => `Signed in as ${u} (${r}).`,
+      signinFailed: (e) => `Sign-in failed: ${e}. Check the API address and token.`,
+      needAdmin: (u, r) => `Signed in as ${u} (${r}). Loading patient data needs an admin. Ask your administrator.`,
+      evalTime: 'Evaluation time', evalHint: "Leave empty to evaluate as of now (this device's local time).", evalNow: 'Now',
+      fileTitle: 'Load a FHIR Bundle', fileLabel: 'FHIR R4 Bundle file (.json)', fileHint: 'Up to 5 MB. Analysed as soon as you pick it.',
+      examplesTitle: 'Load an example (synthetic patients)', exLung: 'Lung nodule on CT', exFit: 'Positive FIT', exInr: 'Warfarin and INR (closed loop)',
+      pasteTitle: 'Paste a report', pasteKind: 'Report type', kindRad: 'Imaging report', kindPat: 'Pathology report',
+      pasteDate: 'Date of the study', pasteName: 'Study name (e.g. CT chest)', pasteText: 'Report text', pasteGo: 'Analyse',
+      resultsTitle: 'Results', footer: 'ClinLoop AI does not diagnose. The results are follow-up steps for a clinician to check.',
+      loadingRuntime: 'Loading Python for the browser (Pyodide)… the first time can take a few tens of seconds',
+      loadingPackages: 'Loading the packages the engine needs…', loadingEngine: 'Loading the ClinLoop engine files…',
+      analysing: 'Analysing…', sending: 'Sending to the server…',
+      engineFailed: 'The engine could not be loaded in this browser. Check the network connection and try again.',
+      analyseFailed: 'This data could not be analysed. Check that it is a FHIR R4 Bundle.',
+      notJson: 'The file could not be read: it is not valid JSON.', notBundle: 'This is not a FHIR Bundle (resourceType must be "Bundle").',
+      tooBig: 'The file is too large (5 MB at most).', exampleFailed: 'The example could not be loaded.',
+      summary: (r) => `${r.patients} patient(s) · ${r.events} event(s) · ${r.active_loops} open loop(s) · ${r.detections.length} in total`,
+      evaluatedAt: (w) => `Evaluated at ${w}`,
+      none: 'No follow-up obligations to track were found in this data.',
+      warnings: 'Warnings while reading the data', ingested: (r) => `Processed ${r.patients} patient(s), ${r.events} event(s): ${r.loops.new ?? 0} new loop(s), ${r.loops.updated ?? 0} updated, ${r.loops.resolved_by_engine ?? 0} closed by the engine · ${r.active_loops} open now.`,
+      toWorklist: 'Open the worklist →',
+      status: { open: 'Open', needs_human_review: 'Needs human review', closed: 'Closed', delayed: 'Closed late' },
+      severity: { critical: 'Critical', high: 'High', moderate: 'Moderate', low: 'Low' },
+      patient: 'Patient', due: 'Due', trigger: 'Trigger', overdue: 'Overdue', basisTitle: 'Basis (plain language)', evidenceTitle: 'Technical evidence',
+      rule: 'Rule', source: (s) => `Source: ${s}`, srcFile: 'chosen file', srcPaste: 'pasted report', srcExample: 'example',
+    },
+  };
+  const store = {
+    get(k, s = sessionStorage) { try { return s.getItem(k) || ''; } catch { return ''; } },
+    set(k, v, s = sessionStorage) { try { s.setItem(k, v); } catch {} },
+  };
+  const preferredLanguage = store.get('clinloop_lang', localStorage);
+  let lang = ['en', 'ko'].includes(preferredLanguage) ? preferredLanguage : ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');
+  const t = () => T[lang];
+  let running = false;
+  let last = null;            // last result, re-drawn when the language changes
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    $('btn-lang').textContent = lang === 'ko' ? 'English' : '한국어';
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t()[el.dataset.i18n]; });
+    if ($('token')) $('token').placeholder = lang === 'ko' ? '관리자에게 받은 Bearer 토큰' : 'Bearer token from your administrator';
+    $('paste-title').placeholder = 'CT chest';
+    if (last) last.draw();
+  }
+
+  function setStatus(msg, isError = false) {
+    $('status').textContent = msg;
+    $('status').classList.toggle('error', isError);
+  }
+  function setRun(msg, isError = false) {
+    $('run-status').textContent = msg;
+    $('run-status').classList.toggle('error', isError);
+  }
+  const fmtDate = (iso) => iso ? String(iso).replace('T', ' ').slice(0, 16) + ' UTC' : '—';
+
+  // ── Inputs → a FHIR Bundle ────────────────────────────────────────────────
+  // A pasted report becomes a minimal synthetic Bundle: one Patient and one final DiagnosticReport. The
+  // engine reads DiagnosticReport.conclusion for the report text, code.text for the study name and the
+  // HL7 v2-0074 category (RAD imaging / PAT pathology) to know which reader applies.
+  function pasteBundle(kind, title, date, text) {
+    const category = kind === 'PAT' ? 'PAT' : 'RAD';
+    return {
+      resourceType: 'Bundle', type: 'collection',
+      meta: { tag: [{ code: 'synthetic', display: 'Pasted report' }] },
+      entry: [
+        { fullUrl: 'urn:uuid:Patient-PASTE-1', resource: { resourceType: 'Patient', id: 'PASTE-1' } },
+        { fullUrl: 'urn:uuid:DiagnosticReport-PASTE-REPORT-1', resource: {
+          resourceType: 'DiagnosticReport', id: 'PASTE-REPORT-1', status: 'final',
+          category: [{ coding: [{ system: 'http://terminology.hl7.org/CodeSystem/v2-0074', code: category }] }],
+          code: { text: title }, subject: { reference: 'Patient/PASTE-1' },
+          effectiveDateTime: date, issued: date, conclusion: text,
+        } },
+      ],
+    };
+  }
+
+  // Never echo the content back: messages are generic
+  function parseBundle(text) {
+    let bundle;
+    try { bundle = JSON.parse(text); } catch { throw new Error(t().notJson); }
+    if (!bundle || typeof bundle !== 'object' || bundle.resourceType !== 'Bundle') throw new Error(t().notBundle);
+    return bundle;
+  }
+
+  // The engine's time base is UTC: the local time picked here is sent as UTC
+  const evalTime = () => { const v = $('eval-time').value; const d = v ? new Date(v) : null; return d && !isNaN(d) ? d.toISOString() : null; };
+  const asUtc = (iso) => new Date(/([zZ]|[+-]\d\d:\d\d)$/.test(String(iso)) ? iso : iso + 'Z');
+
+  // ── Mode 2: the engine in this browser (Pyodide) ──────────────────────────
+  let engine = null;
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src; s.crossOrigin = 'anonymous';
+      s.onload = resolve; s.onerror = () => reject(new Error('script'));
+      document.head.appendChild(s);
+    });
+  }
+  function startEngine() {
+    if (engine) return engine;
+    engine = (async () => {
+      const manifest = await (await fetch('js/engine_manifest.json', { cache: 'no-cache' })).json();
+      setRun(t().loadingRuntime);
+      if (!window.loadPyodide) await loadScript(PYODIDE_URL + 'pyodide.js');
+      const py = await window.loadPyodide({ indexURL: PYODIDE_URL });
+      setRun(t().loadingPackages);
+      // A wheel file name loads that wheel alone (networkx without its optional plotting dependencies)
+      await py.loadPackage(manifest.packages.map((p) => p.endsWith('.whl') ? PYODIDE_URL + p : p));
+      setRun(t().loadingEngine);
+      const root = '/home/pyodide/clinloop/';
+      // The engine's own files, from this website; nothing about the patient is in these requests
+      const files = await Promise.all(manifest.files.map(async (f) => {
+        const r = await fetch(f, { cache: 'no-cache' });
+        if (!r.ok) throw new Error('engine file');
+        return [f, await r.text()];
+      }));
+      for (const [f, text] of files) {
+        py.FS.mkdirTree(root + f.split('/').slice(0, -1).join('/'));
+        py.FS.writeFile(root + f, text);
+      }
+      py.runPython(`import sys\nsys.path.insert(0, ${JSON.stringify(root)})`);
+      return py.pyimport(manifest.entry).analyse_json;
+    })();
+    engine.catch(() => { engine = null; });     // a failed load can be retried
+    return engine;
+  }
+
+  async function analyseHere(bundle, source) {
+    let fn;
+    try { fn = await startEngine(); } catch (err) {
+      console.error('ClinLoop engine load failed:', err && err.name);
+      throw new Error(t().engineFailed);
+    }
+    setRun(t().analysing);
+    try {
+      const result = JSON.parse(fn(JSON.stringify(bundle), evalTime()));
+      last = { draw: () => drawDetections(result, source) };
+      last.draw();
+    } catch (err) {
+      console.error('ClinLoop analysis failed:', err && err.name);   // the type only, never the data
+      throw new Error(t().analyseFailed);
+    }
+  }
+
+  function chipFor(status) {
+    return status === 'closed' || status === 'delayed' ? 'ok' : status === 'needs_human_review' ? 'moderate' : 'critical';
+  }
+
+  function drawDetections(r, source) {
+    const now = r.evaluation_time ? asUtc(r.evaluation_time) : new Date();
+    const cards = r.detections.map((d) => {
+      const overdue = d.status === 'open' && d.deadline && asUtc(d.deadline) < now;
+      const basis = (lang === 'ko' && d.basis_ko && d.basis_ko.length) ? d.basis_ko : d.basis;
+      const sev = d.severity || 'low';
+      return `<article class="card loop ${esc(d.status === 'closed' ? 'closed' : sev)}">
+        <div class="loop-head">
+          <h3 class="loop-title">${esc(d.rule_name)}</h3>
+          <span class="chip neutral">${esc(d.rule_id)}</span>
+          <span class="chip ${chipFor(d.status)}">${esc(t().status[d.status] || d.status)}</span>
+          <span class="chip ${esc(sev)}">${esc(t().severity[sev] || sev)}</span>
+          ${overdue ? `<span class="chip overdue">${esc(t().overdue)}</span>` : ''}
+        </div>
+        <div class="meta"><span>${esc(t().patient)} <b>${esc(d.patient_id)}</b></span>
+          <span>${esc(t().trigger)} <b>${esc(d.trigger_event)}</b> · ${esc(fmtDate(d.trigger_time))}</span>
+          <span>${esc(t().due)} <b>${esc(fmtDate(d.deadline))}</b></span></div>
+        ${d.status !== 'closed' && d.missing ? `<p class="missing">${esc(d.missing)}</p>` : ''}
+        ${d.status !== 'closed' && d.recommended_action ? `<p class="action">${esc(d.recommended_action)}</p>` : ''}
+        ${basis && basis.length ? `<details open><summary>${esc(t().basisTitle)}</summary><ul class="basis">${basis.map((b) => `<li>${esc(b)}</li>`).join('')}</ul></details>` : ''}
+        ${d.evidence && d.evidence.length ? `<details><summary>${esc(t().evidenceTitle)}</summary><div class="evidence">${esc(d.evidence.join('\n'))}</div></details>` : ''}
+      </article>`;
+    }).join('');
+    $('results').innerHTML = `<div class="card summary-line"><strong>${esc(t().summary(r))}</strong>
+        <div class="sub" style="font-size:.85rem;">${esc(t().evaluatedAt(fmtDate(r.evaluation_time)))} · ${esc(t().source(source()))}</div>
+        ${r.warnings.length ? `<details><summary>${esc(t().warnings)} (${r.warnings.length})</summary><ul class="warnings">${r.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}
+      </div>` + (cards || `<div class="card empty">${esc(t().none)}</div>`);
+    setRun('');
+    $('results').focus();
+  }
+
+  // ── Mode 1: this hospital's ClinLoop server ───────────────────────────────
+  const state = { base: '', token: '', user: null };
+  async function api(path, opts = {}) {
+    const res = await fetch(state.base + path, {
+      ...opts,
+      headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const d = body.detail;
+      throw new Error(Array.isArray(d) ? d.map((x) => (x.loc ? x.loc[x.loc.length - 1] + ': ' : '') + (x.msg || '')).join('; ')
+        : d || (res.status === 401 ? 'Not signed in, or the token is not recognised' : `HTTP ${res.status}`));
+    }
+    return body;
+  }
+  const isAdmin = () => state.user && RANK[state.user.role] >= RANK.admin;
+
+  async function sendToServer(bundle) {
+    if (!isAdmin()) throw new Error(t().needAdmin(state.user ? state.user.user : '', state.user ? state.user.role : ''));
+    setRun(t().sending);
+    const q = evalTime() ? `?evaluation_time=${encodeURIComponent(evalTime())}` : '';
+    const r = await api('/api/v1/fhir/ingest' + q, { method: 'POST', body: JSON.stringify(bundle) });
+    last = { draw: () => {
+      $('results').innerHTML = `<div class="card summary-line"><strong>${esc(t().ingested(r))}</strong>
+          <p style="margin:8px 0 0;"><a href="worklist">${esc(t().toWorklist)}</a></p>
+          ${r.warnings.length ? `<details><summary>${esc(t().warnings)} (${r.warnings.length})</summary><ul class="warnings">${r.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}
+        </div>`;
+      setRun('');
+      $('results').focus();
+    } };
+    last.draw();
+  }
+
+  function invalidateResults() {
+    last = null;
+    $('results').replaceChildren();
+  }
+
+  async function run(loadBundle, source) {
+    if (running) return;
+    running = true;
+    invalidateResults();
+    const busy = document.querySelectorAll('#app button, #app input, #app select, #app textarea');
+    busy.forEach((el) => { el.disabled = true; });
+    setRun(t().preparing);
+    try {
+      const bundle = typeof loadBundle === 'function' ? await loadBundle() : loadBundle;
+      if (IN_BROWSER) await analyseHere(bundle, source);
+      else await sendToServer(bundle);
+    } catch (err) {
+      invalidateResults();
+      setRun(err.message || t().analyseFailed, true);
+    } finally {
+      running = false;
+      busy.forEach((el) => { el.disabled = false; });
+      applyRole();
+    }
+  }
+
+  function applyRole() {
+    if (IN_BROWSER) return;
+    const blocked = !isAdmin();
+    document.querySelectorAll('#bundle-file, .example, #paste-form button').forEach((el) => { el.disabled = blocked; });
+  }
+
+  // ── Events ────────────────────────────────────────────────────────────────
+  $('btn-lang').addEventListener('click', () => {
+    lang = lang === 'ko' ? 'en' : 'ko';
+    store.set('clinloop_lang', lang, localStorage);
+    applyLang();
+  });
+
+  $('btn-eval-now').addEventListener('click', () => { $('eval-time').value = ''; invalidateResults(); setRun(t().sourceChanged); });
+
+  $('bundle-file').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    await run(async () => {
+      if (file.size > MAX_BYTES) throw new Error(t().tooBig);
+      let text;
+      try { text = await file.text(); } catch (_) { throw new Error(t().notJson); }
+      return parseBundle(text);
+    }, () => t().srcFile);
+    e.target.value = '';
+  });
+
+  document.querySelectorAll('.example').forEach((btn) => btn.addEventListener('click', async () => {
+    await run(async () => {
+      let text;
+      try {
+        const r = await fetch(`demo/examples/${btn.dataset.example}.json`, { cache: 'no-cache' });
+        if (!r.ok) throw new Error();
+        text = await r.text();
+      } catch (_) { throw new Error(t().exampleFailed); }
+      return parseBundle(text);
+    }, () => `${t().srcExample}: ${btn.textContent}`);
+  }));
+
+  $('paste-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await run(() => pasteBundle($('paste-kind').value, $('paste-title').value.trim(), $('paste-date').value, $('paste-text').value.trim()), () => t().srcPaste);
+  });
+
+  for (const id of ['eval-time', 'paste-kind', 'paste-title', 'paste-date', 'paste-text']) {
+    for (const event of ['input', 'change']) $(id).addEventListener(event, () => {
+      if (running) return;
+      invalidateResults();
+      setRun(t().sourceChanged);
+    });
+  }
+
+  $('connect-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    state.base = $('api-base').value.replace(/\/+$/, '');
+    state.token = $('token').value.trim();
+    setStatus(t().signingIn);
+    try {
+      state.user = await api('/api/v1/me');
+      store.set('clinloop_api', state.base);
+      store.set('clinloop_token', state.token);
+      $('app').hidden = false;
+      setStatus(isAdmin() ? t().signedIn(state.user.user, state.user.role) : t().needAdmin(state.user.user, state.user.role), !isAdmin());
+      applyRole();
+    } catch (err) {
+      $('app').hidden = true;
+      setStatus(t().signinFailed(err.message), true);
+    }
+  });
+
+  // ── Start ─────────────────────────────────────────────────────────────────
+  $('paste-date').value = new Date().toISOString().slice(0, 10);
+  if (IN_BROWSER) {
+    $('local-note').hidden = false;
+    $('connect-card').remove();          // no server here: nothing to sign in to (and no auto sign-in)
+    $('app').hidden = false;
+  } else {
+    $('server-note').hidden = false;
+    $('connect-card').hidden = false;
+    $('api-base').value = store.get('clinloop_api') || window.CLINLOOP_API_BASE || (isLocal ? 'http://localhost:8124' : '');
+    $('token').value = store.get('clinloop_token');   // session storage: gone when the tab closes
+  }
+  applyLang();
+})();
+</script>
+</body>
+</html>

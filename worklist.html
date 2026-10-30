@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="ko" data-workspace="worklist" data-language-options="en ko">
+<head>
+<script src="js/display-start.js?v=20261028_languages1"></script>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e7490">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<title>ClinLoop Worklist</title>
+<style>
+:root {
+  --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --border-strong: #cbd5e1;
+  --text: #0f172a; --muted: #475569; --dim: #556274;
+  --accent: #0369a1; --accent-soft: rgba(3,105,161,.10);
+  --critical: #be123c; --critical-soft: rgba(225,29,72,.10);
+  --high: #c2410c; --high-soft: rgba(234,88,12,.10);
+  --moderate: #854d0e; --moderate-soft: rgba(202,138,4,.12);
+  --low: #475569; --low-soft: rgba(71,85,105,.10);
+  --ok: #065f46; --ok-soft: rgba(5,150,105,.10);
+  --radius: 12px; --shadow: 0 4px 14px rgba(15,23,42,.06);
+  --font-head: 'Outfit', 'Noto Sans KR', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+    --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+    --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+    --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+    --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+    --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+    --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+    --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+  --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+  --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+  --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+  --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+  --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+  --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+  --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 64px; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; }
+header nav { display: flex; gap: 12px; align-items: center; }
+h1 { font: 800 1.6rem/1.2 var(--font-head); margin: 0; letter-spacing: -.01em; }
+h1 span { color: var(--accent); }
+.sub { color: var(--muted); margin: 4px 0 0; }
+a { color: var(--accent); font-weight: 600; }
+.banner { margin: 16px 0; padding: 10px 14px; border-radius: var(--radius); background: var(--moderate-soft);
+  border: 1px solid var(--border); font-size: .9rem; }
+.feed { margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius); font-size: .9rem; font-weight: 600;
+  border: 1px solid var(--border); }
+.feed.ok { background: var(--ok-soft); color: var(--ok); font-weight: 500; }
+.feed.alarm { background: var(--critical); color: #fff; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.connect { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 10px; padding: 14px; align-items: end; }
+label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+input, select, textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; }
+textarea { min-height: 72px; resize: vertical; }
+button { font: 600 .88rem var(--font-body); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { color: var(--critical); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+.status-line { padding: 0 14px 12px; font-size: .85rem; color: var(--muted); min-height: 1.4em; }
+.status-line.error { color: var(--critical); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+.kpi { padding: 12px 14px; }
+.kpi .v { font: 700 1.6rem/1.1 var(--font-head); font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: .8rem; color: var(--muted); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 12px; }
+.toolbar .spacer { flex: 1; }
+.check { display: flex; gap: 6px; align-items: center; margin: 0; color: var(--text); font-weight: 500; font-size: .88rem; }
+.check input { width: auto; }
+.loop { padding: 14px; margin-bottom: 10px; border-left: 4px solid var(--low); }
+.loop.critical { border-left-color: var(--critical); }
+.loop.high { border-left-color: var(--high); }
+.loop.moderate { border-left-color: var(--moderate); }
+.loop-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.loop-title { font-weight: 700; flex: 1 1 260px; }
+.chip { font: 600 .72rem var(--font-mono); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.critical { background: var(--critical-soft); color: var(--critical); }
+.chip.high { background: var(--high-soft); color: var(--high); }
+.chip.moderate { background: var(--moderate-soft); color: var(--moderate); }
+.chip.low, .chip.neutral { background: var(--low-soft); color: var(--low); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.overdue { background: var(--critical); color: #fff; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: .85rem; margin: 6px 0; }
+.meta b { color: var(--text); font-weight: 600; }
+.missing { font-weight: 600; margin: 4px 0; }
+.action { color: var(--muted); font-size: .9rem; }
+details { margin-top: 8px; }
+summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
+.basis { margin: 8px 0 4px; padding-left: 1.2em; font-size: .9rem; line-height: 1.5; }
+.basis li { margin: 2px 0; }
+details.tech > summary { font-size: .8rem; color: var(--muted); cursor: pointer; margin-top: 4px; }
+.evidence { font: .78rem/1.5 var(--font-mono); color: var(--muted); background: var(--bg); padding: 10px; margin-top: 6px;
+  border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.form { display: none; gap: 8px; margin-top: 10px; padding: 12px; border-radius: 8px; background: var(--bg); }
+.form.open { display: grid; }
+.form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form .msg-controls { display: grid; gap: 8px; }
+.form .msg-controls[hidden] { display: none; }
+.msg { border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 8px; background: var(--surface); }
+.msg-text { white-space: pre-wrap; margin: 6px 0; }
+.empty { text-align: center; color: var(--muted); padding: 40px 16px; }
+.rate-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.rate-table th, .rate-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.rate-table td.num, .rate-table th.num { font-variant-numeric: tabular-nums; text-align: right; }
+footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
+@media (max-width: 720px) {
+  .connect { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .form .row { grid-template-columns: 1fr; }
+}
+</style>
+<script src="config.js"></script>
+<script src="js/demo.js?v=20261023_locale1"></script>
+<script src="js/appnav.js?v=20261028_languages1"></script>
+<link rel="stylesheet" href="css/responsive.css?v=20261023_locale1">
+<script defer src="js/language-controls.js?v=20261023_locale1"></script>
+<link rel="stylesheet" href="css/app-chrome.css?v=20261028_languages1"><script defer src="js/appearance-controls.js?v=20261027_research2"></script><script defer src="js/workspace-shell.js?v=20261028_languages1"></script><script src="js/interface-copy.js?v=20261028_files1"></script><script src="js/interface-language.js?v=20261028_languages1"></script></head>
+<body class="clinloop-page"><a class="skip-link shell-skip" href="#clinloop-workspace">Skip to workspace</a>
+<!-- clinloop-shell:start -->
+<header class="clinloop-shell" data-static-shell="true"><div class="clinloop-shell-top"><a class="clinloop-shell-brand" href="./"><img src="icons/logo.svg" alt="" width="32" height="32"><span>ClinLoop AI</span></a><div class="clinloop-shell-controls" role="group" aria-label="Display and account"><div role="group" data-shell-account=""><div class="appearance-controls" role="group" aria-label="Appearance"><button type="button" aria-pressed="true"><span data-nav-language="en">Light</span><span data-nav-language="ko">라이트</span></button><button type="button" aria-pressed="false"><span data-nav-language="en">Dark</span><span data-nav-language="ko">다크</span></button></div><button hidden data-legacy-language="true" type="button" id="btn-lang" aria-label="Language">English</button><div class="prominent-lang-pill" role="group" aria-label="Language"><button type="button" id="lang-opt-en" data-language="en" aria-pressed="true">English</button><button type="button" id="lang-opt-ko" data-language="ko" aria-pressed="false">한국어</button></div></div></div></div><nav class="app-nav clinloop-shell-links" aria-label="ClinLoop pages"><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-0"><span class="clinloop-nav-group-label" id="nav-group-0"><span data-nav-language="en">Clinical workspace</span><span data-nav-language="ko">진료 작업 공간</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="./" data-label-en="Cockpit" data-label-ko="종합 화면"><span data-nav-language="en">Cockpit</span><span data-nav-language="ko">종합 화면</span></a><a class="app-nav-link" href="worklist" data-label-en="Worklist" data-label-ko="업무 목록" aria-current="page"><span data-nav-language="en">Worklist</span><span data-nav-language="ko">업무 목록</span></a><a class="app-nav-link" href="patient" data-label-en="Patient graph" data-label-ko="환자 그래프"><span data-nav-language="en">Patient graph</span><span data-nav-language="ko">환자 그래프</span></a><a class="app-nav-link" href="quality" data-label-en="Quality" data-label-ko="품질 지표"><span data-nav-language="en">Quality</span><span data-nav-language="ko">품질 지표</span></a><a class="app-nav-link" href="governance" data-label-en="Rule sign-off" data-label-ko="규칙 승인"><span data-nav-language="en">Rule sign-off</span><span data-nav-language="ko">규칙 승인</span></a><a class="app-nav-link" href="pilot" data-label-en="Pilot review" data-label-ko="시범 검토"><span data-nav-language="en">Pilot review</span><span data-nav-language="ko">시범 검토</span></a><a class="app-nav-link" href="imaging" data-label-en="Imaging" data-label-ko="영상"><span data-nav-language="en">Imaging</span><span data-nav-language="ko">영상</span></a><a class="app-nav-link" href="analyse" data-label-en="Analyse patient" data-label-ko="환자 분석"><span data-nav-language="en">Analyse patient</span><span data-nav-language="ko">환자 분석</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-1"><span class="clinloop-nav-group-label" id="nav-group-1"><span data-nav-language="en">Research</span><span data-nav-language="ko">연구</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="reports" data-label-en="Live report reader" data-label-ko="실시간 보고서 검토"><span data-nav-language="en">Live report reader</span><span data-nav-language="ko">실시간 보고서 검토</span></a><a class="app-nav-link" href="review" data-label-en="Report review" data-label-ko="보고서 검토"><span data-nav-language="en">Report review</span><span data-nav-language="ko">보고서 검토</span></a><a class="app-nav-link" href="private" data-label-en="Personal workspace" data-label-ko="개인 작업 공간"><span data-nav-language="en">Personal workspace</span><span data-nav-language="ko">개인 작업 공간</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-2"><span class="clinloop-nav-group-label" id="nav-group-2"><span data-nav-language="en">Evidence and setup</span><span data-nav-language="ko">검증 및 설정</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="validation" data-label-en="Validation evidence" data-label-ko="검증 근거"><span data-nav-language="en">Validation evidence</span><span data-nav-language="ko">검증 근거</span></a><a class="app-nav-link" href="deployment" data-label-en="International setup" data-label-ko="국제 배포 계획"><span data-nav-language="en">International setup</span><span data-nav-language="ko">국제 배포 계획</span></a></div></div></nav><div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label><select id="clinloop-page-picker"><optgroup label="Clinical workspace"><option value="/">Cockpit</option><option value="/worklist" selected>Worklist</option><option value="/patient">Patient graph</option><option value="/quality">Quality</option><option value="/governance">Rule sign-off</option><option value="/pilot">Pilot review</option><option value="/imaging">Imaging</option><option value="/analyse">Analyse patient</option></optgroup><optgroup label="Research"><option value="/reports">Live report reader</option><option value="/review">Report review</option><option value="/private">Personal workspace</option></optgroup><optgroup label="Evidence and setup"><option value="/validation">Validation evidence</option><option value="/deployment">International setup</option></optgroup></select></div><details class="clinloop-workflow-guide"><summary><span data-nav-language="en">Choose a workflow</span><span data-nav-language="ko">작업 흐름 선택</span></summary><div class="clinloop-workflow-grid"><div><a href="review"><span data-nav-language="en">Review report text</span><span data-nav-language="ko">보고서 텍스트 검토</span></a><p><span data-nav-language="en">Load TXT in your browser or import PDF, scans, photos and DICOM through your personal gateway. Check the complete source before model review (6000 UTF-8 bytes).</span><span data-nav-language="ko">TXT는 브라우저에서, PDF·스캔·사진·DICOM은 개인 게이트웨이에서 불러옵니다. 모델 검토(UTF-8 6000바이트) 전에 전체 원문을 확인하세요.</span></p></div><div><a href="analyse"><span data-nav-language="en">Try follow-up detection</span><span data-nav-language="ko">후속 조치 탐지 체험</span></a><p><span data-nav-language="en">Start with a synthetic example, a FHIR .json bundle or radiology/pathology report text. The browser demo needs no model connection.</span><span data-nav-language="ko">합성 예제, FHIR .json 번들 또는 영상·병리 보고서 텍스트로 시작하세요. 브라우저 데모는 모델 연결이 필요 없습니다.</span></p></div><div><a href="imaging"><span data-nav-language="en">Explore document and imaging workflows</span><span data-nav-language="ko">문서 및 영상 작업 흐름 살펴보기</span></a><p><span data-nav-language="en">DICOM image pixels, medical images and waveforms need a separate validated imaging workflow. The public Imaging page shows local-installation demonstrations.</span><span data-nav-language="ko">DICOM 화소, 의료영상 및 파형에는 별도로 검증된 영상 작업 흐름이 필요합니다. 공개 영상 화면은 로컬 설치 기능을 시연합니다.</span></p></div><div><a href="validation"><span data-nav-language="en">Check evidence and limitations</span><span data-nav-language="ko">검증 근거 및 한계 확인</span></a><p><span data-nav-language="en">See measured results, supported tasks and pending reviews before choosing a workflow or comparing models. Universal clinical accuracy is not established.</span><span data-nav-language="ko">작업 흐름 선택이나 모델 비교 전에 측정 결과, 지원 작업 및 검토 현황을 확인하세요. 모든 임상 작업에 대한 정확도는 입증되지 않았습니다.</span></p></div></div></details><aside class="research-release-notice" role="note"><span data-nav-language="en">Research preview · synthetic data only. Independent review and clinical validation pending. <a href="validation#research-release">Review status</a></span><span data-nav-language="ko">연구 미리보기 · 합성 데이터 전용. 독립 검토 및 임상 검증 대기 중. <a href="validation#research-release">검토 현황</a></span></aside></header>
+<!-- clinloop-shell:end -->
+<div class="wrap" id="clinloop-workspace" role="main" tabindex="-1">
+  <header>
+
+    <div>
+      <h1><a class="brand-home" href="./" title="ClinLoop home"><svg class="brand-mark" viewBox="0 0 48 48" role="img" aria-label="ClinLoop logo: rod of Asclepius inside a closing loop"><path d="M37.6 10.4A19 19 0 1 0 43 24" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/><path d="M44.2 8.6 43.9 18.9 34 16.2Z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M24 8.6v30.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><g class="bm-serpent"><path d="M27 14.2C21.2 13.8 19 17.4 24 18.6 29 19.8 29 22.8 24 23.8 19 24.8 19 28 24 29 28 29.8 27.8 32.6 25 34.2" fill="none" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="28.6" cy="13.4" rx="3" ry="2.1" transform="rotate(-18 28.6 13.4)" stroke="none"/></g></svg></a><span data-i18n="title">Worklist</span></h1>
+      <p class="sub" data-i18n="subtitle"></p>
+    </div>
+
+  </header>
+
+  <div class="banner" role="note" data-i18n="prototype"></div>
+
+  <section class="card" aria-label="Connection">
+    <form class="connect" id="connect-form">
+      <div>
+        <label for="api-base" data-i18n="api"></label>
+        <input id="api-base" type="url" placeholder="http://localhost:8124" required>
+      </div>
+      <div>
+        <label for="token" data-i18n="token"></label>
+        <input id="token" type="password" autocomplete="off" required>
+      </div>
+      <button class="primary" type="submit" data-i18n="signin"></button>
+    </form>
+    <div class="status-line" id="status" aria-live="polite"></div>
+  </section>
+
+  <div id="app" hidden>
+    <div class="status-row">
+      <div id="feed" class="feed" role="status" aria-live="polite"></div>
+      <div id="gov" class="feed" role="status"></div>
+    </div>
+
+    <section id="coverage" class="feed" aria-label="Report coverage" hidden>
+      <strong id="coverage-summary" role="status" aria-live="polite"></strong>
+      <p data-i18n="coverageHelp"></p>
+      <details><summary data-i18n="coverageDetails"></summary><p id="coverage-detail"></p></details>
+    </section>
+
+    <section class="kpis" aria-label="Summary">
+      <div class="card kpi"><div class="v" id="k-active">–</div><div class="l" data-i18n="kActive"></div></div>
+      <div class="card kpi"><div class="v" id="k-overdue">–</div><div class="l" data-i18n="kOverdue"></div></div>
+      <div class="card kpi"><div class="v" id="k-critical">–</div><div class="l" data-i18n="kCritical"></div></div>
+      <div class="card kpi"><div class="v" id="k-rate">–</div><div class="l" data-i18n="kRate"></div></div>
+    </section>
+
+    <div class="toolbar">
+      <label class="check" id="only-mine-label"><input type="checkbox" id="only-mine"> <span data-i18n="onlyMine"></span></label>
+      <label class="check"><input type="checkbox" id="show-inactive"> <span data-i18n="showInactive"></span></label>
+      <span class="spacer"></span>
+      <button type="button" id="btn-refresh" data-i18n="refresh"></button>
+      <span class="sub" id="updated" style="font-size:.8rem;"></span>
+      <button type="button" id="btn-load-example" data-i18n="loadExample" hidden></button>
+      <button type="button" id="btn-load-radiology" data-i18n="loadRadiology" hidden></button>
+      <button type="button" id="btn-escalate" data-i18n="escalate" hidden></button>
+    </div>
+
+    <section id="worklist" aria-label="Open loops"></section>
+
+    <section class="card" style="padding:14px;margin-top:16px;" aria-label="Equity">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;">
+        <strong data-i18n="rateTitle"></strong>
+        <select id="strata" style="width:auto;" aria-label="Group by">
+          <option value="rule" data-i18n="byRule"></option>
+          <option value="language" data-i18n="byLanguage"></option>
+          <option value="age_group" data-i18n="byAge"></option>
+          <option value="sex" data-i18n="bySex"></option>
+        </select>
+      </div>
+      <p class="sub" style="font-size:.85rem;" data-i18n="rateHelp"></p>
+      <div id="rate-table"></div>
+    </section>
+  </div>
+
+  <footer data-i18n="footer"></footer>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const RANK = { viewer: 0, navigator: 1, clinician: 2, admin: 3 };
+  const NAVIGATOR_REASONS = ['completed_elsewhere', 'patient_declined', 'duplicate', 'patient_deceased'];
+  const ACTIVE = ['new', 'acknowledged'];
+
+  // ── Language ──────────────────────────────────────────────────────────────
+  const T = {
+    ko: {
+      snapshotFeed: (tm) => `합성 스냅샷 · 기록 ${tm} · 실시간 자료가 아닙니다`, dateUnavailable: '기록 날짜 없음',
+      title: '작업 목록', subtitle: '미완결 진료 루프를 위험도 순으로 보여줍니다. 조치하거나, 사유와 함께 보류하거나, 근거와 함께 종결하세요.',
+      cockpit: '← 콕핏', signoffLink: '규칙 승인', imagingLink: '영상·외부 판독지', graphLink: '환자 그래프', qualityLink: '끊기는 곳', prototype: '임상용 에디션입니다. 전문의가 승인하지 않은 규칙(“미승인 규칙” 표시)은 승인 전까지 실제 진료에 사용하지 마십시오.',
+      gov: (g, shadow) => `전문의 승인 규칙 ${g.rules_approved}/${g.rules_total} · 위급 소견 목록: ${({approved: '승인됨', not_approved: '미승인', changed_since_approval: '승인 후 변경됨'})[g.critical_findings_list]} · `
+        + (g.enforce_signoff ? `섀도 모드: 미승인·일시중지 규칙의 루프 ${shadow}건은 표시되지 않습니다` : '섀도 모드 꺼짐 (파일럿)')
+        + ((g.paused_rules || []).length ? ` · 모니터링으로 일시중지된 규칙: ${g.paused_rules.join(', ')} (규칙 승인 페이지에서 검토)` : '')
+        + ((g.flagged_rules || []).length ? ` · 검토 필요 (위급 규칙, 알림은 계속됨): ${g.flagged_rules.join(', ')}` : ''),
+      unsigned: '미승인 규칙', loadRadiology: '합성 영상 판독 예제 불러오기',
+      api: 'ClinLoop API', token: '접근 토큰', signin: '로그인', signingIn: '로그인 중…',
+      signedIn: (u, r) => `${u}(${r})님으로 로그인했습니다.`, signinFailed: (e) => `로그인 실패: ${e}. ` + (/role/i.test(e) ? '관리자에게 ClinLoop 권한을 요청하세요.' : 'API 주소와 토큰을 확인하세요.'),
+      kActive: '진행 중 루프', kOverdue: '기한 초과', kCritical: '위급', kRate: '미완결률 / 1,000',
+      onlyMine: '내 루프만', showInactive: '보류·종결 포함', refresh: '새로고침', loadExample: '합성 FHIR 예제 불러오기', escalate: '에스컬레이션 실행',
+      rateTitle: '그룹별 미완결률', byRule: '규칙', byLanguage: '언어', byAge: '연령대', bySex: '성별',
+      rateHelp: '기한이 지난 루프 1,000건당 기한 내 종결되지 않은 건수입니다. 그룹 간 차이가 있다면 누군가를 놓치고 있다는 뜻입니다.',
+      footer: 'ClinLoop AI · 규칙이 판단하고, 사람이 조치하며, 모든 행위는 감사 기록됩니다.',
+      coverageHelp: '데이터 수신 성공이 모든 판독문을 읽었다는 뜻은 아닙니다.',
+      coverageDetails: '범위 및 경고 확인',
+      coverageSummary: (c, n) => `판독문 범위 · 환자 ${n}명 · 판독문 ${c.diagnostic_reports}건 · 첨부파일 포함 ${c.reports_with_attachments}건 · 매핑 경고 메시지 ${c.mapping_warning_messages}건`,
+      coverage: (c, n) => `최근 평가한 환자 ${n}명의 전체 기록: 판독문 ${c.diagnostic_reports}건 중 결론 텍스트 포함 ${c.with_conclusion}건, 첨부파일만 있는 판독문 ${c.attachment_only}건, 연결 문서만 있는 문서 참조 ${c.document_reference_linked_only}건, 매핑 경고 메시지 ${c.mapping_warning_messages}건. 첨부파일은 자동으로 읽지 않습니다. 수신 성공이나 빈 작업 목록은 정상 결과 또는 진료 완료를 뜻하지 않습니다. 원본과 데이터 범위를 확인하세요.`,
+      feed: { OK: (h) => `데이터 수신 정상 · 마지막 수신 ${h}시간 전`, STALE: (h) => `⚠ 데이터 수신 중단: 마지막 정상 수신 ${h ?? '–'}시간 전. 작업 목록이 불완전할 수 있습니다.`,
+              FAILING: () => '⚠ 데이터 연동 실패: 최근 3회 수신이 모두 실패했습니다. 작업 목록이 불완전할 수 있습니다.',
+              NEVER: () => '⚠ 아직 수신된 임상 데이터가 없습니다.' },
+      patient: '환자', graph: '환자 지식 그래프', rule: '규칙', deadline: '기한', owner: '담당', risk: '우선순위 점수', riskHelp: '규칙 기반 우선순위이며 질병이나 위해 발생의 확률이 아닙니다.', unassigned: '미지정',
+      pastDeadline: '기한 초과', escalatedTo: '에스컬레이션 →',
+      states: { new: '신규', acknowledged: '확인함', deferred: '보류', closed_by_clinician: '의료진 종결', resolved_by_engine: '기록상 완료', superseded: '최종 판독으로 대체' },
+      severity: { critical: '위급', high: '높음', moderate: '중간', low: '낮음' },
+      missing: (items, win, any) => `${items.join(any ? ' 또는 ' : ', ')} 미시행 · 기한 ${win}`,
+      lateDone: (win) => `후속 조치가 ${win} 기한 이후에 시행됨`,
+      actions: { BLACK: '긴급: 즉시 확인 및 조치 — 기한 초과', RED: '오늘 조치 필요 — 기한 임박', YELLOW: '곧 일정 잡기 — 기한 절반 경과', GREEN: '모니터링', review: '검토 필요 — 자동 판단에 필요한 기록이 부족합니다' },
+      why: '이 알림의 근거 (증거·감사 기록)', technical: '기술 세부 정보 (위험 점수, 원본 근거)', auditLoading: '감사 기록 불러오는 중…', noActions: '아직 조치 기록이 없습니다.',
+      ack: '확인', defer: '보류…', close: '근거와 함께 종결…', assignMe: '나에게 배정', assignTo: '배정…', message: '환자 메시지…',
+      reason: '사유', resurface: '재표시 날짜 (선택)', note: '메모', notePh: '임상적 판단 또는 기타 사유일 때 필수', recordDefer: '보류 기록',
+      evidence: '완료된 후속 조치의 근거', evidencePh: '예: 대장내시경 오더 C-2231, 2026-09-10 예약', closeLoop: '루프 종결',
+      assignee: '담당자', assign: '배정', choose: '선택…',
+      updated: (tm) => `${tm} 갱신 · 30초마다 자동 갱신`, conflict: (e) => `다른 사용자가 먼저 이 루프를 변경했습니다 (${e}). 최신 상태로 갱신했습니다.`,
+      msgLang: '언어', msgChannel: '채널', draft: '초안 작성', msgHelp: '메시지에는 진단명이나 결과가 포함되지 않습니다. 의료진 승인 전에는 발송되지 않습니다.',
+      msgStatus: { draft: '승인 대기', sending: '발송 중', sent: '발송됨', rejected: '반려', failed: '발송 실패', withdrawn: '철회됨 (루프 종결·보류·수신 거부)' },
+      approveSend: '승인 후 발송', reject: '반려', awaitingClinician: '의료진 승인 대기 중',
+      optedOut: (p) => `환자가 메시지 수신을 원하지 않습니다 (${p.reason} · ${p.recorded_by} · ${(p.recorded_at || '').slice(0, 10)}). 다른 방법으로 연락하세요.`,
+      optOutToggle: '환자가 메시지 수신을 거부함…', optReason: '거부 경위', optReasonPh: '예: 2026-10-01 전화로 코디네이터에게 요청',
+      recordOptOut: '수신 거부 기록', optIn: '수신 동의로 변경', optOutSaved: '수신 거부를 기록했습니다. 대기 중인 초안은 철회되었습니다.', optInSaved: '수신 동의로 변경했습니다.',
+      clinicianOnly: '이 루프는 의료진이 직접 처리해야 하며 환자 메시지를 보낼 수 없습니다.',
+      deferred: (r, n) => `보류: ${r}${n ? ' — ' + n : ''}`, closedWith: (e) => `종결 근거: ${e}`,
+      ingested: (r) => `합성 환자 ${r.patients}명, 이벤트 ${r.events}건 수신: 신규 루프 ${r.loops.new}건.`,
+      escalated: (n) => `${n}건 에스컬레이션.`, deferRecorded: '보류가 기록되었습니다.', loopClosed: '루프를 종결했습니다.',
+      assigned: (o) => `${o}에게 배정했습니다.`, drafted: '초안을 작성했습니다. 의료진 승인 후 발송됩니다.', sent: '메시지를 발송했습니다.', rejected: '메시지를 반려했습니다.',
+      linkedMissing: '연결된 후속 조치가 진행 중 목록에 없습니다 (종결 또는 보류되었을 수 있습니다).',
+      silentRun: (n) => `무경보 시범 운영 중: ClinLoop은 기록을 계속 읽지만(루프 ${n}건) 일반 진료를 바꾸지 않도록 작업 목록에 표시하지 않습니다. 검토팀은 '시범 검토' 페이지를 사용합니다.`,
+      noLoops: 'ClinLoop이 볼 수 있는 기록에서는 진행 중인 루프가 없습니다. 후속 조치가 필요 없다는 확인은 아닙니다.', loadHint: ' 합성 FHIR 예제를 불러와 흐름을 확인하세요.', noRates: '아직 기한이 지난 루프가 없습니다.',
+      rateCols: ['기한 경과', '미완결', '1,000건당'], loadFailed: (e) => `작업 목록을 불러오지 못했습니다: ${e}`,
+    },
+    en: {
+      snapshotFeed: (tm) => `Synthetic snapshot · recorded ${tm} · not a live feed`, dateUnavailable: 'date unavailable',
+      title: 'Worklist', subtitle: 'Open clinical loops, most dangerous first. Act, defer with a reason, or close with evidence.',
+      cockpit: '← Cockpit', signoffLink: 'Rule sign-off', imagingLink: 'Imaging', graphLink: 'Patient graph', qualityLink: 'Follow-up gaps', prototype: 'Clinical edition. Do not use a rule for patient care until a specialist has signed it off (marked “unsigned rule”).',
+      gov: (g, shadow) => `Rules signed off by a specialist: ${g.rules_approved}/${g.rules_total} · Critical-finding list: ${g.critical_findings_list.replace(/_/g, ' ')} · `
+        + (g.enforce_signoff ? `Shadow mode: ${shadow} loop(s) from unsigned or paused rules are hidden` : 'Shadow mode off (pilot)')
+        + ((g.paused_rules || []).length ? ` · Paused by monitoring: ${g.paused_rules.join(', ')} (review on the Rule sign-off page)` : '')
+        + ((g.flagged_rules || []).length ? ` · Under review (critical, still alerting): ${g.flagged_rules.join(', ')}` : ''),
+      unsigned: 'unsigned rule', loadRadiology: 'Load synthetic radiology example',
+      api: 'ClinLoop API', token: 'Access token', signin: 'Sign in', signingIn: 'Signing in…',
+      signedIn: (u, r) => `Signed in as ${u} (${r}).`, signinFailed: (e) => `Sign-in failed: ${e}. ` + (/role/i.test(e) ? 'Ask your administrator for ClinLoop access.' : 'Check the API address and token.'),
+      kActive: 'Active loops', kOverdue: 'Past deadline', kCritical: 'Critical', kRate: 'Open-loop rate / 1,000',
+      onlyMine: 'Only my loops', showInactive: 'Show deferred & closed', refresh: 'Refresh', loadExample: 'Load synthetic FHIR example', escalate: 'Run escalation',
+      rateTitle: 'Open-loop rate by group', byRule: 'Rule', byLanguage: 'Language', byAge: 'Age group', bySex: 'Sex',
+      rateHelp: 'Loops not closed within their guideline window, per 1,000 loops past deadline. Groups should not differ; if they do, someone is being missed.',
+      footer: 'ClinLoop AI · Rules decide, people act, every action is audited.',
+      coverageHelp: 'Transport success does not mean every report was read.',
+      coverageDetails: 'Coverage details and limitations',
+      coverageSummary: (c, n) => `Report coverage · ${n} patients · ${c.diagnostic_reports} reports · ${c.reports_with_attachments} with attachments · ${c.mapping_warning_messages} mapping warning messages`,
+      coverage: (c, n) => `Full histories of ${n} patients evaluated in the latest run: ${c.diagnostic_reports} reports; ${c.with_conclusion} with conclusion text; ${c.attachment_only} attachment-only reports; ${c.document_reference_linked_only} linked-only document references; ${c.mapping_warning_messages} mapping warning messages. Attachments are not read automatically. A successful feed or empty worklist does not establish normal results or completed care. Check original records and dataset coverage.`,
+      feed: { OK: (h) => `Data feed OK · last received ${h} h ago`, STALE: (h) => `⚠ Data feed silent: last successful update ${h ?? '–'} h ago. The worklist may be incomplete.`,
+              FAILING: () => '⚠ Data feed failing: the last 3 updates all failed. The worklist may be incomplete.',
+              NEVER: () => '⚠ No clinical data has been received yet.' },
+      patient: 'Patient', graph: 'Patient knowledge graph', rule: 'Rule', deadline: 'Deadline', owner: 'Owner', risk: 'Priority score', riskHelp: 'Heuristic priority, not a probability of disease or patient harm.', unassigned: 'unassigned',
+      pastDeadline: 'PAST DEADLINE', escalatedTo: 'escalated →',
+      states: { new: 'new', acknowledged: 'acknowledged', deferred: 'deferred', closed_by_clinician: 'closed by clinician', resolved_by_engine: 'done in record', superseded: 'replaced by final report' },
+      severity: { critical: 'critical', high: 'high', moderate: 'moderate', low: 'low' },
+      missing: (items, win, any) => `Missing: ${items.join(any ? ' or ' : ', ')} within ${win}`,
+      lateDone: (win) => `Completed late: follow-up came after the ${win} deadline`,
+      actions: { BLACK: 'URGENT: verify and act now — deadline passed', RED: 'Act today — deadline approaching', YELLOW: 'Schedule soon — half the window used', GREEN: 'Monitor', review: 'Needs review — not enough in the record for an automated judgment' },
+      why: 'Why this alert (evidence & audit)', technical: 'Technical detail (risk score, raw evidence)', auditLoading: 'Loading audit trail…', noActions: 'No actions yet.',
+      ack: 'Acknowledge', defer: 'Defer…', close: 'Close with evidence…', assignMe: 'Assign to me', assignTo: 'Assign…', message: 'Message patient…',
+      reason: 'Reason', resurface: 'Resurface on (optional)', note: 'Note', notePh: "Required for clinical judgment or 'other'", recordDefer: 'Record deferral',
+      evidence: 'Evidence of the completed follow-up', evidencePh: 'e.g. Colonoscopy order C-2231 booked for 2026-09-10', closeLoop: 'Close loop',
+      assignee: 'Assignee', assign: 'Assign', choose: 'Choose…',
+      updated: (tm) => `Updated ${tm} · refreshes every 30 s`, conflict: (e) => `Someone else changed this loop first (${e}). The list now shows its current state.`,
+      msgLang: 'Language', msgChannel: 'Channel', draft: 'Create draft', msgHelp: 'Messages never name a diagnosis or result. Nothing is sent until a clinician approves.',
+      msgStatus: { draft: 'awaiting approval', sending: 'sending', sent: 'sent', rejected: 'rejected', failed: 'delivery failed', withdrawn: 'withdrawn (loop closed, deferred or patient opted out)' },
+      approveSend: 'Approve & send', reject: 'Reject', awaitingClinician: 'Awaiting clinician approval',
+      optedOut: (p) => `The patient asked not to be messaged (${p.reason} · ${p.recorded_by} · ${(p.recorded_at || '').slice(0, 10)}). Contact them another way.`,
+      optOutToggle: 'Patient declines messages…', optReason: 'How the patient asked', optReasonPh: 'e.g. by phone to the navigator, 2026-10-01',
+      recordOptOut: 'Record opt-out', optIn: 'Patient agrees to messages again', optOutSaved: 'Opt-out recorded. Drafts waiting for approval were withdrawn.', optInSaved: 'The patient can be messaged again.',
+      clinicianOnly: 'This loop must be handled by a clinician personally; patient messaging is disabled.',
+      deferred: (r, n) => `Deferred: ${r}${n ? ' — ' + n : ''}`, closedWith: (e) => `Closed with evidence: ${e}`,
+      ingested: (r) => `Ingested ${r.patients} synthetic patients, ${r.events} events: ${r.loops.new} new loops.`,
+      escalated: (n) => `${n} loop(s) escalated.`, deferRecorded: 'Deferral recorded.', loopClosed: 'Loop closed.',
+      assigned: (o) => `Assigned to ${o}.`, drafted: 'Draft created. It will be sent only after clinician approval.', sent: 'Message sent.', rejected: 'Message rejected.',
+      linkedMissing: 'The linked follow-up is not on the active worklist (it may be closed or deferred).',
+      silentRun: (n) => `Silent run in progress: ClinLoop keeps reading the record (${n} loops) but shows nothing here, so usual care is unchanged. The review team works on the Pilot review page.`,
+      noLoops: 'No open loops in the records ClinLoop can see. This does not confirm that no follow-up is needed.', loadHint: ' Load the synthetic FHIR example to see the workflow.', noRates: 'No loops past deadline yet.',
+      rateCols: ['Past deadline', 'Missed', 'Rate / 1,000'], loadFailed: (e) => `Could not load worklist: ${e}`,
+    },
+  };
+  // Event types in plain words (for "missing" lines)
+  const EVENT = {
+    ko: { patient_notification: '환자 통보', followup_appointment: '추적 외래', followup_ct: '추적 CT', specialist_referral: '전문의 의뢰',
+      biopsy_order: '조직검사 오더', colposcopy_referral: '질확대경 의뢰', callback: '환자 연락', inr_recheck: 'INR 재검',
+      referral_visit: '의뢰 진료', followup_lab: '모니터링 검사', provider_review: '의료진 확인', hba1c_recheck: '당화혈색소 재검',
+      culture_result: '혈액배양 재검', echocardiogram: '심초음파', colonoscopy: '대장내시경', breast_biopsy: '유방 조직검사',
+      critical_value_notification: '의료진 보고', bp_check: '혈압 측정', postpartum_glucose_test: '산후 당부하검사',
+      hcv_rna_test: 'HCV RNA 검사', liver_imaging: '간 영상검사', mental_health_followup: '정신건강 추적 진료',
+      imaging_ct: 'CT', imaging_mri: 'MRI', imaging_ultrasound: '초음파', imaging_xray: 'X선 촬영', imaging_pet: 'PET/CT',
+      endoscopic_ultrasound: '내시경초음파', biopsy_result: '조직검사 시행', pathology_result: '병리 결과',
+      ai_finding_reviewed: '영상의학과 재검토 기록' },
+    en: {},
+  };
+  const store = {
+    get(k, s = sessionStorage) { try { return s.getItem(k) || ''; } catch { return ''; } },
+    set(k, v, s = sessionStorage) { try { s.setItem(k, v); } catch {} },
+  };
+  const preferredLanguage = store.get('clinloop_lang', localStorage);
+  let lang = ['en', 'ko'].includes(preferredLanguage) ? preferredLanguage : ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');
+  const t = () => T[lang];
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    $('btn-lang').textContent = lang === 'ko' ? 'English' : '한국어';
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t()[el.dataset.i18n]; });
+    $('token').placeholder = lang === 'ko' ? '관리자에게 받은 Bearer 토큰' : 'Bearer token from your administrator';
+  }
+
+  // ── State & API ───────────────────────────────────────────────────────────
+  const state = { base: '', token: '', user: null, deferReasons: {}, rules: {}, loops: [], staff: [] };
+  const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+  $('api-base').value = store.get('clinloop_api') || window.CLINLOOP_API_BASE || (isLocal ? 'http://localhost:8124' : '');
+  $('token').value = store.get('clinloop_token');   // session storage: gone when the tab closes
+
+  function setStatus(msg, isError = false) {
+    $('status').textContent = msg;
+    $('status').classList.toggle('error', isError);
+  }
+
+  async function api(path, opts = {}) {
+    const res = await fetch(state.base + path, {
+      ...opts,
+      headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      // FastAPI lists form problems as objects; show their text, not "[object Object]"
+      const d = body.detail;
+      throw new Error(Array.isArray(d) ? d.map((x) => (x.loc ? x.loc[x.loc.length - 1] + ': ' : '') + (x.msg || '')).join('; ')
+        : d || (res.status === 401 ? 'Not signed in, or the token is not recognised' : `HTTP ${res.status}`));
+    }
+    return body;
+  }
+
+  const can = (role) => state.user && RANK[state.user.role] >= RANK[role];
+  const fmtDate = (iso) => iso ? iso.replace('T', ' ').slice(0, 16) + ' UTC' : '—';
+  const keyPath = (key) => `/api/v1/loops/${encodeURIComponent(key)}`;
+  const domId = (key) => 'L' + Array.from(new TextEncoder().encode(key)).map((b) => b.toString(16).padStart(2, '0')).join('').slice(-40);
+  const ev = (type) => (EVENT[lang][type]) || type.replace(/_/g, ' ')
+    .replace(/\bfollowup\b/g, 'follow-up').replace(/\b(ct|mri|pet|inr|hba1c|hcv)\b/gi, (term) => term.toUpperCase());
+
+  function windowText(days) {
+    if (days < 1) { const h = Math.round(days * 24); return lang === 'ko' ? `${h}시간` : `${h} hour${h === 1 ? '' : 's'}`; }
+    const d = Number.isInteger(days) ? days : Math.round(days * 10) / 10;
+    return lang === 'ko' ? `${d}일` : `${d} day${d === 1 ? '' : 's'}`;
+  }
+
+  function missingText(l) {
+    const rule = state.rules[l.rule_id];
+    if (!rule) return l.missing_step;
+    if ((l.missing_step || '').startsWith('Completed late')) return t().lateDone(windowText(rule.deadline_days));
+    if (/^(All follow-ups|Tracked obligation satisfied)/.test(l.missing_step || '')) return lang === 'ko' ? '추적 중인 조치 확인 · 전체 진료 완료를 의미하지 않음' : 'Tracked obligation satisfied · overall care completion is not established';
+    const m = (l.missing_step || '').match(/^Missing: (.+) within (.+)$/);
+    if (!m) return l.missing_step;
+    const items = m[1].split(/, | or /).map(ev);
+    return t().missing(items, lang === 'ko' ? m[2].replace(/(\d+(?:\.\d+)?) days?/, '$1일').replace(/(\d+) hours?/, '$1시간') : m[2], rule.followup_logic === 'any');
+  }
+
+  function actionText(l) {
+    if (l.engine_status === 'needs_human_review') return t().actions.review;
+    return t().actions[l.clock_state] || l.recommended_action;
+  }
+
+  // ── Rendering ─────────────────────────────────────────────────────────────
+  function loopCard(l) {
+    const rule = state.rules[l.rule_id] || {};
+    const id = domId(l.loop_key);
+    const overdue = l.clock_state === 'BLACK' && ACTIVE.includes(l.workflow_state);
+    const active = ACTIVE.includes(l.workflow_state) || l.deferral_expired;
+    const reasons = Object.entries(state.deferReasons)
+      .filter(([code]) => can('clinician') || NAVIGATOR_REASONS.includes(code))
+      .map(([code, text]) => `<option value="${esc(code)}">${esc(text)}</option>`).join('');
+    const name = lang === 'ko' ? (rule.name_ko || l.rule_name) : l.rule_name;
+    const done = ['closed_by_clinician', 'resolved_by_engine', 'superseded'].includes(l.workflow_state);
+    return `
+    <article class="card loop ${esc(l.severity)}" data-key="${esc(l.loop_key)}" data-id="${id}">
+      <div class="loop-head">
+        <span class="loop-title">${esc(name)}</span>
+        <span class="chip ${esc(l.severity)}">${esc(t().severity[l.severity] || l.severity)}</span>
+        ${overdue ? `<span class="chip overdue">${esc(t().pastDeadline)}</span>` : ''}
+        <span class="chip ${done ? 'ok' : 'neutral'}">${esc(t().states[l.workflow_state] || l.workflow_state)}</span>
+        ${l.rule_signoff && l.rule_signoff !== 'approved' ? `<span class="chip moderate">${esc(t().unsigned)}</span>` : ''}
+        ${l.escalation_level > 0 ? `<span class="chip high">${esc(t().escalatedTo)} ${esc(l.escalated_to.replace(/_/g, ' '))}</span>` : ''}
+      </div>
+      <div class="meta">
+        <span>${esc(t().patient)} <a href="patient?patient=${encodeURIComponent(l.patient_id)}" title="${esc(t().graph)}"><b>${esc(l.patient_id)}</b></a></span>
+        <span>${esc(t().rule)} <b>${esc(l.rule_id)}</b></span>
+        <span>${esc(t().deadline)} <b>${esc(fmtDate(l.deadline))}</b></span>
+        <span>${esc(t().owner)} <b>${esc(l.owner === 'unassigned' ? t().unassigned : l.owner)}</b></span>
+        <span title="${esc(t().riskHelp)}">${esc(t().risk)} <b>${esc((l.risk_score ?? 0).toFixed(2))}</b></span>
+      </div>
+      <div class="missing">${esc(missingText(l))}</div>
+      ${active ? `<div class="action">${esc(actionText(l))}</div>` : ''}
+      ${l.defer_reason ? `<div class="action">${esc(t().deferred(state.deferReasons[l.defer_reason] || l.defer_reason, l.defer_note))}</div>` : ''}
+      ${l.closure_evidence ? `<div class="action">${esc(t().closedWith(l.closure_evidence))}</div>` : ''}
+      <details data-panel="why">
+        <summary>${esc(t().why)}</summary>
+        ${(() => { const b = (lang === 'ko' && (l.basis_ko || []).length) ? l.basis_ko : (l.basis || []);
+          return b.length ? `<ul class="basis">${b.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''; })()}
+        <details class="tech"><summary>${esc(t().technical)}</summary>
+          <div class="evidence">${esc([...(l.explanation || []), '', ...(l.evidence_chain || [])].join('\n'))}</div>
+        </details>
+        <div class="evidence" data-audit>${esc(t().auditLoading)}</div>
+      </details>
+      <div data-messages></div>
+      ${active && can('navigator') ? `
+      <div class="actions">
+        ${l.workflow_state === 'new' || l.deferral_expired ? `<button type="button" data-act="ack">${esc(t().ack)}</button>` : ''}
+        ${can('clinician') && l.owner !== state.user.user ? `<button type="button" data-act="assign-me">${esc(t().assignMe)}</button>` : ''}
+        ${can('clinician') ? `<button type="button" data-act="toggle" data-form="assign">${esc(t().assignTo)}</button>` : ''}
+        <button type="button" data-act="toggle" data-form="defer">${esc(t().defer)}</button>
+        ${rule.patient_outreach !== false ? `<button type="button" data-act="toggle" data-form="message">${esc(t().message)}</button>` : ''}
+        <button type="button" class="primary" data-act="toggle" data-form="close">${esc(t().close)}</button>
+      </div>
+      ${rule.patient_outreach === false ? `<div class="action" style="margin-top:8px;">${esc(t().clinicianOnly)}</div>` : ''}
+      <form class="form" data-form="assign">
+        <div><label for="${id}-assignee">${esc(t().assignee)}</label>${state.staff.length
+          ? `<select id="${id}-assignee" name="owner" required><option value="">${esc(t().choose)}</option>${state.staff
+              .filter((u) => u.user !== l.owner).map((u) => `<option value="${esc(u.user)}">${esc(u.user)} (${esc(u.role)})</option>`).join('')}</select>`
+          : `<input id="${id}-assignee" name="owner" required>`}</div>
+        <div><button class="primary" type="submit">${esc(t().assign)}</button></div>
+      </form>
+      <form class="form" data-form="defer">
+        <div class="row">
+          <div><label for="${id}-reason">${esc(t().reason)}</label><select id="${id}-reason" name="reason" required>${reasons}</select></div>
+          <div><label for="${id}-until">${esc(t().resurface)}</label><input id="${id}-until" name="until" type="date"></div>
+        </div>
+        <div><label for="${id}-note">${esc(t().note)}</label><textarea id="${id}-note" name="note" placeholder="${esc(t().notePh)}"></textarea></div>
+        <div><button class="primary" type="submit">${esc(t().recordDefer)}</button></div>
+      </form>
+      <form class="form" data-form="message">
+        <p class="sub" style="margin:0;font-size:.85rem;">${esc(t().msgHelp)}</p>
+        <div data-pref></div>
+        <div class="msg-controls">
+        <div class="row">
+          <div><label for="${id}-mlang">${esc(t().msgLang)}</label>
+            <select id="${id}-mlang" name="language"><option value="ko">한국어</option><option value="en">English</option></select></div>
+          <div><label for="${id}-mch">${esc(t().msgChannel)}</label>
+            <select id="${id}-mch" name="channel"><option value="kakao">KakaoTalk</option><option value="sms">SMS</option></select></div>
+        </div>
+        <div><button class="primary" type="submit">${esc(t().draft)}</button></div>
+        </div>
+      </form>
+      <form class="form" data-form="close">
+        <div><label for="${id}-evidence">${esc(t().evidence)}</label>
+          <textarea id="${id}-evidence" name="evidence" required minlength="5" placeholder="${esc(t().evidencePh)}"></textarea></div>
+        <div><button class="primary" type="submit">${esc(t().closeLoop)}</button></div>
+      </form>` : ''}
+    </article>`;
+  }
+
+  function messageCard(m) {
+    const draft = m.status === 'draft';
+    return `
+      <div class="msg" data-msg="${esc(m.id)}">
+        <div class="loop-head">
+          <span class="chip ${m.status === 'sent' ? 'ok' : m.status === 'draft' ? 'moderate' : 'critical'}">${esc(t().msgStatus[m.status] || m.status)}</span>
+          <span class="meta" style="margin:0;">${esc(m.channel)} · ${esc(m.language)} · ${esc((m.drafted_at || '').slice(0, 16))} · ${esc(m.drafted_by)}</span>
+        </div>
+        ${draft && can('clinician') ? `
+          <textarea name="text" aria-label="Message text">${esc(m.draft_text)}</textarea>
+          <div class="actions">
+            <button type="button" class="primary" data-act="approve">${esc(t().approveSend)}</button>
+            <button type="button" class="danger" data-act="reject">${esc(t().reject)}</button>
+          </div>`
+        : `<div class="msg-text">${esc(m.final_text || m.draft_text)}</div>
+           ${draft ? `<div class="action">${esc(t().awaitingClinician)}</div>` : ''}
+           ${m.status === 'failed' ? `<div class="action">${esc(m.note)}</div>` : ''}`}
+      </div>`;
+  }
+
+  // A link from the EHR (CDS Hooks card) or elsewhere: worklist#loop=<loop key>
+  function focusLinkedLoop() {
+    const m = location.hash.match(/^#loop=(.+)$/);
+    if (!m) return;
+    let key;
+    try { key = decodeURIComponent(m[1]); } catch (e) { return; }      // a malformed link is ignored
+    const card = [...document.querySelectorAll('article.loop')].find((a) => a.dataset.key === key);
+    if (!card) { setStatus(t().linkedMissing || 'The linked follow-up is not on the active worklist (it may be closed or deferred).'); return; }
+    card.scrollIntoView({ block: 'center' });
+    card.style.outline = '3px solid var(--accent, #0284c7)';
+    card.querySelectorAll('details').forEach((d) => { d.open = true; });
+  }
+
+  const prefPath = (card) => `/api/v1/patients/${encodeURIComponent(card.dataset.key.split('|')[0])}/outreach-preference`;
+
+  // Whether the patient asked not to be messaged: shown in the message form, which is hidden while it stands
+  async function renderPreference(card, form) {
+    const box = form.querySelector('[data-pref]');
+    const controls = form.querySelector('.msg-controls');
+    const id = form.querySelector('select')?.id || 'm';
+    try {
+      const p = await api(prefPath(card));
+      controls.hidden = p.opted_out;
+      box.innerHTML = p.opted_out
+        ? `<div class="action">${esc(t().optedOut(p))}</div>
+           <div class="actions"><button type="button" data-act="opt-in">${esc(t().optIn)}</button></div>`
+        : `<details><summary>${esc(t().optOutToggle)}</summary>
+             <div><label for="${id}-optreason">${esc(t().optReason)}</label>
+               <input id="${id}-optreason" name="optreason" maxlength="500" placeholder="${esc(t().optReasonPh)}"></div>
+             <div class="actions"><button type="button" data-act="opt-out">${esc(t().recordOptOut)}</button></div>
+           </details>`;
+    } catch { box.innerHTML = ''; controls.hidden = false; }
+  }
+
+  async function renderMessages(card) {
+    const box = card.querySelector('[data-messages]');
+    try {
+      const r = await api(`${keyPath(card.dataset.key)}/outreach`);
+      box.innerHTML = r.messages.map(messageCard).join('');
+    } catch { box.innerHTML = ''; }
+  }
+
+  async function refresh() {
+    try {
+      const include = $('show-inactive').checked;
+      const owner = $('only-mine').checked ? `&owner=${encodeURIComponent(state.user.user)}` : '';
+      const [wl, rate, feed] = await Promise.all([
+        api(`/api/v1/worklist?include_inactive=${include}${owner}`),
+        api('/api/v1/metrics/open-loop-rate'),
+        api('/api/v1/feed/status'),
+      ]);
+      state.deferReasons = wl.defer_reasons || {};
+      state.loops = wl.loops;
+      const active = wl.loops.filter((l) => ACTIVE.includes(l.workflow_state) || l.deferral_expired);
+      $('k-active').textContent = active.length;
+      $('k-overdue').textContent = active.filter((l) => l.clock_state === 'BLACK').length;
+      $('k-critical').textContent = active.filter((l) => l.severity === 'critical').length;
+      $('k-rate').textContent = rate.groups.all ? rate.groups.all.rate_per_1000.toLocaleString() : '–';
+      const fs = feed.status;
+      $('feed').className = `feed ${fs === 'OK' ? 'ok' : 'alarm'}`;
+      $('feed').textContent = window.CLINLOOP_DEMO && window.CLINLOOP_DEMO.static ? t().snapshotFeed(feed.last_success ? fmtDate(feed.last_success) : t().dateUnavailable) : t().feed[fs](feed.hours_since_success);
+      const latestRun = (feed.recent_runs || [])[0];
+      const coverage = latestRun && latestRun.ok && latestRun.coverage;
+      $('coverage').hidden = !coverage;
+      $('coverage-summary').textContent = coverage ? t().coverageSummary(coverage, latestRun.patients) : '';
+      $('coverage-detail').textContent = coverage ? t().coverage(coverage, latestRun.patients) : '';
+      if (coverage) $('coverage').setAttribute('aria-label', document.documentElement.lang === 'ko' ? '판독문 범위' : 'Report coverage');
+      if (coverage) $('coverage').style.background = 'var(--moderate-soft)';
+      if (wl.governance) {
+        const g = wl.governance;
+        $('gov').className = `feed ${g.rules_approved === g.rules_total && g.critical_findings_list === 'approved' ? 'ok' : ''}`;
+        $('gov').style.background = g.rules_approved === g.rules_total ? '' : 'var(--moderate-soft)';
+        $('gov').textContent = t().gov(g, wl.shadow_count || 0);
+      }
+      $('worklist').innerHTML = wl.silent_run
+        ? `<div class="card empty">${esc(t().silentRun(wl.shadow_count || 0))} <a href="pilot">${esc(lang === 'ko' ? '시범 검토 →' : 'Pilot review →')}</a></div>`
+        : wl.loops.length
+        ? wl.loops.map(loopCard).join('')
+        : `<div class="card empty">${esc(t().noLoops)}${can('admin') ? esc(t().loadHint) : ''}</div>`;
+      document.querySelectorAll('article.loop').forEach(renderMessages);
+      if ($('status').classList.contains('error')) setStatus('');   // the last problem is over
+      $('updated').textContent = t().updated(new Date().toLocaleTimeString(lang === 'ko' ? 'ko-KR' : 'en-GB', { hour: '2-digit', minute: '2-digit' }));
+      focusLinkedLoop();
+      await renderRates();
+    } catch (e) {
+      setStatus(t().loadFailed(e.message), true);
+    }
+  }
+
+  async function renderRates() {
+    const by = $('strata').value;
+    const rate = await api(`/api/v1/metrics/open-loop-rate?stratify_by=${encodeURIComponent(by)}`);
+    const rows = Object.entries(rate.groups);
+    const label = (g) => by === 'rule' && state.rules[g] ? `${g} · ${lang === 'ko' ? state.rules[g].name_ko : state.rules[g].name}` : g;
+    const [c1, c2, c3] = t().rateCols;
+    $('rate-table').innerHTML = rows.length ? `
+      <table class="rate-table">
+        <thead><tr><th>${esc($('strata').selectedOptions[0].textContent)}</th><th class="num">${esc(c1)}</th><th class="num">${esc(c2)}</th><th class="num">${esc(c3)}</th></tr></thead>
+        <tbody>${rows.map(([g, v]) => `<tr><td>${esc(label(g))}</td><td class="num">${v.eligible}</td><td class="num">${v.missed}</td><td class="num">${v.rate_per_1000.toLocaleString()}</td></tr>`).join('')}</tbody>
+      </table>` : `<p class="sub">${esc(t().noRates)}</p>`;
+  }
+
+  // ── Several people at once ────────────────────────────────────────────────
+  // The list refreshes itself every 30 s and when the tab comes back into view, so everyone sees
+  // what colleagues have just done, but never while this person is typing or has a form or an
+  // audit trail open (a refresh redraws the cards).
+  function busy() {
+    const a = document.activeElement;
+    return document.hidden || !!document.querySelector('#worklist form.open, #worklist details[open]')
+      || (a && a.closest('#worklist') && a.matches('input, textarea, select'));
+  }
+  let autoTimer = null;
+  function startAutoRefresh() {
+    if (autoTimer) return;
+    autoTimer = setInterval(() => { if (state.user && !busy()) refresh(); }, 30000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && state.user && !busy()) refresh(); });
+  }
+  // A colleague acted first (the server refuses the second of two conflicting actions): say so and show the current state
+  async function failed(err) {
+    if (/^Cannot /.test(err.message)) { setStatus(t().conflict(err.message), true); await refresh(); }
+    else setStatus(err.message, true);
+  }
+
+  // ── Events ────────────────────────────────────────────────────────────────
+  $('btn-lang').addEventListener('click', () => {
+    lang = lang === 'ko' ? 'en' : 'ko';
+    store.set('clinloop_lang', lang, localStorage);
+    applyLang();
+    if (state.user) refresh();
+  });
+
+  $('connect-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    state.base = $('api-base').value.replace(/\/+$/, '');
+    state.token = $('token').value.trim();
+    setStatus(t().signingIn);
+    try {
+      state.user = await api('/api/v1/me');
+      const rules = await api('/api/v1/rules');
+      state.rules = Object.fromEntries(rules.rules.map((r) => [r.rule_id, r]));
+      store.set('clinloop_api', state.base);
+      store.set('clinloop_token', state.token);
+      setStatus(t().signedIn(state.user.user, state.user.role));
+      $('app').hidden = false;
+      $('btn-load-example').hidden = !can('admin');
+      $('btn-escalate').hidden = !can('admin');
+      $('btn-load-radiology').hidden = !can('admin');
+      state.staff = can('clinician') ? await api('/api/v1/users').then((r) => r.users).catch(() => []) : [];
+      await refresh();
+      startAutoRefresh();
+    } catch (err) {
+      $('app').hidden = true;
+      setStatus(t().signinFailed(err.message), true);
+    }
+  });
+
+  $('btn-refresh').addEventListener('click', refresh);
+  $('show-inactive').addEventListener('change', refresh);
+  $('only-mine').addEventListener('change', refresh);
+  $('strata').addEventListener('change', () => renderRates().catch((e) => setStatus(e.message, true)));
+
+  $('btn-load-example').addEventListener('click', async () => {
+    try {
+      const bundle = await (await fetch('data/fhir_example_bundle.json')).json();
+      // Synthetic data is dated 2026; evaluate on 1 Sep 2026 so deadlines are meaningful
+      const r = await api('/api/v1/fhir/ingest?evaluation_time=2026-09-01T00:00:00', { method: 'POST', body: JSON.stringify(bundle) });
+      setStatus(t().ingested(r));
+      await refresh();
+    } catch (e) { setStatus(e.message, true); }
+  });
+
+  $('btn-load-radiology').addEventListener('click', async () => {
+    try {
+      const bundle = await (await fetch('data/radiology_test_bundle.json')).json();
+      // 16 synthetic radiology reports dated 2026; evaluated on 8 Oct 2026
+      const r = await api('/api/v1/fhir/ingest?evaluation_time=2026-10-08T00:00:00', { method: 'POST', body: JSON.stringify(bundle) });
+      setStatus(t().ingested(r));
+      await refresh();
+    } catch (e) { setStatus(e.message, true); }
+  });
+
+  $('btn-escalate').addEventListener('click', async () => {
+    try {
+      const r = await api('/api/v1/watchdog/escalate', { method: 'POST' });
+      setStatus(t().escalated(r.escalated.length));
+      await refresh();
+    } catch (e) { setStatus(e.message, true); }
+  });
+
+  $('worklist').addEventListener('toggle', async (e) => {
+    const details = e.target;
+    if (!(details instanceof HTMLDetailsElement) || !details.open) return;
+    const box = details.querySelector('[data-audit]');
+    if (!box) return;                                   // other panels (patient opt-out) have no audit trail
+    const key = details.closest('[data-key]').dataset.key;
+    try {
+      const r = await api(`${keyPath(key)}/audit`);
+      box.textContent = r.audit.map((a) => `${a.ts.slice(0, 19)}  ${a.actor} (${a.role || ''})  ${a.action}  ${JSON.stringify(a.detail)}`).join('\n') || t().noActions;
+    } catch (err) { box.textContent = err.message; }
+  }, true);
+
+  $('worklist').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const card = btn.closest('[data-key]');
+    const key = card.dataset.key;
+    const act = btn.dataset.act;
+    try {
+      if (act === 'toggle') {
+        const form = card.querySelector(`form[data-form="${btn.dataset.form}"]`);
+        card.querySelectorAll('form.form').forEach((f) => { if (f !== form) f.classList.remove('open'); });
+        form.classList.toggle('open');
+        if (btn.dataset.form === 'message' && form.classList.contains('open')) await renderPreference(card, form);
+        form.querySelector('input, select, textarea')?.focus();
+        return;
+      }
+      if (act === 'opt-out' || act === 'opt-in') {
+        const form = btn.closest('form');
+        const reason = act === 'opt-out' ? (form.querySelector('input[name=optreason]').value || '').trim() : '';
+        btn.disabled = true;
+        await api(prefPath(card), { method: 'PUT', body: JSON.stringify({ opted_out: act === 'opt-out', reason }) });
+        setStatus(act === 'opt-out' ? t().optOutSaved : t().optInSaved);
+        await renderPreference(card, form);
+        await renderMessages(card);
+        return;
+      }
+      btn.disabled = true;
+      if (act === 'ack') {
+        await api(`${keyPath(key)}/acknowledge`, { method: 'POST' });
+      } else if (act === 'assign-me') {
+        await api(`${keyPath(key)}/assign`, { method: 'POST', body: JSON.stringify({ owner: state.user.user }) });
+        setStatus(t().assigned(state.user.user));
+      } else if (act === 'approve' || act === 'reject') {
+        const msg = btn.closest('[data-msg]');
+        const body = act === 'approve'
+          ? { approve: true, text: msg.querySelector('textarea[name=text]').value }
+          : { approve: false };
+        const r = await api(`/api/v1/outreach/${encodeURIComponent(msg.dataset.msg)}/decision`, { method: 'POST', body: JSON.stringify(body) });
+        setStatus(r.status === 'sent' ? t().sent : r.status === 'rejected' ? t().rejected : `${r.status}: ${r.note || ''}`, r.status === 'failed');
+      }
+      await refresh();
+    } catch (err) { btn.disabled = false; await failed(err); }
+  });
+
+  $('worklist').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const key = form.closest('[data-key]').dataset.key;
+    const data = new FormData(form);
+    try {
+      if (form.dataset.form === 'defer') {
+        const until = data.get('until');
+        await api(`${keyPath(key)}/defer`, { method: 'POST', body: JSON.stringify({
+          reason_code: data.get('reason'), note: data.get('note') || '', until: until ? `${until}T00:00:00` : null }) });
+        setStatus(t().deferRecorded);
+      } else if (form.dataset.form === 'close') {
+        await api(`${keyPath(key)}/close`, { method: 'POST', body: JSON.stringify({ evidence: data.get('evidence') }) });
+        setStatus(t().loopClosed);
+      } else if (form.dataset.form === 'assign') {
+        const owner = String(data.get('owner')).trim();
+        await api(`${keyPath(key)}/assign`, { method: 'POST', body: JSON.stringify({ owner }) });
+        setStatus(t().assigned(owner));
+      } else if (form.dataset.form === 'message') {
+        await api(`${keyPath(key)}/outreach`, { method: 'POST', body: JSON.stringify({
+          language: data.get('language'), channel: data.get('channel') }) });
+        setStatus(t().drafted);
+      }
+      await refresh();
+    } catch (err) { await failed(err); }
+  });
+
+  applyLang();
+})();
+</script>
+</body>
+</html>

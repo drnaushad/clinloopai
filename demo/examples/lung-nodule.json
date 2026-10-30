@@ -1,0 +1,81 @@
+{
+ "resourceType": "Bundle",
+ "id": "example-lung-nodule",
+ "type": "collection",
+ "meta": {
+  "tag": [
+   {
+    "code": "synthetic",
+    "display": "Synthetic example: not a real patient"
+   }
+  ]
+ },
+ "entry": [
+  {
+   "fullUrl": "urn:uuid:Patient-SYN-002",
+   "resource": {
+    "resourceType": "Patient",
+    "id": "SYN-002",
+    "birthDate": "1971-06-11",
+    "gender": "female",
+    "communication": [
+     {
+      "language": {
+       "coding": [
+        {
+         "system": "urn:ietf:bcp:47",
+         "code": "ko"
+        }
+       ]
+      },
+      "preferred": true
+     }
+    ]
+   }
+  },
+  {
+   "fullUrl": "urn:uuid:DiagnosticReport-ct-2",
+   "resource": {
+    "resourceType": "DiagnosticReport",
+    "id": "ct-2",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+        "code": "RAD"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "text": "CT abdomen and pelvis"
+    },
+    "subject": {
+     "reference": "Patient/SYN-002"
+    },
+    "effectiveDateTime": "2026-04-01T10:00:00+09:00",
+    "conclusion": "No acute abdominal findings. Incidental 12 mm solid nodule in the right lower lobe."
+   }
+  },
+  {
+   "fullUrl": "urn:uuid:Appointment-appt-2",
+   "resource": {
+    "resourceType": "Appointment",
+    "id": "appt-2",
+    "status": "noshow",
+    "start": "2026-06-20T10:00:00+09:00",
+    "description": "Follow-up chest CT",
+    "participant": [
+     {
+      "actor": {
+       "reference": "Patient/SYN-002"
+      },
+      "status": "accepted"
+     }
+    ]
+   }
+  }
+ ]
+}

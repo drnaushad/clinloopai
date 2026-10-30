@@ -1,0 +1,9 @@
+{
+  "source_commit": "14221e19e361e1b0d32b045b47b0f613104670f1",
+  "version": "2026-10-30.engineering1",
+  "channel": "research-preview",
+  "clinical_use_authorized": false,
+  "source_pull_request": "https://github.com/drnaushad/clinloopai/pull/59",
+  "engine_source_sha256": "80d4488efbd302b4d1f111c6f3d44d19f8a24516c34c96e9ac35ee65537a6f9c",
+  "artifact_scope": "Allowlisted static assets and repository synthetic examples only"
+}

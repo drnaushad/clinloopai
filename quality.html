@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ko" data-workspace="quality" data-language-options="en ko">
+<head>
+<script src="js/display-start.js?v=20261028_languages1"></script>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e7490">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<title>ClinLoop Follow-up Gaps</title>
+<style>
+:root {
+  --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --border-strong: #cbd5e1;
+  --text: #0f172a; --muted: #475569; --dim: #556274;
+  --accent: #0369a1; --accent-soft: rgba(3,105,161,.10);
+  --critical: #be123c; --critical-soft: rgba(225,29,72,.10);
+  --high: #c2410c; --high-soft: rgba(234,88,12,.10);
+  --moderate: #854d0e; --moderate-soft: rgba(202,138,4,.12);
+  --low: #475569; --low-soft: rgba(71,85,105,.10);
+  --ok: #065f46; --ok-soft: rgba(5,150,105,.10);
+  --radius: 12px; --shadow: 0 4px 14px rgba(15,23,42,.06);
+  --font-head: 'Outfit', 'Noto Sans KR', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+    --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+    --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+    --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+    --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+    --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+    --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+    --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+  --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+  --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+  --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+  --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+  --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+  --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+  --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 64px; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; }
+header nav { display: flex; gap: 12px; align-items: center; }
+h1 { font: 800 1.6rem/1.2 var(--font-head); margin: 0; letter-spacing: -.01em; }
+h1 span { color: var(--accent); }
+.sub { color: var(--muted); margin: 4px 0 0; }
+a { color: var(--accent); font-weight: 600; }
+.banner { margin: 16px 0; padding: 10px 14px; border-radius: var(--radius); background: var(--moderate-soft);
+  border: 1px solid var(--border); font-size: .9rem; }
+.feed { margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius); font-size: .9rem; font-weight: 600;
+  border: 1px solid var(--border); }
+.feed.ok { background: var(--ok-soft); color: var(--ok); font-weight: 500; }
+.feed.alarm { background: var(--critical); color: #fff; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.connect { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 10px; padding: 14px; align-items: end; }
+label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+input, select, textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; }
+textarea { min-height: 72px; resize: vertical; }
+button { font: 600 .88rem var(--font-body); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { color: var(--critical); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+.status-line { padding: 0 14px 12px; font-size: .85rem; color: var(--muted); min-height: 1.4em; }
+.status-line.error { color: var(--critical); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+.kpi { padding: 12px 14px; }
+.kpi .v { font: 700 1.6rem/1.1 var(--font-head); font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: .8rem; color: var(--muted); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 12px; }
+.toolbar .spacer { flex: 1; }
+.check { display: flex; gap: 6px; align-items: center; margin: 0; color: var(--text); font-weight: 500; font-size: .88rem; }
+.check input { width: auto; }
+.loop { padding: 14px; margin-bottom: 10px; border-left: 4px solid var(--low); }
+.loop.critical { border-left-color: var(--critical); }
+.loop.high { border-left-color: var(--high); }
+.loop.moderate { border-left-color: var(--moderate); }
+.loop-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.loop-title { font-weight: 700; flex: 1 1 260px; }
+.chip { font: 600 .72rem var(--font-mono); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.critical { background: var(--critical-soft); color: var(--critical); }
+.chip.high { background: var(--high-soft); color: var(--high); }
+.chip.moderate { background: var(--moderate-soft); color: var(--moderate); }
+.chip.low, .chip.neutral { background: var(--low-soft); color: var(--low); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.overdue { background: var(--critical); color: #fff; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: .85rem; margin: 6px 0; }
+.meta b { color: var(--text); font-weight: 600; }
+.missing { font-weight: 600; margin: 4px 0; }
+.action { color: var(--muted); font-size: .9rem; }
+details { margin-top: 8px; }
+summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
+.evidence { font: .78rem/1.5 var(--font-mono); color: var(--muted); background: var(--bg); padding: 10px; margin-top: 6px;
+  border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.form { display: none; gap: 8px; margin-top: 10px; padding: 12px; border-radius: 8px; background: var(--bg); }
+.form.open { display: grid; }
+.form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.msg { border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 8px; background: var(--surface); }
+.msg-text { white-space: pre-wrap; margin: 6px 0; }
+.empty { text-align: center; color: var(--muted); padding: 40px 16px; }
+.rate-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.rate-table th, .rate-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.rate-table td.num, .rate-table th.num { font-variant-numeric: tabular-nums; text-align: right; }
+footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
+@media (max-width: 720px) {
+  .connect { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .form .row { grid-template-columns: 1fr; }
+}
+</style>
+<style>
+.pane { padding: 16px; margin-top: 16px; }
+.pane h2 { font: 700 1.1rem var(--font-head); margin: 0 0 4px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.tbl th, .tbl td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; overflow-wrap: anywhere; }
+.tbl td.num, .tbl th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.scroll { overflow-x: auto; }
+.rate { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+.rate .track { flex: 1; height: 8px; border-radius: 4px; background: var(--border); position: relative; }
+.rate .fill { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--accent); }
+.rate .v { font: 600 .8rem var(--font-mono); color: var(--text); min-width: 42px; text-align: right; }
+.gap { color: var(--critical); font-weight: 600; }
+.sugg { border-top: 1px solid var(--line, rgba(148,163,184,.3)); padding: 12px 0; }
+.sugg blockquote { margin: 6px 0; padding: 6px 10px; border-left: 3px solid var(--accent, #0e7490); background: rgba(14,116,144,.06); border-radius: 4px; }
+.sugg form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
+.sugg form input[type="text"] { flex: 1 1 220px; min-width: 0; }
+.bn { padding: 10px 12px; border-left: 4px solid var(--critical); margin: 8px 0; background: var(--surface); border-radius: 8px; }
+</style>
+<script src="config.js"></script>
+<script src="js/demo.js?v=20261023_locale1"></script>
+<script src="js/appnav.js?v=20261028_languages1"></script>
+<link rel="stylesheet" href="css/responsive.css?v=20261023_locale1">
+<script defer src="js/language-controls.js?v=20261023_locale1"></script>
+<link rel="stylesheet" href="css/app-chrome.css?v=20261028_languages1"><script defer src="js/appearance-controls.js?v=20261027_research2"></script><script defer src="js/workspace-shell.js?v=20261028_languages1"></script><script src="js/interface-copy.js?v=20261028_files1"></script><script src="js/interface-language.js?v=20261028_languages1"></script></head>
+<body class="clinloop-page"><a class="skip-link shell-skip" href="#clinloop-workspace">Skip to workspace</a>
+<!-- clinloop-shell:start -->
+<header class="clinloop-shell" data-static-shell="true"><div class="clinloop-shell-top"><a class="clinloop-shell-brand" href="./"><img src="icons/logo.svg" alt="" width="32" height="32"><span>ClinLoop AI</span></a><div class="clinloop-shell-controls" role="group" aria-label="Display and account"><div role="group" data-shell-account=""><div class="appearance-controls" role="group" aria-label="Appearance"><button type="button" aria-pressed="true"><span data-nav-language="en">Light</span><span data-nav-language="ko">라이트</span></button><button type="button" aria-pressed="false"><span data-nav-language="en">Dark</span><span data-nav-language="ko">다크</span></button></div><button hidden data-legacy-language="true" type="button" id="btn-lang" aria-label="Language">English</button><div class="prominent-lang-pill" role="group" aria-label="Language"><button type="button" id="lang-opt-en" data-language="en" aria-pressed="true">English</button><button type="button" id="lang-opt-ko" data-language="ko" aria-pressed="false">한국어</button></div></div></div></div><nav class="app-nav clinloop-shell-links" aria-label="ClinLoop pages"><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-0"><span class="clinloop-nav-group-label" id="nav-group-0"><span data-nav-language="en">Clinical workspace</span><span data-nav-language="ko">진료 작업 공간</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="./" data-label-en="Cockpit" data-label-ko="종합 화면"><span data-nav-language="en">Cockpit</span><span data-nav-language="ko">종합 화면</span></a><a class="app-nav-link" href="worklist" data-label-en="Worklist" data-label-ko="업무 목록"><span data-nav-language="en">Worklist</span><span data-nav-language="ko">업무 목록</span></a><a class="app-nav-link" href="patient" data-label-en="Patient graph" data-label-ko="환자 그래프"><span data-nav-language="en">Patient graph</span><span data-nav-language="ko">환자 그래프</span></a><a class="app-nav-link" href="quality" data-label-en="Quality" data-label-ko="품질 지표" aria-current="page"><span data-nav-language="en">Quality</span><span data-nav-language="ko">품질 지표</span></a><a class="app-nav-link" href="governance" data-label-en="Rule sign-off" data-label-ko="규칙 승인"><span data-nav-language="en">Rule sign-off</span><span data-nav-language="ko">규칙 승인</span></a><a class="app-nav-link" href="pilot" data-label-en="Pilot review" data-label-ko="시범 검토"><span data-nav-language="en">Pilot review</span><span data-nav-language="ko">시범 검토</span></a><a class="app-nav-link" href="imaging" data-label-en="Imaging" data-label-ko="영상"><span data-nav-language="en">Imaging</span><span data-nav-language="ko">영상</span></a><a class="app-nav-link" href="analyse" data-label-en="Analyse patient" data-label-ko="환자 분석"><span data-nav-language="en">Analyse patient</span><span data-nav-language="ko">환자 분석</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-1"><span class="clinloop-nav-group-label" id="nav-group-1"><span data-nav-language="en">Research</span><span data-nav-language="ko">연구</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="reports" data-label-en="Live report reader" data-label-ko="실시간 보고서 검토"><span data-nav-language="en">Live report reader</span><span data-nav-language="ko">실시간 보고서 검토</span></a><a class="app-nav-link" href="review" data-label-en="Report review" data-label-ko="보고서 검토"><span data-nav-language="en">Report review</span><span data-nav-language="ko">보고서 검토</span></a><a class="app-nav-link" href="private" data-label-en="Personal workspace" data-label-ko="개인 작업 공간"><span data-nav-language="en">Personal workspace</span><span data-nav-language="ko">개인 작업 공간</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-2"><span class="clinloop-nav-group-label" id="nav-group-2"><span data-nav-language="en">Evidence and setup</span><span data-nav-language="ko">검증 및 설정</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="validation" data-label-en="Validation evidence" data-label-ko="검증 근거"><span data-nav-language="en">Validation evidence</span><span data-nav-language="ko">검증 근거</span></a><a class="app-nav-link" href="deployment" data-label-en="International setup" data-label-ko="국제 배포 계획"><span data-nav-language="en">International setup</span><span data-nav-language="ko">국제 배포 계획</span></a></div></div></nav><div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label><select id="clinloop-page-picker"><optgroup label="Clinical workspace"><option value="/">Cockpit</option><option value="/worklist">Worklist</option><option value="/patient">Patient graph</option><option value="/quality" selected>Quality</option><option value="/governance">Rule sign-off</option><option value="/pilot">Pilot review</option><option value="/imaging">Imaging</option><option value="/analyse">Analyse patient</option></optgroup><optgroup label="Research"><option value="/reports">Live report reader</option><option value="/review">Report review</option><option value="/private">Personal workspace</option></optgroup><optgroup label="Evidence and setup"><option value="/validation">Validation evidence</option><option value="/deployment">International setup</option></optgroup></select></div><details class="clinloop-workflow-guide"><summary><span data-nav-language="en">Choose a workflow</span><span data-nav-language="ko">작업 흐름 선택</span></summary><div class="clinloop-workflow-grid"><div><a href="review"><span data-nav-language="en">Review report text</span><span data-nav-language="ko">보고서 텍스트 검토</span></a><p><span data-nav-language="en">Load TXT in your browser or import PDF, scans, photos and DICOM through your personal gateway. Check the complete source before model review (6000 UTF-8 bytes).</span><span data-nav-language="ko">TXT는 브라우저에서, PDF·스캔·사진·DICOM은 개인 게이트웨이에서 불러옵니다. 모델 검토(UTF-8 6000바이트) 전에 전체 원문을 확인하세요.</span></p></div><div><a href="analyse"><span data-nav-language="en">Try follow-up detection</span><span data-nav-language="ko">후속 조치 탐지 체험</span></a><p><span data-nav-language="en">Start with a synthetic example, a FHIR .json bundle or radiology/pathology report text. The browser demo needs no model connection.</span><span data-nav-language="ko">합성 예제, FHIR .json 번들 또는 영상·병리 보고서 텍스트로 시작하세요. 브라우저 데모는 모델 연결이 필요 없습니다.</span></p></div><div><a href="imaging"><span data-nav-language="en">Explore document and imaging workflows</span><span data-nav-language="ko">문서 및 영상 작업 흐름 살펴보기</span></a><p><span data-nav-language="en">DICOM image pixels, medical images and waveforms need a separate validated imaging workflow. The public Imaging page shows local-installation demonstrations.</span><span data-nav-language="ko">DICOM 화소, 의료영상 및 파형에는 별도로 검증된 영상 작업 흐름이 필요합니다. 공개 영상 화면은 로컬 설치 기능을 시연합니다.</span></p></div><div><a href="validation"><span data-nav-language="en">Check evidence and limitations</span><span data-nav-language="ko">검증 근거 및 한계 확인</span></a><p><span data-nav-language="en">See measured results, supported tasks and pending reviews before choosing a workflow or comparing models. Universal clinical accuracy is not established.</span><span data-nav-language="ko">작업 흐름 선택이나 모델 비교 전에 측정 결과, 지원 작업 및 검토 현황을 확인하세요. 모든 임상 작업에 대한 정확도는 입증되지 않았습니다.</span></p></div></div></details><aside class="research-release-notice" role="note"><span data-nav-language="en">Research preview · synthetic data only. Independent review and clinical validation pending. <a href="validation#research-release">Review status</a></span><span data-nav-language="ko">연구 미리보기 · 합성 데이터 전용. 독립 검토 및 임상 검증 대기 중. <a href="validation#research-release">검토 현황</a></span></aside></header>
+<!-- clinloop-shell:end -->
+<div class="wrap" id="clinloop-workspace" role="main" tabindex="-1">
+  <header>
+
+    <div>
+      <h1><a class="brand-home" href="./" title="ClinLoop home"><svg class="brand-mark" viewBox="0 0 48 48" role="img" aria-label="ClinLoop logo: rod of Asclepius inside a closing loop"><path d="M37.6 10.4A19 19 0 1 0 43 24" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/><path d="M44.2 8.6 43.9 18.9 34 16.2Z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M24 8.6v30.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><g class="bm-serpent"><path d="M27 14.2C21.2 13.8 19 17.4 24 18.6 29 19.8 29 22.8 24 23.8 19 24.8 19 28 24 29 28 29.8 27.8 32.6 25 34.2" fill="none" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="28.6" cy="13.4" rx="3" ry="2.1" transform="rotate(-18 28.6 13.4)" stroke="none"/></g></svg></a><span data-i18n="title"></span></h1>
+      <p class="sub" data-i18n="subtitle"></p>
+    </div>
+
+  </header>
+  <div class="banner" role="note" data-i18n="note"></div>
+  <section class="card" aria-label="Connection">
+    <form class="connect" id="connect-form">
+      <div><label for="api-base" data-i18n="api"></label><input id="api-base" type="url" placeholder="http://localhost:8124" required></div>
+      <div><label for="token" data-i18n="token"></label><input id="token" type="password" autocomplete="off" required></div>
+      <button class="primary" type="submit" data-i18n="signin"></button>
+    </form>
+    <div class="status-line" id="status" aria-live="polite"></div>
+  </section>
+  <div id="app" hidden>
+    <div class="kpis" id="kpis"></div>
+    <section class="card pane" aria-labelledby="h-bn"><h2 id="h-bn" data-i18n="bottlenecks"></h2><p class="sub" data-i18n="bnHelp"></p><div id="bn"></div></section>
+    <section class="card pane" aria-labelledby="h-rules"><h2 id="h-rules" data-i18n="byRule"></h2><div class="scroll" id="rules"></div></section>
+    <section class="card pane" aria-labelledby="h-eq"><h2 id="h-eq" data-i18n="equity"></h2><p class="sub" data-i18n="eqHelp"></p><div id="eq"></div></section>
+    <section class="card pane" aria-labelledby="h-own"><h2 id="h-own" data-i18n="owners"></h2><p class="sub" data-i18n="ownHelp"></p><div class="scroll" id="owners"></div></section>
+    <section class="card pane" id="outcome-pane" aria-labelledby="h-out" hidden><h2 id="h-out" data-i18n="outcomes"></h2><p class="sub" data-i18n="outHelp"></p><div id="out-kpis" class="kpis"></div><div class="scroll" id="outcomes"></div></section>
+    <section class="card pane" id="sr-pane" aria-labelledby="h-sr" hidden><h2 id="h-sr" data-i18n="sr"></h2><p class="sub" data-i18n="srHelp"></p><p id="sr-mode"></p><div class="scroll" id="sr-table"></div><div id="sr-items"></div></section>
+    <section class="card pane" id="audit-pane" aria-labelledby="h-audit" hidden><h2 id="h-audit" data-i18n="audit"></h2><p class="sub" data-i18n="auditHelp"></p><div class="scroll" id="audit"></div></section>
+  </div>
+  <footer data-i18n="footer"></footer>
+</div>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const T = {
+    ko: {
+      sourceQuote: '보고서 인용 (원문 언어 유지)',
+      title: '후속 조치가 끊기는 곳', subtitle: '병원 전체에서 어떤 규칙, 어떤 단계, 어떤 환자군에서 진료 루프가 닫히지 않는지 보여줍니다.',
+      worklist: '작업 목록 →', governance: '규칙 승인 →', api: 'ClinLoop API', token: '접근 토큰', signin: '로그인',
+      note: '절차를 고치기 위한 화면입니다. 의료진 개인의 순위를 매기지 않습니다. 담당자별 표는 업무량 분배를 위한 것입니다.',
+      loops: '전체 루프', active: '진행 중', overdue: '기한 초과', ontime: '기한 내 종결률',
+      bottlenecks: '병목 (기한 초과 × 중증도)', bnHelp: '가장 많이 끊기는 규칙과 가장 자주 빠지는 단계. 한 번의 절차 개선으로 많은 루프가 닫힙니다.',
+      byRule: '규칙별', rule: '규칙', missingStep: '가장 자주 빠진 단계', ontimeCol: '기한 내 종결', closedLate: '늦게 종결', byClin: '의료진 종결', deferred: '보류',
+      equity: '환자군별 놓친 비율', eqHelp: '기한이 지난 루프 중 닫히지 않은 비율. 전체보다 10%p 이상 높은 군(5건 이상)은 표시됩니다.',
+      age_group: '연령대', language: '언어', sex: '성별', group: '군', n: '기한 경과', missed: '놓침', rate: '놓친 비율', above: (d) => `전체보다 ${d}%p 높음`,
+      owners: '담당자별 업무량', ownHelp: '진행 중·기한 초과 루프 수. 업무를 나누기 위한 것이며 평가가 아닙니다.', owner: '담당자', escalated: '상향 보고',
+      none: '없음', noBn: '기한을 넘긴 루프가 없습니다.', working: '불러오는 중…',
+      outcomes: '알림 이후: 루프는 실제로 닫혔는가', outHelp: '열린 루프마다 누군가 조치했는지, 언제 닫혔는지(기록된 후속 조치 또는 근거와 함께 직원이 종결), 기한을 넘겼는지, 기각되었는지를 감사 기록에서 집계합니다. 환자 식별 정보는 없습니다.',
+      oOpened: '열린 루프', oActed: '조치됨', oFirst: '첫 조치까지 (중앙값)', oClosed: '종결 (기록 / 직원)', oDays: '종결까지 (중앙값)', oLate: '기한 후 종결', oDismissed: '기각', oOpenOver: '기한 지나 열림', oUntouched: '그중 아무도 손대지 않음', oNever: '기한이 지났는데 아무도 조치하지 않음',
+      hours: (h) => h == null ? '–' : `${h}시간`, days: (d) => d == null ? '–' : `${d}일`, silentNote: '시범 운영(silent run) 중: 직원에게 알림이 가지 않으므로 이 수치는 일반 진료만의 결과입니다.',
+      audit: '위급 결과 통보 기록 감사 (다음 날)', auditHelp: '하루 이상 지난 위급 검사·영상 결과마다 1시간 안에 의료진 통보가 기록되었는지 확인합니다. 병원의 위급 결과 통보 절차가 우선이며, 이 표는 그 기록을 사후에 점검합니다.',
+      total: '합계', sr: '모델 판독 보조 (무경보 측정)', srHelp: '병원 내부 언어모델이 판독문을 다시 읽고, 규칙이 추적하지 않는 후속 조치를 원문 인용과 함께 제안합니다. 임상용 에디션에서는 제안이 업무 목록·EHR·환자 기록에 들어가지 않으며, 품질팀만 보고 판정합니다. 이 판정 결과로 이후 의료진에게 보여줄지 결정합니다.',
+      srMode: { off: '꺼짐 (CLINLOOP_SECOND_READER=silent로 켭니다)', silent: '무경보 측정 중: 진료에는 아무것도 표시되지 않습니다', live: '실시간 (연구용 프로필): 제안이 R058 검토 루프를 엽니다' },
+      srCat: '분류', srN: '제안', srReviewed: '판정', srMiss: '실제 누락', srHandled: '이미 처리됨', srNotNeeded: '불필요', srWrong: '인용 오류', srPrec: '정밀도 (95% CI)',
+      srPending: '판정 대기 중인 제안', srNone: '판정 대기 중인 제안이 없습니다.', srReport: '판독', srModelReason: '모델의 이유', srUrgent: '긴급',
+      srReferral: '안전 보고: 누구에게, 어떻게 알렸는지 (긴급한 실제 누락은 필수)', srNote: '메모 (선택)', srSave: '판정 저장', srSaved: '저장했습니다.',
+      verdicts: { real_miss: '실제 누락', already_handled: '이미 처리됨', not_needed: '불필요', wrong_quote: '인용 오류' },
+      auditLive: '핵심 프로필: R022·R035는 실시간 알림 대신 이 감사로 보고됩니다.', auditNone: '하루 이상 지난 위급 결과가 없습니다.',
+      result: '결과', resultTime: '결과 시각', patient: '환자',
+      results: { not_documented: '기록 없음', documented_late: '늦게 기록', documented_on_time: '1시간 내 기록', closed_by_staff: '직원이 근거와 함께 종결' },
+      footer: 'ClinLoop AI · 절차의 빈틈을 찾습니다. 사람을 탓하지 않습니다.',
+    },
+    en: {
+      sourceQuote: 'Original report quote (source language)',
+      title: 'Where follow-up breaks', subtitle: 'Hospital-wide: which rules, which steps and which patient groups lose their care loops.',
+      worklist: 'Worklist →', governance: 'Rule sign-off →', api: 'ClinLoop API', token: 'Access token', signin: 'Sign in',
+      note: 'For fixing processes, not ranking clinicians. The owner table is for balancing workload.',
+      loops: 'Loops', active: 'Active', overdue: 'Overdue', ontime: 'Closed on time',
+      bottlenecks: 'Bottlenecks (overdue × severity)', bnHelp: 'The rules that break most and the step most often missing: one process fix closes many loops.',
+      byRule: 'By rule', rule: 'Rule', missingStep: 'Step most often missing', ontimeCol: 'On time', closedLate: 'Closed late', byClin: 'Closed by clinician', deferred: 'Deferred',
+      equity: 'Missed rate by patient group', eqHelp: 'Share of loops past their deadline that were not closed. A group ≥ 10 points above the overall rate (≥ 5 loops) is marked.',
+      age_group: 'Age group', language: 'Language', sex: 'Sex', group: 'Group', n: 'Past deadline', missed: 'Missed', rate: 'Missed rate', above: (d) => `${d} points above overall`,
+      owners: 'Workload by owner', ownHelp: 'Active and overdue loops: to share work, not to judge.', owner: 'Owner', escalated: 'Escalated',
+      none: 'none', noBn: 'No loop is past its deadline.', working: 'Loading…',
+      outcomes: 'After the alert: did loops actually close?', outHelp: 'For every loop that opened: whether anyone acted on it, when it closed (follow-up found in the record, or closed by staff with evidence), whether that was after the deadline, and whether it was dismissed. From the audit log; no patient identifiers.',
+      oOpened: 'Loops opened', oActed: 'Acted on', oFirst: 'To first action (median)', oClosed: 'Closed (record / staff)', oDays: 'To closure (median)', oLate: 'Closed after deadline', oDismissed: 'Dismissed', oOpenOver: 'Open past deadline', oUntouched: 'of which never acted on', oNever: 'Past deadline, never acted on',
+      hours: (h) => h == null ? '–' : `${h} h`, days: (d) => d == null ? '–' : `${d} d`, silentNote: 'Silent run: nothing reaches staff, so these figures describe usual care alone.',
+      audit: 'Critical-result communication audit (next day)', auditHelp: 'For each critical lab or imaging result more than a day old: was the clinician notification documented within the hour? The hospital\'s critical-result call process is the primary control; this table checks its documentation afterwards.',
+      total: 'Total', sr: 'Model second reader (silent measurement)', srHelp: "The hospital's own language model rereads reports and suggests follow-up no rule tracks, quoting the report. In the clinical edition its suggestions never reach the worklist, EHR or patient record: only the quality team sees and judges them. These judgements decide whether it may ever be shown to clinicians.",
+      srMode: { off: 'Off (turn on with CLINLOOP_SECOND_READER=silent)', silent: 'Silent measurement: nothing reaches clinical care', live: 'Live (research profile): suggestions open R058 review loops' },
+      srCat: 'Category', srN: 'Suggestions', srReviewed: 'Judged', srMiss: 'Real miss', srHandled: 'Already handled', srNotNeeded: 'Not needed', srWrong: 'Wrong quote', srPrec: 'Precision (95% CI)',
+      srPending: 'Suggestions waiting for a judgement', srNone: 'No suggestion is waiting.', srReport: 'Report', srModelReason: "Model's reason", srUrgent: 'Urgent',
+      srReferral: 'Safety referral: who was told, and how (required for an urgent real miss)', srNote: 'Note (optional)', srSave: 'Save judgement', srSaved: 'Saved.',
+      verdicts: { real_miss: 'Real miss', already_handled: 'Already handled', not_needed: 'Not needed', wrong_quote: 'Wrong quote' },
+      auditLive: 'Core profile: R022 and R035 are reported here instead of as live alerts.', auditNone: 'No critical result more than a day old.',
+      result: 'Result', resultTime: 'Result time', patient: 'Patient',
+      results: { not_documented: 'Not documented', documented_late: 'Documented late', documented_on_time: 'Documented within the hour', closed_by_staff: 'Closed by staff with evidence' },
+      footer: 'ClinLoop AI · Finds gaps in the process. Blames no one.',
+    },
+  };
+  const store = { get(k, s = sessionStorage) { try { return s.getItem(k) || ''; } catch { return ''; } },
+                  set(k, v, s = sessionStorage) { try { s.setItem(k, v); } catch {} } };
+  const preferredLanguage = store.get('clinloop_lang', localStorage);
+  let lang = ['en', 'ko'].includes(preferredLanguage) ? preferredLanguage : ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');
+  const t = () => T[lang];
+  const state = { base: '', token: '', data: null, audit: null, outcomes: null, sr: null, srItems: null };
+  const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+  $('api-base').value = store.get('clinloop_api') || window.CLINLOOP_API_BASE || (isLocal ? 'http://localhost:8124' : '');
+  $('token').value = store.get('clinloop_token');
+  function setStatus(m, err = false) { $('status').textContent = m; $('status').classList.toggle('error', err); }
+  async function api(path) {
+    const res = await fetch(state.base + path, { headers: { 'Authorization': `Bearer ${state.token}` } });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      // FastAPI lists form problems as objects; show their text, not "[object Object]"
+      const d = body.detail;
+      throw new Error(Array.isArray(d) ? d.map((x) => (x.loc ? x.loc[x.loc.length - 1] + ': ' : '') + (x.msg || '')).join('; ')
+        : d || (res.status === 401 ? 'Not signed in, or the token is not recognised' : `HTTP ${res.status}`));
+    }
+    return body;
+  }
+  async function apiPost(path, body) {
+    const res = await fetch(state.base + path, { method: 'POST', body: JSON.stringify(body),
+      headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' } });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(typeof out.detail === 'string' ? out.detail : `HTTP ${res.status}`);
+    return out;
+  }
+  const pct = (x) => x == null ? '–' : `${Math.round(x * 100)}%`;
+  const bar = (x, label) => x == null ? '<span class="sub">–</span>'
+    : `<div class="rate" title="${esc(label)}: ${pct(x)}"><div class="track"><div class="fill" style="width:${Math.round(x * 100)}%"></div></div><span class="v">${pct(x)}</span></div>`;
+
+  function stepLabel(value) {
+    return String(value || t().none).replace(/_/g, ' ')
+      .replace(/\bfollowup\b/g, 'follow-up').replace(/\b(ct|mri|pet)\b/gi, (term) => term.toUpperCase());
+  }
+
+  function render() {
+    document.documentElement.lang = lang;
+    $('btn-lang').textContent = lang === 'ko' ? 'English' : '한국어';
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t()[el.dataset.i18n]; });
+    const d = state.data;
+    if (!d) return;
+    const active = d.rules.reduce((a, r) => a + r.active, 0), overdue = d.rules.reduce((a, r) => a + r.overdue, 0);
+    const due = d.rules.reduce((a, r) => a + r.due_passed, 0), missed = d.rules.reduce((a, r) => a + r.overdue + r.closed_late, 0);
+    const overall = due ? 1 - missed / due : null;
+    $('kpis').innerHTML = [[d.loops, t().loops], [active, t().active], [overdue, t().overdue], [pct(overall), t().ontime]]
+      .map(([v, l]) => `<div class="card kpi"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join('');
+    $('bn').innerHTML = d.bottlenecks.length ? d.bottlenecks.map((b) => `<div class="bn"><b>${esc(b.rule_id)}</b> ${esc(b.rule_name)}
+      · <span class="chip overdue">${esc(t().overdue)} ${esc(b.overdue)}</span> <span class="chip ${esc(b.severity)}">${esc(b.severity)}</span>
+      ${b.top_missing ? `<div class="sub" style="margin-top:4px;">${esc(t().missingStep)}: <b>${esc(stepLabel(b.top_missing))}</b></div>` : ''}</div>`).join('')
+      : `<p class="sub">${esc(t().noBn)}</p>`;
+    $('rules').innerHTML = `<table class="tbl"><thead><tr><th>${esc(t().rule)}</th><th class="num">${esc(t().active)}</th><th class="num">${esc(t().overdue)}</th>
+      <th>${esc(t().ontimeCol)}</th><th class="num">${esc(t().closedLate)}</th><th class="num">${esc(t().byClin)}</th><th class="num">${esc(t().deferred)}</th><th>${esc(t().missingStep)}</th></tr></thead><tbody>
+      ${d.rules.map((r) => `<tr><td><b>${esc(r.rule_id)}</b> ${esc(r.rule_name)}</td><td class="num">${r.active}</td>
+        <td class="num">${r.overdue ? `<span class="gap">${r.overdue}</span>` : 0}</td><td>${bar(r.on_time_rate, t().ontimeCol)}</td>
+        <td class="num">${r.closed_late}</td><td class="num">${r.closed_by_clinician}</td><td class="num">${r.deferred}</td>
+        <td class="sub">${esc(stepLabel(r.top_missing))}</td></tr>`).join('')}</tbody></table>`;
+    const overallMissed = due ? missed / due : null;
+    $('eq').innerHTML = Object.entries(d.strata).map(([key, groups]) => `<h3 class="sub" style="margin:12px 0 4px;"><b>${esc(t()[key] || key)}</b></h3>
+      <div class="scroll"><table class="tbl"><thead><tr><th>${esc(t().group)}</th><th class="num">${esc(t().n)}</th><th class="num">${esc(t().missed)}</th><th>${esc(t().rate)}</th><th></th></tr></thead><tbody>
+      ${Object.entries(groups).sort((a, b) => b[1].due_passed - a[1].due_passed).map(([g, c]) => {
+        const diff = overallMissed == null || c.missed_rate == null ? 0 : Math.round((c.missed_rate - overallMissed) * 100);
+        return `<tr><td>${esc(g)}</td><td class="num">${c.due_passed}</td><td class="num">${c.missed}</td><td>${bar(c.missed_rate, t().rate)}</td>
+          <td>${diff >= 10 && c.due_passed >= 5 ? `<span class="gap">⚠ ${esc(t().above(diff))}</span>` : ''}</td></tr>`;
+      }).join('')}</tbody></table></div>`).join('');
+    const o = state.outcomes;
+    $('outcome-pane').hidden = !o;
+    if (o) {
+      const ov = o.overall;
+      $('out-kpis').innerHTML = [[ov.opened, t().oOpened], [pct(ov.acted_on_share), t().oActed], [t().hours(ov.median_hours_to_first_action), t().oFirst],
+        [t().days(ov.median_days_to_closure), t().oDays], [ov.open_past_deadline_never_acted_on, t().oNever]]
+        .map(([v, l]) => `<div class="card kpi"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join('');
+      $('outcomes').innerHTML = (o.silent_run ? `<p class="sub">${esc(t().silentNote)}</p>` : '') + `<table class="tbl"><thead><tr><th>${esc(t().rule)}</th>
+        <th class="num">${esc(t().oOpened)}</th><th class="num">${esc(t().oActed)}</th><th class="num">${esc(t().oFirst)}</th><th class="num">${esc(t().oClosed)}</th>
+        <th class="num">${esc(t().oDays)}</th><th class="num">${esc(t().oLate)}</th><th class="num">${esc(t().oDismissed)}</th><th class="num">${esc(t().oOpenOver)}</th></tr></thead><tbody>
+        ${Object.entries(o.rules).map(([rid, r]) => `<tr><td><b>${esc(rid)}</b></td><td class="num">${r.opened}</td><td class="num">${r.acted_on}</td>
+          <td class="num">${esc(t().hours(r.median_hours_to_first_action))}</td><td class="num">${r.closed_by_record} / ${r.closed_by_staff}</td>
+          <td class="num">${esc(t().days(r.median_days_to_closure))}</td><td class="num">${r.closed_late}</td>
+          <td class="num" title="${esc(Object.entries(r.defer_reasons).map(([k, v]) => `${k}: ${v}`).join(', '))}">${r.dismissed}</td>
+          <td class="num">${r.open_past_deadline_never_acted_on ? `<span class="gap">${r.open_past_deadline} (${r.open_past_deadline_never_acted_on})</span>` : r.open_past_deadline}</td></tr>`).join('')}
+        </tbody></table>`;
+    }
+    const s = state.sr;
+    $('sr-pane').hidden = !s;
+    if (s) {
+      $('sr-mode').innerHTML = `<span class="chip ${s.mode === 'silent' ? 'ok' : 'neutral'}">${esc(t().srMode[s.mode] || s.mode)}</span>`;
+      const ci = (c) => c.precision == null ? '–' : `${pct(c.precision)} (${pct(c.precision_ci95[0])}–${pct(c.precision_ci95[1])})`;
+      const row = (label, c) => `<tr><td>${label}</td><td class="num">${c.n}</td><td class="num">${c.reviewed}</td><td class="num">${c.real_miss ? `<b>${c.real_miss}</b>` : 0}</td>
+        <td class="num">${c.already_handled}</td><td class="num">${c.not_needed}</td><td class="num">${c.wrong_quote}</td><td class="num">${esc(ci(c))}</td></tr>`;
+      $('sr-table').innerHTML = `<table class="tbl"><thead><tr><th>${esc(t().srCat)}</th><th class="num">${esc(t().srN)}</th><th class="num">${esc(t().srReviewed)}</th>
+        <th class="num">${esc(t().srMiss)}</th><th class="num">${esc(t().srHandled)}</th><th class="num">${esc(t().srNotNeeded)}</th><th class="num">${esc(t().srWrong)}</th><th class="num">${esc(t().srPrec)}</th></tr></thead><tbody>
+        ${Object.values(s.categories).map((c) => row(esc(c[lang] || c.en), c)).join('')}${row(`<b>${esc(t().total)}</b>`, s.total)}</tbody></table>`;
+      const items = (state.srItems || []).filter((i) => !i.verdict);
+      $('sr-items').innerHTML = state.srItems == null ? '' : `<h3 style="margin:16px 0 4px;">${esc(t().srPending)}</h3>` + (items.length ? items.map((i) => `
+        <div class="sugg"><span class="chip neutral">${esc(i.label[lang] || i.label.en)}</span> <b>${esc(i.patient_id)}</b> · ${esc(t().srReport)} ${esc((i.report_date || '').slice(0, 10))}
+          <p class="sub">${esc(t().sourceQuote)}</p><blockquote data-source-evidence>“${esc(i.quote)}”</blockquote><div class="sub">${esc(t().srModelReason)}: ${esc(i.reason || '–')}</div>
+          <form data-sid="${esc(i.id)}"><select name="verdict" aria-label="${esc(t().srReviewed)}">${Object.entries(t().verdicts).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select>
+            <label class="check"><input type="checkbox" name="urgent"> ${esc(t().srUrgent)}</label>
+            <input type="text" name="referral" maxlength="500" placeholder="${esc(t().srReferral)}" aria-label="${esc(t().srReferral)}">
+            <input type="text" name="note" maxlength="500" placeholder="${esc(t().srNote)}" aria-label="${esc(t().srNote)}">
+            <button type="submit" class="primary">${esc(t().srSave)}</button></form></div>`).join('') : `<p class="sub">${esc(t().srNone)}</p>`);
+    }
+    const a = state.audit;
+    $('audit-pane').hidden = !a;
+    if (a) {
+      const counts = Object.entries(a.counts).map(([k, v]) => `<span class="chip${k === 'not_documented' ? ' overdue' : ''}">${esc(t().results[k] || k)} ${esc(v)}</span>`).join(' ');
+      $('audit').innerHTML = (a.replaces_live_alert ? `<p class="sub">${esc(t().auditLive)}</p>` : '') + (a.items.length
+        ? `<p>${counts}</p><table class="tbl"><thead><tr><th>${esc(t().rule)}</th><th>${esc(t().patient)}</th><th>${esc(t().resultTime)}</th><th>${esc(t().result)}</th></tr></thead><tbody>
+          ${a.items.map((i) => `<tr><td><b>${esc(i.rule_id)}</b> ${esc(i.rule_name)}</td><td>${esc(i.patient_id)}</td><td>${esc(i.trigger_time.slice(0, 16).replace('T', ' '))}</td>
+            <td>${i.result === 'not_documented' ? `<span class="gap">${esc(t().results[i.result])}</span>` : esc(t().results[i.result] || i.result)}</td></tr>`).join('')}</tbody></table>`
+        : `<p class="sub">${esc(t().auditNone)}</p>`);
+    }
+    $('owners').innerHTML = `<table class="tbl"><thead><tr><th>${esc(t().owner)}</th><th class="num">${esc(t().active)}</th><th class="num">${esc(t().overdue)}</th><th class="num">${esc(t().escalated)}</th></tr></thead><tbody>
+      ${d.owners.map((o) => `<tr><td>${esc(o.owner)}</td><td class="num">${o.active}</td><td class="num">${o.overdue}</td><td class="num">${o.escalated}</td></tr>`).join('')}</tbody></table>`;
+  }
+  $('connect-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    state.base = $('api-base').value.replace(/\/+$/, '');
+    state.token = $('token').value.trim();
+    try {
+      setStatus(t().working);
+      const me = await api('/api/v1/me');
+      state.data = await api('/api/v1/metrics/breakdowns');
+      // Patient-level audit: navigators and above (viewers see the hospital-wide tables only)
+      state.audit = await api('/api/v1/quality/documentation-audit').catch(() => null);
+      state.outcomes = await api('/api/v1/quality/outcomes').catch(() => null);
+      state.sr = await api('/api/v1/quality/second-reader').catch(() => null);
+      // The suggestions quote reports: the quality team only (others get 403 and see the counts)
+      state.srItems = await api('/api/v1/quality/second-reader/suggestions?pending=true').then((r) => r.items).catch(() => null);
+      store.set('clinloop_api', state.base); store.set('clinloop_token', state.token);
+      $('app').hidden = false;
+      setStatus(`${(lang === 'ko' ? `${me.user}(${me.role})님으로 로그인했습니다.` : `Signed in as ${me.user} (${me.role}).`)} · ${lang === 'ko' ? '기준' : 'as of'} ${state.data.as_of.slice(0, 16).replace('T', ' ')}`);
+      render();
+    } catch (err) { $('app').hidden = true; setStatus(err.message, true); }
+  });
+  $('sr-items').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target, sid = f.dataset.sid;
+    try {
+      await apiPost(`/api/v1/quality/second-reader/suggestions/${encodeURIComponent(sid)}/review`, {
+        verdict: f.verdict.value, urgent: f.urgent.checked, safety_referral: f.referral.value.trim(), note: f.note.value.trim() });
+      state.sr = await api('/api/v1/quality/second-reader');
+      state.srItems = (state.srItems || []).filter((i) => i.id !== sid);
+      render();
+      setStatus(t().srSaved);
+    } catch (err) { setStatus(err.message, true); }
+  });
+  $('btn-lang').addEventListener('click', () => { lang = lang === 'ko' ? 'en' : 'ko'; store.set('clinloop_lang', lang, localStorage); render(); });
+  render();
+  // A token from this tab signs in automatically (js/appnav.js)
+})();
+</script>
+</body>
+</html>

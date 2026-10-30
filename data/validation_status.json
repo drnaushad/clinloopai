@@ -1,0 +1,127 @@
+{
+  "checked_at": "2026-10-20T13:38:06+00:00",
+  "clinical_accuracy": "not established; clinician reference reviews pending",
+  "hapi": {
+    "round_trip_passed": true,
+    "synthetic_patients": 7,
+    "resources_read": 20,
+    "events": 16
+  },
+  "smart": {
+    "authentication_and_search_passed": true,
+    "readable_resource_types": 12
+  },
+  "epic": {
+    "authentication_and_capability_passed": true,
+    "bulk_export_passed": false,
+    "patients_processed": 0,
+    "events": 0
+  },
+  "synthea": {
+    "patients": 1166,
+    "resources": 1508694,
+    "events": 670556,
+    "mapping_warnings": 1089,
+    "warnings_audited": 1089,
+    "warnings_missing_lab_metadata": 1089
+  },
+  "openi": {
+    "sample": 100,
+    "systems": [
+      {
+        "system": "rules",
+        "processed": 100,
+        "usable": 100,
+        "flagged": 5
+      },
+      {
+        "system": "medgemma:27b",
+        "processed": 100,
+        "usable": 100,
+        "flagged": 22
+      },
+      {
+        "system": "medgemma:4b",
+        "processed": 100,
+        "usable": 100,
+        "flagged": 89
+      },
+      {
+        "system": "exaone3.5:7.8b",
+        "processed": 100,
+        "usable": 95,
+        "flagged": 3
+      }
+    ],
+    "reference_status": "two independent clinician reviews required",
+    "scope": "Exploratory report-text pilot; previously used for development; patient independence not established"
+  },
+  "mimic_demo": {
+    "patients": 100,
+    "review_cases": 232,
+    "reference_status": "independent clinician reviews pending"
+  },
+  "credentialed_data": "Only the open 100-patient MIMIC-IV demo was found in the checked data folders; full MIMIC, RadGraph and n2c2 access not confirmed",
+  "public_model_connection": "Eight installed models selectable on synthetic report text; temporary HTTPS tunnel",
+  "limitations": [
+    "Successful connections and processing do not establish clinical accuracy.",
+    "Synthetic EHRs do not validate real patient outcomes.",
+    "Unusable model answers are abstentions, not normal results.",
+    "Patient-independent expert-labelled testing and longitudinal outcome validation remain pending."
+  ],
+  "report_accuracy_check": {
+    "synthetic_rules": {
+      "reports": 753,
+      "exact_matches": 635,
+      "true_positive_obligations": 467,
+      "false_positive_obligations": 37,
+      "false_negative_obligations": 115,
+      "negative_reports": 266,
+      "true_negative_reports": 264,
+      "deadline_eligible_reports": 457,
+      "deadlines_within_strict_reference_window": 448,
+      "exact_mismatches": 118
+    },
+    "scope": "Exposed synthetic development regression; review alerts count as detected obligations; no independent clinical accuracy estimate.",
+    "deadline_scope": "Strict reference bounds conditional on a matching rule; missed obligations excluded",
+    "openi_all_distinct": {
+      "records": 3157,
+      "available": 3157,
+      "flagged": 95
+    },
+    "folders_checked": 1206,
+    "reference_reviews_complete": 0,
+    "clinical_accuracy": "not established; independent clinician labels and approved external test data required",
+    "candidate_source_commit": "9332100304846852c8d35d6b77820e5941ad566f",
+    "engineering_rechecked_at": "2026-10-30",
+    "historical_data_scope": "OpenI processing and dataset folder counts below remain historical and were not rerun for this release."
+  },
+  "historical_report_accuracy_check": {
+    "synthetic_rules": {
+      "reports": 753,
+      "exact_matches": 635,
+      "true_positive_obligations": 466,
+      "false_positive_obligations": 37,
+      "false_negative_obligations": 116,
+      "negative_reports": 266,
+      "true_negative_reports": 265,
+      "deadline_eligible_reports": 456,
+      "deadlines_within_strict_reference_window": 447,
+      "exact_mismatches": 118,
+      "mismatches_with_harness_group_equivalence": 116
+    },
+    "scope": "Previously used synthetic fixtures; rules engine only; not LLM or clinical accuracy",
+    "deadline_scope": "Strict reference bounds, only reports with an exact matching rule; missed obligations excluded",
+    "openi_all_distinct": {
+      "records": 3157,
+      "available": 3157,
+      "flagged": 95
+    },
+    "folders_checked": 1206,
+    "reference_reviews_complete": 0,
+    "clinical_accuracy": "not established; independent clinician labels and approved external test data required",
+    "candidate_source_commit": "9cf754e89f383e28f6684b12b7c4402f0028afca",
+    "engineering_rechecked_at": "2026-10-27"
+  },
+  "current_engineering_release": "data/engineering_release_status.json"
+}

@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="ko" data-workspace="pilot" data-language-options="en ko">
+<head>
+<script src="js/display-start.js?v=20261028_languages1"></script>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e7490">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<title>ClinLoop Silent-run Review</title>
+<style>
+:root {
+  --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --border-strong: #cbd5e1;
+  --text: #0f172a; --muted: #475569; --dim: #556274;
+  --accent: #0369a1; --accent-soft: rgba(3,105,161,.10);
+  --critical: #be123c; --critical-soft: rgba(225,29,72,.10);
+  --high: #c2410c; --high-soft: rgba(234,88,12,.10);
+  --moderate: #854d0e; --moderate-soft: rgba(202,138,4,.12);
+  --low: #475569; --low-soft: rgba(71,85,105,.10);
+  --ok: #065f46; --ok-soft: rgba(5,150,105,.10);
+  --radius: 12px; --shadow: 0 4px 14px rgba(15,23,42,.06);
+  --font-head: 'Outfit', 'Noto Sans KR', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+    --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+    --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+    --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+    --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+    --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+    --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+    --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #060b16; --surface: #0d1526; --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+  --text: #f1f5f9; --muted: #a3b1c6; --dim: #7c8aa0;
+  --accent: #38bdf8; --accent-soft: rgba(56,189,248,.12);
+  --critical: #fb7185; --critical-soft: rgba(251,113,133,.14);
+  --high: #fb923c; --high-soft: rgba(251,146,60,.14);
+  --moderate: #facc15; --moderate-soft: rgba(250,204,21,.12);
+  --low: #94a3b8; --low-soft: rgba(148,163,184,.12);
+  --ok: #34d399; --ok-soft: rgba(52,211,153,.12);
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--font-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 64px; }
+header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; }
+header nav { display: flex; gap: 12px; align-items: center; }
+h1 { font: 800 1.6rem/1.2 var(--font-head); margin: 0; letter-spacing: -.01em; }
+h1 span { color: var(--accent); }
+.sub { color: var(--muted); margin: 4px 0 0; }
+a { color: var(--accent); font-weight: 600; }
+.banner { margin: 16px 0; padding: 10px 14px; border-radius: var(--radius); background: var(--moderate-soft);
+  border: 1px solid var(--border); font-size: .9rem; }
+.feed { margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius); font-size: .9rem; font-weight: 600;
+  border: 1px solid var(--border); }
+.feed.ok { background: var(--ok-soft); color: var(--ok); font-weight: 500; }
+.feed.alarm { background: var(--critical); color: #fff; }
+.feed.warn { background: #f6edd9; color: #5c4300; font-weight: 500; }
+@media (prefers-color-scheme: dark) { .feed.warn { background: #3a2f17; color: #f3d99b; } }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.connect { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 10px; padding: 14px; align-items: end; }
+label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+input, select, textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; }
+textarea { min-height: 72px; resize: vertical; }
+button { font: 600 .88rem var(--font-body); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { color: var(--critical); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+.status-line { padding: 0 14px 12px; font-size: .85rem; color: var(--muted); min-height: 1.4em; }
+.status-line.error { color: var(--critical); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+.kpi { padding: 12px 14px; }
+.kpi .v { font: 700 1.6rem/1.1 var(--font-head); font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: .8rem; color: var(--muted); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 12px; }
+.toolbar .spacer { flex: 1; }
+.check { display: flex; gap: 6px; align-items: center; margin: 0; color: var(--text); font-weight: 500; font-size: .88rem; }
+.check input { width: auto; }
+.loop { padding: 14px; margin-bottom: 10px; border-left: 4px solid var(--low); }
+.loop.critical { border-left-color: var(--critical); }
+.loop.high { border-left-color: var(--high); }
+.loop.moderate { border-left-color: var(--moderate); }
+.loop-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.loop-title { font-weight: 700; flex: 1 1 260px; }
+.chip { font: 600 .72rem var(--font-mono); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.critical { background: var(--critical-soft); color: var(--critical); }
+.chip.high { background: var(--high-soft); color: var(--high); }
+.chip.moderate { background: var(--moderate-soft); color: var(--moderate); }
+.chip.low, .chip.neutral { background: var(--low-soft); color: var(--low); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.overdue { background: var(--critical); color: #fff; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: .85rem; margin: 6px 0; }
+.meta b { color: var(--text); font-weight: 600; }
+.missing { font-weight: 600; margin: 4px 0; }
+.action { color: var(--muted); font-size: .9rem; }
+details { margin-top: 8px; }
+summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
+.evidence { font: .78rem/1.5 var(--font-mono); color: var(--muted); background: var(--bg); padding: 10px; margin-top: 6px;
+  border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.form { display: none; gap: 8px; margin-top: 10px; padding: 12px; border-radius: 8px; background: var(--bg); }
+.form.open { display: grid; }
+.form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.msg { border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-top: 8px; background: var(--surface); }
+.msg-text { white-space: pre-wrap; margin: 6px 0; }
+.empty { text-align: center; color: var(--muted); padding: 40px 16px; }
+.rate-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.rate-table th, .rate-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.rate-table td.num, .rate-table th.num { font-variant-numeric: tabular-nums; text-align: right; }
+footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
+@media (max-width: 720px) {
+  .connect { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .form .row { grid-template-columns: 1fr; }
+}
+</style>
+<style>
+.pane { padding: 16px; margin-top: 16px; }
+.pane h2 { font: 700 1.1rem var(--font-head); margin: 0 0 4px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.tbl th, .tbl td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; overflow-wrap: anywhere; }
+.tbl td.num, .tbl th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.scroll { overflow-x: auto; }
+.rate { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+.rate .track { flex: 1; height: 8px; border-radius: 4px; background: var(--border); position: relative; }
+.rate .fill { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--accent); }
+.rate .v { font: 600 .8rem var(--font-mono); color: var(--text); min-width: 42px; text-align: right; }
+.gap { color: var(--critical); font-weight: 600; }
+.bn { padding: 10px 12px; border-left: 4px solid var(--critical); margin: 8px 0; background: var(--surface); border-radius: 8px; }
+.q { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.q fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin: 0; }
+.q legend { font-size: .8rem; font-weight: 700; color: var(--text); padding: 0 4px; }
+.q label.opt { display: flex; gap: 6px; align-items: center; color: var(--text); font-weight: 500; font-size: .88rem; margin: 2px 0; }
+.q label.opt input { width: auto; }
+.crit td.pass { color: var(--ok); font-weight: 700; } .crit td.fail { color: var(--critical); font-weight: 700; }
+@media (max-width: 720px) { .q { grid-template-columns: 1fr; } }
+</style>
+<script src="config.js"></script>
+<script src="js/demo.js?v=20261023_locale1"></script>
+<script src="js/appnav.js?v=20261028_languages1"></script>
+<link rel="stylesheet" href="css/responsive.css?v=20261023_locale1">
+<script defer src="js/language-controls.js?v=20261023_locale1"></script>
+<link rel="stylesheet" href="css/app-chrome.css?v=20261028_languages1"><script defer src="js/appearance-controls.js?v=20261027_research2"></script><script defer src="js/workspace-shell.js?v=20261028_languages1"></script><script src="js/interface-copy.js?v=20261028_files1"></script><script src="js/interface-language.js?v=20261028_languages1"></script></head>
+<body class="clinloop-page"><a class="skip-link shell-skip" href="#clinloop-workspace">Skip to workspace</a>
+<!-- clinloop-shell:start -->
+<header class="clinloop-shell" data-static-shell="true"><div class="clinloop-shell-top"><a class="clinloop-shell-brand" href="./"><img src="icons/logo.svg" alt="" width="32" height="32"><span>ClinLoop AI</span></a><div class="clinloop-shell-controls" role="group" aria-label="Display and account"><div role="group" data-shell-account=""><div class="appearance-controls" role="group" aria-label="Appearance"><button type="button" aria-pressed="true"><span data-nav-language="en">Light</span><span data-nav-language="ko">라이트</span></button><button type="button" aria-pressed="false"><span data-nav-language="en">Dark</span><span data-nav-language="ko">다크</span></button></div><button hidden data-legacy-language="true" type="button" id="btn-lang" aria-label="Language">English</button><div class="prominent-lang-pill" role="group" aria-label="Language"><button type="button" id="lang-opt-en" data-language="en" aria-pressed="true">English</button><button type="button" id="lang-opt-ko" data-language="ko" aria-pressed="false">한국어</button></div></div></div></div><nav class="app-nav clinloop-shell-links" aria-label="ClinLoop pages"><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-0"><span class="clinloop-nav-group-label" id="nav-group-0"><span data-nav-language="en">Clinical workspace</span><span data-nav-language="ko">진료 작업 공간</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="./" data-label-en="Cockpit" data-label-ko="종합 화면"><span data-nav-language="en">Cockpit</span><span data-nav-language="ko">종합 화면</span></a><a class="app-nav-link" href="worklist" data-label-en="Worklist" data-label-ko="업무 목록"><span data-nav-language="en">Worklist</span><span data-nav-language="ko">업무 목록</span></a><a class="app-nav-link" href="patient" data-label-en="Patient graph" data-label-ko="환자 그래프"><span data-nav-language="en">Patient graph</span><span data-nav-language="ko">환자 그래프</span></a><a class="app-nav-link" href="quality" data-label-en="Quality" data-label-ko="품질 지표"><span data-nav-language="en">Quality</span><span data-nav-language="ko">품질 지표</span></a><a class="app-nav-link" href="governance" data-label-en="Rule sign-off" data-label-ko="규칙 승인"><span data-nav-language="en">Rule sign-off</span><span data-nav-language="ko">규칙 승인</span></a><a class="app-nav-link" href="pilot" data-label-en="Pilot review" data-label-ko="시범 검토" aria-current="page"><span data-nav-language="en">Pilot review</span><span data-nav-language="ko">시범 검토</span></a><a class="app-nav-link" href="imaging" data-label-en="Imaging" data-label-ko="영상"><span data-nav-language="en">Imaging</span><span data-nav-language="ko">영상</span></a><a class="app-nav-link" href="analyse" data-label-en="Analyse patient" data-label-ko="환자 분석"><span data-nav-language="en">Analyse patient</span><span data-nav-language="ko">환자 분석</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-1"><span class="clinloop-nav-group-label" id="nav-group-1"><span data-nav-language="en">Research</span><span data-nav-language="ko">연구</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="reports" data-label-en="Live report reader" data-label-ko="실시간 보고서 검토"><span data-nav-language="en">Live report reader</span><span data-nav-language="ko">실시간 보고서 검토</span></a><a class="app-nav-link" href="review" data-label-en="Report review" data-label-ko="보고서 검토"><span data-nav-language="en">Report review</span><span data-nav-language="ko">보고서 검토</span></a><a class="app-nav-link" href="private" data-label-en="Personal workspace" data-label-ko="개인 작업 공간"><span data-nav-language="en">Personal workspace</span><span data-nav-language="ko">개인 작업 공간</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-2"><span class="clinloop-nav-group-label" id="nav-group-2"><span data-nav-language="en">Evidence and setup</span><span data-nav-language="ko">검증 및 설정</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="validation" data-label-en="Validation evidence" data-label-ko="검증 근거"><span data-nav-language="en">Validation evidence</span><span data-nav-language="ko">검증 근거</span></a><a class="app-nav-link" href="deployment" data-label-en="International setup" data-label-ko="국제 배포 계획"><span data-nav-language="en">International setup</span><span data-nav-language="ko">국제 배포 계획</span></a></div></div></nav><div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label><select id="clinloop-page-picker"><optgroup label="Clinical workspace"><option value="/">Cockpit</option><option value="/worklist">Worklist</option><option value="/patient">Patient graph</option><option value="/quality">Quality</option><option value="/governance">Rule sign-off</option><option value="/pilot" selected>Pilot review</option><option value="/imaging">Imaging</option><option value="/analyse">Analyse patient</option></optgroup><optgroup label="Research"><option value="/reports">Live report reader</option><option value="/review">Report review</option><option value="/private">Personal workspace</option></optgroup><optgroup label="Evidence and setup"><option value="/validation">Validation evidence</option><option value="/deployment">International setup</option></optgroup></select></div><details class="clinloop-workflow-guide"><summary><span data-nav-language="en">Choose a workflow</span><span data-nav-language="ko">작업 흐름 선택</span></summary><div class="clinloop-workflow-grid"><div><a href="review"><span data-nav-language="en">Review report text</span><span data-nav-language="ko">보고서 텍스트 검토</span></a><p><span data-nav-language="en">Load TXT in your browser or import PDF, scans, photos and DICOM through your personal gateway. Check the complete source before model review (6000 UTF-8 bytes).</span><span data-nav-language="ko">TXT는 브라우저에서, PDF·스캔·사진·DICOM은 개인 게이트웨이에서 불러옵니다. 모델 검토(UTF-8 6000바이트) 전에 전체 원문을 확인하세요.</span></p></div><div><a href="analyse"><span data-nav-language="en">Try follow-up detection</span><span data-nav-language="ko">후속 조치 탐지 체험</span></a><p><span data-nav-language="en">Start with a synthetic example, a FHIR .json bundle or radiology/pathology report text. The browser demo needs no model connection.</span><span data-nav-language="ko">합성 예제, FHIR .json 번들 또는 영상·병리 보고서 텍스트로 시작하세요. 브라우저 데모는 모델 연결이 필요 없습니다.</span></p></div><div><a href="imaging"><span data-nav-language="en">Explore document and imaging workflows</span><span data-nav-language="ko">문서 및 영상 작업 흐름 살펴보기</span></a><p><span data-nav-language="en">DICOM image pixels, medical images and waveforms need a separate validated imaging workflow. The public Imaging page shows local-installation demonstrations.</span><span data-nav-language="ko">DICOM 화소, 의료영상 및 파형에는 별도로 검증된 영상 작업 흐름이 필요합니다. 공개 영상 화면은 로컬 설치 기능을 시연합니다.</span></p></div><div><a href="validation"><span data-nav-language="en">Check evidence and limitations</span><span data-nav-language="ko">검증 근거 및 한계 확인</span></a><p><span data-nav-language="en">See measured results, supported tasks and pending reviews before choosing a workflow or comparing models. Universal clinical accuracy is not established.</span><span data-nav-language="ko">작업 흐름 선택이나 모델 비교 전에 측정 결과, 지원 작업 및 검토 현황을 확인하세요. 모든 임상 작업에 대한 정확도는 입증되지 않았습니다.</span></p></div></div></details><aside class="research-release-notice" role="note"><span data-nav-language="en">Research preview · synthetic data only. Independent review and clinical validation pending. <a href="validation#research-release">Review status</a></span><span data-nav-language="ko">연구 미리보기 · 합성 데이터 전용. 독립 검토 및 임상 검증 대기 중. <a href="validation#research-release">검토 현황</a></span></aside></header>
+<!-- clinloop-shell:end -->
+<div class="wrap" id="clinloop-workspace" role="main" tabindex="-1">
+  <header>
+
+    <div>
+      <h1><a class="brand-home" href="./" title="ClinLoop home"><svg class="brand-mark" viewBox="0 0 48 48" role="img" aria-label="ClinLoop logo: rod of Asclepius inside a closing loop"><path d="M37.6 10.4A19 19 0 1 0 43 24" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round"/><path d="M44.2 8.6 43.9 18.9 34 16.2Z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M24 8.6v30.8" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><g class="bm-serpent"><path d="M27 14.2C21.2 13.8 19 17.4 24 18.6 29 19.8 29 22.8 24 23.8 19 24.8 19 28 24 29 28 29.8 27.8 32.6 25 34.2" fill="none" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="28.6" cy="13.4" rx="3" ry="2.1" transform="rotate(-18 28.6 13.4)" stroke="none"/></g></svg></a><span data-i18n="title"></span></h1>
+      <p class="sub" data-i18n="subtitle"></p>
+    </div>
+
+  </header>
+  <div class="banner" role="note" data-i18n="note"></div>
+  <section class="card" aria-label="Connection">
+    <form class="connect" id="connect-form">
+      <div><label for="api-base" data-i18n="api"></label><input id="api-base" type="url" placeholder="http://localhost:8124" required></div>
+      <div><label for="token" data-i18n="token"></label><input id="token" type="password" autocomplete="off" required></div>
+      <button class="primary" type="submit" data-i18n="signin"></button>
+    </form>
+    <div class="status-line" id="status" aria-live="polite"></div>
+  </section>
+  <div id="app" hidden>
+    <div id="mode" class="feed" role="status"></div>
+    <div class="kpis" id="kpis"></div>
+    <section class="card pane" aria-labelledby="h-sample" id="sample-pane" hidden>
+      <h2 id="h-sample" data-i18n="sampleTitle"></h2><p class="sub" data-i18n="sampleHelp"></p>
+      <form id="sample-form" class="toolbar">
+        <label class="check" for="sample-size"><span data-i18n="sampleSize"></span></label>
+        <input id="sample-size" type="number" min="1" max="5000" value="20" style="width:110px;">
+        <label class="check" for="sample-all"><input id="sample-all" type="checkbox"> <span data-i18n="sampleAll"></span></label>
+        <button class="primary" type="submit" data-i18n="draw"></button>
+        <span class="spacer"></span>
+        <a id="export" href="#" data-i18n="export"></a>
+      </form>
+    </section>
+    <section class="card pane" aria-labelledby="h-queue">
+      <h2 id="h-queue" data-i18n="queueTitle"></h2><p class="sub" data-i18n="queueHelp"></p>
+      <div id="queue"></div>
+    </section>
+    <section class="card pane" aria-labelledby="h-metrics">
+      <h2 id="h-metrics" data-i18n="metricsTitle"></h2><p class="sub" data-i18n="metricsHelp"></p>
+      <div class="scroll" id="criteria"></div>
+      <div class="scroll" id="families" style="margin-top:12px;"></div>
+    </section>
+    <section class="card pane" aria-labelledby="h-safety">
+      <h2 id="h-safety" data-i18n="safetyTitle"></h2><div id="safety"></div>
+    </section>
+  </div>
+  <footer data-i18n="footer"></footer>
+</div>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const T = {
+    ko: {
+      title: '무경보 시범 운영 검토', subtitle: '연구 프로토콜 2단계: ClinLoop을 실제 기록에 조용히 실행하고, 검토팀이 매주 표본을 판정합니다.',
+      api: 'ClinLoop API', token: '접근 토큰', signin: '로그인', working: '불러오는 중…',
+      note: '무경보 운영 중에는 작업 목록·EHR 카드·상향 보고·환자 메시지가 모두 꺼져 있어 일반 진료는 바뀌지 않습니다. 긴급한 미완결 루프는 병원의 안전 보고 절차로 담당 팀에 즉시 알립니다.',
+      silentOn: '무경보 운영 중: 임상 진료에는 아무것도 표시되지 않습니다.', silentOff: '무경보 운영이 꺼져 있습니다 (CLINLOOP_SILENT_RUN=1로 켭니다). 표본 검토는 할 수 있습니다.',
+      kPatients: '모니터링 환자', kSampled: '표본 루프', kReviewed: '검토 완료', kPpv: 'PPV (실제 미완결)',
+      sampleTitle: '이번 주 표본', sampleHelp: '기한이 지났다고 표시된 루프에서 무작위로 뽑습니다(같은 주에는 같은 결과). 이미 뽑힌 루프는 다시 뽑지 않습니다.',
+      sampleSize: '표본 수', sampleAll: '전체 (100% 검토)', draw: '표본 추출', drawn: (r) => `${r.week}: 대상 ${r.candidates}건 중 ${r.sampled}건 추출`, export: '비식별 내보내기 (CSV)',
+      queueTitle: '내 검토 대기', queueHelp: '다른 검토자의 답은 보이지 않습니다. 전체 차트를 보고 답하세요.', noQueue: '검토할 루프가 없습니다.',
+      qa: '(a) 실제로 미완결인가?', qb: '(b) 일반 진료가 결국 처리했을까?', qc: '(c) 임상적으로 중요한가?',
+      yes: '예', no: '아니오', unclear: '불확실', unknown: '알 수 없음', urgent: '긴급: 지금 담당 팀이 알아야 함',
+      referral: '안전 보고 (누구에게, 언제, 어떻게 알렸는지)', referralPh: '예: 7병동 박 교수께 14:20 전화, 안전보고 #2291', note2: '메모 (선택)', submit: '검토 제출', saved: '검토를 기록했습니다.',
+      reviews: (a, b) => `검토 ${a}/${b}`, deadline: '기한', missing: '빠진 단계', evidence: '근거',
+      metricsTitle: '진행/중단 기준 (2단계 → 3단계)', metricsHelp: '프로토콜 §7. 검토 30건 미만이거나 관찰 4주 미만이면 판단하지 않습니다.', criterion: '기준', value: '값', result: '결과',
+      results: { pass: '충족', fail: '미충족', 'insufficient data': '자료 부족', 'decided by the clinical leads': '임상 책임자 결정' },
+      family: '규칙군', reviewed: '판정', open: '실제 미완결', ppv: 'PPV (95% CI)', kappa: '검토자 간 일치 (일치율 · κ)', observed: '관찰 기간 (일 / 최소)', closedLater: '실제 미완결 중 이후 일반 진료로 완료', delay: '일반 진료 지연 (기한 초과 일수 중앙값)', discordant: '불일치 (재판정 필요)',
+      safetyTitle: '안전 보고', noSafety: '아직 없습니다.', notReviewer: '검토팀만 볼 수 있습니다.',
+      footer: 'ClinLoop AI · 시범 운영의 안전을 위해 임상 감독과 통상 진료가 필요합니다.',
+    },
+    en: {
+      title: 'Silent-run review', subtitle: 'Protocol Stage 2: ClinLoop runs silently on the live record; the review team judges a weekly sample.',
+      api: 'ClinLoop API', token: 'Access token', signin: 'Sign in', working: 'Loading…',
+      note: 'During the silent run the worklist, EHR cards, escalation and patient messages are all off, so usual care is unchanged. An urgent open loop is passed to the treating team at once through the hospital\'s safety-reporting route.',
+      silentOn: 'Silent run on: nothing reaches clinical care.', silentOff: 'Silent run off (turn on with CLINLOOP_SILENT_RUN=1). Sample review still works.',
+      kPatients: 'Patients monitored', kSampled: 'Loops sampled', kReviewed: 'Reviewed', kPpv: 'PPV (truly open)',
+      sampleTitle: "This week's sample", sampleHelp: 'Drawn at random from loops ClinLoop marks overdue (the same week gives the same draw). A loop is never sampled twice.',
+      sampleSize: 'Sample size', sampleAll: 'All (100% review)', draw: 'Draw sample', drawn: (r) => `${r.week}: ${r.sampled} of ${r.candidates} eligible loops sampled`, export: 'De-identified export (CSV)',
+      queueTitle: 'Waiting for my review', queueHelp: "Other reviewers' answers are hidden. Answer from the full chart.", noQueue: 'Nothing to review.',
+      qa: '(a) Truly open?', qb: '(b) Would usual care have caught it?', qc: '(c) Clinically important?',
+      yes: 'Yes', no: 'No', unclear: 'Unclear', unknown: 'Unknown', urgent: 'Urgent: the treating team must know now',
+      referral: 'Safety referral (who was told, when, how)', referralPh: 'e.g. Dr Park, ward 7, by phone at 14:20; safety report #2291', note2: 'Note (optional)', submit: 'Submit review', saved: 'Review recorded.',
+      reviews: (a, b) => `Reviews ${a}/${b}`, deadline: 'Deadline', missing: 'Missing', evidence: 'Evidence',
+      metricsTitle: 'Go / no-go (Stage 2 → 3)', metricsHelp: 'Protocol §7. No judgement before 30 reviewed loops and 4 weeks of observation.', criterion: 'Criterion', value: 'Value', result: 'Result',
+      results: { pass: 'Pass', fail: 'Fail', 'insufficient data': 'Insufficient data', 'decided by the clinical leads': 'Clinical leads decide' },
+      family: 'Rule family', reviewed: 'Judged', open: 'Truly open', ppv: 'PPV (95% CI)', kappa: 'Agreement between reviewers (observed · κ)', observed: 'Days observed / minimum', closedLater: 'Truly open, later closed by usual care', delay: 'Delay in usual care (median days past deadline)', discordant: 'Discordant (need adjudication)',
+      safetyTitle: 'Safety referrals', noSafety: 'None yet.', notReviewer: 'Only the review team sees this.',
+      footer: 'ClinLoop AI · Pilot safety requires active clinical oversight and usual care.',
+    },
+  };
+  const store = { get(k, s = sessionStorage) { try { return s.getItem(k) || ''; } catch { return ''; } },
+                  set(k, v, s = sessionStorage) { try { s.setItem(k, v); } catch {} } };
+  const preferredLanguage = store.get('clinloop_lang', localStorage);
+  let lang = ['en', 'ko'].includes(preferredLanguage) ? preferredLanguage : ((navigator.language || '').startsWith('ko') ? 'ko' : 'en');
+  const t = () => T[lang];
+  const state = { base: '', token: '', me: null, status: null, queue: [], metrics: null, safety: [] };
+  const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+  $('api-base').value = store.get('clinloop_api') || window.CLINLOOP_API_BASE || (isLocal ? 'http://localhost:8124' : '');
+  $('token').value = store.get('clinloop_token');
+  function setStatus(m, err = false) { $('status').textContent = m; $('status').classList.toggle('error', err); }
+  async function api(path, opts = {}) {
+    const res = await fetch(state.base + path, { ...opts, headers: { 'Authorization': `Bearer ${state.token}`, 'Content-Type': 'application/json' } });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const d = body.detail;
+      throw new Error(Array.isArray(d) ? d.map((x) => (x.loc ? x.loc[x.loc.length - 1] + ': ' : '') + (x.msg || '')).join('; ')
+        : d || (res.status === 401 ? 'Not signed in, or the token is not recognised' : `HTTP ${res.status}`));
+    }
+    return body;
+  }
+  const pct = (x) => x == null ? '–' : `${Math.round(x * 100)}%`;
+  const radios = (name, opts, id) => opts.map((o) => `<label class="opt"><input type="radio" name="${name}" value="${o}" required> ${esc(t()[o])}</label>`).join('');
+
+  function itemCard(it, i) {
+    const l = it.loop, id = `q${i}`;
+    return `<article class="card loop ${esc(l.severity)}" data-key="${esc(l.loop_key)}">
+      <div class="loop-head"><span class="loop-title">${esc(l.rule_id)} · ${esc(l.rule_name)}</span>
+        <span class="chip ${esc(l.severity)}">${esc(l.severity)}</span><span class="chip neutral">${esc(t().reviews(it.reviews_so_far, it.reviews_needed))}</span></div>
+      <div class="meta"><span>${esc(l.patient_id)}</span><span>${esc(t().deadline)}: <b>${esc((l.deadline || '').slice(0, 10))}</b></span></div>
+      ${l.missing_step ? `<div class="missing">${esc(t().missing)}: ${esc(l.missing_step)}</div>` : ''}
+      <details><summary>${esc(t().evidence)}</summary><div class="evidence">${esc(JSON.stringify(l.evidence_chain, null, 1))}</div></details>
+      <form class="review" data-key="${esc(l.loop_key)}">
+        <div class="q">
+          <fieldset><legend>${esc(t().qa)}</legend>${radios(`${id}a`, ['yes', 'no', 'unclear'])}</fieldset>
+          <fieldset><legend>${esc(t().qb)}</legend>${radios(`${id}b`, ['yes', 'no', 'unknown'])}</fieldset>
+          <fieldset><legend>${esc(t().qc)}</legend>${radios(`${id}c`, ['yes', 'no', 'unclear'])}</fieldset>
+        </div>
+        <label class="check" for="${id}u" style="margin-top:8px;"><input id="${id}u" name="urgent" type="checkbox"> ${esc(t().urgent)}</label>
+        <div class="ref" hidden><label for="${id}r">${esc(t().referral)}</label><input id="${id}r" name="referral" maxlength="1000" placeholder="${esc(t().referralPh)}"></div>
+        <div><label for="${id}n">${esc(t().note2)}</label><input id="${id}n" name="note" maxlength="2000"></div>
+        <div class="actions"><button class="primary" type="submit">${esc(t().submit)}</button></div>
+      </form></article>`;
+  }
+
+  function render() {
+    document.documentElement.lang = lang;
+    $('btn-lang').textContent = lang === 'ko' ? 'English' : '한국어';
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t()[el.dataset.i18n]; });
+    if (!state.status) return;
+    const s = state.status, m = state.metrics;
+    $('mode').className = `feed ${s.silent_run ? 'ok' : 'warn'}`;
+    $('mode').textContent = s.silent_run ? t().silentOn : t().silentOff;
+    $('kpis').innerHTML = [[s.monitored_patients, t().kPatients], [s.sampled, t().kSampled], [m ? m.reviewed : '–', t().kReviewed],
+      [m ? pct(m.ppv.value) : '–', t().kPpv]].map(([v, l]) => `<div class="card kpi"><div class="v">${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join('');
+    $('sample-pane').hidden = !(state.me && state.me.role === 'admin');
+    if (!s.you_review) { $('queue').innerHTML = `<p class="sub">${esc(t().notReviewer)}</p>`; $('criteria').innerHTML = ''; $('families').innerHTML = ''; $('safety').innerHTML = ''; return; }
+    $('queue').innerHTML = state.queue.length ? state.queue.map(itemCard).join('') : `<p class="sub">${esc(t().noQueue)}</p>`;
+    if (m) {
+      const fmt = (v, unit) => v == null ? '–' : unit === 'share' ? `${(v * 100).toFixed(2)}%` : v;
+      $('criteria').innerHTML = `<table class="tbl crit"><thead><tr><th>${esc(t().criterion)}</th><th class="num">${esc(t().value)}</th><th>${esc(t().result)}</th></tr></thead><tbody>
+        ${m.go_no_go.map((c) => `<tr><td>${esc(c.criterion)}</td><td class="num">${esc(fmt(c.value, c.unit))}</td><td class="${esc(c.result)}">${esc(t().results[c.result] || c.result)}</td></tr>`).join('')}
+        <tr><td>${esc(t().kappa)}</td><td class="num">${esc(m.agreement.observed == null ? '–' : pct(m.agreement.observed) + ' · κ ' + (m.agreement.kappa ?? '–'))}</td><td></td></tr>
+        <tr><td>${esc(t().observed)}</td><td class="num">${esc(m.days_observed)} / ${esc(m.minimum_days)}</td><td></td></tr>
+        <tr><td>${esc(t().discordant)}</td><td class="num">${esc(m.discordant)}</td><td></td></tr>
+        <tr><td>${esc(t().closedLater)}</td><td class="num">${esc(m.truly_open_closed_later_by_usual_care.count)} / ${esc(m.truly_open_closed_later_by_usual_care.of)}</td><td></td></tr>
+        <tr><td>${esc(t().delay)}</td><td class="num">${esc(m.usual_care_delay_days.median ?? '–')} (n ${esc(m.usual_care_delay_days.n)})</td><td></td></tr></tbody></table>`;
+      const fam = Object.entries(m.ppv_by_family);
+      $('families').innerHTML = fam.length ? `<table class="tbl"><thead><tr><th>${esc(t().family)}</th><th class="num">${esc(t().reviewed)}</th><th class="num">${esc(t().open)}</th><th class="num">${esc(t().ppv)}</th></tr></thead><tbody>
+        ${fam.map(([f, r]) => `<tr><td>${esc(f.replace(/_/g, ' '))}</td><td class="num">${r.reviewed}</td><td class="num">${r.truly_open}</td>
+          <td class="num">${pct(r.ppv)} (${pct(r.ci_low)}–${pct(r.ci_high)})</td></tr>`).join('')}</tbody></table>` : '';
+    }
+    $('safety').innerHTML = state.safety.length ? `<table class="tbl"><tbody>${state.safety.map((r) => `<tr><td>${esc(r.reviewed_at.slice(0, 16).replace('T', ' '))}</td>
+      <td>${esc(r.loop_key.split('|').slice(0, 2).join(' · '))}</td><td>${esc(r.reviewer)}</td><td>${esc(r.safety_referral)}</td></tr>`).join('')}</tbody></table>`
+      : `<p class="sub">${esc(t().noSafety)}</p>`;
+  }
+
+  async function reload() {
+    state.status = await api('/api/v1/pilot/status');
+    if (state.status.you_review) {
+      const [q, m, sr] = await Promise.all([api('/api/v1/pilot/queue'), api('/api/v1/pilot/metrics'), api('/api/v1/pilot/safety-referrals')]);
+      state.queue = q.items; state.metrics = m; state.safety = sr.referrals;
+    }
+    render();
+  }
+
+  $('connect-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    state.base = $('api-base').value.replace(/\/+$/, '');
+    state.token = $('token').value.trim();
+    try {
+      setStatus(t().working);
+      state.me = await api('/api/v1/me');
+      store.set('clinloop_api', state.base); store.set('clinloop_token', state.token);
+      await reload();
+      $('app').hidden = false;
+      setStatus((lang === 'ko' ? `${state.me.user}(${state.me.role})님으로 로그인했습니다.` : `Signed in as ${state.me.user} (${state.me.role}).`));
+    } catch (err) { $('app').hidden = true; setStatus(err.message, true); }
+  });
+  $('sample-all').addEventListener('change', () => { $('sample-size').disabled = $('sample-all').checked; });
+  $('sample-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api('/api/v1/pilot/sample', { method: 'POST', body: JSON.stringify({ size: $('sample-all').checked ? null : Number($('sample-size').value) }) });
+      setStatus(t().drawn(r));
+      await reload();
+    } catch (err) { setStatus(err.message, true); }
+  });
+  $('export').addEventListener('click', async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(state.base + '/api/v1/pilot/export.csv', { headers: { 'Authorization': `Bearer ${state.token}` } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(await res.blob()); a.download = 'clinloop_silent_run_reviews.csv'; a.click();
+    } catch (err) { setStatus(err.message, true); }
+  });
+  $('queue').addEventListener('change', (e) => {
+    if (e.target.name === 'urgent') {
+      const ref = e.target.closest('form').querySelector('.ref');
+      ref.hidden = !e.target.checked;
+      ref.querySelector('input').required = e.target.checked;
+    }
+  });
+  $('queue').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target, d = new FormData(f), id = f.querySelector('input[type=radio]').name.slice(0, -1);
+    try {
+      await api('/api/v1/pilot/reviews', { method: 'POST', body: JSON.stringify({ loop_key: f.dataset.key,
+        truly_open: d.get(`${id}a`), usual_care: d.get(`${id}b`), important: d.get(`${id}c`),
+        urgent: d.get('urgent') === 'on', safety_referral: d.get('referral') || '', note: d.get('note') || '' }) });
+      setStatus(t().saved);
+      await reload();
+    } catch (err) { setStatus(err.message, true); }
+  });
+  $('btn-lang').addEventListener('click', () => { lang = lang === 'ko' ? 'en' : 'ko'; store.set('clinloop_lang', lang, localStorage); render(); });
+  render();
+})();
+</script>
+</body>
+</html>
