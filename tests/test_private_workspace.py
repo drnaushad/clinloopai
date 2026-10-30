@@ -11,7 +11,7 @@ class TestPrivateWorkspace(unittest.TestCase):
     def test_private_transport_and_page(self):
         root = Path(__file__).resolve().parents[1]
         result = subprocess.run(
-            ['node', '--test', '--test-reporter=tap', 'tests/test_private_workspace.cjs'],
+            ['node', '--test-reporter=tap', 'tests/test_private_workspace.cjs'],
             cwd=root, capture_output=True, text=True, timeout=30,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
