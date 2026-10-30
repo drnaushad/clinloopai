@@ -25,6 +25,9 @@
       try{
         const bytes=new Uint8Array(await file.arrayBuffer());
         if(epoch!==this.epoch||bytes.length!==file.size)throw Error('File import cancelled.');
+        if(!root.crypto||!root.crypto.subtle)throw Error('File integrity checks are unavailable. Use an approved secure local installation.');
+        const digest=Array.from(new Uint8Array(await root.crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');
+        if(epoch!==this.epoch||c.signal.aborted)throw Error('File import cancelled.');
         let binary='';for(let start=0;start<bytes.length;start+=8192)binary+=String.fromCharCode(...bytes.subarray(start,start+8192));
         const r=await this.fetcher(base+'/review/files/import',{method:'POST',credentials:'omit',cache:'no-store',redirect:'error',referrerPolicy:'no-referrer',signal:c.signal,
           headers:{Authorization:'Bearer '+code,'Content-Type':'application/json'},body:JSON.stringify({extension:ext,content_base64:root.btoa(binary),ocr_language:language,synthetic_only:true,local_processing_allowed:true})});
@@ -36,7 +39,7 @@
         if(epoch!==this.epoch||c.signal.aborted)throw Error('File import cancelled.');
         if(!data||typeof data.text!=='string'||new TextEncoder().encode(data.text).length>120000||typeof data.text_review_allowed!=='boolean'||
           !Array.isArray(data.pages)||data.pages.length>20||data.page_count!==data.pages.length||data.external_model_called!==false||data.human_check_required!==true||
-          !/^[a-f0-9]{64}$/.test(data.sha256)||!['pdf','image','dicom-pdf','dicom-sr','dicom-image'].includes(data.kind)||
+          data.sha256!==digest||!['pdf','image','dicom-pdf','dicom-sr','dicom-image'].includes(data.kind)||
           data.pages.some((p,i)=>p.number!==i+1||typeof p.text!=='string'||!['pdf-text','ocr','dicom-sr'].includes(p.method))||
           data.text!==data.pages.map(p=>p.text).join('\n\n')||
           (data.kind==='dicom-image'&&(data.text_review_allowed||data.text||data.pages.length))||

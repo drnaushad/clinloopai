@@ -23,14 +23,14 @@ Authentication (the EHR is the client):
     own `jku`):  CLINLOOP_CDS_CLIENTS='[{"iss": "https://ehr.hospital.local", "jwks_url": "https://…/jwks"}]'
     ("jwks" may hold the key set inline for an air-gapped site). The audience must be this service's URL
     (CLINLOOP_CDS_AUDIENCE when behind a proxy); tokens are short-lived and used once.
-  - Or a ClinLoop API token (viewer role or higher), for EHRs or tests without JWT support.
+  - Or a ClinLoop API token (clinician role or higher), for EHRs or tests without JWT support.
 """
 
 import json
 import logging
 import os
 import re
-import threading
+import math
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -50,10 +50,6 @@ INDICATOR = {"critical": "critical", "high": "warning"}       # anything else: i
 
 router = APIRouter(tags=["CDS Hooks (EHR integration)"])
 
-_seen_jti: Dict[str, float] = {}
-_jti_lock = threading.Lock()
-
-
 def _clients() -> List[Dict[str, Any]]:
     raw = os.environ.get("CLINLOOP_CDS_CLIENTS", "").strip()
     if not raw:
@@ -62,6 +58,9 @@ def _clients() -> List[Dict[str, Any]]:
         clients = json.loads(raw)
     except ValueError:
         logger.error("CLINLOOP_CDS_CLIENTS is not valid JSON; no EHR is trusted")
+        return []
+    if not isinstance(clients, list):
+        logger.error("CLINLOOP_CDS_CLIENTS must be a list; no EHR is trusted")
         return []
     return [c for c in clients if isinstance(c, dict) and c.get("iss") and (c.get("jwks_url") or c.get("jwks"))]
 
@@ -94,11 +93,33 @@ def _signing_key(client: Dict[str, Any], token: str):
     return jwks.get_signing_key_from_jwt(token).key
 
 
+def _claim_shape(claims: Dict[str, Any]) -> bool:
+    """Only bounded NumericDates and a nonempty nonce may reach verification."""
+    issued, expires, nonce = claims.get("iat"), claims.get("exp"), claims.get("jti")
+    if (type(issued) not in (int, float) or type(expires) not in (int, float)
+            or not 0 <= issued <= 2 ** 53 or not 0 <= expires <= 2 ** 53
+            or not math.isfinite(issued) or not math.isfinite(expires)
+            or not isinstance(nonce, str) or not 1 <= len(nonce) <= 1024):
+        return False
+    return True
+
+
 def _check_jwt(token: str, audience: str) -> Optional[str]:
     """The trusted EHR's issuer if the CDS Hooks JWT is valid, else None."""
     import jwt
+    if not isinstance(token, str) or len(token) > 16384:
+        return None
     try:
-        iss = jwt.decode(token, options={"verify_signature": False}).get("iss")
+        header = jwt.get_unverified_header(token)
+        if (header.get("typ") != "JWT" or not isinstance(header.get("kid"), str)
+                or not 1 <= len(header["kid"]) <= 512):
+            return None
+        unverified = jwt.decode(token, options={"verify_signature": False})
+        if not _claim_shape(unverified):
+            return None
+        iss = unverified.get("iss")
+        if not isinstance(iss, str):
+            return None
     except jwt.InvalidTokenError:
         return None
     client = next((c for c in _clients() if c["iss"] == iss), None)
@@ -107,18 +128,23 @@ def _check_jwt(token: str, audience: str) -> Optional[str]:
     try:
         claims = jwt.decode(token, _signing_key(client, token), algorithms=ALGORITHMS, audience=audience,
                             issuer=iss, options={"require": ["exp", "iat", "jti", "iss", "aud"]}, leeway=30)
-    except (jwt.InvalidTokenError, jwt.PyJWKClientError, ValueError) as e:
+    except (jwt.PyJWTError, ValueError, TypeError, OverflowError) as e:
         logger.warning("CDS Hooks JWT rejected: %s", type(e).__name__)
         return None
-    if claims["exp"] - claims["iat"] > 600:          # the standard asks for tokens of at most 5 minutes
+    # PyJWT validates NumericDates but can leave numeric strings in the decoded
+    # claims. Reject non-numbers before arithmetic instead of throwing HTTP 500.
+    issued, expires, nonce = claims["iat"], claims["exp"], claims["jti"]
+    if not _claim_shape(claims) or not 0 < expires - issued <= 600:
         return None
-    with _jti_lock:                                   # each token once
-        now = time.time()
-        for k in [k for k, exp in _seen_jti.items() if exp < now]:
-            _seen_jti.pop(k)
-        if claims["jti"] in _seen_jti:
+    try:
+        # Retain the nonce throughout clock-skew tolerance. SQLite's transaction
+        # makes this one-use check atomic across connections and restarts.
+        if not get_store().claim_cds_token(iss, nonce, expires + 60, time.time()):
             return None
-        _seen_jti[claims["jti"]] = claims["exp"] + 60
+    except Exception as error:
+        logger.error("CDS replay protection unavailable (%s)", type(error).__name__)
+        return None
+
     return iss
 
 

@@ -71,11 +71,22 @@ def discovery() -> Dict[str, Any]:
     try:
         r = requests.get(f"{issuer}/.well-known/openid-configuration", timeout=10,
                          headers={"Accept": "application/json"})
-        r.raise_for_status()
-        cfg = r.json()
+        try:
+            r.raise_for_status()
+            cfg = r.json()
+        finally:
+            r.close()
     except (requests.RequestException, ValueError) as e:
         raise OIDCError(f"Identity provider unreachable ({type(e).__name__})") from None
-    if str(cfg.get("issuer", "")).rstrip("/") != issuer:
+    if (not isinstance(cfg, dict) or not isinstance(cfg.get("issuer"), str)
+            or any(field in cfg and not isinstance(cfg[field], str) for field in
+                   ("jwks_uri", "authorization_endpoint", "token_endpoint", "end_session_endpoint"))):
+        raise OIDCError("Identity provider discovery metadata is malformed")
+    algorithms = cfg.get("id_token_signing_alg_values_supported")
+    if algorithms is not None and (not isinstance(algorithms, list)
+                                   or any(not isinstance(item, str) for item in algorithms)):
+        raise OIDCError("Identity provider signing metadata is malformed")
+    if cfg["issuer"].rstrip("/") != issuer:
         raise OIDCError("The identity provider's discovery document names a different issuer")
     with _lock:
         _discovery.update(config=cfg, fetched=time.time(), issuer=issuer)
@@ -115,9 +126,10 @@ def role_map() -> Dict[str, str]:
     except ValueError:
         raise OIDCError("CLINLOOP_OIDC_ROLE_MAP is not valid JSON") from None
     from .auth import ROLE_RANK
-    bad = [v for v in mapping.values() if v not in ROLE_RANK]
-    if not isinstance(mapping, dict) or bad:
-        raise OIDCError(f"CLINLOOP_OIDC_ROLE_MAP maps to unknown roles: {bad}")
+    if (not isinstance(mapping, dict) or not mapping or any(
+            not isinstance(k, str) or not k.strip() or not isinstance(v, str) or v not in ROLE_RANK
+            for k, v in mapping.items())):
+        raise OIDCError("CLINLOOP_OIDC_ROLE_MAP must map nonempty group names to known roles")
     return mapping
 
 

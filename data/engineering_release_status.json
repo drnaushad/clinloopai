@@ -1,0 +1,98 @@
+{
+  "version": "2026-10-30.engineering1",
+  "channel": "research-preview",
+  "engine_source_commit": "9332100304846852c8d35d6b77820e5941ad566f",
+  "verification_scope": "Recovered engine source; static packaging and publication have separate GitHub Actions checks.",
+  "clinical_accuracy_established": false,
+  "clinical_use_authorized": false,
+  "independent_source_review": "pending",
+  "human_approvals": 0,
+  "engine_source_files_pending_review": 47,
+  "software_checks": {
+    "tests_passed": 1510,
+    "subtests_passed": 239,
+    "git_checks_passed_separately": 26,
+    "optional_imaging_adapter_not_run": true,
+    "synthetic_load_passed": true,
+    "synthetic_benchmark_passed": true
+  },
+  "report_regression": {
+    "eligible_cases": 753,
+    "exact_cases": 635,
+    "matched_obligations": 467,
+    "expected_obligations": 582,
+    "predicted_obligations_accepted": 504,
+    "extra_obligations": 37,
+    "missed_obligations_including_abstention": 115,
+    "precision_accepted": 0.9265873015873016,
+    "recall_all_eligible": 0.802405498281787,
+    "micro_f1_all_eligible": 0.860036832412523
+  },
+  "report_baseline": {
+    "eligible_cases": 753,
+    "exact_cases": 635,
+    "matched_obligations": 466,
+    "expected_obligations": 582,
+    "predicted_obligations_accepted": 503,
+    "extra_obligations": 37,
+    "missed_obligations_including_abstention": 116,
+    "precision_accepted": 0.9264413518886679,
+    "recall_all_eligible": 0.8006872852233677,
+    "micro_f1_all_eligible": 0.8589861751152074
+  },
+  "reference_scope": "753 exposed developer/AI-authored synthetic reports; includes review alerts; not an independent clinical reference.",
+  "timelines": {
+    "cases": 60,
+    "exact_status_cases": 35,
+    "strict_status_agreement": 53,
+    "status_comparisons": 78,
+    "observed_false_closures": 0
+  },
+  "autonomous": {
+    "accepted_reports": 325,
+    "review_required_reports": 428,
+    "matched_obligations": 62,
+    "expected_obligations": 582
+  },
+  "metamorphic": {
+    "resource_order": {
+      "attempted": 753,
+      "matched": 753,
+      "mismatch": 0,
+      "unavailable": 0
+    },
+    "identity_rename": {
+      "attempted": 753,
+      "matched": 753,
+      "mismatch": 0,
+      "unavailable": 0
+    },
+    "equivalent_timezone": {
+      "attempted": 753,
+      "matched": 753,
+      "mismatch": 0,
+      "unavailable": 0
+    },
+    "unrelated_patient": {
+      "attempted": 753,
+      "matched": 753,
+      "mismatch": 0,
+      "unavailable": 0
+    }
+  },
+  "patient_confidence_intervals": "Withheld: authentic patient grouping unavailable.",
+  "remaining_gaps": [
+    "Independent clinician line-by-line review, adjudicated all-eligible held-out patient/site/time/language cohorts, false-closure and workload analysis, prospective silent evaluation and institutional approval remain outstanding. No highest-accuracy or patient-benefit claim is supported.",
+    "Multiple lesions sharing one rule and serial same-target plans can still collapse. Site match alone does not establish exact lesion/order/encounter identity. Independent source-bound task references and explicit amendment/withdrawal semantics are needed.",
+    "Hard deletions, patient merges/reassignment, tombstones, filter/population changes and authoritative loss-of-evidence reconciliation remain unsupported. Unknown feed content is refused rather than implemented.",
+    "External immutable audit anchoring, encrypted storage/backups, institutional tenant/patient authorization, managed credentials, TLS/egress/network controls, restore and incident drills remain operator requirements.",
+    "Built-in sync staging fixes local whole-run atomicity. Custom legacy clients and enabled optional second reader retain wide transactions; optimistic staging can reject benign concurrent writes. Hospital-scale memory, lock contention and distributed effects remain unvalidated.",
+    "Raw-image/LLM/OCR clinical performance, calibration, all formats/languages, missing acquisition timing, zone/date precision and device-specific policies remain unvalidated. Optional TorchXRayVision weights are unavailable; no live EHR or model inference was tested.",
+    "OIDC/SMART discovery/JWKS/connection-check transports do not share every clinical-data budget. Endpoint TLS/DNS policies and previously reported Epic PDF attachment HTTP 400 integration require separate authorized environment testing."
+  ],
+  "public_site_scope": "Static synthetic preview; no hospital backend and no authorization for patient information.",
+  "release_notes": "docs/releases/20261030.md",
+  "engine_source_commit_scope": "Local verified recovery commit; published engine file hashes match this source snapshot.",
+  "engine_source_sha256": "80d4488efbd302b4d1f111c6f3d44d19f8a24516c34c96e9ac35ee65537a6f9c",
+  "publication_method": "Existing GitHub CI plus an allowlisted static artifact on a dedicated Pages branch. Workflow permission expansion is deferred."
+}

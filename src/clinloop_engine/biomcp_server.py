@@ -1,7 +1,7 @@
 """
 BioMCP Server: Biomedical Model Context Protocol Server for ClinLoop AI.
-Provides authoritative clinical guideline retrieval, PubMed evidence verification,
-and FDA safety advisory grounding via standard MCP JSON-RPC 2.0.
+Legacy static reference examples. No live source retrieval or clinical evidence verification.
+Every result requires independent source and applicability review.
 """
 
 import sys
@@ -65,7 +65,7 @@ TOOLS = [
     }
 ]
 
-def handle_call_tool(name, args):
+def _legacy_reference(name, args):
     if name == "biomcp_query_guidelines":
         finding = args.get("finding_value", "").upper()
         if "HSIL" in finding:
@@ -152,7 +152,24 @@ def handle_call_tool(name, args):
             "derived_k_factor": 16.0
         }
 
-    raise ValueError(f"Unknown tool: {name}")
+    raise ValueError("Unknown static reference tool")
+
+
+def handle_call_tool(name, args):
+    """Expose old examples honestly; they never authorize treatment or deadlines."""
+    if not isinstance(args, dict):
+        raise ValueError("Invalid static reference arguments")
+    if name == "biomcp_query_clsi_critical_lab":
+        # A canned specimen-independent treatment recommendation is not evidence.
+        return {"status": "unavailable", "source": "ClinLoop legacy static reference examples",
+                "source_verified": False, "clinical_use": False, "human_review_required": True,
+                "reason": "Critical-result action requires the hospital-approved list and clinician review"}
+    result = _legacy_reference(name, args)
+    for field in ("legal_liability", "evidence_grade", "derived_k_factor"):
+        result.pop(field, None)
+    return {**result, "status": "static_unverified", "source": "ClinLoop legacy static reference examples",
+            "source_verified": False, "clinical_use": False, "human_review_required": True,
+            "notice": "No source retrieved or applicability established; independent source and clinician review required"}
 
 def main():
     logger.info("BioMCP Server started on stdio.")
@@ -206,7 +223,7 @@ def main():
             err_res = {
                 "jsonrpc": "2.0",
                 "id": req.get("id") if 'req' in locals() else None,
-                "error": {"code": -32603, "message": str(e)}
+                "error": {"code": -32603, "message": "Static reference request failed"}
             }
             sys.stdout.write(json.dumps(err_res) + "\n")
             sys.stdout.flush()

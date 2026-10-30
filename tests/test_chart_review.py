@@ -96,6 +96,49 @@ class TestChartReview(unittest.TestCase):
         self.assertEqual(len(merged), len(self.sample) - 2)
         self.assertLess(cr.analyze(packet, _key_rows(self.sample), reps=50)["cohens_kappa"], 1.0)
 
+    def test_invalid_or_duplicated_join_keys_cannot_inflate_metrics(self):
+        packet = _packet(self.sample, lambda r: ("no", "no", ""))
+        keys = _key_rows(self.sample)
+        for bad_packet, bad_keys in [(packet + [packet[0]], keys), (packet, keys + [keys[0]]),
+                                     (packet[1:], keys), (packet, keys[1:])]:
+            with self.subTest(packet=len(bad_packet), keys=len(bad_keys)), self.assertRaises(ValueError):
+                cr.analyze(bad_packet, bad_keys, reps=20)
+
+    def test_invalid_sampling_weights_and_classes_are_rejected(self):
+        packet = _packet(self.sample, lambda r: ("no", "no", ""))
+        for change in [{"weight": "nan"}, {"weight": "inf"}, {"weight": "0"},
+                       {"weight": "-1"}, {"predicted_positive": "unknown"}]:
+            keys = _key_rows(self.sample)
+            keys[0].update(change)
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                cr.analyze(packet, keys, reps=20)
+
+    def test_private_outputs_refuse_overwrite(self):
+        with tempfile.TemporaryDirectory() as d:
+            paths = cr.export_review_files(self.sample, d, cr._rule_lookup())
+            for path in paths:
+                self.assertEqual(os.stat(path).st_mode & 0o777, 0o600)
+            with self.assertRaises(ValueError):
+                cr.export_review_files(self.sample, d, cr._rule_lookup())
+
+    def test_engine_only_frame_enforces_end_to_end_refusal(self):
+        packet = _packet(self.sample, lambda r: ("no", "no", ""))
+        with self.assertRaises(ValueError):
+            cr.analyze(packet, _key_rows(self.sample), reps=20, target="end_to_end")
+
+    def test_cluster_intervals_refuse_missing_patient_groups(self):
+        packet = _packet(self.sample, lambda r: ("no", "no", ""))
+        keys = _key_rows(self.sample)
+        for row in keys:row.pop("patient_id")
+        result = cr.analyze(packet, keys, reps=20)
+        self.assertEqual(result["ci95"], {})
+        self.assertEqual(result["bootstrap_patient_groups"], 0)
+
+    def test_missing_entire_sampling_stratum_is_not_population_estimate(self):
+        stratum = self.sample[0]["stratum"]
+        packet = _packet(self.sample, lambda r: ("unclear", "unclear", "") if r["stratum"] == stratum else ("no", "no", ""))
+        self.assertFalse(cr.analyze(packet, _key_rows(self.sample), reps=20)["population_estimate_supported"])
+
     def test_cli_end_to_end(self):
         with tempfile.TemporaryDirectory() as d:
             bundle = os.path.join(d, "bundle.json")

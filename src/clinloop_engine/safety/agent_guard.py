@@ -63,7 +63,14 @@ def detect_prohibited_action(action_intent: str, agent_role: str) -> bool:
         return True
     return False
 
+def contains_internal_reasoning(text: str) -> bool:
+    """Reject known internal-output markers; this is not a complete safety classifier."""
+    return bool(re.search(r"<\s*/?\s*(?:think|analysis|reasoning)\b", text or "", re.I))
+
+
 def validate_agent_output(agent_name: str, output_text: str):
     """Runs BEFORE downstream use of agent output."""
+    if contains_internal_reasoning(output_text):
+        raise CapabilityViolationError(f"[{agent_name}] Output contains internal reasoning markers.")
     if detect_unsupported_clinical_claims(output_text):
         raise CapabilityViolationError(f"[{agent_name}] Output contains unsupported definitive clinical claims.")

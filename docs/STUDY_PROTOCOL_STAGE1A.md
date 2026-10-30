@@ -52,7 +52,7 @@ that decision in writing before starting.
 | Rules | The 21 radiology-report rules: R003, R018–R020, R030–R046 (lung nodules, BI-RADS 4/5, Lung-RADS, radiologist-recommended imaging and biopsy, incidental adrenal, renal, pancreatic and thyroid findings, aortic aneurysm, critical findings). R035 is scored for *detecting* a critical finding only; its communication cannot be judged in MIMIC |
 | Unit | One radiology report, read on its own (`report_validation.py`: earlier reports are not used, so stepped Fleischner intervals are not exercised) |
 | Sample | Reports of randomly drawn subjects (`mimic_ingest --sample`), then a random sample of reports (`--sample` on the template), seed 42 |
-| Reference standard | A radiologist, blind to ClinLoop, lists the obligations each report creates (`expected_rules`; empty = none) under the guideline each rule cites, using the report and the context columns (age, sex; smoking and cancer history where documented). A second radiologist labels a random 20 % independently |
+| Reference standard | A radiologist, blind to ClinLoop, lists the obligations each report creates (`expected_rules`; explicit `NONE` = no obligation; blank or incomplete labels remain unreviewed) under the guideline each rule cites, using the report and the context columns (age, sex; smoking and cancer history where documented). For a feasibility pilot a second radiologist labels a prespecified random 20 % independently; before a confirmatory accuracy claim, require independent double review and third-person adjudication of all reference disagreements as specified in the 29 October evidence plan |
 | Primary endpoints | Sensitivity and PPV over all report × rule obligations pooled (`score`: `overall`), with Wilson 95 % intervals; per rule, the same figures and every disagreement listed for adjudication |
 | Targets | Sensitivity ≥ 85 % and PPV ≥ 70 % for the imaging-findings family (protocol §7); per-rule results are descriptive |
 | Agreement | Cohen's κ between the two radiologists on the double-labelled subset (any obligation yes / no); κ ≥ 0.6 required (protocol §7) |
@@ -129,3 +129,8 @@ Passing Stage 1A does not make ClinLoop ready for clinical use (see
 | Radiologist 2 (20 % double labelling) | | | | |
 | Clinician reviewers, Part B (two) and adjudicator | | | | |
 | Clinical lead (confirms Part B rules) | | | | |
+
+
+## 11. Evidence integrity amendment, 29 October 2026
+
+The [candidate evidence plan](reviews/EVIDENCE_REVIEW_20261029.md) specifies the additional confirmatory requirements. Do not treat this protocol's sample-size sketch, targets or unclustered Wilson intervals as an approved statistical analysis plan. A statistician must set sample size, patient-level dependence handling and decision bounds before the untouched test set is opened. The existing chart toolkit scores only obligations the engine identified; an independently enumerated reference cohort is required to measure missed obligations. Existing AI-reviewed and development-exposed Open-i labels cannot serve as independent confirmatory truth. All source/model/rule hashes must describe the exact evaluated candidate. No institutional, ethics or regulatory approvals are created by this amendment.

@@ -61,7 +61,7 @@ def analyze_and_route_biomcp(clinical_context: str) -> EvidenceQueryPlan:
         rationale = "Critical lab panic value flagged."
         
     return EvidenceQueryPlan(
-        clinical_question="What is the mandatory follow-up interval for this finding?",
+        clinical_question="Which current evidence and applicability criteria require clinician verification?",
         patient_context_summary=clinical_context[:100],
         candidate_sources=sources,
         selected_tools=selected,
@@ -101,26 +101,19 @@ def run_evidence_synthesis(clinical_context: str, task: str = "differential_diag
             
         res = handle_biomcp(tool, args)
         if res:
-            candidate = EvidenceCandidate(
-                source_name=res.get("source", "BioMCP"),
-                source_version=res.get("version", "1.0"),
-                source_uri=res.get("uri", None),
-                retrieved_at=datetime.now(timezone.utc).isoformat(),
-                recommendation_text=res.get("guideline_text", "Follow standard care"),
-                applicability={"age": "all"},
-                exclusions=[],
-                temporal_expression=f"{res.get('derived_t_crit', 0)} days",
-                evidence_grade=res.get("evidence_level", "Unknown"),
-                evidence_span=str(res),
-                uncertainty=plan.uncertainty
-            )
-            candidates.append(candidate)
-            
+            # This adapter calls the bundled static reference library, not a
+            # verified retrieval provider. Its canned text and deadlines cannot
+            # establish evidence, patient applicability, or a grounded answer.
+            # A real retrieval/verification adapter is required before this
+            # function may emit EvidenceCandidates. Never fabricate defaults.
+            continue
 
     # --- NEW INTEGRATION WIRING ---
     ctx = AgentExecutionContext(agent_name="EvidenceAgent", model_name="BioMCP", autonomy_level="A1")
     ctx.record_input({"context": clinical_context, "task": task})
-    ctx.record_output({"candidates_count": len(candidates)})
+    ctx.human_review_required = True
+    ctx.safety_flags.append("static_reference_library_is_not_verified_evidence")
+    ctx.record_output({"candidates_count": len(candidates), "verified_evidence_available": False})
     
     # Sign the execution envelope
     sig = sign_agent_context(ctx)

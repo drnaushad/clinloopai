@@ -1,10 +1,11 @@
 """
-Blind timeline evaluation: does follow-up that happens (or does not) close the right obligations?
+Exposed synthetic timeline regression: does follow-up that happens (or does not) close the right obligations?
 
 Each case is a patient timeline: a first report, then later events (imaging of some modality and body part,
 referrals, specialist visits, biopsies, later reports). Every event becomes the FHIR resource a hospital feed
 would send; the real pipeline (bundle_to_events → ClinLoopDetector) runs at the evaluation date; each
-obligation created by the FIRST report is compared with the clinician's expected status:
+obligation created by the FIRST report is compared with developer/AI-authored expected status
+(not independent clinician truth):
   done       the right follow-up happened within the deadline
   done_late  it happened after the deadline
   pending    not done, deadline not yet passed
@@ -105,22 +106,38 @@ def run_case(case):
             status = "done"
         elif d.loop_status == "delayed":
             status = "done_late"
+        elif d.loop_status == "needs_human_review" or d.should_abstain:
+            status = "review_required"
         else:
             status = "pending" if datetime.fromisoformat(d.deadline) > when else "missed"
         got[d.rule_id] = status
     return got
 
 
+def validate_cases(cases):
+    if not isinstance(cases, list) or not cases:
+        raise ValueError("Nonempty explicit timeline reference cohort required")
+    ids = set()
+    for case in cases:
+        rid, expected = case.get('id'), case.get('expected')
+        if not isinstance(rid, str) or not rid.strip() or rid in ids:
+            raise ValueError("Distinct nonempty timeline IDs required")
+        if not isinstance(expected, dict) or set(expected)-REPORT_RULES or any(v not in DONE|{'pending','missed','review_required'} for v in expected.values()):
+            raise ValueError("Explicit known timeline rule/status reference required")
+        ids.add(rid)
+    return cases
+
+
 def main():
     path = sys.argv[1]
     show = "--show" in sys.argv
-    cases = json.load(open(path, encoding="utf-8"))
+    cases = validate_cases(json.load(open(path, encoding="utf-8")))
     pairs = Counter()
     agree = total = 0
     false_closure, false_alarm, wrong_rules, exact = [], [], [], 0
     eq_agree = eq_total = 0
     for c in cases:
-        exp = {k: v for k, v in (c.get("expected") or {}).items() if k in REPORT_RULES}
+        exp = c['expected']
         try:
             got = run_case(c)
         except Exception as e:                       # a crash is a failure

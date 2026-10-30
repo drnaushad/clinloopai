@@ -170,7 +170,8 @@ class TestPACSStudies(unittest.TestCase):
         study = {"0020000D": {"vr": "UI", "Value": ["1.2.840.1"]}, "00080020": {"vr": "DA", "Value": ["20260301"]},
                  "00080030": {"vr": "TM", "Value": ["101500"]}, "00081030": {"vr": "LO", "Value": ["CT CHEST LOW DOSE"]},
                  "00080061": {"vr": "CS", "Value": ["CT"]}, "00080050": {"vr": "SH", "Value": ["ACC1"]},
-                 "00100010": {"vr": "PN", "Value": [{"Alphabetic": "HONG^GILDONG"}]}}
+                 "00100010": {"vr": "PN", "Value": [{"Alphabetic": "HONG^GILDONG"}]},
+                 "00100020": {"vr": "LO", "Value": ["MRN-0042"]}}
         series = [{"0020000E": {"vr": "UI", "Value": ["1.2.840.1.1"]}, "00080060": {"vr": "CS", "Value": ["CT"]},
                    "00180015": {"vr": "CS", "Value": ["CHEST"]}}]
 
@@ -180,6 +181,12 @@ class TestPACSStudies(unittest.TestCase):
 
             def json(self):
                 return self.body
+
+            def iter_content(self, _size):
+                yield json.dumps(self.body).encode()
+
+            def close(self):
+                pass
 
         session = mock.Mock()
         session.get.side_effect = lambda url, **kw: Resp(series if url.endswith("/series") else [study])
@@ -213,6 +220,12 @@ class TestPACSStudies(unittest.TestCase):
 
             def json(self):
                 return self.body
+
+            def iter_content(self, _size):
+                yield json.dumps(self.body).encode()
+
+            def close(self):
+                pass
         session = mock.Mock()
         session.get.side_effect = lambda url, **kw: Resp([] if url.endswith("/series") else [other])
         client = DICOMwebClient("https://pacs.example/dicom-web", session=session)
@@ -673,8 +686,8 @@ class TestIndependentReviewImaging(unittest.TestCase):
     @unittest.skipUnless(HAVE_DICOM, "pydicom not installed")
     def test_dicom_robustness(self):
         from src.clinloop_engine.imaging_ai import ImagingError, analyze_dicom
-        bad_date = analyze_dicom(make_dicom(phantom(), date="20260230"), "P", ["MRN-0042"], models=[])
-        self.assertTrue(bad_date["filed"])
+        with self.assertRaisesRegex(ImagingError, "timing"):
+            analyze_dicom(make_dicom(phantom(), date="20260230"), "P", ["MRN-0042"], models=[])
         rgb = np.random.RandomState(1).randint(0, 255, (3, 32, 32, 3)).astype(np.uint8)
         from pydicom.uid import ExplicitVRLittleEndian  # noqa: F401
         raw = make_dicom(phantom(32), modality="US", body="ABDOMEN", extra={"NumberOfFrames": 3})
@@ -690,7 +703,11 @@ class TestIndependentReviewImaging(unittest.TestCase):
         self.assertIsNotNone(out["preview"])
         strings = analyze_dicom(make_dicom(phantom()), "P", ["MRN-0042"],
                                 models=[StubModel({"Nodule": "0.9", "Effusion": "n/a"})])
-        self.assertEqual(len(strings["resources"]), 2)
+        self.assertEqual(len(strings["resources"]), 1)  # study only; malformed model output abstains
+        self.assertFalse(strings["models"][0]["ran"])
+        valid_string = analyze_dicom(make_dicom(phantom()), "P", ["MRN-0042"],
+                                     models=[StubModel({"Nodule": "0.9"})])
+        self.assertEqual(len(valid_string["resources"]), 2)
         with self.assertRaises(ImagingError):
             analyze_dicom(b"%PDF-1.4 not a dicom file at all" * 10, "P", ["P"], models=[])
         no_id = analyze_dicom(make_dicom(phantom(), pid=""), "P", ["MRN-0042"], models=[])

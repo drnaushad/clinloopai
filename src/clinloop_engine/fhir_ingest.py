@@ -22,6 +22,7 @@ Appointment, Communication, Encounter, MedicationRequest, Procedure, Condition.
 
 import os
 import contextvars
+import math
 import re
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -274,6 +275,26 @@ def _flag_from_reference_range(resource: Dict, value: Any) -> Optional[str]:
 
 # ── Resource mappers ─────────────────────────────────────────────────────────
 
+def _validate_measurement_quantities(resource: Dict) -> None:
+    """Invalid stated measurements cannot establish clinical completion.
+
+    This validates FHIR numeric representation, not physiological ranges or
+    laboratory-specific units. Mapper failures remain aggregate review warnings.
+    """
+    components = resource.get("component", [])
+    if not isinstance(components, list) or any(not isinstance(c, dict) for c in components):
+        raise ValueError("Observation components are malformed")
+    for item in [resource, *components]:
+        if "valueQuantity" not in item:
+            continue
+        quantity = item["valueQuantity"]
+        if not isinstance(quantity, dict):
+            raise ValueError("Observation quantity is malformed")
+        value = quantity.get("value")
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise ValueError("Observation measurement is not a finite number")
+
+
 def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
     """Returns [(event_type, timestamp, details)]."""
     ts = _first(r.get("effectiveDateTime"), (r.get("effectivePeriod") or {}).get("end"), r.get("issued"))
@@ -309,6 +330,8 @@ def _map_observation(r: Dict) -> List[Tuple[str, str, Dict]]:
         if status is None:
             return []
         return [(EventType.RISK_FACTOR.value, ts, {"smoking": status, "mapping": [f"Observation(smoking status)→risk_factor: {status}"]})]
+
+    _validate_measurement_quantities(r)
 
     # Vital signs are not lab results: a high BP reading must not raise
     # "abnormal lab" alerts. A recorded BP is evidence of a BP check.
@@ -1115,15 +1138,66 @@ def _resources(bundle_or_resources: Any) -> Iterable[Dict]:
         yield from bundle_or_resources
 
 
-def _with_full_urls(bundle_or_resources: Any, fn):
-    """Run fn() with the bundle's fullUrl → Type/id map, so absolute references resolve."""
-    full_urls = {}
+def _full_url_map(bundle_or_resources: Any) -> Dict[str, str]:
+    """Resolve only unambiguous Bundle aliases; never let entry order choose a patient."""
+    full_urls: Dict[str, str] = {}
     if isinstance(bundle_or_resources, dict) and bundle_or_resources.get("resourceType") == "Bundle":
-        for entry in bundle_or_resources.get("entry", []):
-            r = entry.get("resource") or {}
-            if entry.get("fullUrl") and r.get("resourceType") and r.get("id"):
-                full_urls[entry["fullUrl"]] = f"{r['resourceType']}/{r['id']}"
-    token = _FULL_URLS.set(full_urls)
+        entries = bundle_or_resources.get("entry", [])
+        if not isinstance(entries, list):
+            raise ValueError("Invalid FHIR Bundle entries")
+        for entry in entries:
+            if not isinstance(entry, dict) or not isinstance(entry.get("resource"), dict):
+                raise ValueError("Invalid FHIR Bundle resource")
+            r = entry["resource"]
+            alias = entry.get("fullUrl")
+            if alias is not None and not isinstance(alias, str):
+                raise ValueError("Invalid FHIR Bundle alias")
+            if alias and r.get("resourceType") and r.get("id"):
+                target = f"{r['resourceType']}/{r['id']}"
+                if alias in full_urls and full_urls[alias] != target:
+                    raise ValueError("Conflicting FHIR Bundle aliases; human review required")
+                full_urls[alias] = target
+    return full_urls
+
+
+def resolved_resources(bundle_or_resources: Any) -> List[Dict]:
+    """Independent resources with Bundle fullUrl references canonicalised.
+
+    Validate before snapshots or loop-store mutation. Errors contain no input values.
+    This does not infer identities for unresolved urns or identifier-only references.
+    """
+    import copy
+    full_urls = _full_url_map(bundle_or_resources)
+    if isinstance(bundle_or_resources, dict):
+        resources = list(_resources(bundle_or_resources))
+    elif isinstance(bundle_or_resources, (list, tuple)):
+        resources = list(bundle_or_resources)
+    else:
+        raise ValueError("Expected FHIR resources or a Bundle")
+    for resource in resources:
+        if (not isinstance(resource, dict) or not isinstance(resource.get("resourceType"), str)
+                or not re.fullmatch(r"[A-Z][A-Za-z0-9]+", resource["resourceType"])
+                or not isinstance(resource.get("id"), str)
+                or not re.fullmatch(r"[A-Za-z0-9\-.]{1,64}", resource["id"])):
+            raise ValueError("Invalid FHIR resource identity")
+    resources = copy.deepcopy(resources)
+    def resolve(node):
+        if isinstance(node, dict):
+            ref = node.get("reference")
+            if isinstance(ref, str) and ref in full_urls:
+                node["reference"] = full_urls[ref]
+            for value in node.values():
+                resolve(value)
+        elif isinstance(node, list):
+            for value in node:
+                resolve(value)
+    resolve(resources)
+    return resources
+
+
+def _with_full_urls(bundle_or_resources: Any, fn):
+    """Run fn() with an unambiguous Bundle fullUrl → Type/id map."""
+    token = _FULL_URLS.set(_full_url_map(bundle_or_resources))
     try:
         return fn()
     finally:
@@ -1131,6 +1205,9 @@ def _with_full_urls(bundle_or_resources: Any, fn):
 
 
 def bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> Tuple[Dict[str, List[Dict]], List[str]]:
+    # Mappers, context, and version handling make multiple passes over resources.
+    if not isinstance(bundle_or_resources, (dict, list, tuple)):
+        bundle_or_resources = list(bundle_or_resources)
     return _with_full_urls(bundle_or_resources, lambda: _bundle_to_events(bundle_or_resources, evaluation_time))
 
 
@@ -1204,8 +1281,19 @@ def _superseded_reports() -> Dict[str, str]:
         released = [r for r in versions if str(r.get("status", "")).lower() in released_set]
         if not released:
             continue
-        newest = max(released, key=lambda r: str(_first(r.get("issued"), r.get("effectiveDateTime"),
-                                                         (r.get("meta") or {}).get("lastUpdated")) or ""))
+        def release_instant(resource):
+            value = _first(resource.get("issued"), resource.get("effectiveDateTime"),
+                           (resource.get("meta") or {}).get("lastUpdated"))
+            try:
+                return normalize_timestamp(value)
+            except (ValueError, TypeError):
+                return None
+        instants = [release_instant(r) for r in released]
+        # Ambiguous ordering cannot establish which released record supersedes
+        # a draft. Keep the draft visible for human reconciliation.
+        if any(instant is None for instant in instants):
+            continue
+        newest = released[max(range(len(released)), key=lambda i: instants[i])]
         for r in versions:
             if str(r.get("status", "")).lower() in draft and r["id"] != newest["id"]:
                 out[f"{rtype}/{r['id']}"] = f"{rtype}/{newest['id']}"
@@ -1240,7 +1328,7 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
     by_patient: Dict[str, List[Dict]] = defaultdict(list)
     warnings: List[str] = []
     uncertain_status_count = 0
-    patients = _patient_context(bundle_or_resources)
+    patients = _patient_context(bundle_or_resources, warnings)
     resources = list(_resources(bundle_or_resources))
     token = _CURRENT_RESOURCES.set(resources)
     try:
@@ -1319,6 +1407,28 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
                         "interface to send OBX-8 / Observation.interpretation or reference ranges")
 
     for pid, events in by_patient.items():
+        # PACS indexes and DICOM headers can describe the same study differently.
+        # Retain each observation with stable provenance, but none may prove a
+        # completed follow-up until the conflicting study metadata is reconciled.
+        # Other duplicate identities still fail the graph's strict collision guard.
+        import hashlib
+        import json
+        study_groups = defaultdict(list)
+        for event in events:
+            if event["source"].startswith("ImagingStudy/"):
+                study_groups[event["event_id"]].append(event)
+        for group in study_groups.values():
+            variants = {json.dumps(e, sort_keys=True, default=str): e for e in group}
+            if len(variants) < 2:
+                continue
+            for event in group:
+                encoded = json.dumps(event, sort_keys=True, default=str)
+                event["event_id"] += ":variant:" + hashlib.sha256(encoded.encode()).hexdigest()
+                event["status"] = "unknown"
+                event["details"]["review_note_all"] = "Conflicting imaging study records; human reconciliation required"
+            message = "Conflicting imaging study records retained for review; excluded from completion evidence"
+            if message not in warnings:
+                warnings.append(message)
         _derive_context(events)
         decide_obligations(events, patients.get(pid, {}))
         # Patterns that depend on "now" (age reached by today) use the evaluation time, not the wall clock
@@ -1327,7 +1437,7 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
     return dict(by_patient), warnings
 
 
-def _patient_context(bundle_or_resources: Any) -> Dict[str, Dict[str, Any]]:
+def _patient_context(bundle_or_resources: Any, warnings: Optional[List[str]] = None) -> Dict[str, Dict[str, Any]]:
     """Birth date and administrative sex per patient (for age- and sex-specific radiology guidance)."""
     out: Dict[str, Dict[str, Any]] = {}
     for r in _resources(bundle_or_resources):
@@ -1335,9 +1445,16 @@ def _patient_context(bundle_or_resources: Any) -> Dict[str, Dict[str, Any]]:
             continue
         ctx: Dict[str, Any] = {}
         birth = str(r.get("birthDate", ""))
-        m = re.match(r"^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?", birth)
-        if m:
-            ctx["birth_date"] = datetime(int(m.group(1)), int(m.group(2) or 7), int(m.group(3) or 1))
+        m = re.fullmatch(r"(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?", birth)
+        try:
+            if m:
+                ctx["birth_date"] = datetime(int(m.group(1)), int(m.group(2) or 7), int(m.group(3) or 1))
+            elif birth:
+                raise ValueError
+        except ValueError:
+            message = "Patient birth date is invalid; age-dependent rules require human review"
+            if warnings is not None and message not in warnings:
+                warnings.append(message)
         if r.get("gender"):
             ctx["sex"] = str(r["gender"]).lower()
         out[r["id"]] = ctx

@@ -31,20 +31,21 @@ def handle_call_tool(name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         uid = arguments.get("study_uid")
         modality = arguments.get("modality", "CT")
         
-        logger.info(f"Mock PACS: Fetching DICOM metadata for Study UID {uid} (Modality: {modality})")
+        logger.info("Mock PACS: Fetching DICOM metadata")
         
         # Simulated response from a PACS server
         return {
+            "simulated": True, "pacs_connected": False, "clinical_confirmation": False,
             "content": [
                 {
                     "type": "text",
-                    "text": f"DICOM Metadata for {uid}:\n"
-                            f"Modality: {modality}\n"
+                    "text": "Synthetic imaging metadata example; no PACS queried:\n"
+                            "Modality: CT\n"
                             f"Body Part Examined: CHEST\n"
                             f"Series Count: 4\n"
-                            f"Status: COMPLETED AND VERIFIED BY RADIOLOGIST"
+                            "Status: SIMULATED; no scan completion or radiologist review established"
                 }
             ]
         }
     else:
-        raise ValueError(f"Unknown PACS MCP tool: {name}")
+        raise ValueError("Unknown PACS mock tool")

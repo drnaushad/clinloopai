@@ -18,6 +18,8 @@ from src.clinloop_engine.local_llm_engine import (
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import json
@@ -73,6 +75,15 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def private_validation_error(_request: Request, exc: RequestValidationError):
+    # Pydantic errors include submitted values; count only, never echo or log them.
+    logger.warning("Request validation failed: %d field errors", len(exc.errors()))
+    return JSONResponse(status_code=422, content={
+        "detail": "Request validation failed. Check required fields and supported formats."
+    })
 
 
 # CORS: only the cockpit origins may call the API from a browser. Override
@@ -563,11 +574,10 @@ def test_api_key(req: TestKeyRequest, user: User = Depends(require_role("admin")
 @app.post("/api/v1/agent/evidence-synthesis", tags=["Autonomous Evidence Synthesis Agent (RAG)"])
 def agent_evidence_synthesis(req: EvidenceSynthesisRequest, user: User = Depends(require_role("clinician"))):
     """
-    Autonomous Retrieval-Augmented Generation (RAG) pipeline.
-    1. Analyzes the context and autonomously queries the correct BioMCP guideline.
-    2. Injects the strict clinical mandate into a system prompt.
-    3. Runs on-premise inference via DeepSeek-R1 70B for zero-hallucination grounded text.
-    Research feature: refused in the core profile.
+    Research routing prototype using the bundled, unverified reference library.
+    No verified evidence candidates are emitted until an evidence retrieval and
+    applicability verification adapter is implemented. Model output does not
+    establish medical accuracy. Refused in the core profile.
     """
     _require_profile("llm_assistant")
     try:
@@ -589,9 +599,9 @@ def agent_safety_clock_status(user: User = Depends(require_role("viewer"))):
 @app.post("/api/v1/agent/patient-outreach/generate", tags=["Patient Outreach Agent (Dynamic)"])
 def agent_generate_patient_outreach(req: DynamicOutreachRequest, user: User = Depends(require_role("clinician"))):
     """
-    Autonomous dynamic generation of patient communication.
-    Uses the Evidence Synthesis Agent (RAG) to ensure the message is medically grounded
-    before using the Local LLM (DeepSeek) to write the empathetic patient text.
+    Draft patient communication from supplied facts for clinician review.
+    A model or static reference lookup does not verify the clinical facts or
+    guarantee accuracy. This endpoint does not send a message.
     Research feature: refused in the core profile (loop messages go through outreach.py instead).
     """
     _require_profile("llm_assistant")

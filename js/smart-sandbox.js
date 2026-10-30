@@ -71,14 +71,19 @@
   function reportsFrom(bundle, patient, iss) {
     patientId(patient); issuer(iss);
     if (!bundle || bundle.resourceType !== 'Bundle' || bundle.type !== 'searchset' ||
-        (bundle.entry !== undefined && !Array.isArray(bundle.entry)) || (bundle.entry?.length || 0) > 20) fail();
+        (bundle.entry !== undefined && !Array.isArray(bundle.entry)) || (bundle.entry?.length || 0) > 20 ||
+        (bundle.link !== undefined && (!Array.isArray(bundle.link) || bundle.link.some(link => !link || typeof link.relation !== 'string'))) ||
+        (bundle.total !== undefined && (!Number.isSafeInteger(bundle.total) || bundle.total < (bundle.entry?.length || 0)))) fail();
     const reports = (bundle.entry || []).map(entry => {
       const r = entry.resource;
       if (entry.search?.mode === 'outcome' || !r || r.resourceType !== 'DiagnosticReport' ||
           !['Patient/' + patient, iss + '/Patient/' + patient].includes(r.subject?.reference)) fail();
       // Deliberately do not render FHIR XHTML or load attachments, images or linked records.
-      return {status: typeof r.status === 'string' ? r.status.slice(0, 80) : 'Status unavailable',
-        conclusion: typeof r.conclusion === 'string' ? r.conclusion.slice(0, 12000) : 'No plain-text conclusion supplied. Review the original report in the source system.'};
+      // Never silently drop a report tail: it may contain an addendum or follow-up request.
+      if ((r.status !== undefined && (typeof r.status !== 'string' || r.status.length > 80)) ||
+          (r.conclusion !== undefined && (typeof r.conclusion !== 'string' || r.conclusion.length > 12000))) fail();
+      return {status: r.status || 'Status unavailable',
+        conclusion: r.conclusion || 'No plain-text conclusion supplied. Review the original report in the source system.'};
     });
     return {reports, partial: (bundle.link || []).some(link => link.relation === 'next') ||
       (Number.isFinite(bundle.total) && bundle.total > reports.length)};

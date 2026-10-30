@@ -19,7 +19,9 @@ def test_every_page_has_one_visible_choice_per_language_and_updated_assets(page)
  assert p.html['data-language-options']=='en ko'
  for ident in ['lang-opt-en','lang-opt-ko']:
   assert len(p.ids[ident])==1 and 'hidden' not in p.ids[ident][0]
- assert 'js/interface-copy.js?v=20261028_files1' in text
+ # The private workspace refreshed its privacy copy in the security update.
+ copy_version='20261029_security1' if page=='private' else '20261028_files1'
+ assert f'js/interface-copy.js?v={copy_version}' in text
  assert 'js/interface-language.js?v=20261028_languages1' in text
  if page in ['review','private']:assert p.html['data-isolated-session']=='true'
 @pytest.mark.skipif(not shutil.which('node'),reason='Node required for interface-language checks')

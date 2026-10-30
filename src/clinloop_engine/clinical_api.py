@@ -88,8 +88,8 @@ class CriticalListApprovalRequest(BaseModel):
 
 class OutreachDecisionRequest(BaseModel):
     approve: bool
-    text: Optional[str] = Field(None, description="Edited text to send instead of the draft")
-    note: str = ""
+    text: Optional[str] = Field(None, max_length=1000, description="Edited text to send instead of the draft")
+    note: str = Field("", max_length=2000)
 
 
 def _workflow(fn, *args, **kwargs):
@@ -346,36 +346,48 @@ def ingest_fhir(bundle: Dict[str, Any] = Body(..., description="FHIR R4 Bundle")
     when = normalize_timestamp(evaluation_time) if evaluation_time else None
     store = get_store()
     # Keep each patient's records, so later uploads (outside reports, DICOM) are judged in context
-    from .fhir_ingest import _patient_id, _resources
+    from .fhir_ingest import _patient_id, resolved_resources
+    try:
+        incoming = resolved_resources(bundle)
+    except (ValueError, TypeError, AttributeError):
+        raise HTTPException(422, "FHIR resource identities or references are invalid or ambiguous") from None
     by_patient: Dict[str, list] = {}
-    for r in _resources(bundle):
-        pid = r.get("id") if r.get("resourceType") == "Patient" else _patient_id(r)
+    for r in incoming:
+        try:
+            pid = r.get("id") if r.get("resourceType") == "Patient" else _patient_id(r)
+        except (AttributeError, TypeError):
+            raise HTTPException(422, "FHIR patient references are malformed") from None
         if pid:
             by_patient.setdefault(pid, []).append(r)
+    access(user, "ingest", list(by_patient))
     from .fhir_sync import patient_record
     from .pacs_client import client_from_env as pacs_from_env
     pacs = pacs_from_env()
     resources, record_warnings = [], []
     for pid, items in by_patient.items():
-        store.save_snapshot(pid, items)
-        # the snapshot just saved, plus uploads and the PACS's studies for this patient
-        record, w = patient_record(pid, store, None, pacs)
+        # Stage new histories without replacing existing snapshots until mapping succeeds.
+        record, w = patient_record(pid, store, None, pacs, resources=items)
         resources += record
         record_warnings += w
-    events_by_patient, warnings = bundle_to_events(resources, evaluation_time=when)
+    try:
+        events_by_patient, warnings = bundle_to_events(resources, evaluation_time=when)
+        strata = patient_strata(incoming)
+    except (ValueError, TypeError, AttributeError):
+        raise HTTPException(422, "FHIR clinical content could not be mapped safely; no snapshot replaced") from None
     warnings += record_warnings
-    strata = patient_strata(bundle)
     detector = hospital_detector(when)
     detections = []
     for pid, events in events_by_patient.items():
         detections.extend(lapse_after_death(detector.process_patient("fhir-ingest", pid, events), resources))
-    access(user, "ingest", list(events_by_patient))
-    store.note_patients(events_by_patient)
-    counts = store.upsert_detections(detections, strata=strata, actor=user.name)
-    from .fhir_ingest import superseded_reports
-    counts["superseded"] = store.supersede_sources(superseded_reports(resources), actor=user.name)
-    store.record_ingest("manual-upload", user.name, ok=True, patients=len(events_by_patient),
-                        events=sum(len(v) for v in events_by_patient.values()), warnings=len(warnings))
+    with store.atomic():
+        for pid, items in by_patient.items():
+            store.save_snapshot(pid, items)
+        store.note_patients(events_by_patient)
+        counts = store.upsert_detections(detections, strata=strata, actor=user.name)
+        from .fhir_ingest import superseded_reports
+        counts["superseded"] = store.supersede_sources(superseded_reports(resources), actor=user.name)
+        store.record_ingest("manual-upload", user.name, ok=True, patients=len(events_by_patient),
+                            events=sum(len(v) for v in events_by_patient.values()), warnings=len(warnings))
     return {
         "patients": len(events_by_patient),
         "events": sum(len(v) for v in events_by_patient.values()),
@@ -520,8 +532,12 @@ def decide_outreach(message_id: str, req: OutreachDecisionRequest,
             check_text(req.text if req.text is not None else msg["draft_text"])
         except OutreachNotAllowed as e:
             raise HTTPException(422, str(e))
+    try:
+        provider = provider_from_env() if req.approve else None
+    except (OutreachNotAllowed, KeyError):
+        raise HTTPException(503, "Outreach delivery is not configured safely") from None
     return _workflow(get_store().decide_outreach, message_id, user.name, user.role, req.approve,
-                     final_text=req.text, provider=provider_from_env() if req.approve else None, note=req.note)
+                     final_text=req.text, provider=provider, note=req.note)
 
 
 # ── Metrics, escalation, audit ───────────────────────────────────────────────

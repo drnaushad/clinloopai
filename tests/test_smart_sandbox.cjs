@@ -202,3 +202,20 @@ test('restoring a page from browser cache clears the previous session', () => {
   const p = page(); p.events.pageshow({persisted:true});
   assert.deepEqual(p.clientCalls, [['close',undefined]]);
 });
+
+// A report tail can contain a correction. Oversize source must fail instead of looking complete.
+test('SMART source content is never silently truncated or coerced', () => {
+  for (const change of [{conclusion: 'x'.repeat(12000)+' SYNTHETIC ADDENDUM'},
+    {conclusion: {text: 'SYNTHETIC'}}, {status: 'x'.repeat(81)}]) {
+    const bundle = structuredClone(BUNDLE);
+    Object.assign(bundle.entry[0].resource, change);
+    assert.throws(() => reportsFrom(bundle, PATIENT.id, ISS));
+  }
+  const bundle = structuredClone(BUNDLE);
+  bundle.entry[0].resource.conclusion = 'x'.repeat(11975)+' SYNTHETIC ADDENDUM';
+  assert.equal(reportsFrom(bundle, PATIENT.id, ISS).reports[0].conclusion, bundle.entry[0].resource.conclusion);
+});
+test('malformed SMART pagination and inconsistent totals cannot look complete', () => {
+  for (const change of [{link: {}}, {link: [null]}, {total: -1}, {total: 0}, {total: '1'}])
+    assert.throws(() => reportsFrom({...BUNDLE, ...change}, PATIENT.id, ISS));
+});

@@ -1,18 +1,14 @@
-// ClinLoop AI - Cache Busting Service Worker
-// Immediately invalidates all previous caches and always fetches fresh network resources
-
+// Network-only service worker. Source reports and API responses have no offline fallback.
 self.addEventListener('install', event => {
-  self.skipWaiting();
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => self.clients.claim())
-  );
+  // Cache storage belongs to the origin, including unrelated applications.
+  // Do not erase another application's data or reuse a stale clinical response.
+  event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
-  );
+  event.respondWith(fetch(event.request));
 });

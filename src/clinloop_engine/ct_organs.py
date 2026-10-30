@@ -44,7 +44,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from .imaging_ai import ImagingError, dicom_summary, qa_checks
+from .imaging_ai import ImagingError, dicom_summary, qa_checks, _when
 from .imaging_fhir import ai_observation_resource, dicom_datetime, imaging_study_resource
 
 logger = logging.getLogger("clinloop.ct_organs")
@@ -395,6 +395,9 @@ def analyze_ct_series(content: bytes, filename: str, patient_id: str, expected_p
         img, header, notes = read_dicom_series(content)
         summary = dicom_summary(header)
         qa = qa_checks(header, summary, expected_patient_ids, "CT")
+        # Refuse malformed supplied acquisition timing before segmentation.
+        # Missing acquisition dates retain separately marked bookkeeping time.
+        when = _when(summary)
 
     if segmenter is None:
         reason = available()
@@ -419,8 +422,6 @@ def analyze_ct_series(content: bytes, filename: str, patient_id: str, expected_p
     critical = [c for c in qa if c["level"] == "critical"]
     resources: List[Dict[str, Any]] = []
     if not critical and header is not None:
-        when = (dicom_datetime(summary["study_date"], summary["study_time"], summary["tz_offset"])
-                or datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0).isoformat())
         study = imaging_study_resource({
             "study_uid": summary["study_uid"], "accession": summary["accession"], "modalities": ["CT"],
             "description": summary["study_description"] or summary["series_description"],

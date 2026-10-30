@@ -1,5 +1,6 @@
 """The public evidence artifact must contain aggregates, never arbitrary source fields."""
 import importlib.util
+import json
 import unittest
 from pathlib import Path
 
@@ -33,3 +34,17 @@ class TestValidationStatus(unittest.TestCase):
         self.assertNotIn('PRIVATE-REPORT', json.dumps(result))
         self.assertEqual(result['reference_reviews_complete'], 0)
         self.assertIn('not established', result['clinical_accuracy'])
+
+
+def test_historical_release_counts_are_not_current_candidate_verification():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    status = json.loads((root / 'data/research_release_status.json').read_text())
+    scope = status['evidence_scope']
+    assert scope['kind'] == 'historical_release_record'
+    assert scope['source_commit'] == status['engineering_candidate_source_commit']
+    assert scope['applies_to_current_modified_candidate'] is False
+    page = (root / 'validation.html').read_text()
+    assert 'id="historical-evidence-scope"' in page
+    assert 'do not verify the modified recovery candidate' in page
+    assert 'Historical release evidence only' in (root / 'js/interface-copy.js').read_text()

@@ -102,13 +102,13 @@ class TestMIMIC(unittest.TestCase):
 class TestECG(unittest.TestCase):
 
     @staticmethod
-    def ecg_obs(rid, when, text="", qtc=None):
+    def ecg_obs(rid, when, text="", qtc=None, unit="ms"):
         r = {"resourceType": "Observation", "id": rid, "status": "final", "subject": {"reference": "Patient/P"},
              "code": {"coding": [{"system": "http://loinc.org", "code": "11524-6"}], "text": "12-lead ECG"},
              "effectiveDateTime": when, "valueString": text}
         if qtc is not None:
             r["component"] = [{"code": {"coding": [{"system": "http://loinc.org", "code": "8636-3"}]},
-                               "valueQuantity": {"value": qtc, "unit": "ms"}}]
+                               "valueQuantity": {"value": qtc, "unit": unit}}]
         return r
 
     def test_prolonged_qtc_needs_review_or_repeat_ecg_within_a_day(self):
@@ -121,7 +121,7 @@ class TestECG(unittest.TestCase):
         self.assertEqual(found["R059"].loop_status, "closed")
         self.assertNotIn("R059", loops([P, self.ecg_obs("e3", "2023-03-01T08:00:00", qtc=462)], "P",
                                        "2023-03-03T00:00:00")[0])
-        self.assertIn("R059", loops([P, self.ecg_obs("e4", "2023-03-01T08:00:00", qtc=0.51)], "P",
+        self.assertIn("R059", loops([P, self.ecg_obs("e4", "2023-03-01T08:00:00", qtc=0.51, unit="s")], "P",
                                     "2023-03-03T00:00:00")[0])          # seconds are converted
 
     def test_af_on_an_ecg_reaches_the_anticoagulation_rule(self):

@@ -73,6 +73,33 @@
     "synthetic_rules": {
       "reports": 753,
       "exact_matches": 635,
+      "true_positive_obligations": 467,
+      "false_positive_obligations": 37,
+      "false_negative_obligations": 115,
+      "negative_reports": 266,
+      "true_negative_reports": 264,
+      "deadline_eligible_reports": 457,
+      "deadlines_within_strict_reference_window": 448,
+      "exact_mismatches": 118
+    },
+    "scope": "Exposed synthetic development regression; review alerts count as detected obligations; no independent clinical accuracy estimate.",
+    "deadline_scope": "Strict reference bounds conditional on a matching rule; missed obligations excluded",
+    "openi_all_distinct": {
+      "records": 3157,
+      "available": 3157,
+      "flagged": 95
+    },
+    "folders_checked": 1206,
+    "reference_reviews_complete": 0,
+    "clinical_accuracy": "not established; independent clinician labels and approved external test data required",
+    "candidate_source_commit": "9332100304846852c8d35d6b77820e5941ad566f",
+    "engineering_rechecked_at": "2026-10-30",
+    "historical_data_scope": "OpenI processing and dataset folder counts below remain historical and were not rerun for this release."
+  },
+  "historical_report_accuracy_check": {
+    "synthetic_rules": {
+      "reports": 753,
+      "exact_matches": 635,
       "true_positive_obligations": 466,
       "false_positive_obligations": 37,
       "false_negative_obligations": 116,
@@ -95,5 +122,6 @@
     "clinical_accuracy": "not established; independent clinician labels and approved external test data required",
     "candidate_source_commit": "9cf754e89f383e28f6684b12b7c4402f0028afca",
     "engineering_rechecked_at": "2026-10-27"
-  }
+  },
+  "current_engineering_release": "data/engineering_release_status.json"
 }

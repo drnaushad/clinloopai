@@ -61,18 +61,18 @@ test('local structured review sends original text only to an inspected local mod
 });
 function page({search='',fileRun=null,localRun=async()=>JSON.stringify(REVIEW),researchRun=async()=>validate(REVIEW,TEXT),localConnect=async()=>['synthetic'],researchConnect=async()=> 'synthetic-api',schemaFetch=async()=>ok({type:'object'})}={}){
   const ids=['mode','provider','provider-destination','provider-consent','local-options','research-options','connect','disconnect','status','model','report','report-file','analyze','local-address','research-address','gateway-code','local-confirm','research-confirm','report-type','complete-confirm','result','sample','clear','report-budget','review-readiness','choose-local','choose-openai','choose-anthropic','choose-gemini','connection-summary','personal-setup-link','check-source','load-file','file-address','file-code','file-confirm','ocr-language','file-preview'];
-  const el={},events={},windowEvents={},calls=[];
+  const el={},events={},windowEvents={},calls=[],documentEvents={};
   for(const id of ids)el[id]={value:'',checked:false,children:[],files:[],attrs:{},setAttribute(k,v){this.attrs[k]=v;},addEventListener:(n,f)=>{events[id+':'+n]=f;},replaceChildren(...xs){this.children=xs;},append(...xs){this.children.push(...xs);}};
   el.mode.value='local';el.provider.value='openai';el['local-address'].value='http://127.0.0.1:11434';el['research-address'].value='http://127.0.0.1:18127';el['report-type'].value='radiology-text';
   const api=require('../js/report-review.js');
-  const context={document:{documentElement:{lang:'en'},getElementById:id=>el[id],createTextNode:text=>({textContent:text}),createElement:()=>({children:[],append(...xs){this.children.push(...xs);}}),addEventListener(){}},
+  const context={document:{documentElement:{lang:'en'},getElementById:id=>el[id],createTextNode:text=>({textContent:text}),createElement:()=>({children:[],append(...xs){this.children.push(...xs);}}),addEventListener:(n,f)=>{documentEvents[n]=f;}},
     Option:function(text,value){this.text=text;this.value=value;},fetch:schemaFetch,setInterval(){},Date,TextDecoder,TextEncoder,
     window:{URLSearchParams,location:{search},fetch:async()=>ok({type:'object'}),addEventListener:(n,f)=>{windowEvents[n]=f;},
       ClinLoopPrivate:{Workspace:class{clear(v){calls.push(['localClear',v]);}async connect(){calls.push(['localConnect']);return localConnect();}async run(){calls.push(['localRun']);return localRun();}}},
       ClinLoopReportReview:{...api,Research:class{clear(){calls.push(['researchClear']);}async connect(){calls.push(['researchConnect']);return researchConnect();}async run(){calls.push(['researchRun']);return researchRun();}}}}};
   if(fileRun)context.window.ClinLoopFileImport={kind:require('../js/report-file-import.js').kind,Importer:class{clear(){}async run(){return fileRun();}}};
   vm.runInNewContext(fs.readFileSync(require.resolve('../js/report-review-page.js'),'utf8'),context);
-  return{el,events,windowEvents,calls};
+  return{el,events,windowEvents,calls,documentEvents};
 }
 test('default hospital pathway uses local models and does not call research transport',async()=>{
   const p=page();p.el['local-confirm'].checked=true;await p.events['connect:click']();
@@ -302,4 +302,19 @@ test('a long imported document is previewed intact and never silently trimmed fo
 test('clearing during binary import prevents a late document from restoring its source or preview',async()=>{
  let finish;const pending=new Promise(r=>finish=r),p=page({fileRun:()=>pending});p.el['report-file'].files=[{name:'synthetic.pdf',size:500}];
  const task=p.events['report-file:change']();p.events['disconnect:click']();finish(importedDoc());await task;assert.equal(p.el.report.value,'');assert.equal(p.el['file-preview'].children.length,0);
+});
+
+test('review activity cannot renew a session that expired while the tab was suspended',async()=>{
+  const p=page();p.el['gateway-code'].value='SYNTHETIC access code';p.el.report.value=TEXT;
+  const original=Date.now;
+  try{Date.now=()=>original()+600001;p.documentEvents.input();}finally{Date.now=original;}
+  assert.equal(p.el.report.value,'');assert.equal(p.el['gateway-code'].value,'');
+});
+
+test('review accessibility click after suspension cannot send an expired source',async()=>{
+  const p=page();p.el['local-confirm'].checked=true;await p.events['connect:click']();
+  p.el.report.value=TEXT;p.el['complete-confirm'].checked=true;
+  const original=Date.now;
+  try{Date.now=()=>original()+600001;await p.events['analyze:click']();}finally{Date.now=original;}
+  assert(!p.calls.some(x=>x[0]==='localRun'||x[0]==='researchRun'));assert.equal(p.el.report.value,'');
 });

@@ -1,5 +1,10 @@
 /** English/Korean interface copy only; source evidence is not a translation target. */
-(function(root,copy){if(typeof module==='object'&&module.exports)module.exports=copy;else root.ClinLoopInterfaceCopy=copy;})(typeof window==='undefined'?this:window, {
+(function(root,copy){
+if(typeof module==='object'&&module.exports)module.exports=copy;else root.ClinLoopInterfaceCopy=copy;})(typeof window==='undefined'?this:window, {
+  "Historical release evidence only (27 October 2026). These counts and review records do not verify the modified recovery candidate or the currently deployed website.": "과거 릴리스 근거만 표시합니다(2026년 10월 27일). 이 수치와 검토 기록은 수정된 복구 후보나 현재 배포된 웹사이트를 검증하지 않습니다.",
+  "29 October candidate review and clinical evidence plan": "10월 29일 후보 검토 및 임상 근거 계획",
+  "Earlier corrections (27 October)": "이전 수정 사항(10월 27일)",
+
   "html": "html",
   "Report review · ClinLoop": "보고서 검토 · ClinLoop",
   "Skip to workspace": "작업 공간으로 건너뛰기",
@@ -101,6 +106,7 @@
   "What stays private here": "이 작업 공간의 개인정보 보호",
   "Model calls go only to the loopback address you connect. There is no shared-server fallback.": "모델 요청은 연결한 루프백 주소로만 전송됩니다. 공유 서버로 자동 전환하지 않습니다.",
   "No account, shared patient database, browser storage, history service, analytics or cloud model is used by this page.": "이 페이지는 계정, 공유 환자 데이터베이스, 브라우저 저장소, 기록 서비스, 분석 추적 또는 클라우드 모델을 사용하지 않습니다.",
+  "Reports, responses and conversation history are not saved in browser storage by this workspace. The interface may remember display and language preferences.": "이 작업 공간은 보고서, 응답 및 대화 기록을 브라우저 저장소에 저장하지 않습니다. 화면 표시와 언어 설정은 인터페이스에 저장될 수 있습니다.",
   "The current text and response stay in page memory. Disconnecting, leaving the page or 10 minutes of inactivity clears the workspace. Closing a tab is not secure deletion from device memory.": "현재 텍스트와 응답은 페이지 메모리에만 있습니다. 연결 해제, 페이지 이탈 또는 10분간 미사용 시 작업 공간을 지웁니다. 탭을 닫는 것은 기기 메모리의 안전한 삭제가 아닙니다.",
   "Someone using the same unlocked screen, browser extensions, a compromised device or the administrator of your model server may still see data. A private endpoint alone does not prove network isolation.": "같은 잠금 해제 화면을 사용하는 사람, 브라우저 확장 프로그램, 손상된 기기 또는 모델 서버 관리자는 데이터에 접근할 수 있습니다. 비공개 주소만으로 네트워크 격리가 입증되지는 않습니다.",
   "Other ClinLoop pages use a different workspace. This page does not make an existing hospital database private per user, or erase earlier history elsewhere.": "다른 ClinLoop 페이지는 별도 작업 공간입니다. 이 페이지는 기존 병원 데이터베이스를 사용자별로 격리하거나 다른 곳의 이전 기록을 지우지 않습니다.",

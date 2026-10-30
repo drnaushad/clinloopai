@@ -44,7 +44,9 @@ class TestNobleEngine(unittest.TestCase):
             "finding_category": "cervical_cytology",
             "finding_value": "HSIL"
         })
-        self.assertEqual(res["status"], "grounded")
+        self.assertEqual(res["status"], "static_unverified")
+        self.assertFalse(res["source_verified"])
+        self.assertTrue(res["human_review_required"])
         self.assertEqual(res["derived_t_crit"], 30)
         self.assertEqual(res["pmid"], "32243307")
 

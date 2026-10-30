@@ -171,12 +171,13 @@ function pageHarness() {
     return ok(url.endsWith('/api/tags') ? tags : url.endsWith('/api/show') ? info :
       {...reply, response: '<img src=https://evil.test> Synthetic model markup'});
   }, addEventListener(event, listener) {listeners[event] = listener;}};
-  const document = {getElementById: id => elements.get(id), addEventListener() {}};
+  const documentListeners={};
+  const document = {getElementById: id => elements.get(id), addEventListener(name,handler) {documentListeners[name]=handler;}};
   const storage = new Proxy({}, {get() {throw new Error('Persistent storage accessed');}});
   const context = vm.createContext({window, document, Date, Option: function (text, value) {return {text, value};},
     setInterval: (fn, ms) => {intervals.push({fn, ms});}, localStorage: storage, sessionStorage: storage});
   vm.runInContext(fs.readFileSync('js/private-workspace-page.js', 'utf8'), context);
-  return {elements, listeners, intervals, calls};
+  return {elements, listeners, intervals, calls, documentListeners};
 }
 
 test('actual page clears prior form state, renders model markup as text and clears on leaving', async () => {
@@ -259,4 +260,41 @@ test('session navigation matches shared page destinations and keeps the current 
     assert(current.includes('aria-current="page"'));
     assert(html.includes('id="workspace" tabindex="-1"'));
   }
+});
+
+test('activity after browser suspension expires before it can renew the session',async()=>{
+  const {elements,documentListeners}=pageHarness();
+  elements.get('local-only').checked=true;
+  await elements.get('connect-form').listeners.submit({preventDefault(){}});
+  elements.get('prompt').value='SYNTHETIC suspended marker';
+  const original=Date.now;
+  try{Date.now=()=>original()+600001;documentListeners.input();}finally{Date.now=original;}
+  assert.equal(elements.get('prompt').value,'');assert.equal(elements.get('run').disabled,true);
+});
+
+test('pageshow cannot reset away an already expired session',async()=>{
+  const {elements,listeners}=pageHarness();elements.get('local-only').checked=true;
+  await elements.get('connect-form').listeners.submit({preventDefault(){}});
+  elements.get('prompt').value='SYNTHETIC expired marker';
+  const original=Date.now;
+  try{Date.now=()=>original()+600001;listeners.pageshow({persisted:false});}finally{Date.now=original;}
+  assert.equal(elements.get('prompt').value,'');assert.equal(elements.get('run').disabled,true);
+});
+
+test('an accessibility click after suspension cannot submit an expired prompt',async()=>{
+  const {elements,calls}=pageHarness();elements.get('local-only').checked=true;
+  await elements.get('connect-form').listeners.submit({preventDefault(){}});
+  elements.get('prompt').value='SYNTHETIC expired marker';
+  const before=calls.length,original=Date.now;
+  try{Date.now=()=>original()+600001;await elements.get('run').listeners.click();}finally{Date.now=original;}
+  assert.equal(calls.length,before);assert.equal(elements.get('prompt').value,'');
+});
+
+test('free-text workspace also verifies context capacity before sending the prompt',async()=>{
+ for(const model_info of [{'general.architecture':'test'},{'test.context_length':512},{'test.context_length':2048}]){
+  const {workspace,calls}=setup({'/api/show':()=>ok({...info,model_info})});
+  await workspace.connect('http://localhost:11434',true);
+  await assert.rejects(workspace.run(MODEL,'SYNTHETIC '+ 'x'.repeat(2000)));
+  assert(!calls.some(c=>c.url.endsWith('/api/generate')));
+ }
 });

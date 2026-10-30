@@ -43,6 +43,9 @@ class ClinicalDataLoader:
         return self._scenario_from_dict(data)
 
     def _scenario_from_dict(self, data: dict) -> PatientScenario:
+        # Missing labels are unknown, never silently converted into closed controls.
+        if not isinstance(data, dict) or data.get("ground_truth_status") not in {"open", "closed", "delayed"}:
+            raise ValueError("Research scenarios require an explicit evaluable reference status")
         events = [
             ClinicalEvent(
                 event_id=e["event_id"],
@@ -64,7 +67,7 @@ class ClinicalDataLoader:
             scenario_category=data.get("scenario_category", ""),
             applicable_rule_id=data.get("applicable_rule_id", ""),
             events=events,
-            ground_truth_status=data.get("ground_truth_status", "closed"),
+            ground_truth_status=data["ground_truth_status"],
             ground_truth_severity=data.get("ground_truth_severity", "low"),
             ground_truth_risk_score=data.get("ground_truth_risk_score", 0.0),
             missing_followup=data.get("missing_followup", ""),
@@ -75,7 +78,7 @@ class ClinicalDataLoader:
         """Loads all scenario JSON files from the target directory."""
         target_dir = directory or self.data_dir
         if not os.path.exists(target_dir):
-            return self.generate(save=True)
+            raise ValueError("Research dataset is missing; generate synthetic scenarios explicitly")
 
         scenarios = []
         for filename in sorted(os.listdir(target_dir)):
@@ -89,7 +92,7 @@ class ClinicalDataLoader:
                     scenarios.append(self.load_scenario_file(path))
         
         if not scenarios:
-            return self.generate(save=True)
+            raise ValueError("Research dataset has no scenarios; generate synthetic scenarios explicitly")
             
         return scenarios
 
@@ -113,6 +116,6 @@ class ClinicalDataLoader:
 
 
 def load_dataset(data_dir: Optional[str] = None) -> List[PatientScenario]:
-    """Convenience helper function to load or generate the full dataset."""
+    """Load an existing dataset; synthetic generation must be explicitly requested."""
     loader = ClinicalDataLoader(data_dir=data_dir)
     return loader.load_all()

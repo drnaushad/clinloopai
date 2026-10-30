@@ -103,6 +103,11 @@ CREATE TABLE IF NOT EXISTS loops (
 );
 CREATE INDEX IF NOT EXISTS idx_loops_patient ON loops(patient_id);
 CREATE INDEX IF NOT EXISTS idx_loops_owner ON loops(owner);
+CREATE TABLE IF NOT EXISTS cds_replay_tokens (
+    digest TEXT PRIMARY KEY,
+    expires_at REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_cds_replay_expiry ON cds_replay_tokens(expires_at);
 CREATE TABLE IF NOT EXISTS ingest_runs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts TEXT NOT NULL,
@@ -337,6 +342,7 @@ def loop_key(patient_id: str, rule_id: str, trigger_event_id: str) -> str:
 class LoopStore:
     def __init__(self, path: str = ":memory:"):
         self._lock = threading.RLock()
+        self._savepoint_counter = 0
         self._db = sqlite3.connect(path, check_same_thread=False, timeout=30)
         self._db.row_factory = sqlite3.Row
         with self._lock:
@@ -364,19 +370,55 @@ class LoopStore:
 
     # ── audit ────────────────────────────────────────────────────────────────
     @contextmanager
-    def _writing(self):
-        """One write transaction that holds SQLite's write lock from its first read (BEGIN IMMEDIATE).
-        The in-process lock alone does not stop a second process (another worker, a CLI ingest)
-        from reading the same state and writing in between: two audit entries would chain from the
-        same hash, or a deferral could overwrite a closure made a moment earlier."""
+    def atomic(self):
+        """Commit all local writes together, or roll them back, including nested writers.
+
+        This is local SQLite atomicity only; external reads/inference cannot be
+        rolled back. Callers must not send messages or write to an EHR here.
+        The store lock and SQLite write lock are held until this scope exits.
+        """
+        with self._writing():
+            yield self
+
+    def staging_token(self) -> Tuple[int, int]:
+        """Conservative concurrency guard, compared on this same connection.
+
+        data_version detects commits from other connections; total_changes
+        detects local writes (including a rolled-back attempt). Any intervening
+        write requires restaging rather than overwriting newer clinical evidence.
+        """
         with self._lock:
-            if not self._db.in_transaction:
+            return (self._db.execute("PRAGMA data_version").fetchone()[0], self._db.total_changes)
+
+    @contextmanager
+    def _writing(self):
+        """A write transaction, with savepoints for nested operation isolation.
+
+        BEGIN IMMEDIATE takes SQLite's write lock before reads that determine a
+        write. Inner methods release their savepoint without committing their
+        caller's transaction; a caught inner failure rolls back only that scope.
+        """
+        with self._lock:
+            outer = not self._db.in_transaction
+            savepoint = None
+            if outer:
                 self._db.execute("BEGIN IMMEDIATE")
+            else:
+                self._savepoint_counter += 1
+                savepoint = f"clinloop_write_{self._savepoint_counter}"
+                self._db.execute(f"SAVEPOINT {savepoint}")
             try:
                 yield
-                self._db.commit()
+                if outer:
+                    self._db.commit()
+                else:
+                    self._db.execute(f"RELEASE SAVEPOINT {savepoint}")
             except BaseException:
-                self._db.rollback()
+                if outer:
+                    self._db.rollback()
+                else:
+                    self._db.execute(f"ROLLBACK TO SAVEPOINT {savepoint}")
+                    self._db.execute(f"RELEASE SAVEPOINT {savepoint}")
                 raise
 
     def _audit(self, actor: str, role: str, action: str, key: Optional[str], detail: Dict,
@@ -399,6 +441,19 @@ class LoopStore:
         """Add one entry to the hash-chained audit log (for events outside the loop workflow)."""
         with self._writing():
             self._audit(actor, role, action, key, detail)
+
+    def claim_cds_token(self, issuer: str, nonce: str, expires_at: float, now: float) -> bool:
+        """Atomically consume a verified CDS nonce across workers sharing this DB.
+
+        Store a digest only, never a bearer token or raw nonce. Independent server
+        databases need a shared replay store; process-local caches are insufficient.
+        """
+        digest = hashlib.sha256(json.dumps([issuer, nonce], separators=(",", ":")).encode()).hexdigest()
+        with self._writing():
+            self._db.execute("DELETE FROM cds_replay_tokens WHERE expires_at < ?", (now,))
+            cursor = self._db.execute("INSERT OR IGNORE INTO cds_replay_tokens (digest, expires_at) VALUES (?,?)",
+                                      (digest, expires_at))
+            return cursor.rowcount == 1
 
     # ── access log: reads of patient data ────────────────────────────────────
     ACCESS_REPEAT_SECONDS = 600
@@ -458,15 +513,22 @@ class LoopStore:
                  "patients": json.loads(r["patients"]), "detail": json.loads(r["detail"] or "{}")} for r in rows]
 
     def verify_access_chain(self) -> bool:
-        """Recompute every access-record hash; False if any record was altered, removed or reordered."""
+        """Recompute stored links; unreadable or altered records fail verification.
+
+        Without an external trusted anchor, deletion of the tail or a complete
+        rewrite/re-hash cannot be detected by this local chain alone.
+        """
         with self._lock:
-            prev = "GENESIS"
-            for r in self._db.execute("SELECT * FROM access_log ORDER BY id"):
-                if r["prev_hash"] != prev or \
-                        hashlib.sha256(self._access_body(dict(r), prev).encode("utf-8")).hexdigest() != r["hash"]:
-                    return False
-                prev = r["hash"]
-            return True
+            try:
+                prev = "GENESIS"
+                for r in self._db.execute("SELECT * FROM access_log ORDER BY id"):
+                    if r["prev_hash"] != prev or \
+                            hashlib.sha256(self._access_body(dict(r), prev).encode("utf-8")).hexdigest() != r["hash"]:
+                        return False
+                    prev = r["hash"]
+                return True
+            except (sqlite3.DatabaseError, ValueError, TypeError, UnicodeError):
+                return False
 
     def audit_trail(self, key: Optional[str] = None, limit: int = 200) -> List[Dict]:
         with self._lock:
@@ -477,18 +539,25 @@ class LoopStore:
             return [{**dict(r), "detail": json.loads(r["detail"] or "{}")} for r in rows]
 
     def verify_audit_chain(self) -> bool:
-        """Recompute every hash; False if any entry was altered, removed or reordered."""
+        """Recompute stored links; fail closed on unreadable records.
+
+        This is tamper evidence, not immutable storage. An external trusted
+        anchor is needed to detect tail truncation or a complete re-hash.
+        """
         with self._lock:
-            prev = "GENESIS"
-            for r in self._db.execute("SELECT * FROM audit_log ORDER BY id"):
-                body = json.dumps({"ts": r["ts"], "actor": r["actor"], "role": r["role"],
-                                   "action": r["action"], "loop_key": r["loop_key"],
-                                   "detail": json.loads(r["detail"] or "{}"), "prev": prev},
-                                  sort_keys=True, ensure_ascii=False, default=str)
-                if r["prev_hash"] != prev or hashlib.sha256(body.encode("utf-8")).hexdigest() != r["hash"]:
-                    return False
-                prev = r["hash"]
-            return True
+            try:
+                prev = "GENESIS"
+                for r in self._db.execute("SELECT * FROM audit_log ORDER BY id"):
+                    body = json.dumps({"ts": r["ts"], "actor": r["actor"], "role": r["role"],
+                                       "action": r["action"], "loop_key": r["loop_key"],
+                                       "detail": json.loads(r["detail"] or "{}"), "prev": prev},
+                                      sort_keys=True, ensure_ascii=False, default=str)
+                    if r["prev_hash"] != prev or hashlib.sha256(body.encode("utf-8")).hexdigest() != r["hash"]:
+                        return False
+                    prev = r["hash"]
+                return True
+            except (sqlite3.DatabaseError, ValueError, TypeError, UnicodeError):
+                return False
 
     # ── governance: rule sign-off and configuration approval ─────────────────
     REVIEW_DECISIONS = ("approve", "reject", "request_changes")
@@ -502,13 +571,12 @@ class LoopStore:
         if decision != "approve" and len(note.strip()) < 5:
             raise WorkflowError("Explain a rejection or change request (at least 5 characters)")
         now = utc_now().isoformat()
-        with self._lock:
+        with self._writing():
             cur = self._db.execute(
                 "INSERT INTO rule_reviews (rule_id, rule_hash, decision, reviewer, role, specialty, note, decided_at) "
                 "VALUES (?,?,?,?,?,?,?,?)", (rule_id, rule_hash, decision, reviewer, role, specialty.strip(), note, now))
             self._audit(reviewer, role, f"rule_review:{decision}", None,
                         {"rule_id": rule_id, "rule_hash": rule_hash, "specialty": specialty.strip(), "note": note})
-            self._db.commit()
             return dict(self._db.execute("SELECT * FROM rule_reviews WHERE id=?", (cur.lastrowid,)).fetchone())
 
     def rule_reviews(self, rule_id: Optional[str] = None) -> List[Dict]:
@@ -524,13 +592,12 @@ class LoopStore:
         if not title.strip():
             raise WorkflowError("The approver's title (e.g. Chair of Radiology) is required")
         now = utc_now().isoformat()
-        with self._lock:
+        with self._writing():
             cur = self._db.execute(
                 "INSERT INTO config_approvals (kind, content_hash, approver, role, title, note, decided_at) "
                 "VALUES (?,?,?,?,?,?,?)", (kind, content_hash, approver, role, title.strip(), note, now))
             self._audit(approver, role, f"config_approval:{kind}", None,
                         {"content_hash": content_hash, "title": title.strip(), "note": note})
-            self._db.commit()
             return dict(self._db.execute("SELECT * FROM config_approvals WHERE id=?", (cur.lastrowid,)).fetchone())
 
     def latest_config_approval(self, kind: str) -> Optional[Dict]:
@@ -550,7 +617,7 @@ class LoopStore:
         # overwrites or moves this patient's record
         row_id = f"{pid}|{resource['resourceType']}/{resource['id']}"
         now = utc_now().isoformat()
-        with self._lock:
+        with self._writing():
             self._db.execute(
                 "INSERT INTO external_resources (id, patient_id, kind, resource, source_sha256, summary, created_by, created_at) "
                 "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET resource=excluded.resource, "
@@ -559,7 +626,6 @@ class LoopStore:
             self._audit(actor, role, f"external_resource:{kind}", None,
                         {"patient_id": pid, "resource": f"{resource.get('resourceType')}/{resource['id']}",
                          "source_sha256": source_sha256, "summary": summary})
-            self._db.commit()
 
     def external_resources(self, patient_id: str) -> List[Dict]:
         with self._lock:
@@ -574,11 +640,10 @@ class LoopStore:
             return [dict(r) for r in rows]
 
     def save_snapshot(self, patient_id: str, resources: List[Dict]) -> None:
-        with self._lock:
+        with self._writing():
             self._db.execute("INSERT INTO patient_snapshots (patient_id, resources, updated_at) VALUES (?,?,?) "
                              "ON CONFLICT(patient_id) DO UPDATE SET resources=excluded.resources, updated_at=excluded.updated_at",
                              (patient_id, json.dumps(resources, ensure_ascii=False), utc_now().isoformat()))
-            self._db.commit()
 
     def snapshot(self, patient_id: str) -> List[Dict]:
         with self._lock:
@@ -730,6 +795,12 @@ class LoopStore:
         n = 0
         with self._writing():
             for rtype, pid, rid, resource in rows:
+                prior = self._db.execute("SELECT patient_id FROM fhir_mirror WHERE resource_key=?",
+                                         (f"{rtype}/{rid}",)).fetchone()
+                if prior is not None and prior["patient_id"] != pid:
+                    # A reassignment can invalidate previously recorded follow-up evidence.
+                    # Do not silently migrate it until clinical reconciliation is supported.
+                    raise ValueError("FHIR resource patient reassignment requires reconciliation")
                 self._db.execute(
                     "INSERT INTO fhir_mirror (resource_key, patient_id, resource_type, resource, updated_at) "
                     "VALUES (?,?,?,?,?) ON CONFLICT(resource_key) DO UPDATE SET patient_id=excluded.patient_id, "
@@ -768,7 +839,7 @@ class LoopStore:
         strata = strata or {}
         from .governance import ruleset_version
         ruleset = ruleset_version()
-        with self._lock:
+        with self._writing():
             for d in detections:
                 key = loop_key(d.patient_id, d.rule_id, d.trigger_event_id or d.trigger_time)
                 existing = self._db.execute("SELECT * FROM loops WHERE loop_key=?", (key,)).fetchone()
@@ -804,17 +875,22 @@ class LoopStore:
                     self._audit(actor, "system", "loop_resolved_by_record", key,
                                 {"evidence": "required follow-up found in the record",
                                  "on_time": d.loop_status == LoopStatus.CLOSED.value, "ruleset": ruleset})
+                    self._withdraw_drafts(key, actor, "required follow-up found in the record")
                 elif (d.loop_status in ACTION_NEEDED_STATUSES
                       and existing["workflow_state"] == "resolved_by_engine"):
                     # The record changed (e.g. a follow-up was cancelled): reopen
                     fields["workflow_state"] = "new"
+                    # A newly active episode needs a fresh escalation path.
+                    # Never revive an old message based on superseded evidence.
+                    fields.update(escalation_level=0, last_escalated_at=None,
+                                  defer_reason=None, defer_note=None, defer_until=None)
+                    self._withdraw_drafts(key, actor, "loop reopened after record changed")
                     self._audit(actor, "system", "loop_reopened", key,
                                 {"engine_status": d.loop_status, "ruleset": ruleset})
                 counts["updated"] += 1
                 self._db.execute(
                     f"UPDATE loops SET {', '.join(f'{k}=?' for k in fields)} WHERE loop_key=?",
                     (*fields.values(), key))
-            self._db.commit()
         return counts
 
     # ── read ─────────────────────────────────────────────────────────────────
@@ -1003,7 +1079,7 @@ class LoopStore:
         """
         now = now or utc_now()
         escalated = []
-        with self._lock:
+        with self._writing():
             for loop in self.worklist(now=now):
                 if rule_ids is not None and loop["rule_id"] not in rule_ids:
                     continue
@@ -1022,7 +1098,6 @@ class LoopStore:
                 self._audit(actor, "system", "escalate", loop["loop_key"],
                             {"level": level, "to": ESCALATION_CHAIN[level], "severity": loop["severity"]})
                 escalated.append({"loop_key": loop["loop_key"], "level": level, "to": ESCALATION_CHAIN[level]})
-            self._db.commit()
         return escalated
 
     # ── patient outreach (draft → clinician approval → send) ─────────────────
@@ -1083,7 +1158,6 @@ class LoopStore:
                 (msg_id, key, loop["patient_id"], language, channel, text, "draft",
                  json.dumps(safety_flags), actor, utc_now().isoformat()))
             self._audit(actor, role, "outreach_drafted", key, {"message_id": msg_id, "language": language})
-            self._db.commit()
             return self._outreach(msg_id)
 
     def decide_outreach(self, msg_id: str, actor: str, role: str, approve: bool,
@@ -1091,6 +1165,9 @@ class LoopStore:
         """Approve (and send through `provider`) or reject a draft. Exactly one decision per draft.
         The message is claimed ('sending') under the lock and sent outside it: a slow messaging
         provider must not hold every other user's request."""
+        with self._lock:
+            if approve and self._db.in_transaction:
+                raise WorkflowError("Cannot send outreach inside an active transaction; decide after commit")
         with self._writing():
             msg = self._outreach(msg_id)
             if msg["status"] != "draft":
@@ -1113,7 +1190,8 @@ class LoopStore:
         try:
             ref, status, err = provider.send(payload), "sent", None
         except Exception as e:  # delivery failure is recorded, never silent
-            ref, status, err = None, "failed", f"{type(e).__name__}: {e}"
+            # Provider exceptions can include request bodies, signed URLs or patient identifiers.
+            ref, status, err = None, "failed", f"Delivery failed ({type(e).__name__})"
         with self._writing():
             self._db.execute(
                 "UPDATE outreach_messages SET status=?, provider=?, provider_ref=?, note=? WHERE id=?",
@@ -1135,7 +1213,7 @@ class LoopStore:
                       coverage: Optional[Dict] = None) -> None:
         from .fhir_coverage import safe_coverage
         coverage_json = json.dumps(safe_coverage(coverage), sort_keys=True) if coverage is not None else None
-        with self._lock:
+        with self._writing():
             self._db.execute(
                 "INSERT INTO ingest_runs (ts, source, actor, ok, patients, events, warnings, error, coverage) "
                 "VALUES (?,?,?,?,?,?,?,?,?)",
@@ -1145,7 +1223,6 @@ class LoopStore:
                             {"source": source, "patients": patients, "coverage": json.loads(coverage_json)})
             if not ok:
                 self._audit(actor, "system", "ingest_failed", None, {"source": source, "error": error})
-            self._db.commit()
 
     # ── automatic image scanning ─────────────────────────────────────────────
     def scan_study(self, study_uid: str) -> Optional[Dict]:
@@ -1160,7 +1237,7 @@ class LoopStore:
         """Record a study's state; returns its attempt count (failures of this study, not outages)."""
         ts = (now or utc_now()).isoformat()
         inc = 1 if count_attempt else 0
-        with self._lock:
+        with self._writing():
             self._db.execute(
                 "INSERT INTO image_scan_studies (study_uid, patient_id, status, models, findings, detail, attempts, "
                 "instances, first_seen, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(study_uid) DO UPDATE SET "
@@ -1170,7 +1247,6 @@ class LoopStore:
                 "instances=COALESCE(excluded.instances, instances), updated_at=excluded.updated_at",
                 (study_uid, patient_id, status, json.dumps(models or []), findings, detail[:500], inc, instances, ts, ts))
             n = self._db.execute("SELECT attempts FROM image_scan_studies WHERE study_uid=?", (study_uid,)).fetchone()
-            self._db.commit()
         return n["attempts"] if n else 0
 
     def second_read(self, report_key: str) -> Optional[Dict]:
@@ -1180,14 +1256,13 @@ class LoopStore:
 
     def set_second_read(self, report_key: str, patient_id: str, text_hash: str, status: str, items: int = 0,
                         flags: int = 0, model: str = "", detail: str = "", now: Optional[datetime] = None) -> None:
-        with self._lock:
+        with self._writing():
             self._db.execute(
                 "INSERT INTO second_reads (report_key, patient_id, text_hash, status, items, flags, model, detail, updated_at) "
                 "VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(report_key) DO UPDATE SET text_hash=excluded.text_hash, "
                 "status=excluded.status, items=excluded.items, flags=excluded.flags, model=excluded.model, "
                 "detail=excluded.detail, updated_at=excluded.updated_at",
                 (report_key, patient_id, text_hash, status, items, flags, model, detail[:300], (now or utc_now()).isoformat()))
-            self._db.commit()
 
     def second_read_counts(self) -> Dict[str, Any]:
         with self._lock:
@@ -1205,20 +1280,15 @@ class LoopStore:
         """File one silent-mode suggestion (once per report and category). Returns True when new."""
         sid = hashlib.sha256(f"{patient_id}|{report_ref}|{category}".encode()).hexdigest()[:32]
         ts = (now or utc_now()).isoformat()
-        with self._lock:
-            try:
-                cur = self._db.execute(
-                    "INSERT OR IGNORE INTO second_reader_suggestions (id, patient_id, report_ref, report_kind, "
-                    "report_date, category, quote, reason, model, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
-                    (sid, patient_id, report_ref, report_kind, report_date, category, quote[:300], reason[:200],
-                     model[:100], ts))
-                if cur.rowcount == 1:
-                    self._audit("second-reader", "system", "second_reader_suggestion", None,
-                                {"suggestion": sid, "category": category, "model": model[:100]}, at=now)
-                self._db.commit()
-            except Exception:
-                self._db.rollback()
-                raise
+        with self._writing():
+            cur = self._db.execute(
+                "INSERT OR IGNORE INTO second_reader_suggestions (id, patient_id, report_ref, report_kind, "
+                "report_date, category, quote, reason, model, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (sid, patient_id, report_ref, report_kind, report_date, category, quote[:300], reason[:200],
+                 model[:100], ts))
+            if cur.rowcount == 1:
+                self._audit("second-reader", "system", "second_reader_suggestion", None,
+                            {"suggestion": sid, "category": category, "model": model[:100]}, at=now)
         return cur.rowcount == 1
 
     def second_reader_suggestions(self, pending_only: bool = False, limit: int = 200) -> List[Dict]:
@@ -1241,27 +1311,20 @@ class LoopStore:
         if urgent and not (safety_referral or "").strip():
             raise WorkflowError("An urgent real miss needs a safety referral: who on the treating team was told, and how")
         ts = (now or utc_now()).isoformat()
-        with self._lock:
-            try:
-                if not self._db.in_transaction:
-                    self._db.execute("BEGIN IMMEDIATE")
-                row = self._db.execute("SELECT verdict FROM second_reader_suggestions WHERE id=?", (sid,)).fetchone()
-                if row is None:
-                    raise WorkflowError("No such suggestion")
-                self._db.execute(
-                    "UPDATE second_reader_suggestions SET verdict=?, urgent=?, safety_referral=?, note=?, reviewer=?, "
-                    "reviewed_at=? WHERE id=?",
-                    (verdict, int(urgent), (safety_referral or "").strip()[:500] or None, (note or "").strip()[:500] or None,
-                     actor, ts, sid))
-                self._audit(actor, role, "second_reader_review", None,
-                            {"suggestion": sid, "verdict": verdict, "urgent": urgent, "previous": row["verdict"]}, at=now)
-                if urgent:
-                    self._audit(actor, role, "safety_referral", None, {"suggestion": sid, "referral": safety_referral.strip()[:500]},
-                                at=now)
-                self._db.commit()
-            except Exception:
-                self._db.rollback()
-                raise
+        with self._writing():
+            row = self._db.execute("SELECT verdict FROM second_reader_suggestions WHERE id=?", (sid,)).fetchone()
+            if row is None:
+                raise WorkflowError("No such suggestion")
+            self._db.execute(
+                "UPDATE second_reader_suggestions SET verdict=?, urgent=?, safety_referral=?, note=?, reviewer=?, "
+                "reviewed_at=? WHERE id=?",
+                (verdict, int(urgent), (safety_referral or "").strip()[:500] or None, (note or "").strip()[:500] or None,
+                 actor, ts, sid))
+            self._audit(actor, role, "second_reader_review", None,
+                        {"suggestion": sid, "verdict": verdict, "urgent": urgent, "previous": row["verdict"]}, at=now)
+            if urgent:
+                self._audit(actor, role, "safety_referral", None, {"suggestion": sid, "referral": safety_referral.strip()[:500]},
+                            at=now)
             out = self._db.execute("SELECT * FROM second_reader_suggestions WHERE id=?", (sid,)).fetchone()
         return dict(out)
 
@@ -1279,29 +1342,26 @@ class LoopStore:
         """A lease across processes (API workers, the CLI, cron): only one holder until it ends or expires."""
         now = now or utc_now()
         key = f"lease:{name}"
-        with self._lock:
+        with self._writing():
             self._db.execute("INSERT OR IGNORE INTO sync_state (source, cursor, updated_at) VALUES (?,?,?)",
                              (key, owner, now.isoformat()))
             cur = self._db.execute(
                 "UPDATE sync_state SET cursor=?, updated_at=? WHERE source=? AND (cursor=? OR cursor='' OR updated_at < ?)",
                 (owner, now.isoformat(), key, owner, (now - timedelta(minutes=ttl_minutes)).isoformat()))
             got = cur.rowcount == 1
-            self._db.commit()
         return got
 
     def release_lease(self, name: str, owner: str) -> None:
-        with self._lock:
+        with self._writing():
             self._db.execute("UPDATE sync_state SET cursor='' WHERE source=? AND cursor=?", (f"lease:{name}", owner))
-            self._db.commit()
 
     def record_scan_run(self, ok: bool, found: int = 0, scanned: int = 0, findings: int = 0,
                         error: Optional[str] = None, now: Optional[datetime] = None) -> None:
-        with self._lock:
+        with self._writing():
             self._db.execute("INSERT INTO image_scan_runs (ts, ok, found, scanned, findings, error) VALUES (?,?,?,?,?,?)",
                              ((now or utc_now()).isoformat(), int(ok), found, scanned, findings, error))
             if not ok:
                 self._audit("image-scan", "system", "image_scan_failed", None, {"error": error})
-            self._db.commit()
 
     def scan_status(self, max_silence_hours: float = 2.0, now: Optional[datetime] = None) -> Dict:
         """Is the image scanner running? Kept apart from feed_status: a working scanner must never
@@ -1336,11 +1396,10 @@ class LoopStore:
         return r["cursor"] if r else None
 
     def set_cursor(self, source: str, cursor: str) -> None:
-        with self._lock:
+        with self._writing():
             self._db.execute("INSERT INTO sync_state (source, cursor, updated_at) VALUES (?,?,?) "
                              "ON CONFLICT(source) DO UPDATE SET cursor=excluded.cursor, updated_at=excluded.updated_at",
                              (source, cursor, utc_now().isoformat()))
-            self._db.commit()
 
     def feed_status(self, max_silence_hours: float = 24.0, now: Optional[datetime] = None) -> Dict:
         """
@@ -1383,14 +1442,13 @@ class LoopStore:
         status = self.feed_status(max_silence_hours, now)
         if status["status"] not in ("STALE", "FAILING"):
             return None
-        with self._lock:
+        with self._writing():
             last = self._db.execute("SELECT ts FROM audit_log WHERE action='feed_alarm' ORDER BY id DESC LIMIT 1").fetchone()
             if last and now - datetime.fromisoformat(last["ts"]) < timedelta(hours=max_silence_hours):
                 return None
             detail = {"status": status["status"], "last_success": status["last_success"],
                       "hours_since_success": status["hours_since_success"]}
             self._audit("watchdog", "system", "feed_alarm", None, detail, at=now)
-            self._db.commit()
         return detail
 
     # ── quality measure ──────────────────────────────────────────────────────

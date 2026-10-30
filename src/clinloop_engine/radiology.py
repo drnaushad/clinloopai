@@ -370,7 +370,7 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
                 continue
             if _in_history_section(text, m.start()):
                 continue   # "HISTORY: … 2.1 cm spiculated nodule in 2023, s/p lobectomy": not this report's finding
-            if _RESOLVED.search(text[m.start(): m.end() + 140].split("\n")[0]):
+            if _RESOLVED.search(sentence(text, m.start(), m.end())):
                 continue   # "the previously noted 8 mm nodule … is no longer visible"
             if re.search(r"component|portion|성분", m.group(0), re.I) \
                     or re.match(r"\s*(?:solid\s+)?(?:component|portion|part)\b|\s*고형\s*(?:성분|부분)", text[m.end():], re.I):
@@ -445,7 +445,8 @@ def _lung_nodules(text: str, code_text: str) -> List[Dict[str, Any]]:
         # The same nodule in FINDINGS and again in IMPRESSION is one nodule, not "multiple": same size and
         # type, and not in different lobes. What either mention says about it applies to it
         same = next((u for u in unique if abs(u["size_mm"] - n["size_mm"]) <= 0.5 and u["type"] == n["type"]
-                     and not (u["lobe"] and n["lobe"] and u["lobe"] != n["lobe"])), None)
+                     and not (u["lobe"] and n["lobe"] and u["lobe"] != n["lobe"])
+                     and not (u["side"] and n["side"] and u["side"] != n["side"])), None)
         if same:
             same["benign"] = same["benign"] or n["benign"]
             same["lobe"] = same["lobe"] or n["lobe"]
@@ -532,13 +533,30 @@ _HISTORY_LINE = re.compile(r"\s*(?:comparison|compared with|clinical (?:history|
 
 
 _SECTION_HEADING = re.compile(r"\b(?:FINDINGS|IMPRESSION|CONCLUSIONS?|RECOMMENDATIONS?|OPINION)\s*[:：]|판독\s*소견|결론|소견\s*[:：]", re.I)
+_REPORT_HEADING = re.compile(
+    r"^\s*(?P<history>comparison|compared with|clinical (?:history|information|indication)|history|indication|"
+    r"비교|임상\s*(?:정보|소견|병력)|병력)\s*(?:[:：]|$)|"
+    r"(?:^\s*|\b)(?P<current>FINDINGS|IMPRESSION|CONCLUSIONS?|RECOMMENDATIONS?|OPINION|TECHNIQUE|"
+    r"판독\s*소견|결론|소견|검사\s*소견|권고|추가\s*판독|수정\s*판독|정정\s*판독|ADDENDUM)\s*(?:[:：]|$)",
+    re.I | re.M)
 
 
 def _in_history_section(text: str, pos: int) -> bool:
-    """Inside a history or comparison heading's text, and before the next section heading on that line:
-    "COMPARISON: 2025-09-08. FINDINGS: LUL nodule now 10 mm" puts the nodule in FINDINGS."""
-    line = text[text.rfind("\n", 0, pos) + 1:pos]
-    return bool(_HISTORY_LINE.match(line)) and not _SECTION_HEADING.search(line)
+    """Honor explicit history/comparison blocks across lines, until the next heading.
+
+    Inline "COMPARISON: ... FINDINGS: ..." still ends the history at FINDINGS.
+    Unheaded narrative cannot reliably establish section provenance.
+    """
+    headings = list(_REPORT_HEADING.finditer(text, 0, pos))
+    if not headings or not headings[-1].group("history"):
+        return False
+    heading = headings[-1]
+    line_end = text.find("\n", heading.end())
+    # A populated indication/history line does not consume the unheaded
+    # findings on the next line. An empty heading starts a multiline block.
+    if line_end >= 0 and pos > line_end and text[heading.end():line_end].strip():
+        return False
+    return True
 
 
 def _incidental_findings(text: str, code_text: str, study_modality: Optional[str]) -> List[Dict[str, Any]]:
@@ -994,7 +1012,15 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
         # "ADDENDUM: the 4 mm LLL nodule is calcified" leaves the 12 mm nodule standing
         revised_nodules = _lung_nodules(addendum, code_text)
         for revised_nodule in revised_nodules:
-            nodules = [n for n in nodules if abs(n["size_mm"] - revised_nodule["size_mm"]) > 1.0] + [revised_nodule]
+            candidates = [n for n in nodules if abs(n["size_mm"] - revised_nodule["size_mm"]) <= 1.0
+                          and not any(n.get(k) and revised_nodule.get(k) and n[k] != revised_nodule[k]
+                                      for k in ("lobe", "side"))]
+            if len(candidates) == 1:
+                nodules = [n for n in nodules if n is not candidates[0]]
+            elif len(candidates) > 1:
+                rad["review_required"] = True
+                rad["review_note"] = "Addendum lesion identity is ambiguous; original findings retained for clinician review"
+            nodules.append(revised_nodule)
         # "ADDENDUM: the 'nodule' represents the nipple shadow. There is no pulmonary nodule." retracts the
         # finding itself, not only the advice. "There is no pulmonary nodule" retracts every nodule; "the
         # nodule represents a vessel" only the report's single nodule (with several, it cannot tell which)
@@ -1003,7 +1029,8 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
             nodules = []
             mapping.append("addendum: no pulmonary nodule")
     if nodules:
-        dominant = max(nodules, key=lambda n: (n["size_mm"], n["type"] != "ggn"))
+        # A large calcified/benign lesion cannot hide a smaller actionable lesion.
+        dominant = max(nodules, key=lambda n: (not n["benign"], n["size_mm"], n["type"] != "ggn"))
         dominant["multiple"] = dominant["multiple"] or len(nodules) > 1
         rad["lung_nodule"] = dominant
         rad["lung_nodules"] = nodules           # every nodule, for lesion tracking across reports
@@ -1097,6 +1124,9 @@ def map_radiology_report(ts: Optional[str], code_text: str, conclusion: str,
         mapping.append("communication to clinician documented in report")
 
     details["radiology"] = rad
+    if rad.get("review_required"):
+        details["review_required"] = True
+        details["review_note_all"] = rad["review_note"]
     details["mapping"] = mapping
     events.insert(0, (EventType.RADIOLOGY_REPORT.value, ts, details))
     # A completed study fulfils outstanding follow-up imaging obligations

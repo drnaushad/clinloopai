@@ -1,5 +1,6 @@
 """Synthetic malformed responses cannot masquerade as a healthy FHIR feed."""
 import unittest
+import json
 from unittest.mock import Mock, patch
 from src.clinloop_engine.fhir_sync import FHIRClient, FHIRSyncError, check_connection, search_bundle
 from src.clinloop_engine.bulk_fhir import BulkFHIRClient
@@ -14,12 +15,13 @@ class TestFHIRResponseSafety(unittest.TestCase):
 
     def test_warning_outcome_is_not_emitted_as_patient_data(self):
         body={'resourceType':'Bundle','type':'searchset','entry':[{'resource':{'resourceType':'OperationOutcome','issue':[{'severity':'warning'}]}}]}
-        c=FHIRClient('https://example.org/fhir');r=Mock(status_code=200);r.json.return_value=body
+        c=FHIRClient('https://example.org/fhir');r=Mock(status_code=200);r.json.return_value=body;r.iter_content.return_value=[json.dumps(body).encode()]
         with patch.object(c,'_get',return_value=r):self.assertEqual(list(c.search('Patient',{})),[])
 
     def test_paging_cannot_send_token_to_another_origin(self):
         c=FHIRClient('https://example.org/fhir',token='synthetic-token')
         r=Mock(status_code=200);r.json.return_value={'resourceType':'Bundle','type':'searchset','link':[{'relation':'next','url':'https://elsewhere.example/steal'}]}
+        r.iter_content.return_value=[json.dumps(r.json.return_value).encode()]
         with patch.object(c,'_get',return_value=r) as get:
             with self.assertRaises(FHIRSyncError):list(c.search('Patient',{}))
             self.assertEqual(get.call_count,1)

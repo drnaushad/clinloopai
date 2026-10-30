@@ -21,6 +21,7 @@ import base64
 import binascii
 import hashlib
 import re
+from datetime import date as calendar_date
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -71,6 +72,17 @@ class AIResults(BaseModel):
     bundle: Optional[Dict[str, Any]] = Field(None, description="FHIR Bundle of AI Observations (and ImagingStudy)")
     dicom_sr_base64: Optional[str] = None
     regulatory: str = Field("not stated", description="Regulatory status of the product, e.g. 'MFDS approved (Class II)'")
+
+
+def _validated_date(value: str) -> str:
+    """Validate a real calendar date before storing any clinical resource."""
+    try:
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+            raise ValueError
+        calendar_date.fromisoformat(value)
+    except (ValueError, TypeError):
+        raise HTTPException(422, "date must be a valid calendar date in YYYY-MM-DD format") from None
+    return value
 
 
 def _decode(b64: str, limit: int = MAX_UPLOAD_BYTES) -> bytes:
@@ -148,9 +160,9 @@ def extract_outside_report(req: FileUpload, user: User = Depends(require_role("n
     data = _decode(req.content_base64)
     try:
         extracted = extract_text(data, req.filename)
+        parsed = parse_report(extracted["text"])
     except DocumentError as e:
         raise HTTPException(422, str(e))
-    parsed = parse_report(extracted["text"])
     parsed["conclusion"] = scrub_identifiers(parsed["conclusion"], names)
     return {"method": extracted["method"], "confidence": extracted["confidence"], "pages": extracted["pages"],
             "text": scrub_identifiers(extracted["text"], names), "parsed": parsed,
@@ -166,15 +178,17 @@ def file_outside_report(req: OutsideReportFiling, user: User = Depends(require_r
     data = _decode(req.content_base64)
     try:
         extracted = extract_text(data, req.filename)
+        parsed = parse_report(extracted["text"])
     except DocumentError as e:
         raise HTTPException(422, str(e))
-    parsed = parse_report(extracted["text"])
     for field in ("title", "date", "conclusion"):
         value = getattr(req, field)
         if value is not None and str(value).strip():
             parsed[field] = str(value).strip()
-    if parsed.get("date") and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", parsed["date"]):
-        raise HTTPException(422, "date must be YYYY-MM-DD")
+    if parsed.get("date"):
+        _validated_date(parsed["date"])
+    if len((parsed.get("conclusion") or "").encode("utf-8")) > 120_000:
+        raise HTTPException(422, "Report text exceeds supported length; nothing filed")
     if len((parsed.get("conclusion") or "").strip()) < 5:
         raise HTTPException(422, "No report text found: enter the impression")
     resource = outside_report_resource(req.patient_id, data, extracted, parsed,
@@ -231,8 +245,7 @@ def file_clinical_note(req: ClinicalNote, user: User = Depends(require_role("nav
     patient = _patient_resource(req.patient_id)
     got = _note_text(req)
     when = req.date or _date.today().isoformat()
-    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", when):
-        raise HTTPException(422, "date must be YYYY-MM-DD")
+    _validated_date(when)
     text = scrub_identifiers(got["text"], _patient_names(patient))
     # Plans are read from the note as written: identifier removal must never change what is tracked
     before = {(p["kind"], p["target"], p["tracked"]) for p in find_plans(got["text"])["plans"]}
@@ -344,7 +357,7 @@ def receive_ai_results(req: AIResults, user: User = Depends(require_role("admin"
     Results from an approved imaging-AI product, sent by the hospital's integration engine:
     a FHIR Bundle of Observations (device = product), or the product's DICOM SR.
     """
-    from .imaging_ai import ImagingError, parse_dicom_sr
+    from .imaging_ai import ImagingError, parse_dicom_sr, _when
     from .imaging_fhir import ai_observation_resource, dicom_datetime, imaging_study_resource
     _require_profile("imaging_ai_results")
     patient = _patient_resource(req.patient_id)
@@ -373,9 +386,13 @@ def receive_ai_results(req: AIResults, user: User = Depends(require_role("admin"
             raise HTTPException(422, str(e))
         if not sr["patient_id"] or sr["patient_id"] not in _patient_ids(patient):
             raise HTTPException(409, "The SR's PatientID is missing or does not match the patient: nothing filed")
-        when = dicom_datetime(sr["study_date"], sr["study_time"]) or __import__("datetime").datetime.now(__import__("datetime").timezone.utc).replace(tzinfo=None, microsecond=0).isoformat()
+        try:
+            when = _when({"study_date": sr.get("study_date"), "study_time": sr.get("study_time"),
+                          "tz_offset": sr.get("tz_offset")})
+        except ImagingError:
+            raise HTTPException(422, "DICOM acquisition timing is invalid; verify the original before filing") from None
         study = imaging_study_resource({"study_uid": sr["study_uid"], "study_date": sr["study_date"],
-                                        "study_time": sr["study_time"]}, req.patient_id, source="ai-sr")
+                                        "study_time": sr["study_time"], "tz_offset": sr.get("tz_offset")}, req.patient_id, source="ai-sr")
         ref = f"ImagingStudy/{study['id']}" if sr["study_uid"] else None
         from .imaging_fhir import ai_finding_key
         for f in sr["findings"]:

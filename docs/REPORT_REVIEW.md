@@ -510,3 +510,12 @@ evaluation, clinician workflow assessment and appropriate monitoring and approva
 engineering package supports those activities; it does not certify completion. See
 [FDA's GMLP resource](https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/good-machine-learning-practice-medical-device-development-guiding-principles)
 and the existing [readiness tracker](PRODUCTION_READINESS.md).
+
+#### Browser suspension and privacy (2026-10-29 candidate)
+
+The ten-minute session expiry is checked on resumed visibility/history and before model
+submission or import, not just by a background timer. Expired source text, results and
+personal-gateway codes are cleared before an overdue action can send them. This covers
+browser suspension and accessibility-generated clicks. It cannot undo a request already
+received by a model server or securely erase browser/OS memory and provider logs. Real
+patient studies still require the approved private institutional workflow described above.

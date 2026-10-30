@@ -30,6 +30,7 @@ Usage:
 import argparse
 import csv
 import json
+import math
 import os
 import random
 import sys
@@ -52,7 +53,7 @@ ANSWERS = {"yes", "no", "unclear"}
 PACKET_FIELDS = ["review_id", "patient_id", "source_record", "obligation", "trigger_time",
                  "required_followup", "window", "deadline",
                  "reviewer_1", "reviewer_2", "adjudicator", "notes"]
-KEY_FIELDS = ["review_id", "rule_id", "predicted_status", "predicted_positive", "stratum", "weight"]
+KEY_FIELDS = ["review_id", "patient_id", "rule_id", "predicted_status", "predicted_positive", "stratum", "weight"]
 
 
 # ── 1. Sampling ──────────────────────────────────────────────────────────────
@@ -89,6 +90,8 @@ def stratified_sample(frame: Sequence[Dict], per_stratum: int, seed: int = SEED)
     stratum. Each sampled row carries weight = stratum size / sample size,
     so population estimates stay unbiased despite oversampling rare strata.
     """
+    if type(per_stratum) is not int or per_stratum <= 0:
+        raise ValueError("Per-stratum sample must be a positive integer")
     rng = random.Random(seed)
     strata: Dict[str, List[Dict]] = defaultdict(list)
     for row in frame:
@@ -113,7 +116,9 @@ def export_review_files(sample: Sequence[Dict], out_dir: str, rules: Dict[str, D
     os.makedirs(out_dir, exist_ok=True)
     packet_path = os.path.join(out_dir, "review_packet.csv")
     key_path = os.path.join(out_dir, "prediction_key.csv")
-    with open(packet_path, "w", newline="", encoding="utf-8") as f:
+    if os.path.lexists(packet_path) or os.path.lexists(key_path):
+        raise ValueError("Review outputs already exist; choose new output paths")
+    with os.fdopen(os.open(packet_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=PACKET_FIELDS)
         w.writeheader()
         for r in sorted(sample, key=lambda x: x["review_id"]):
@@ -125,7 +130,7 @@ def export_review_files(sample: Sequence[Dict], out_dir: str, rules: Dict[str, D
                 "required_followup": rule.get("required", ""), "window": rule.get("window", ""),
                 "deadline": r["deadline"], "reviewer_1": "", "reviewer_2": "", "adjudicator": "", "notes": "",
             })
-    with open(key_path, "w", newline="", encoding="utf-8") as f:
+    with os.fdopen(os.open(key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=KEY_FIELDS)
         w.writeheader()
         for r in sorted(sample, key=lambda x: x["review_id"]):
@@ -146,7 +151,29 @@ def merge_reviews(packet_rows: Sequence[Dict], key_rows: Sequence[Dict]) -> Tupl
     adjudicator's. "Was the follow-up completed in time?" → no = positive
     (loop open). Unclear or unresolved loops are excluded and counted.
     """
-    key = {k["review_id"]: k for k in key_rows}
+    def indexed(rows):
+        result = {}
+        for row in rows:
+            rid = row.get("review_id")
+            if not isinstance(rid, str) or not rid.strip() or rid in result:
+                raise ValueError("Review rows require distinct nonempty keys")
+            result[rid] = row
+        return result
+
+    packet, key = indexed(packet_rows), indexed(key_rows)
+    if set(packet) != set(key):
+        raise ValueError("Review packet and prediction key must contain the same keys")
+    for row in key.values():
+        try:
+            weight = float(row["weight"])
+        except (KeyError, TypeError, ValueError):
+            raise ValueError("Invalid review sampling weight") from None
+        if not math.isfinite(weight) or weight <= 0:
+            raise ValueError("Invalid review sampling weight")
+        if str(row.get("predicted_positive")).lower() not in {"true", "false"}:
+            raise ValueError("Prediction class must be explicitly true or false")
+        if any(not isinstance(row.get(k), str) or not row[k].strip() for k in ("rule_id", "stratum")):
+            raise ValueError("Prediction key requires a rule and sampling stratum")
     merged, excluded = [], {"unreviewed": 0, "unclear": 0, "disagreement_unresolved": 0}
     for p in packet_rows:
         r1, r2, adj = _answer(p.get("reviewer_1")), _answer(p.get("reviewer_2")), _answer(p.get("adjudicator"))
@@ -161,8 +188,11 @@ def merge_reviews(packet_rows: Sequence[Dict], key_rows: Sequence[Dict]) -> Tupl
             excluded["unclear"] += 1
             continue
         k = key[p["review_id"]]
+        if p.get("patient_id") and k.get("patient_id") and p["patient_id"] != k["patient_id"]:
+            raise ValueError("Review packet patient grouping does not match prediction key")
         merged.append({
             "review_id": p["review_id"], "rule_id": k["rule_id"], "stratum": k["stratum"],
+            "patient_id": k.get("patient_id") or p.get("patient_id"),
             "weight": float(k["weight"]),
             "predicted_positive": str(k["predicted_positive"]).lower() == "true",
             "truth_positive": final == "no",
@@ -188,14 +218,25 @@ def _weighted_metrics(rows: Sequence[Dict]) -> Dict[str, Optional[float]]:
 
 
 def bootstrap_ci(rows: Sequence[Dict], reps: int = 2000, seed: int = SEED) -> Dict[str, Tuple[float, float]]:
-    """Stratified bootstrap (resample within each stratum) 95% percentile CIs."""
+    """Resample whole declared patients. Refuse loop-independent intervals without groups.
+
+    These weighted cluster percentile intervals describe the reviewed sample;
+    they do not fully model the stratified two-stage sampling design.
+    """
+    if type(reps) is not int or reps <= 0:
+        raise ValueError("Bootstrap replicates must be a positive integer")
     rng = random.Random(seed)
-    by_stratum: Dict[str, List[Dict]] = defaultdict(list)
+    by_patient: Dict[str, List[Dict]] = defaultdict(list)
     for r in rows:
-        by_stratum[r["stratum"]].append(r)
+        if not isinstance(r.get("patient_id"), str) or not r["patient_id"].strip():
+            return {}
+        by_patient[r["patient_id"]].append(r)
+    if len(by_patient) < 2:
+        return {}
+    clusters = [by_patient[k] for k in sorted(by_patient)]
     draws: Dict[str, List[float]] = defaultdict(list)
     for _ in range(reps):
-        boot = [rng.choice(s) for s in by_stratum.values() for _ in s]
+        boot = [row for _ in clusters for row in rng.choice(clusters)]
         for metric, value in _weighted_metrics(boot).items():
             if value is not None:
                 draws[metric].append(value)
@@ -217,7 +258,10 @@ def cohens_kappa(rows: Sequence[Dict]) -> Optional[float]:
     return None if expected == 1 else (observed - expected) / (1 - expected)
 
 
-def analyze(packet_rows: Sequence[Dict], key_rows: Sequence[Dict], reps: int = 2000) -> Dict:
+def analyze(packet_rows: Sequence[Dict], key_rows: Sequence[Dict], reps: int = 2000,
+            target: str = "conditional_status") -> Dict:
+    if target != "conditional_status":
+        raise ValueError("Engine-detected-only frame cannot estimate missed obligations; use an independent all-eligible reference cohort")
     merged, excluded = merge_reviews(packet_rows, key_rows)
     # Kappa uses every loop both reviewers answered, before adjudication
     both = [{"reviewer_1": _answer(p.get("reviewer_1")), "reviewer_2": _answer(p.get("reviewer_2"))}
@@ -225,10 +269,17 @@ def analyze(packet_rows: Sequence[Dict], key_rows: Sequence[Dict], reps: int = 2
     estimates = _weighted_metrics(merged)
     return {
         "n_reviewed": len(merged),
+        "n_sampled": len(key_rows),
+        "review_coverage": len(merged) / len(key_rows) if key_rows else None,
+        "exclusion_assumption": "within-stratum exclusions unrelated to reference outcome; not verified",
         "sampling_scope": "status classification conditional on engine-detected obligations",
         "end_to_end_sensitivity": None,
         "cannot_measure_undetected_obligations": True,
-        "bootstrap_scope": "loops within strata; not patient-clustered",
+        "bootstrap_scope": "weighted patient-cluster percentile intervals; absent without declared groups; not full survey-design inference",
+        "bootstrap_patient_groups": len({m["patient_id"] for m in merged if m.get("patient_id")}),
+        "bootstrap_seed": SEED,
+        "population_estimate_supported": bool(key_rows) and bool(merged) and not bool(
+            {k["stratum"] for k in key_rows} - {m["stratum"] for m in merged}),
         "sampled_by_stratum": dict(Counter(k["stratum"] for k in key_rows)),
         "retained_by_stratum": dict(Counter(m["stratum"] for m in merged)),
         "strata_without_retained_reviews": sorted({k["stratum"] for k in key_rows} -
@@ -290,6 +341,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     a.add_argument("--packet", required=True)
     a.add_argument("--key", required=True)
     a.add_argument("--reps", type=int, default=2000)
+    a.add_argument("--target", choices=("conditional_status", "end_to_end"), default="conditional_status",
+                   help="End-to-end requests are refused because this frame omits undetected obligations")
     args = ap.parse_args(argv)
 
     if args.cmd == "sample":
@@ -303,7 +356,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"{len(frame)} loops in frame; {len(sample)} sampled.\n"
               f"Give reviewers:  {packet}\nKeep separately: {key}")
     else:
-        print(json.dumps(analyze(_read_csv(args.packet), _read_csv(args.key), args.reps), indent=2))
+        print(json.dumps(analyze(_read_csv(args.packet), _read_csv(args.key), args.reps, target=args.target), indent=2))
     return 0
 
 

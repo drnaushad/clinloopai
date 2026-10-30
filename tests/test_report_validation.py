@@ -41,6 +41,15 @@ class TestReportValidation(unittest.TestCase):
         with self.assertRaises(ValueError):
             score([{"expected_rules": "", "label_status": "complete"}])
 
+    def test_duplicate_reports_cannot_inflate_agreement(self):
+        row = {"report_id": "synthetic-1", "conclusion": "No acute findings.",
+               "expected_rules": "NONE", "label_status": "complete"}
+        with self.assertRaises(ValueError):
+            score([row, row.copy()])
+        result = score([row])
+        self.assertFalse(result["clinical_validation_established"])
+        self.assertIn("independence", result["interval_scope"])
+
     def test_wilson_interval(self):
         p, lo, hi = wilson(9, 10)
         self.assertEqual(p, 0.9)
