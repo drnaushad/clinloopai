@@ -4,6 +4,10 @@
 
 # ClinLoop AI — Closed-Loop Clinical Safety Monitoring
 
+## Recovery candidate and evidence review (29 October 2026)
+
+The [candidate evidence review](docs/reviews/EVIDENCE_REVIEW_20261029.md) distinguishes software checks, synthetic experiments and pending clinical validation, and sets out the reference-data and human-review gates. The public research preview does not establish clinical utility or approval. Local source changes are drafts until their exact source and applicable clinical rules receive independent review. Dataset loaders now require an existing nonempty dataset and explicit reference statuses; call `ClinicalDataLoader.generate(...)` explicitly to create synthetic examples. Validation CSV/result outputs are private and refuse to replace an existing output: choose a new study path.
+
 ## Personal model workspace (research preview, not a clinical release)
 
 [Personal workspace](https://clinloopai.app/private.html) provides a separate browser-to-Ollama workspace. Each visitor supplies their own
@@ -267,8 +271,26 @@ Images are published automatically to `ghcr.io/drnaushad/clinloopai` for amd64 a
 - `:latest` on every change to `main`;
 - `:1.2.3` / `:1.2` for version tags.
 
-Each image is published only after the tests pass and a smoke test of the built container succeeds
-(`.github/workflows/docker-publish.yml`).
+The existing GitHub workflow runs `tests/` and `src/tests/`, builds the image and
+smoke-tests it before publication (`.github/workflows/docker-publish.yml`).
+Pull requests run the checks without publishing an image. Dependencies follow
+`requirements.lock`; Korean/English Tesseract is installed for OCR checks.
+JavaScript test launchers select TAP explicitly so summary checks remain stable
+across Node versions.
+
+The complete local release check also runs `test_clinloopai_suite.py`,
+`test_audit_and_optout.py`, `python test_load_and_latency.py --requests 500
+--workers 20` and `python src/run_benchmark.py`. The load check uses a temporary
+synthetic database and an in-process API, verifying successful writes and audit
+chains. It does not establish clinical accuracy or hospital capacity. The
+proposed CI load gate and expanded workflow remain deferred because the server
+publisher token does not have workflow scope; they are not active GitHub gates.
+
+The public website is packaged with `python scripts/build_public_site.py
+--output .public-site` after refreshing the synthetic snapshot with
+`python scripts/build_static_demo.py`. Publish only that web artifact to the
+dedicated GitHub Pages branch. It excludes source, tests, caches, databases and
+recovery archives. See [30 October release notes](docs/releases/20261030.md).
 
 For clinicians on the hospital network, put an HTTPS reverse proxy (e.g. nginx with the hospital
 certificate) in front of port 8124 rather than exposing it over plain HTTP.
