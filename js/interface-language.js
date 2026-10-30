@@ -45,14 +45,15 @@
       el.setAttribute('placeholder', translate(placeholders.get(el), lang));
     });
   }
-  function navigationHref(href, lang) {
+  function navigationHref(href, lang, theme) {
     if (typeof href !== 'string') return null;
     var parts = href.split('#'), anchor = parts.length === 2 && /^[A-Za-z][A-Za-z0-9_-]*$/.test(parts[1]) ? '#' + parts[1] : '';
     if (parts.length > 2 || (parts.length === 2 && !anchor)) return null;
-    var bare = parts[0].replace(/\?lang=(?:en|ko)$/, '');
+    var bare = parts[0].replace(/\?(?:lang=(?:en|ko)(?:&theme=(?:light|dark))?|theme=(?:light|dark))$/, '');
     var path = bare === './' ? '/' : (bare.charAt(0) === '/' ? bare : '/' + bare);
-    path = path.replace(/\.html$/, '');
-    return routes.indexOf(path) < 0 ? null : bare + '?lang=' + (lang === 'ko' ? 'ko' : 'en') + anchor;
+    path = path.replace(/\/index\.html$/, '/').replace(/\.html$/, '');
+    return routes.indexOf(path) < 0 && path !== '/smart/launch' ? null : bare + '?lang=' + (lang === 'ko' ? 'ko' : 'en')
+      + (theme === 'light' || theme === 'dark' ? '&theme=' + theme : '') + anchor;
   }
   function mount(doc, win) {
     documentRef = doc;
@@ -60,19 +61,21 @@
       var owned = doc.documentElement.getAttribute('data-workspace') === 'index';
       var legacy = doc.getElementById('btn-lang');
       var en = doc.getElementById('lang-opt-en'), ko = doc.getElementById('lang-opt-ko');
-      var previousLanguage = language();
+      var previousLanguage = language(), previousTheme = doc.documentElement.getAttribute('data-theme');
       function update() {
         render(doc);
         var lang = language();
-        if (lang !== previousLanguage && win.history && win.history.replaceState && win.URLSearchParams) {
+        var theme = doc.documentElement.getAttribute('data-theme');
+        if ((lang !== previousLanguage || theme !== previousTheme) && win.history && win.history.replaceState && win.URLSearchParams) {
           var params = new win.URLSearchParams(win.location.search); params.set('lang', lang);
+          if (theme === 'light' || theme === 'dark') params.set('theme', theme);
           win.history.replaceState(win.history.state, '', win.location.pathname + '?' + params.toString() + (win.location.hash || ''));
         }
-        previousLanguage = lang;
+        previousLanguage = lang; previousTheme = theme;
         if (en) en.setAttribute('aria-pressed', String(lang === 'en'));
         if (ko) ko.setAttribute('aria-pressed', String(lang === 'ko'));
-        doc.querySelectorAll('.app-nav-link, .clinloop-workflow-guide a, .clinloop-shell-brand, .research-release-notice a, [data-ui-link]').forEach(function (a) {
-          var href = navigationHref(a.getAttribute('href'), lang);
+        doc.querySelectorAll('a[href]').forEach(function (a) {
+          var href = navigationHref(a.getAttribute('href'), lang, doc.documentElement.getAttribute('data-theme'));
           if (href && a.getAttribute('href') !== href) a.setAttribute('href', href);
         });
       }
@@ -93,7 +96,7 @@
       var requested = win.URLSearchParams && new win.URLSearchParams(win.location.search).get('lang');
       if (!owned && (requested === 'en' || requested === 'ko')) choose(requested);
       update();
-      if (win.MutationObserver) new win.MutationObserver(update).observe(doc.documentElement, {attributes: true, attributeFilter: ['lang']});
+      if (win.MutationObserver) new win.MutationObserver(update).observe(doc.documentElement, {attributes: true, attributeFilter: ['lang', 'data-theme']});
     }
     if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', start, {once: true}); else start();
   }

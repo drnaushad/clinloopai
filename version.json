@@ -1,1 +1,7 @@
-{"version":"2026-10-30.engineering2","channel":"research-preview","clinical_validation":"pending","independent_review":"pending","engine_source_commit":"9332100304846852c8d35d6b77820e5941ad566f"}
+{
+  "version": "2026-10-30.consistency1",
+  "channel": "research-preview",
+  "clinical_validation": "pending",
+  "independent_review": "pending",
+  "engine_source_commit": "9332100304846852c8d35d6b77820e5941ad566f"
+}

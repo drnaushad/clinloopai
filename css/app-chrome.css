@@ -231,3 +231,5 @@ body.report-loading > :is(main, footer) { visibility: hidden; }
 }
 /* Explain preserved source language without competing with the page task. */
 .source-language-note { font-size:.9rem; color:var(--shell-muted); padding:.6rem .8rem; border-left:3px solid var(--shell-accent); overflow-wrap:anywhere; }
+/* Release identity is the same on every entry point, including isolated sandboxes. */
+.release-version { display:block; margin-top:4px; color:var(--shell-muted); font:500 .75rem/1.4 var(--font-mono); overflow-wrap:anywhere; }

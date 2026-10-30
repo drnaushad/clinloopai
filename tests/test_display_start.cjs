@@ -13,8 +13,8 @@ test('saved display preferences are applied before body, form or model elements 
  const e=environment({theme:'dark',language:'ko'});start(e.doc,e.win);
  assert.equal(e.attrs['data-theme'],'dark');assert.equal(e.html.lang,'ko');assert.deepEqual(e.reads,['clinloop_theme','clinloop_lang']);
 });
-test('isolated workspaces use device appearance without touching storage, requests or credentials',()=>{
- const e=environment({isolated:true,deviceDark:true,search:'?theme=light'});start(e.doc,e.win);assert.equal(e.attrs['data-theme'],'dark');assert.deepEqual(e.reads,[]);
+test('isolated workspaces accept explicit display appearance without touching storage, requests or credentials',()=>{
+ const e=environment({isolated:true,deviceDark:true,search:'?theme=light'});start(e.doc,e.win);assert.equal(e.attrs['data-theme'],'light');assert.deepEqual(e.reads,[]);
 });
 test('blocked preference storage leaves device appearance usable',()=>{
  const e=environment({blocked:true,deviceDark:true});start(e.doc,e.win);assert.equal(e.attrs['data-theme'],'dark');
@@ -63,3 +63,13 @@ test('report startup reveals recoverable errors and empty catalogues instead of 
 });
 
 test('isolated pages carry only an explicit display language without reading preferences',()=>{const e=environment({isolated:true,search:'?lang=ko'});start(e.doc,e.win);assert.equal(e.html.lang,'ko');assert.deepEqual(e.reads,[]);});
+
+// Display URL precedence must also work when preferences are blocked or stale.
+test('all workspaces apply only allowlisted theme and language URL values',()=>{
+ for(const page of ['worklist','review','smart-launch','smart-callback']){
+  const e=environment({page,isolated:page!=='worklist',theme:'light',search:'?theme=dark&lang=ko&token=SYNTHETIC'});
+  start(e.doc,e.win);assert.equal(e.attrs['data-theme'],'dark');assert.equal(e.html.lang,'ko');
+  const invalid=environment({page,isolated:true,search:'?theme=untrusted&lang=invalid'});
+  start(invalid.doc,invalid.win);assert.equal(invalid.attrs['data-theme'],'light');assert.equal(invalid.html.lang,'en');assert.deepEqual(invalid.reads,[]);
+ }
+});

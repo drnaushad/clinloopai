@@ -83,7 +83,7 @@ class TestEveryDevice(unittest.TestCase):
         model that is not built; the charter states what has not been shown."""
         read = lambda *p: open(os.path.join(ROOT, *p), encoding="utf-8").read()
         html, app = read("index.html"), read("js", "app.js")
-        self.assertIn("<title>ClinLoop AI | Closed-Loop Follow-up of Clinical Results</title>", html)
+        self.assertRegex(html, r"<title(?: data-ui-copy)?>ClinLoop AI \| Closed-Loop Follow-up of Clinical Results</title>")
         self.assertIn('rel="canonical" href="https://clinloopai.app/"', html)
         self.assertTrue(os.path.exists(os.path.join(ROOT, "favicon.ico")))
         for phrase in ("Noble", "Nobility", "Hippocratic", "Causal Reasoning", "DTH-Hybrid", "ISO 29101", "8/8",

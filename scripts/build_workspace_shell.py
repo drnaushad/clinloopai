@@ -7,13 +7,14 @@ from __future__ import annotations
 
 import argparse
 import html
+import json
 from html.parser import HTMLParser
 from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '20261028_languages1'
-APP_VERSION = '2026-10-27.usability1'
+APP_VERSION = json.loads((ROOT / 'version.json').read_text())['version']
+VERSION = re.sub(r'[^A-Za-z0-9_]', '_', APP_VERSION)
 VOID = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
 
 
@@ -94,7 +95,10 @@ def shell(text: str, name: str, entries: list[dict]) -> str:
     parser = Spans(text)
     if name == 'index':
         brand = parser.raw(parser.find(cls='brand-section'))
-        controls = parser.raw(parser.find(cls='theme-segmented-control')) + parser.raw(parser.find(cls='prominent-lang-pill'))
+        controls = (parser.raw(parser.find(cls='theme-segmented-control'))
+                    + '<div class="prominent-lang-pill" role="group" aria-label="Language">'
+                    + parser.raw(parser.find(ident='lang-opt-en'))
+                    + parser.raw(parser.find(ident='lang-opt-ko')) + '</div>')
     else:
         brand = '<a class="clinloop-shell-brand" href="./"><img src="icons/logo.svg" alt="" width="32" height="32"><span>ClinLoop AI</span></a>'
         button = parser.find(ident='btn-lang')
@@ -147,17 +151,20 @@ def shell(text: str, name: str, entries: list[dict]) -> str:
                  f'<div><a href="{href}"><span data-nav-language="en">{en}</span><span data-nav-language="ko">{ko}</span></a>'
                  f'<p><span data-nav-language="en">{desc}</span><span data-nav-language="ko">{translation}</span></p></div>'
                  for href, en, ko, desc, translation in workflows) + '</div></details>')
-    nav = 'workspace-nav' if name in {'private', 'review'} else 'app-nav'
-    return ('<!-- clinloop-shell:start -->\n<header class="clinloop-shell" data-static-shell="true">'
+    nav = 'workspace-nav' if name in {'private', 'review', 'smart-launch', 'smart-callback'} else 'app-nav'
+    if name.startswith('smart-'):
+        grouped = '<option value="" selected>Test EMR connection</option>' + grouped
+    return ('<!-- clinloop-shell:start -->\n<header class="clinloop-shell" data-static-shell="true" data-release-version="' + APP_VERSION + '">'
             '<div class="clinloop-shell-top">' + brand + '<div class="clinloop-shell-controls" role="group" aria-label="Display and account">' + controls + '</div></div>'
             f'<nav class="{nav} clinloop-shell-links" aria-label="ClinLoop pages">' + desktop + '</nav>'
             '<div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label>'
             '<select id="clinloop-page-picker">' + grouped + '</select></div>' + guide +
             '<aside class="research-release-notice" role="note">'
             '<span data-nav-language="en">Research preview · synthetic data only. Independent review and clinical validation pending. '
-            '<a href="validation#research-release">Review status</a></span>'
+            '<a href="validation#engineering-release">Review status</a></span>'
             '<span data-nav-language="ko">연구 미리보기 · 합성 데이터 전용. 독립 검토 및 임상 검증 대기 중. '
-            '<a href="validation#research-release">검토 현황</a></span>'
+            '<a href="validation#engineering-release">검토 현황</a></span>'
+            '<small class="release-version">' + APP_VERSION + '</small>'
             '</aside></header>\n<!-- clinloop-shell:end -->')
 
 
@@ -219,6 +226,38 @@ def render(text: str, name: str, entries: list[dict]) -> str:
     return text
 
 
+def release_assets(text: str, name: str, prefix: str = '') -> str:
+    """Keep every public entry point on one release without rewriting source content."""
+    titles = {entry['page']: entry['en'] + ' — ClinLoop AI' for entry in pages()}
+    titles.update({'index': 'ClinLoop AI | Closed-Loop Follow-up of Clinical Results',
+                   'smart/launch': 'Test EMR connections — ClinLoop AI',
+                   'smart/callback': 'SMART sandbox reports — ClinLoop AI'})
+    text = re.sub(r'<title\b[^>]*>.*?</title>',
+                  '<title data-ui-copy>' + html.escape(titles[name]) + '</title>', text, count=1, flags=re.S)
+    text = re.sub(r'((?:src|href)="(?:\.\./)?(?:js|css)/[^"?]+)(?:\?v=[^" ]+)?"',
+                  lambda m: m[1] + '?v=' + VERSION + '"', text)
+    if name.startswith('smart/'):
+        text = re.sub(r'(href="sandbox\.css)(?:\?v=[^"]+)?"',
+                      lambda m: m[1] + '?v=' + VERSION + '"', text)
+    parser = Spans(text)
+    additions = []
+    if not any(n['attrs'].get('http-equiv', '').lower() == 'cache-control' for n in parser.nodes):
+        additions.append('<meta http-equiv="Cache-Control" content="no-cache">')
+    for rel, href, extra in [('icon', 'icons/logo.svg', ' type="image/svg+xml"'),
+                             ('manifest', 'manifest.json', ''),
+                             ('apple-touch-icon', 'icons/icon-192.png', '')]:
+        if not any(n['tag'] == 'link' and n['attrs'].get('rel') == rel for n in parser.nodes):
+            additions.append(f'<link rel="{rel}" href="{prefix}{href}"{extra}>')
+    if not any(n['attrs'].get('name') == 'theme-color' for n in parser.nodes):
+        additions.append('<meta name="theme-color" content="#0e7490">')
+    if not any(n['tag'] == 'link' and n['attrs'].get('rel') == 'canonical' for n in parser.nodes):
+        route = '' if name == 'index' else name + ('.html' if name.startswith('smart/') else '')
+        additions.append(f'<link rel="canonical" href="https://clinloopai.app/{route}">')
+    if additions:
+        text = text.replace('</head>', '\n' + '\n'.join(additions) + '\n</head>', 1)
+    return text
+
+
 def main() -> int:
     command = argparse.ArgumentParser(description=__doc__)
     command.add_argument('--check', action='store_true')
@@ -228,15 +267,30 @@ def main() -> int:
     for entry in entries:
         path = ROOT / (entry['page'] + '.html')
         old = path.read_text()
-        new = render(old, entry['page'], entries)
+        new = release_assets(render(old, entry['page'], entries), entry['page'])
         if new != old:
             changed.append(path.name)
+            if not args.check:
+                path.write_text(new)
+    for name in ('launch', 'callback'):
+        path = ROOT / 'smart' / (name + '.html')
+        old = path.read_text()
+        markup = shell(old, 'smart-' + name, entries)
+        # Nested sandbox pages share presentation without loading appnav/session code.
+        markup = re.sub(r'href="(?:\./)?([^"?#]*)',
+                        lambda m: 'href="/' + m[1], markup)
+        markup = markup.replace('src="icons/', 'src="../icons/')
+        new = re.sub(r'<!-- clinloop-shell:start -->.*?<!-- clinloop-shell:end -->',
+                     lambda _: markup, old, count=1, flags=re.S)
+        new = release_assets(new, 'smart/' + name, prefix='../')
+        if new != old:
+            changed.append('smart/' + path.name)
             if not args.check:
                 path.write_text(new)
     if args.check and changed:
         print('Shared headers need regeneration: ' + ', '.join(changed))
         return 1
-    print('Checked' if args.check else 'Rendered', len(entries), 'shared headers.')
+    print('Checked' if args.check else 'Rendered', len(entries) + 2, 'shared headers and release assets.')
     return 0
 
 

@@ -8,7 +8,7 @@
 
   function route(href) {
     if (typeof href !== 'string') return null;
-    var path = href.replace(/\?lang=(?:en|ko)$/, '').replace(/^\.\//, '/');
+    var path = href.replace(/\?(?:lang=(?:en|ko)(?:&theme=(?:light|dark))?|theme=(?:light|dark))$/, '').replace(/^\.\//, '/');
     if (path.charAt(0) !== '/') path = '/' + path;
     path = path.replace(/\/index\.html$/, '/').replace(/\.html$/, '');
     return ROUTES.indexOf(path) >= 0 ? path : null;
@@ -112,8 +112,10 @@
     }
     function sync() {
       var ko = doc.documentElement.lang.indexOf('ko') === 0;
-      var here = route(win.location.pathname) || '/';
+      var here = route(win.location.pathname) || '';
       var labelText = ko ? '화면 이동' : 'Go to page';
+      var placeholder = picker.querySelector('option[value=""]');
+      if (placeholder) placeholder.textContent = ko ? '테스트 EMR 연결' : 'Test EMR connection';
       if (label.textContent !== labelText) label.textContent = labelText;
       nav.setAttribute('aria-label', ko ? 'ClinLoop 화면' : 'ClinLoop pages');
       nav.querySelectorAll('a[href]').forEach(function (link) {
@@ -141,6 +143,7 @@
           var option = doc.createElement('option'); option.value = item.path; option.textContent = item.label;
           groups[item.group].append(option);
         });
+        if (placeholder) groups.unshift(placeholder);
         picker.replaceChildren.apply(picker, groups);
       }
       // Back/Forward can restore the old select value from the page cache.
@@ -150,8 +153,10 @@
     }
     picker.addEventListener('change', function () {
       var next = destination(picker.value, win.location.pathname);
-      if (next) win.location.assign(next + '?lang=' + (doc.documentElement.lang.indexOf('ko') === 0 ? 'ko' : 'en'));
-      else picker.value = route(win.location.pathname) || '/';
+      var theme = doc.documentElement.getAttribute && doc.documentElement.getAttribute('data-theme');
+      if (next) win.location.assign(next + '?lang=' + (doc.documentElement.lang.indexOf('ko') === 0 ? 'ko' : 'en')
+        + (theme === 'light' || theme === 'dark' ? '&theme=' + theme : ''));
+      else picker.value = route(win.location.pathname) || '';
     });
     sync();
     if (win.addEventListener) {
