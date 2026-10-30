@@ -965,3 +965,19 @@ reference worksheets and scores frozen outputs across the six supported text cat
 It performs no inference or network calls; real-patient approval and diagnostic accuracy are
 not established. Start with the synthetic example and follow the
 [study instructions](docs/REPORT_REVIEW.md#offline-report-study-coordination).
+
+### Public interface consistency (30 October 2026)
+
+The thirteen main workspaces and two synthetic connection screens share the same
+navigation, bilingual page titles, English/Korean controls, Light/Dark controls, research notice and release
+identity. Page links carry only allowlisted display language/theme values. Isolated
+review, personal and sandbox pages keep these choices in memory or in page links;
+they do not read shared sign-in credentials or save display preferences. The SMART
+OAuth handshake remains separate from this presentation layer.
+
+`version.json` is the source for the generated shell and cache keys. After changing
+navigation labels or the release version, run `python scripts/build_workspace_shell.py`,
+then `python scripts/build_workspace_shell.py --check`. Every public entry point uses
+the same release key for local CSS/JavaScript, preventing old controls from mixing with
+new page markup. The check also covers the two nested sandbox screens. Clinical source
+text, model outputs, historical evidence dates and measurements retain their meaning.

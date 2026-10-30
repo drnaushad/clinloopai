@@ -59,3 +59,16 @@ test('navigation only carries validated language to known pages and safe local a
  assert.equal(ui.navigationHref('review?lang=ko','en'),'review?lang=en');
  for(const value of ['https://foreign.example/review','//foreign.example','review?token=secret','../private','review#patient=private',null])assert.equal(ui.navigationHref(value,'ko'),null);
 });
+
+test('theme and language follow only known page links without leaking unrelated query values',()=>{
+ assert.equal(ui.navigationHref('review?lang=en&theme=light','ko','dark'),'review?lang=ko&theme=dark');
+ assert.equal(ui.navigationHref('/validation#engineering-release','en','light'),'/validation?lang=en&theme=light#engineering-release');
+ assert.equal(ui.navigationHref('smart/launch.html','ko','dark'),'smart/launch.html?lang=ko&theme=dark');
+ for(const href of ['review?lang=en&theme=dark&token=secret','review?theme=dark&patient=SYNTHETIC','/smart/callback.html?code=secret','//foreign.example/review']) assert.equal(ui.navigationHref(href,'ko','dark'),null);
+});
+test('synthetic connection and evidence notices translate counts without changing report source',()=>{
+ for(const text of ['753 synthetic cases; 118 exact rule-set mismatches.','23 mismatches share broad action groups in the old harness; that does not establish clinical equivalence.','Strict reference bounds conditional on a matching rule; missed obligations excluded.','Connected to HAPI FHIR R4. 11 synthetic patients verified; 4 source reports received.','2 synthetic diagnostic reports received.','Connection verification does not measure clinical accuracy.']) {
+  const ko=ui.translate(text,'ko');assert(/[가-힣]/.test(ko),text);assert.equal(ui.translate(text,'en'),text);
+  assert.deepEqual(ko.match(/\d+/g),text.match(/\d+/g));
+ }
+});
