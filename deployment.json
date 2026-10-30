@@ -1,9 +1,10 @@
 {
-  "source_commit": "2311b18002652b4c2182fa59dc8dc11fb4629e2d",
-  "version": "2026-10-30.engineering2",
+  "source_commit": "764596775db33a8c9046936dd9d917d3abffb9fb",
+  "version": "2026-10-30.consistency1",
   "channel": "research-preview",
   "clinical_use_authorized": false,
-  "source_pull_request": "https://github.com/drnaushad/clinloopai/pull/59",
+  "source_pull_request": "https://github.com/drnaushad/clinloopai/pull/60",
   "engine_source_sha256": "80d4488efbd302b4d1f111c6f3d44d19f8a24516c34c96e9ac35ee65537a6f9c",
-  "artifact_scope": "Allowlisted static assets and repository synthetic examples only"
+  "artifact_scope": "Allowlisted static assets and repository synthetic examples only",
+  "interface_scope": "15 public screens; consistent navigation, bilingual titles and display controls; clinical engine unchanged."
 }

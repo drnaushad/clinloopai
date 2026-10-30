@@ -27,8 +27,11 @@
     // Language is a display preference only. Isolated workspaces read no storage;
     // a known language query can follow navigation without carrying session data.
     if (win.URLSearchParams) {
-      var displayLanguage = new win.URLSearchParams(win.location.search).get('lang');
+      var displayParams = new win.URLSearchParams(win.location.search);
+      var displayLanguage = displayParams.get('lang');
       if (displayLanguage === 'en' || displayLanguage === 'ko') language = displayLanguage;
+      var displayTheme = displayParams.get('theme');
+      if (displayTheme === 'light' || displayTheme === 'dark') theme = displayTheme;
     }
     html.setAttribute('data-theme', theme);
     if (html.lang !== language) html.lang = language;

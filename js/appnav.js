@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   // Check for updates without interrupting a report, a form or the current page.
-  var APP_VERSION = '2026-10-30.engineering2';
+  var APP_VERSION = '2026-10-30.consistency1';
   (function checkVersion() {
     if (!window.fetch || location.protocol === 'file:') return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
@@ -44,7 +44,7 @@
     { page: 'pilot', href: 'pilot', en: 'Pilot review', ko: '시범 검토' },
     { page: 'imaging', href: 'imaging', en: 'Imaging', ko: '영상' },
     { page: 'analyse', href: 'analyse', en: 'Analyse patient', ko: '환자 분석' },
-    { page: 'reports', href: 'reports', en: 'Live report reader', ko: '실시간 보고서 검토' },
+    { page: 'reports', href: 'reports', en: 'Report models', ko: '보고서 모델 비교' },
     { page: 'review', href: 'review', en: 'Report review', ko: '보고서 검토' },
     { page: 'private', href: 'private', en: 'Personal workspace', ko: '개인 작업 공간' },
     { page: 'validation', href: 'validation', en: 'Validation evidence', ko: '검증 근거' },
@@ -54,7 +54,7 @@
   // The Light/Dark choice made on the cockpit applies here too; without one, the page follows the device
   try {
     var theme = window.localStorage.getItem('clinloop_theme');
-    if (theme === 'light' || theme === 'dark') document.documentElement.setAttribute('data-theme', theme);
+    if ((theme === 'light' || theme === 'dark') && !document.documentElement.getAttribute('data-theme')) document.documentElement.setAttribute('data-theme', theme);
   } catch (e) { /* storage blocked: follow the device */ }
 
   // Pages have clean addresses ("/worklist", not "/worklist.html"); an old .html link still works and the
@@ -102,7 +102,7 @@
       }
       if (!nav.getAttribute('aria-label')) nav.setAttribute('aria-label', ko ? 'ClinLoop 화면' : 'ClinLoop pages');
       var existing = Array.from(nav.querySelectorAll('a.app-nav-link'));
-      var complete = existing.length === PAGES.length && existing.every(function (a, i) { return a.getAttribute('href').replace(/\?lang=(?:en|ko)$/, '') === PAGES[i].href; });
+      var complete = existing.length === PAGES.length && existing.every(function (a, i) { return a.getAttribute('href').replace(/\?lang=(?:en|ko)(?:&theme=(?:light|dark))?$/, '') === PAGES[i].href; });
       if (complete) existing.forEach(function (a, i) {
         var p = PAGES[i], label = ko ? p.ko : p.en;
         if (!a.hasAttribute('data-label-en') && a.textContent !== label) a.textContent = label;

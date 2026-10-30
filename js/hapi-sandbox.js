@@ -67,26 +67,27 @@
   function mount({document:doc=root.document,window:win=root,createClient=()=>new HapiSandbox(),
     schedule=setTimeout,cancel=clearTimeout}={}){
     const start=doc.getElementById('hapi-connect');if(!start)return;
+    const ui=win.ClinLoopUI||{set:(el,value)=>{el.textContent=value;}};
     const status=doc.getElementById('hapi-status'),output=doc.getElementById('hapi-reports'),
       confirmation=doc.getElementById('hapi-synthetic'),disconnect=doc.getElementById('hapi-disconnect');
     let client=null,epoch=0,timer;
     function clear(message){epoch++;if(client)client.close();client=null;cancel(timer);output.replaceChildren();
-      status.textContent=message;start.disabled=false;}
+      ui.set(status, message);start.disabled=false;}
     function touch(){cancel(timer);if(client)timer=schedule(()=>clear('HAPI session expired. Reconnect to read the synthetic cohort again.'),10*60*1000);}
     disconnect.addEventListener('click',()=>clear('Disconnected. Synthetic HAPI reports cleared from this page.'));
     win.addEventListener('pagehide',()=>clear('Disconnected.'));
     win.addEventListener('pageshow',e=>{if(e.persisted)clear('Disconnected. Reconnect to read the synthetic cohort again.');});
     doc.addEventListener('pointerdown',touch);doc.addEventListener('keydown',touch);
     start.addEventListener('click',async()=>{
-      if(!confirmation.checked){status.textContent='Confirm the synthetic test cohort before connecting.';return;}
+      if(!confirmation.checked){ui.set(status, 'Confirm the synthetic test cohort before connecting.');return;}
       clear('Connecting to HAPI FHIR R4…');client=createClient();const job=epoch;start.disabled=true;touch();
       try{
         const result=await client.connect(true);if(job!==epoch)return;
-        status.textContent='Connected to HAPI FHIR R4. '+result.patients+' synthetic patients verified; '+result.reports.length+' source reports received.';
-        const note=doc.createElement('p');note.textContent=result.partial?'Partial test cohort returned. Missing data does not establish normal results or completed care.':'Read-only source preview. This connection does not run clinical analysis or a language model.';output.appendChild(note);
+        ui.set(status, 'Connected to HAPI FHIR R4. '+result.patients+' synthetic patients verified; '+result.reports.length+' source reports received.');
+        const note=doc.createElement('p');ui.set(note, result.partial?'Partial test cohort returned. Missing data does not establish normal results or completed care.':'Read-only source preview. This connection does not run clinical analysis or a language model.');output.appendChild(note);
         for(const report of result.reports){const article=doc.createElement('article'),h=doc.createElement('h3'),p=doc.createElement('p');
-          h.textContent='Synthetic report · '+report.status;p.className='report-text';p.textContent=report.conclusion;article.append(h,p);output.appendChild(article);}
-        if(!result.reports.length){const empty=doc.createElement('p');empty.textContent='No reports returned. This does not establish normal results.';output.appendChild(empty);}
+          ui.set(h, 'Synthetic report · '+report.status);p.className='report-text';p.textContent=report.conclusion;article.append(h,p);output.appendChild(article);}
+        if(!result.reports.length){const empty=doc.createElement('p');ui.set(empty, 'No reports returned. This does not establish normal results.');output.appendChild(empty);}
       }catch(_){if(job===epoch)clear('HAPI test connection could not be verified. The public test cohort may be unavailable; no clinical conclusion was made.');}
     });
   }
