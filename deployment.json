@@ -1,10 +1,11 @@
 {
-  "source_commit": "6cf521c911bc4d0ab10584a92184629554ef06a6",
-  "version": "2026-10-31.language1",
+  "source_commit": "cec359d32a7daf229538fec692ce36aa09f533ed",
+  "version": "2026-11-01.language2",
   "channel": "research-preview",
   "clinical_use_authorized": false,
-  "source_pull_request": "https://github.com/drnaushad/clinloopai/pull/61",
+  "source_pull_request": "https://github.com/drnaushad/clinloopai/pull/62",
+  "source_language_review": "https://github.com/drnaushad/clinloopai/pull/61",
   "engine_source_sha256": "80d4488efbd302b4d1f111c6f3d44d19f8a24516c34c96e9ac35ee65537a6f9c",
   "artifact_scope": "Allowlisted static assets and repository synthetic examples only",
-  "interface_scope": "English/Korean consistency across 15 pages, dialogs, graphs, app-owned catalogue metadata, statuses and accessibility text. Original source evidence and standard identifiers preserved; clinical engine unchanged."
+  "interface_scope": "Consistent English/Korean interface across 15 pages, dialogs, graphs, catalogue metadata, activity messages and accessibility text. Original source evidence and standard identifiers preserved; clinical engine unchanged."
 }
