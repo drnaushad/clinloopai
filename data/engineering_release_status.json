@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-30.consistency1",
+  "version": "2026-10-31.language1",
   "channel": "research-preview",
   "engine_source_commit": "9332100304846852c8d35d6b77820e5941ad566f",
   "verification_scope": "Recovered engine source; static packaging and publication have separate GitHub Actions checks.",

@@ -100,7 +100,7 @@ def shell(text: str, name: str, entries: list[dict]) -> str:
                     + parser.raw(parser.find(ident='lang-opt-en'))
                     + parser.raw(parser.find(ident='lang-opt-ko')) + '</div>')
     else:
-        brand = '<a class="clinloop-shell-brand" href="./"><img src="icons/logo.svg" alt="" width="32" height="32"><span>ClinLoop AI</span></a>'
+        brand = '<a class="clinloop-shell-brand" href="./"><img src="icons/logo.svg" alt="" width="32" height="32"><span data-ui-copy>ClinLoop AI</span></a>'
         button = parser.find(ident='btn-lang')
         controls = appearance()
         if button:
@@ -226,6 +226,26 @@ def render(text: str, name: str, entries: list[dict]) -> str:
     return text
 
 
+def mark_interface_attributes(text: str) -> str:
+    """Retain English originals for reversible static accessibility translations."""
+    def apply(match: re.Match) -> str:
+        tag = match[0]
+        tag = re.sub(r' data-ui-(?:attributes|en-(?:title|aria-label|alt|placeholder))="[^"]*"', '', tag)
+        if 'data-legacy-language' in tag or re.search(r'id="lang-opt-', tag):
+            return tag
+        fields = []
+        for name in ['title', 'aria-label', 'alt']:
+            value = re.search(r'\b' + name + r'="([^"]*)"', tag)
+            # Dynamic templates retain their page's existing language presenter.
+            if value and re.search('[A-Za-z]', value[1]) and '${' not in value[1]:
+                fields.append((name, value[1]))
+        if not fields:
+            return tag
+        return (tag[:-1] + ' data-ui-attributes="' + ' '.join(name for name, _ in fields) + '"'
+                + ''.join(' data-ui-en-' + name + '="' + value + '"' for name, value in fields) + '>')
+    return re.sub(r'<(?:a|button|div|span|img|svg|section|aside|nav|summary|input|select|textarea)\b[^>]*>', apply, text)
+
+
 def release_assets(text: str, name: str, prefix: str = '') -> str:
     """Keep every public entry point on one release without rewriting source content."""
     titles = {entry['page']: entry['en'] + ' — ClinLoop AI' for entry in pages()}
@@ -255,7 +275,7 @@ def release_assets(text: str, name: str, prefix: str = '') -> str:
         additions.append(f'<link rel="canonical" href="https://clinloopai.app/{route}">')
     if additions:
         text = text.replace('</head>', '\n' + '\n'.join(additions) + '\n</head>', 1)
-    return text
+    return mark_interface_attributes(text)
 
 
 def main() -> int:

@@ -7,7 +7,8 @@
   else { root.ClinLoopUI = api; api.mount(root.document, root); }
 })(typeof window === 'undefined' ? this : window, function (copy) {
   'use strict';
-  var originals = new WeakMap(), placeholders = new WeakMap(), documentRef;
+  var catalogueLabels = {"췌장 MRI f/u": "Pancreatic MRI follow-up", "요추 MRI": "Lumbar MRI", "뇌 CT": "Brain CT", "Korean report: MedGemma adds the gynaecology referral (부인과 진료 권함).": "Korean report: MedGemma adds a gynaecology referral.", "Normal report: 'f/u 불필요'. MedGemma quoted it; the check removes it.": "Normal report: no follow-up needed. MedGemma quoted this; the check removes it.", "Normal report: simple renal cyst, explicit 'f/u 불필요'.": "Normal report: simple renal cyst; follow-up explicitly not needed."};
+  var originals = new WeakMap(), placeholders = new WeakMap(), attributes = new WeakMap(), documentRef;
   var templates = Object.keys(copy).filter(function (key) { return /\{\d+\}/.test(key); }).map(function (key) {
     var indices = [], pattern = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\{(\d+)\\\}/g, function (_, index) { indices.push(index); return '(.*?)'; });
     return {pattern: new RegExp('^' + pattern + '$'), indices: indices, target: copy[key]};
@@ -26,11 +27,12 @@
     }
     return text;
   }
+  function display(text, lang) { return translate(catalogueLabels[String(text)] || text, lang || language()); }
   function reset(el) { originals.delete(el); el.removeAttribute('data-ui-copy'); }
   function source(el, value) { reset(el); el.textContent = value; }
   function set(el, value) {
     // Call only for app-owned labels and status messages. Source-bearing nodes stay unmarked.
-    var text = String(value);
+    var text = catalogueLabels[String(value)] || String(value);
     originals.set(el, text); el.setAttribute('data-ui-copy', ''); el.textContent = translate(text, language());
   }
   function render(doc) {
@@ -43,6 +45,24 @@
     doc.querySelectorAll('[data-ui-placeholder]').forEach(function (el) {
       if (!placeholders.has(el)) placeholders.set(el, el.getAttribute('placeholder') || '');
       el.setAttribute('placeholder', translate(placeholders.get(el), lang));
+    });
+  }
+  function renderAttributes(doc) {
+    if (!doc.querySelectorAll) return;
+    var lang = doc.documentElement.lang.indexOf('ko') === 0 ? 'ko' : 'en';
+    doc.querySelectorAll('[data-ui-attributes]').forEach(function (el) {
+      var values = attributes.get(el);
+      if (!values) {
+        values = {};
+        (el.getAttribute('data-ui-attributes') || '').split(/\s+/).forEach(function (name) {
+          if (['title','aria-label','alt','placeholder'].indexOf(name) >= 0 && el.getAttribute(name) !== null) values[name] = el.getAttribute('data-ui-en-' + name) || el.getAttribute(name);
+        });
+        attributes.set(el, values);
+      }
+      Object.keys(values).forEach(function (name) {
+        var value = translate(values[name], lang);
+        if (el.getAttribute(name) !== value) el.setAttribute(name, value);
+      });
     });
   }
   function navigationHref(href, lang, theme) {
@@ -64,6 +84,7 @@
       var previousLanguage = language(), previousTheme = doc.documentElement.getAttribute('data-theme');
       function update() {
         render(doc);
+        renderAttributes(doc);
         var lang = language();
         var theme = doc.documentElement.getAttribute('data-theme');
         if ((lang !== previousLanguage || theme !== previousTheme) && win.history && win.history.replaceState && win.URLSearchParams) {
@@ -96,9 +117,12 @@
       var requested = win.URLSearchParams && new win.URLSearchParams(win.location.search).get('lang');
       if (!owned && (requested === 'en' || requested === 'ko')) choose(requested);
       update();
+      if (win.MutationObserver && doc.body) new win.MutationObserver(function (records) {
+        if (records.some(function (record) { return Array.from(record.addedNodes || []).some(function (node) { return node.nodeType === 1 && (node.matches('[data-ui-attributes]') || node.querySelector('[data-ui-attributes]')); }); })) renderAttributes(doc);
+      }).observe(doc.body, {childList:true, subtree:true});
       if (win.MutationObserver) new win.MutationObserver(update).observe(doc.documentElement, {attributes: true, attributeFilter: ['lang', 'data-theme']});
     }
     if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', start, {once: true}); else start();
   }
-  return {translate: translate, set: set, source: source, reset: reset, render: render, mount: mount, navigationHref: navigationHref};
+  return {translate: translate, display: display, set: set, source: source, reset: reset, render: render, renderAttributes: renderAttributes, mount: mount, navigationHref: navigationHref};
 });
