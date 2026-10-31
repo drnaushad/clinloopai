@@ -906,7 +906,7 @@ class ClinLoopApp {
     const btnSummaryKakao = document.getElementById('summary-btn-kakao');
     if (btnSummaryKakao) {
       btnSummaryKakao.addEventListener('click', () => {
-        const caseName = this.currentCase?.scenario_name || this.currentCase?.scenario_id || 'UNKNOWN';
+        const caseName = this.currentCase?.scenario_id || 'UNKNOWN';
         this.addAuditEntry('simulation', 'RESEARCH PREVIEW', `Sample patient message preview opened; nothing was sent · Case: ${caseName}`, true);
         this.updateOutreachModal();
         const m = document.getElementById('outreach-modal');
@@ -917,7 +917,7 @@ class ClinLoopApp {
     const btnSummaryOrder = document.getElementById('summary-btn-order');
     if (btnSummaryOrder) {
       btnSummaryOrder.addEventListener('click', () => {
-        const caseName = this.currentCase?.scenario_name || this.currentCase?.scenario_id || 'UNKNOWN';
+        const caseName = this.currentCase?.scenario_id || 'UNKNOWN';
         this.addAuditEntry('simulation', 'LOCAL SIMULATION', `Browser-only example marked resolved; no order was sent · Case: ${caseName}`, true);
         if (!this.currentCase) return;
         this.closedOverrides.add(this.currentCase.scenario_id);
