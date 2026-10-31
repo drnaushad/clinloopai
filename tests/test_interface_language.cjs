@@ -72,3 +72,30 @@ test('synthetic connection and evidence notices translate counts without changin
   assert.deepEqual(ko.match(/\d+/g),text.match(/\d+/g));
  }
 });
+
+test('tooltips, accessible labels and placeholders restore originals without changing values',()=>{
+ const node=new El('SYNTHETIC source 원문');node.value='UNMODIFIED credential';
+ node.setAttribute('data-ui-attributes','title aria-label placeholder value');
+ node.setAttribute('title','wrong captured translation');node.setAttribute('data-ui-en-title','Light theme');
+ node.setAttribute('aria-label','Case queue');node.setAttribute('placeholder','Use a fictional report without personal identifiers.');
+ const doc={documentElement:{lang:'ko'},querySelectorAll:()=>[node]};
+ ui.renderAttributes(doc);assert.equal(node.attrs.title,'밝은 테마');assert.equal(node.attrs['aria-label'],'사례 목록');assert(/[가-힣]/.test(node.attrs.placeholder));
+ assert.equal(node.textContent,'SYNTHETIC source 원문');assert.equal(node.value,'UNMODIFIED credential');
+ doc.documentElement.lang='en';ui.renderAttributes(doc);assert.equal(node.attrs.title,'Light theme');assert.equal(node.attrs['aria-label'],'Case queue');assert(!/[가-힣]/.test(node.attrs.placeholder));
+});
+test('app-owned catalogue metadata translates separately from the unmodified report text',()=>{
+ for(const title of ['췌장 MRI f/u','요추 MRI','뇌 CT']) {
+  const en=ui.display(title,'en'),ko=ui.display(title,'ko');assert(!/[가-힣]/.test(en));assert(/[가-힣]/.test(ko));
+ }
+ const e=env();const report='원문: f/u 불필요. Synthetic <script>sample</script>';ui.source(e.source,report);
+ e.ko.events.click();e.en.events.click();assert.equal(e.source.textContent,report);
+});
+test('fixed panel copy and singular deadlines have Korean translations',()=>{
+ for(const text of ['Hypothetical scenario (illustration only)','Data protection: what is built and what is not','Fast-Forward Clinical Time:','Global Health Informatics Standards Grounding','1 day','1 hour','35 Days','unknown','male','female','unassigned','Load fictional sample'])assert(/[가-힣]/.test(ui.translate(text,'ko')),text);
+});
+
+test('specific dynamic status templates localize their prose rather than matching a generic separator',()=>{
+ for(const text of ['Best model: synthetic · Generating...','Sample patient message preview opened; nothing was sent · Case: SC-01','✅ synthetic · 3ms · On-Premise ✓']) {
+  const ko=ui.translate(text,'ko');assert(/[가-힣]/.test(ko),text);assert(ko.includes('synthetic')||ko.includes('SC-01'));
+ }
+});

@@ -11,7 +11,7 @@ test('a language toggle shows the flag for its destination, independent of curre
   assert.equal(b.attrs['data-language'],'ko'); assert.equal(b.attrs['aria-label'],'Korean'); assert.equal(b.textContent,'Korean');
   assert.equal(b.attrs.lang,'en'); assert.equal(b.attrs['aria-pressed'],undefined);
   b.textContent='English'; decorate(b,'ko');
-  assert.equal(b.attrs['data-language'],'en'); assert.equal(b.attrs['aria-label'],'English');
+  assert.equal(b.attrs['data-language'],'en'); assert.equal(b.attrs['aria-label'],'영어');
 });
 test('header and dock agree on language and selected state after translation replaces text', () => {
   for (const [id,lang] of [['lang-opt-en','en'],['lang-opt-ko','ko'],['dock-btn-en','en'],['dock-btn-ko','ko']]) {
@@ -95,4 +95,54 @@ test('cockpit summary uses the selected language for an unfamiliar synthetic cas
   app.currentCase.scenario_id='SC-0062';context.renderSummary.call(app);
   assert.match(nodes['summary-q3-action'].textContent,/risk-based/);
   assert.doesNotMatch(nodes['summary-q3-action'].textContent,/Mandatory/);
+});
+
+test('late notices translate in Korean and repeated observer delivery does not rewrite unchanged status',()=>{
+ const observers=[],nodes=[];let writes=0,text='Signed in as practice.clinician (clinician).';
+ const status={get textContent(){return text;},set textContent(v){writes++;text=v;},classList:{contains:()=>false}};
+ const doc={readyState:'complete',body:{},documentElement:{lang:'ko'},getElementById:id=>id==='status'?status:null,querySelectorAll:s=>s==='[data-demo-copy]'?nodes:[]};
+ class Observer{constructor(fn){observers.push(fn);}observe(){}}
+ mount(doc,Observer);assert.match(text,/의료진/);const note={textContent:'Synthetic snapshot',getAttribute:()=> 'snapshot'};nodes.push(note);
+ const target={nodeType:1,closest:()=>true};observers.at(-1)([{target,addedNodes:[]}]);assert.match(note.textContent,/합성 스냅샷/);
+ const before=writes;for(let i=0;i<5;i++)observers.at(-1)([{target,addedNodes:[]}]);assert.equal(writes,before);
+ doc.documentElement.lang='en';observers[1]();assert.equal(text,'Signed in as practice.clinician (clinician).');
+});
+test('message-language choice labels do not change its independent selected state',()=>{
+ const b=button('btn-lang-en','English');b.attrs['aria-pressed']='false';decorate(b,'ko');
+ assert.equal(b.textContent,'영어');assert.equal(b.attrs['aria-pressed'],'false');decorate(b,'en');assert.equal(b.textContent,'English');
+});
+
+test('privacy demonstration samples and replacement labels follow language but edited input stays intact',()=>{
+ const vm=require('node:vm'),fs=require('node:fs'),nodes={};
+ function node(){return {value:'',textContent:'',events:{},addEventListener(k,fn){this.events[k]=fn;},dispatchEvent(e){this.events[e.type]?.();}};}
+ for(const id of ['phi-firewall-input','phi-firewall-output','phi-count-badge','firewall-sample-btn'])nodes[id]=node();
+ const context={window:{},location:{hostname:'clinloopai.app',protocol:'https:'},document:{addEventListener(){},getElementById:id=>nodes[id]||null},Event,setTimeout:fn=>{fn();return 0;},clearTimeout(){}};
+ vm.runInNewContext(fs.readFileSync('js/app.js','utf8')+'\nthis.initPrivacy=ClinLoopApp.prototype.initPrivacyFirewall;',context);
+ const app={currentLang:'en'};context.initPrivacy.call(app);nodes['firewall-sample-btn'].events.click();
+ assert(!/[가-힣]/.test(nodes['phi-firewall-input'].value));assert.match(nodes['phi-firewall-output'].textContent,/National ID removed/);
+ app.currentLang='ko';app.renderPrivacyLocale();assert.match(nodes['phi-firewall-input'].value,/가상환자/);assert.match(nodes['phi-firewall-output'].textContent,/주민번호 삭제/);
+ const source='SYNTHETIC edited original 원문 2026-01-01';nodes['phi-firewall-input'].value=source;
+ app.currentLang='en';app.renderPrivacyLocale();assert.equal(nodes['phi-firewall-input'].value,source);assert.match(nodes['phi-count-badge'].textContent,/Date/);assert(!/[가-힣]/.test(nodes['phi-count-badge'].textContent));
+});
+test('graph event titles localize known and unfamiliar types',()=>{
+ const vm=require('node:vm'),fs=require('node:fs'),context={};vm.runInNewContext(fs.readFileSync('js/hypergraph.js','utf8')+'\nthis.label=HypergraphVisualizer.prototype._formatEventType;',context);
+ for(const type of ['lab_result','radiology_report','missing_obligation','scheduling_action','synthetic_unfamiliar_type']) {
+  const labels=context.label(type);assert(/[가-힣]/.test(labels.ko));assert(!/[가-힣]/.test(labels.en));
+ }
+});
+
+test('local synthetic drafting requests the chosen language and preserves the returned model source',async()=>{
+ const vm=require('node:vm'),fs=require('node:fs'),ui=require('../js/interface-language.js');
+ for(const lang of ['en','ko']) {
+  const nodes=Object.fromEntries(['test-local-llm-btn','local-llm-status-badge','local-llm-test-output'].map(id=>[id,{textContent:'',dataset:{},style:{}}]));
+  const requests=[],original='SYNTHETIC model source 원문';
+  const context={window:{CLINLOOP_API_BASE:'https://synthetic.invalid',ClinLoopUI:{set:(e,v)=>{e.textContent=ui.translate(v,lang);},source:(e,v)=>{e.textContent=v;}}},location:{hostname:'clinloopai.app',protocol:'https:'},document:{documentElement:{lang},addEventListener(){},getElementById:id=>nodes[id]||null},fetch:async(url,options)=>{
+   requests.push({url,options});return {ok:true,json:async()=>url.endsWith('/status')?{best_model:'synthetic'}:{text:original,model:'synthetic',latency_ms:3}};
+  }};
+  vm.runInNewContext(fs.readFileSync('js/app.js','utf8'),context);await context.testLocalLLM();
+  assert.equal(JSON.parse(requests[1].options.body).task,'kakao_message_'+lang);
+  assert.equal(nodes['local-llm-test-output'].textContent,original);
+  assert.equal(/[가-힣]/.test(nodes['local-llm-status-badge'].textContent),lang==='ko');
+  assert.equal(nodes['test-local-llm-btn'].disabled,false);
+ }
 });

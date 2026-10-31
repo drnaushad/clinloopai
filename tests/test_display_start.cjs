@@ -50,7 +50,7 @@ async function readerStartup({failure=false,empty=false}={}){
  const source=html.slice(html.lastIndexOf('(async () => {'),html.indexOf('</script>',html.lastIndexOf('(async () => {')));
  const nodes=Object.fromEntries(['list','note','clinloop-workspace','report-load-status'].map(id=>[id,{textContent:'',hidden:false,replaceChildren(){},append(){},setAttribute(k,v){this[k]=v;}}]));
  let release;const reading=new Promise(resolve=>{release=resolve;});const removed=[];
- const context={ui:{set:(e,v)=>{e.textContent=v;},source:(e,v)=>{e.textContent=v;},reset:()=>{}},connectLiveModel:async()=>{},getReport:async()=>{if(failure)throw Error('offline');return {ok:true,json:async()=>({note:'Synthetic catalogue',cases:empty?[]:[{id:'synthetic',title:'Example',language:'en',teaches:'Example'}]})};},$:id=>nodes[id],el:()=>({dataset:{},append(){},addEventListener(){}}),openCase:()=>reading,document:{body:{classList:{remove:name=>removed.push(name)}}}};
+ const context={ui:{set:(e,v)=>{e.textContent=v;},source:(e,v)=>{e.textContent=v;},reset:()=>{}},connectLiveModel:async()=>{},getReport:async()=>{if(failure)throw Error('offline');return {ok:true,json:async()=>({note:'Synthetic catalogue',cases:empty?[]:[{id:'synthetic',title:'Example',language:'en',teaches:'Example'}]})};},$:id=>nodes[id],el:()=>({dataset:{},append(){},addEventListener(){}}),openCase:()=>reading,label:()=>({append(){}}),document:{createTextNode:text=>({textContent:text}),body:{classList:{remove:name=>removed.push(name)}}}};
  const done=vm.runInNewContext(source,context);await new Promise(resolve=>setImmediate(resolve));
  return {done,release,removed,nodes};
 }

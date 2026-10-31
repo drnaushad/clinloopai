@@ -38,9 +38,13 @@
       || /^(.+)\(([^()]*)\)님으로 로그인했습니다\.(?: · 기준 (.+))?$/.exec(text);
     if (!match) return;
     var ko = doc.documentElement.lang.indexOf('ko') === 0;
-    status.textContent = ko ? match[1] + '(' + match[2] + ')님으로 로그인했습니다.'
-      : 'Signed in as ' + match[1].trimEnd() + ' (' + match[2] + ').';
-    if (match[3]) status.textContent += (ko ? ' · 기준 ' : ' · as of ') + match[3];
+    var roles = {admin:'관리자',clinician:'의료진',navigator:'진료 조정 담당자',viewer:'조회 사용자'};
+    var role = Object.keys(roles).find(function (key) { return roles[key] === match[2]; }) || match[2];
+    var roleLabel = ko ? roles[role] || role : role;
+    var localized = ko ? match[1] + '(' + roleLabel + ')님으로 로그인했습니다.'
+      : 'Signed in as ' + match[1].trimEnd() + ' (' + roleLabel + ').';
+    if (match[3]) localized += (ko ? ' · 기준 ' : ' · as of ') + match[3];
+    if (status.textContent !== localized) status.textContent = localized;
   }
   function localizeNotices(doc) {
     localizeSessionStatus(doc);
@@ -50,27 +54,28 @@
       if (text && el.textContent !== text) el.textContent = text;
     });
   }
+  var messageChoices = {'btn-lang-en':'en','btn-lang-ko':'ko'};
   var fixed = { 'lang-opt-ko': 'ko', 'lang-opt-en': 'en', 'dock-btn-ko': 'ko', 'dock-btn-en': 'en' };
   function target(button) {
-    if (fixed[button.id]) return fixed[button.id];
+    if (fixed[button.id] || messageChoices[button.id]) return fixed[button.id] || messageChoices[button.id];
     if (button.id !== 'btn-lang') return null;
     var text = button.textContent.trim();
-    return text === '한국어' || text === 'Korean' ? 'ko' : text === 'English' ? 'en' : null;
+    return text === '한국어' || text === 'Korean' ? 'ko' : text === 'English' || text === '영어' ? 'en' : null;
   }
   function decorate(button, current) {
     var language = target(button);
     if (!language) { button.removeAttribute('data-language'); return; }
     button.setAttribute('data-language', language);
-    var label = language === 'ko' ? (current === 'ko' ? '한국어' : 'Korean') : 'English';
+    var label = current === 'ko' ? (language === 'ko' ? '한국어' : '영어') : (language === 'ko' ? 'Korean' : 'English');
     if (button.textContent !== label) button.textContent = label;
-    button.setAttribute('lang', language === 'ko' && current === 'ko' ? 'ko' : 'en');
+    button.setAttribute('lang', current === 'ko' ? 'ko' : 'en');
     button.setAttribute('aria-label', label);
     button.setAttribute('title', label);
     if (fixed[button.id]) button.setAttribute('aria-pressed', String(language === current));
   }
   function mount(doc, Observer) {
     function start() {
-      var buttons = Array.from(doc.querySelectorAll('#lang-opt-ko, #lang-opt-en, #dock-btn-ko, #dock-btn-en, #btn-lang'));
+      var buttons = Array.from(doc.querySelectorAll('#lang-opt-ko, #lang-opt-en, #dock-btn-ko, #dock-btn-en, #btn-lang, #btn-lang-en, #btn-lang-ko'));
       function update() {
         var current = doc.documentElement.lang.indexOf('ko') === 0 ? 'ko' : 'en';
         buttons.forEach(function (button) { decorate(button, current); });
@@ -82,6 +87,15 @@
       var textObserver = new Observer(update);
       buttons.forEach(function (button) { textObserver.observe(button, { childList: true, characterData: true, subtree: true }); });
       new Observer(update).observe(doc.documentElement, { attributes: true, attributeFilter: ['lang'] });
+      if (doc.body) new Observer(function (records) {
+        if (records.some(function (record) {
+          var el = record.target.nodeType === 1 ? record.target : record.target.parentElement;
+          if (el && el.closest && el.closest('[data-demo-copy], #status')) return true;
+          return Array.from(record.addedNodes || []).some(function (node) {
+            return node.nodeType === 1 && (node.matches('[data-demo-copy], #status') || node.querySelector('[data-demo-copy], #status'));
+          });
+        })) localizeNotices(doc);
+      }).observe(doc.body, {childList: true, characterData: true, subtree: true});
     }
     if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', start, { once: true });
     else start();

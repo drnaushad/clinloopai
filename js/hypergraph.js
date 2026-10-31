@@ -24,6 +24,7 @@ class HypergraphVisualizer {
   }
 
   render(scenario, isClosedOverride = false, simulatedDays = null) {
+    this.language = document.documentElement.lang.indexOf('ko') === 0 ? 'ko' : 'en';
     this.currentScenario = scenario;
     this.isClosedOverride = isClosedOverride;
     this.simulatedDays = simulatedDays;
@@ -183,7 +184,7 @@ class HypergraphVisualizer {
     text.setAttribute('font-weight', '700');
     text.setAttribute('letter-spacing', '0.08em');
     text.setAttribute('font-family', 'var(--font-mono)');
-    text.textContent = 'NEURO-SYMBOLIC TEMPORAL OBLIGATION AXIS';
+    text.textContent = this.language === 'ko' ? '임상 후속 조치 시간축' : 'CLINICAL FOLLOW-UP TIMELINE';
     axisGroup.appendChild(text);
 
     this.svg.appendChild(axisGroup);
@@ -237,9 +238,9 @@ class HypergraphVisualizer {
     const badgeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     badgeGroup.setAttribute('transform', `translate(${midX}, ${arcY + 16})`);
 
-    const labelText = isClosed 
-      ? '✓ OBLIGATION CLOSED & VERIFIED' 
-      : `⚠ OPEN HYPEREDGE: [${scenario.applicable_rule_id}] ${scenario.missing_followup ? scenario.missing_followup.split(' within')[0] : 'ACTION REQUIRED'}`;
+    const labelText = isClosed
+      ? (this.language === 'ko' ? '✓ 후속 조치 기록 (예시)' : '✓ FOLLOW-UP RECORDED (EXAMPLE)')
+      : (this.language === 'ko' ? `⚠ 미완료 후속 조치: [${scenario.applicable_rule_id}]` : `⚠ OPEN FOLLOW-UP: [${scenario.applicable_rule_id}]`);
 
     const badgeWidth = Math.max(240, labelText.length * 7.5 + 30);
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -300,7 +301,7 @@ class HypergraphVisualizer {
     textTitleEn.setAttribute('fill', isClosure ? '#05df72' : '#f8fafc');
     textTitleEn.setAttribute('font-size', '12.5');
     textTitleEn.setAttribute('font-weight', '700');
-    textTitleEn.textContent = labelData.en;
+    textTitleEn.textContent = labelData[this.language] || labelData.en;
     g.appendChild(textTitleEn);
 
     // Date sublabel
@@ -310,7 +311,7 @@ class HypergraphVisualizer {
     textDate.setAttribute('fill', '#94a3b8');
     textDate.setAttribute('font-size', '10');
     textDate.setAttribute('font-family', 'var(--font-mono)');
-    textDate.textContent = node.timestamp.split('T')[0] || node.timestamp;
+    textDate.textContent = this.language === 'ko' && node.timestamp === 'SCHEDULED (Pending)' ? '예약됨 (대기 중)' : this.language === 'ko' && node.timestamp === 'PENDING ACTION' ? '조치 대기 중' : node.timestamp.split('T')[0] || node.timestamp;
     g.appendChild(textDate);
 
     // Tooltip interaction
@@ -349,7 +350,7 @@ class HypergraphVisualizer {
     textLabel.setAttribute('fill', '#ff2a5f');
     textLabel.setAttribute('font-size', '11');
     textLabel.setAttribute('font-weight', '800');
-    textLabel.textContent = 'UNFULFILLED GAP';
+    textLabel.textContent = this.language === 'ko' ? '미완료 조치' : 'UNFULFILLED GAP';
     g.appendChild(textLabel);
 
     const textAction = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -359,7 +360,7 @@ class HypergraphVisualizer {
     textAction.setAttribute('font-size', '9.5');
     textAction.setAttribute('font-weight', '600');
     textAction.setAttribute('font-family', 'var(--font-mono)');
-    textAction.textContent = 'OVERDUE ACTION';
+    textAction.textContent = this.language === 'ko' ? '기한을 넘긴 조치' : 'OVERDUE ACTION';
     g.appendChild(textAction);
 
     this.svg.appendChild(g);
@@ -393,10 +394,12 @@ class HypergraphVisualizer {
       specialist_referral: { en: 'Referral Placed', ko: '전문의 의뢰' },
       referral_visit: { en: 'Specialist Visit', ko: '전문의 진료' },
       inr_recheck: { en: 'INR Recheck', ko: 'INR 재검사' },
-      closure_action: { en: 'Loop Resolved', ko: '루프 종결' }
+      closure_action: { en: 'Loop Resolved', ko: '루프 종결' },
+      scheduling_action: { en: 'Scheduling example', ko: '예약 예시' },
+      missing_obligation: { en: 'Missing follow-up', ko: '미완료 후속 조치' }
     };
     const defaultEn = typeStr.replace(/_/g, ' ').toUpperCase();
-    return map[typeStr] || { en: defaultEn, ko: defaultEn };
+    return map[typeStr] || { en: defaultEn, ko: '임상 이벤트' };
   }
 
   _showTooltip(node) {
@@ -405,7 +408,7 @@ class HypergraphVisualizer {
     if (!tooltip) return;
     
     const labelData = this._formatEventType(node.event_type);
-    document.getElementById('tt-type').textContent = `${this._getEventIcon(node.event_type)} ${labelData.en}`;
+    document.getElementById('tt-type').textContent = `${this._getEventIcon(node.event_type)} ${labelData[this.language] || labelData.en}`;
     document.getElementById('tt-time').textContent = node.timestamp;
     document.getElementById('tt-details').textContent = details;
     
