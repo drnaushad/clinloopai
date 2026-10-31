@@ -10,6 +10,10 @@ const safeStorage = {
   set(key, value) { try { window.localStorage.setItem(key, value); } catch (e) { /* not remembered */ } },
 };
 
+function displayCopy(text, lang) {
+  return window.ClinLoopUI ? window.ClinLoopUI.display(text, lang) : String(text);
+}
+
 const CLINLOOP_I18N = {
 
   ko: {
@@ -190,17 +194,20 @@ async function testLocalLLM() {
   const badge = document.getElementById('local-llm-status-badge');
   const output = document.getElementById('local-llm-test-output');
   if (!btn) return;
-  const label = btn.dataset.label || (btn.dataset.label = btn.textContent);   // put back afterwards, unchanged
+  const lang = document.documentElement.lang.indexOf('ko') === 0 ? 'ko' : 'en';
+  const label = '▶ Test Local LLM Now';
+  const present = (el,text) => { if (!el) return; if (window.ClinLoopUI) window.ClinLoopUI.set(el,text); else el.textContent=displayCopy(text,lang); };
+  const source = text => { if (!output) return; if (window.ClinLoopUI) window.ClinLoopUI.source(output,text); else output.textContent=text; };
 
-  btn.textContent = '⏳ Generating...';
+  present(btn, '⏳ Generating...');
   btn.disabled = true;
-  if (badge) badge.textContent = 'Calling MedLlama2 via Ollama...';
+  if (badge) present(badge, 'Calling MedLlama2 via Ollama...');
   if (output) { output.style.display = 'block'; output.textContent = ''; }
 
   if (!CLINLOOP_API_BASE && !OLLAMA_BASE) {
-    if (badge) badge.innerHTML = `<span style="color:#f59e0b">⚠️ On-premise LLM not available in the public demo</span>`;
-    if (output) output.textContent = 'The local LLM runs only inside the hospital network (ClinLoop API on port 8124 with Ollama). Nothing was generated. Run the cockpit and API locally to try this panel.';
-    btn.textContent = label;
+    if (badge) present(badge, `⚠️ On-premise LLM not available in the public demo`);
+    if (output) present(output, 'The local LLM runs only inside the hospital network (ClinLoop API on port 8124 with Ollama). Nothing was generated. Run the cockpit and API locally to try this panel.');
+    present(btn, label);
     btn.disabled = false;
     return;
   }
@@ -212,14 +219,14 @@ async function testLocalLLM() {
     const status = statusResp.ok ? await statusResp.json() : null;
     const bestModel = status?.best_model || 'deepseek-r1:32b';
 
-    if (badge) badge.textContent = `Best model: ${status?.best_model_label || bestModel} · Generating...`;
+    if (badge) present(badge, `Best model: ${status?.best_model_label || bestModel} · Generating...`);
 
     const t0 = Date.now();
     const resp = await fetch(`${CLINLOOP_API_BASE}/api/v1/local-llm/generate`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        task: 'kakao_message_ko',
+        task: lang === 'ko' ? 'kakao_message_ko' : 'kakao_message_en',
         clinical_context: 'Patient: 40대 남성. CT finding: 14mm ground-glass nodule in right lower lobe. Fleischner 2017: follow-up chest CT at 6-12 months.',
       })
     });
@@ -229,8 +236,8 @@ async function testLocalLLM() {
     if (resp.ok) {
       const data = await resp.json();
       if (!data.text) throw new Error(data.error || 'empty response');
-      if (output) output.textContent = data.text;
-      if (badge) badge.innerHTML = `<span style="color:#10b981">✅ ${data.model} · ${data.latency_ms || latency}ms · On-Premise ✓</span>`;
+      if (output) source(data.text);
+      if (badge) present(badge, `✅ ${data.model} · ${data.latency_ms || latency}ms · On-Premise ✓`);
     } else {
       throw new Error(`HTTP ${resp.status}`);
     }
@@ -244,7 +251,7 @@ async function testLocalLLM() {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           model: 'llama3:latest',
-          prompt: '[De-identified example] 40대 남성 환자, 14mm 간유리음영 결절 발견. 카카오톡 안심 알림 2문장 작성 (의학용어 없이, 환자 이름 없이):',
+          prompt: lang === 'ko' ? '[Synthetic example] 40대 남성 환자, 14mm 간유리음영 결절 발견. 카카오톡 안심 알림 2문장 작성 (의학용어 없이, 환자 이름 없이):' : '[Synthetic example] Man in his 40s, 14 mm ground-glass nodule. Write a two-sentence English patient reminder without medical jargon or patient names:',
           stream: false,
           options: {temperature: 0.3, num_predict: 100}
         })
@@ -252,14 +259,14 @@ async function testLocalLLM() {
       const latency = Date.now() - t0;
       const data = await resp.json();
       if (!data.response) throw new Error('empty response');
-      if (output) output.textContent = data.response;
-      if (badge) badge.innerHTML = `<span style="color:#10b981">✅ ${data.model} (direct Ollama) · ${Math.round(latency/1000)}s · On-Premise ✓</span>`;
+      if (output) source(data.response);
+      if (badge) present(badge, `✅ ${data.model} (direct Ollama) · ${Math.round(latency/1000)}s · On-Premise ✓`);
     } catch (e2) {
-      if (badge) badge.innerHTML = `<span style="color:#f59e0b">⚠️ Local LLM offline (ClinLoop API port 8124 / Ollama port 11434)</span>`;
-      if (output) { output.textContent = 'No message was generated: the on-premise LLM did not respond. Start Ollama and the ClinLoop API, then try again.'; output.style.display = 'block'; }
+      if (badge) present(badge, `⚠️ Local LLM offline (ClinLoop API port 8124 / Ollama port 11434)`);
+      if (output) { present(output, 'No message was generated: the on-premise LLM did not respond. Start Ollama and the ClinLoop API, then try again.'); output.style.display = 'block'; }
     }
   }
-  btn.textContent = label;
+  present(btn, label);
   btn.disabled = false;
 }
 
@@ -566,34 +573,40 @@ class ClinLoopApp {
     const gpuModal = document.getElementById('gpu-modal');
     const btnCloseGpuModal = document.getElementById('btn-close-gpu-modal');
 
-    this.fetchGpuTelemetry = async () => {
-      if (!btnGpuHud || !CLINLOOP_API_BASE) return;
-      const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    let computeStatus;
+    this.renderComputeLocale = () => {
+      if (!btnGpuHud || computeStatus === undefined) return;
+      const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = displayCopy(text, this.currentLang); };
       const label = document.getElementById('gpu-hud-label');
       const dot = document.getElementById('gpu-hud-dot');
-      try {
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 8000);
-        const resp = await fetch(`${CLINLOOP_API_BASE}/api/v1/compute/status`, { signal: ctrl.signal });
-        clearTimeout(timer);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const c = await resp.json();
-        const ko = this.currentLang === 'ko';
-        if (label) label.textContent = c.gpu_available ? `GPU: ${c.gpu_name}` : (ko ? 'CPU 전용' : 'CPU only');
-        if (dot) dot.style.background = c.gpu_available ? 'var(--emerald-safe)' : 'var(--text-dim)';
-        btnGpuHud.title = c.summary;
+      const c = computeStatus;
+      const summary = c ? `Compute device: ${c.gpu_available ? c.gpu_name : 'CPU'}` : 'Could not reach the ClinLoop server to check its hardware';
+      if (label) label.textContent = c ? (c.gpu_available ? `GPU: ${c.gpu_name}` : this.currentLang === 'ko' ? 'CPU 전용' : 'CPU only') : displayCopy('Compute: unknown', this.currentLang);
+      if (dot) dot.style.background = c && c.gpu_available ? 'var(--emerald-safe)' : 'var(--text-dim)';
+      btnGpuHud.title = displayCopy(summary, this.currentLang);
+      // This tooltip is dynamic; do not let the static attribute presenter restore its initial text.
+      btnGpuHud.removeAttribute('data-ui-attributes');
+      if (c) {
         set('gpu-val-device', c.gpu_available ? c.gpu_name : `CPU · ${c.cpu_count || '?'} cores`);
         set('gpu-val-vram-total', c.gpu_memory_total_gb ? `${c.gpu_memory_total_gb} GB` : '—');
         const ct = (c.uses || {}).ct_organ_segmentation || {};
         set('gpu-val-ct', ct.installed ? `Installed · runs on ${String(ct.runs_on).toUpperCase()}` : 'Not installed');
-        set('compute-sub', c.summary);
-        btnGpuHud.hidden = false;
-      } catch (e) {
-        if (label) label.textContent = 'Compute: unknown';
-        btnGpuHud.title = 'Could not reach the ClinLoop server to check its hardware';
-        set('compute-sub', 'Could not reach the ClinLoop server to check its hardware.');
-        btnGpuHud.hidden = false;
       }
+      set('compute-sub', summary);
+      btnGpuHud.hidden = false;
+    };
+    this.fetchGpuTelemetry = async () => {
+      if (!btnGpuHud || !CLINLOOP_API_BASE) return;
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 8000);
+        try {
+          const resp = await fetch(`${CLINLOOP_API_BASE}/api/v1/compute/status`, { signal: ctrl.signal });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          computeStatus = await resp.json();
+        } finally { clearTimeout(timer); }
+      } catch (_) { computeStatus = null; }
+      this.renderComputeLocale();
     };
 
     this.fetchGpuTelemetry();
@@ -624,8 +637,7 @@ class ClinLoopApp {
     if (btnAction && orderModal) {
       btnAction.addEventListener('click', () => {
         if (!this.currentCase || this.closedOverrides.has(this.currentCase.scenario_id)) return;
-        document.getElementById('modal-pt-name').textContent = `${this.currentCase.patient_id} (${this.currentCase.scenario_name})`;
-        document.getElementById('modal-order-desc').textContent = this.currentCase.missing_followup || 'Clinical follow-up for review';
+        this.updateOrderPreview();
         orderModal.classList.add('open');
       });
     }
@@ -648,7 +660,7 @@ class ClinLoopApp {
     const updateScrubDays = (days) => {
       this.currentScrubDays = days;
       if (scrubber) scrubber.value = days;
-      if (scrubberVal) scrubberVal.textContent = `${days} Days`;
+      if (scrubberVal) scrubberVal.textContent = displayCopy(`${days} Days`, this.currentLang);
       
       // Update active preset pill
       document.querySelectorAll('.preset-pill').forEach(pill => {
@@ -906,7 +918,7 @@ class ClinLoopApp {
     if (btnSummaryOrder) {
       btnSummaryOrder.addEventListener('click', () => {
         const caseName = this.currentCase?.scenario_name || this.currentCase?.scenario_id || 'UNKNOWN';
-        this.addAuditEntry('simulation', 'LOCAL SIMULATION', `Case successfully resolved and FHIR orders securely dispatched · Case: ${caseName}`, true);
+        this.addAuditEntry('simulation', 'LOCAL SIMULATION', `Browser-only example marked resolved; no order was sent · Case: ${caseName}`, true);
         if (!this.currentCase) return;
         this.closedOverrides.add(this.currentCase.scenario_id);
         this.selectCase(this.currentCase.scenario_id);
@@ -985,6 +997,11 @@ class ClinLoopApp {
 
       this.applyI18nText(this.currentLang);
       this.updateDisplayLabels();
+      if (this.renderPrivacyLocale) this.renderPrivacyLocale();
+      if (this.renderComputeLocale) this.renderComputeLocale();
+      const scrubberLabel=document.getElementById('scrubber-days-val');
+      if (scrubberLabel) scrubberLabel.textContent=displayCopy(`${this.currentScrubDays} Days`,this.currentLang);
+      if (this.currentCase) this.populateBioMcpModal();
       if (this.renderConnections) this.renderConnections();
 
       this.outreachLang = this.currentLang;
@@ -995,6 +1012,8 @@ class ClinLoopApp {
         btnOutreachEn.classList.toggle('active', !isKo);
       }
       this.updateOutreachModal();
+      this.updateEmrComparisonContent();
+      this.updateOrderPreview();
 
       this.renderCaseTabs();
       this.updateSummaryView();
@@ -1005,9 +1024,9 @@ class ClinLoopApp {
         const isClosed = (this.currentCase.ground_truth_status === 'closed') || isOverridden;
         this.updateDetailsPanel(this.currentCase, isClosed);
       }
-      if (this.currentView === 'counterfactual') {
-        this.updateCounterfactualView();
-      }
+      this.updateCounterfactualView();
+      this.updateStandardsView();
+      if (this.currentCase) this.hypergraph.render(this.currentCase, this.closedOverrides.has(this.currentCase.scenario_id), this.currentScrubDays);
     };
 
     const initialLang = (typeof urlParams !== 'undefined' ? urlParams.get('lang') : new URLSearchParams(window.location.search).get('lang')) || safeStorage.get('clinloop_lang') || 'en';
@@ -1255,7 +1274,7 @@ class ClinLoopApp {
           <span class="case-name">${ptName}</span>
           <span class="case-status-badge ${statusClass}">${statusText}</span>
         </div>
-        <div class="case-title" title="${c.scenario_name}">${ptCondition}</div>
+        <div class="case-title" title="${ptCondition}">${ptCondition}</div>
         <div class="case-meta">
           <span class="case-sev">${sevText}</span>
           <span>${c.applicable_rule_id || ''}</span>
@@ -1296,7 +1315,7 @@ class ClinLoopApp {
     const scrubberVal = document.getElementById('scrubber-days-val');
     this.currentScrubDays = 35;
     if (scrubber) scrubber.value = 35;
-    if (scrubberVal) scrubberVal.textContent = '35 Days';
+    if (scrubberVal) scrubberVal.textContent = displayCopy('35 Days', this.currentLang);
 
     // Render Hypergraph
     this.hypergraph.render(selected, isOverridden, this.currentScrubDays);
@@ -1338,7 +1357,7 @@ class ClinLoopApp {
       if (canvas) canvas.style.display = 'none';
     }
     document.getElementById('case-display-title').textContent = isKo ? (scenario.title_kr || scenario.scenario_name) : scenario.scenario_name;
-    document.getElementById('case-display-desc').textContent = scenario.clinical_narrative;
+    document.getElementById('case-display-desc').textContent = displayCopy(scenario.clinical_narrative, this.currentLang);
 
     document.getElementById('stat-rule-id').textContent = scenario.applicable_rule_id;
     const sevKo = { critical: '위급', high: '높음', moderate: '중간', low: '낮음' };
@@ -1434,11 +1453,19 @@ class ClinLoopApp {
     this.applyFilters();
   }
 
+  updateOrderPreview() {
+    const c=this.currentCase;
+    if (!c) return;
+    const name=document.getElementById('modal-pt-name'), action=document.getElementById('modal-order-desc');
+    if (name) name.textContent=`${c.patient_id} (${this.currentLang === 'ko' ? c.title_kr || displayCopy(c.scenario_name,'ko') : c.scenario_name})`;
+    if (action) action.textContent=displayCopy(c.missing_followup || 'Clinical follow-up for review',this.currentLang);
+  }
+
   updateEmrComparisonContent() {
     if (!this.currentCase) return;
     const c = this.currentCase;
-    document.getElementById('emr-view-scenario-name').textContent = `${c.patient_id} — ${c.scenario_name}`;
-    document.getElementById('emr-missing-action').textContent = c.missing_followup || 'Clinical follow-up';
+    document.getElementById('emr-view-scenario-name').textContent = `${c.patient_id} — ${this.currentLang === 'ko' ? c.title_kr || displayCopy(c.scenario_name, 'ko') : c.scenario_name}`;
+    document.getElementById('emr-missing-action').textContent = displayCopy(c.missing_followup || 'Clinical follow-up', this.currentLang);
   }
 
   _playTelemetrySound(freq, type = 'sine', duration = 0.08) {
@@ -1710,8 +1737,10 @@ class ClinLoopApp {
 
     const s = this.connStatus;
     const apiPill = document.getElementById('api-status-pill');
+    if (apiPill && s === undefined) apiPill.textContent = t.checking;
     if (apiPill && s !== undefined) { apiPill.textContent = s ? t.pillApi : t.pillDemo; style(apiPill, s ? 'ok' : 'off'); }
     const bioPill = document.getElementById('biomcp-status-pill');
+    if (bioPill && s === undefined) bioPill.textContent = t.checking;
     if (bioPill && s !== undefined) {
       const biomcpLive = !!(s && s.biomcp && s.biomcp.status === 'ok');
       const pubmedLive = !!(s && s.pubmed && s.pubmed.status === 'ok');
@@ -1719,6 +1748,7 @@ class ClinLoopApp {
       style(bioPill, biomcpLive || pubmedLive ? 'ok' : 'off');
     }
     const llmPill = document.getElementById('outreach-model-pill');
+    if (llmPill && s === undefined) llmPill.textContent = t.checking;
     if (llmPill && s !== undefined) {
       const llmOn = !!(s && s.local_llm && s.local_llm.status === 'ok');
       llmPill.textContent = llmOn ? t.llmOn(s.local_llm.model) : t.llmOff; style(llmPill, llmOn ? 'ok' : 'off');
@@ -1840,7 +1870,7 @@ class ClinLoopApp {
     this.renderLiveLiterature(this.currentCase.applicable_rule_id);
 
     const gradeEl = document.getElementById('biomcp-evidence-grade');
-    if (gradeEl) gradeEl.textContent = ev.evidence_grade.split('(')[0].trim();
+    if (gradeEl) gradeEl.textContent = displayCopy('Evidence grade not established', this.currentLang);
 
     // Dossier Card
     const orgEl = document.getElementById('biomcp-org-tag');
@@ -1850,7 +1880,7 @@ class ClinLoopApp {
     if (titleEl) titleEl.textContent = ev.guideline_title;
 
     const citEl = document.getElementById('biomcp-citation-text');
-    if (citEl) citEl.textContent = `Citation: ${ev.citation}`;
+    if (citEl) citEl.textContent = `${ev.citation}`;
 
     const pmidLink = document.getElementById('biomcp-pmid-link');
     const pmidVal = document.getElementById('biomcp-pmid-val');
@@ -1864,16 +1894,16 @@ class ClinLoopApp {
 
     // Derived Parameters
     const actVal = document.getElementById('biomcp-param-action');
-    if (actVal) actVal.textContent = ev.mandated_action;
+    if (actVal) actVal.textContent = displayCopy(ev.mandated_action, this.currentLang);
 
     const tcritVal = document.getElementById('biomcp-param-tcrit');
-    if (tcritVal) tcritVal.textContent = `${ev.derived_t_crit} Days`;
+    if (tcritVal) tcritVal.textContent = displayCopy(`${ev.derived_t_crit} Days`, this.currentLang);
 
     const kVal = document.getElementById('biomcp-param-k');
     if (kVal) kVal.textContent = ev.derived_k_factor;
 
     const liabVal = document.getElementById('biomcp-param-liability');
-    if (liabVal) liabVal.textContent = ev.legal_liability.split('(')[0].trim();
+    if (liabVal) liabVal.textContent = displayCopy('Not estimated', this.currentLang);
   }
 
   _getFallbackCases() {
@@ -1948,7 +1978,7 @@ class ClinLoopApp {
 
     const patientProfiles_ko = {
       'SC-0062': {
-        name: '박영희 (Park, Young-hee)',
+        name: '박영희',
         ageSex: '여성 42세',
         dept: '산부인과 정기 건강검진 (자궁경부 세포검사)',
         finding: '자궁경부 세포검사(Pap) 결과 고등급 편평상피내 병변(HSIL) 발견 (자궁경부암 전암 단계)',
@@ -1957,7 +1987,7 @@ class ClinLoopApp {
         deadline: '예시 추적 목표 · 의료진 검토 필요',
       },
       'SC-0004': {
-        name: '김철수 (Kim, Chul-soo)',
+        name: '김철수',
         ageSex: '남성 52세',
         dept: '응급의학과 외상진료 (갈비뼈 골절 치료 후 퇴원)',
         finding: '흉부 CT에서 우상엽(RUL) 7.8mm 침상형 폐 결절이 우연히 보고됨 · 진단 및 관리 계획은 의료진 평가 필요',
@@ -1966,7 +1996,7 @@ class ClinLoopApp {
         deadline: '74일 남음 (마감일자: 2026-12-04)',
       },
       'SC-0098': {
-        name: '박순자 (Park, Soon-ja)',
+        name: '박순자',
         ageSex: '여성 71세',
         dept: '순환기내과 심방세동 항응고 치료',
         finding: '심방세동 뇌졸중 예방을 위해 와파린(Warfarin) 용량을 5mg에서 7.5mg으로 증량 처방',
@@ -1975,7 +2005,7 @@ class ClinLoopApp {
         deadline: '예시 추적 목표 · 의료진 검토 필요',
       },
       'SC-0164': {
-        name: '최민경 (Choi, Min-kyung)',
+        name: '최민경',
         ageSex: '여성 58세',
         dept: '흉부외과 폐암 조기진단 클리닉',
         finding: '흉부 CT에서 10.8mm 폐 결절 발견 (Fleischner 가이드라인 고위험)',
@@ -1984,7 +2014,7 @@ class ClinLoopApp {
         deadline: '완료됨 (Closed Loop)',
       },
       'SC-0083': {
-        name: '정우성 (Jung, Woo-sung)',
+        name: '정우성',
         ageSex: '남성 48세',
         dept: '응급의학과 열성질환 진료 후 퇴원',
         finding: '퇴원 48시간 후 시행된 혈액배양 검사에서 녹농균(Pseudomonas aeruginosa) 균혈증 양성 보고',
@@ -2045,7 +2075,7 @@ class ClinLoopApp {
     const profiles = isKo ? patientProfiles_ko : patientProfiles_en;
     const prof = profiles[c.scenario_id] || {
       name: isKo ? `환자 (${c.patient_id})` : `Patient (${c.patient_id})`,
-      ageSex: isKo ? `${c.patient_age}세 ${c.patient_sex}` : `${c.patient_age}y ${c.patient_sex}`,
+      ageSex: isKo ? `${c.patient_age}세 ${c.patient_sex === 'M' ? '남성' : c.patient_sex === 'F' ? '여성' : '성별 미상'}` : `${c.patient_age}y ${c.patient_sex}`,
       dept: isKo ? '외래 검사' : 'Outpatient testing',
       finding: c.scenario_name,
       missed: c.missing_followup,
@@ -2127,22 +2157,22 @@ class ClinLoopApp {
     const c = this.currentCase;
 
     const conditionTag = document.getElementById('cf-condition-tag');
-    if (conditionTag) conditionTag.textContent = cf.condition_name;
+    if (conditionTag) conditionTag.textContent = displayCopy(cf.condition_name, this.currentLang);
 
     const ptSummary = document.getElementById('cf-patient-summary');
-    if (ptSummary) ptSummary.textContent = `${c.patient_id} (${c.patient_age}y / ${c.patient_sex}) — ${c.scenario_name}`;
+    if (ptSummary) ptSummary.textContent = this.currentLang === 'ko' ? `${c.patient_id} (${c.patient_age}세) — ${c.title_kr || displayCopy(c.scenario_name, 'ko')}` : `${c.patient_id} (${c.patient_age}y / ${c.patient_sex}) — ${c.scenario_name}`;
 
     const deltaEl = document.getElementById('cf-survival-delta');
-    if (deltaEl) deltaEl.textContent = 'Not estimated';
+    if (deltaEl) deltaEl.textContent = displayCopy('Not estimated', this.currentLang);
 
     const subEl = document.getElementById('cf-survival-sub');
-    if (subEl) subEl.textContent = 'No outcome model exists.';
+    if (subEl) subEl.textContent = displayCopy('No outcome model exists.', this.currentLang);
 
     const qalyEl = document.getElementById('cf-qaly-gain');
-    if (qalyEl) qalyEl.textContent = 'Not established';
+    if (qalyEl) qalyEl.textContent = displayCopy('Not established', this.currentLang);
 
     const liabEl = document.getElementById('cf-liability-avoided');
-    if (liabEl) liabEl.textContent = 'Not estimated';
+    if (liabEl) liabEl.textContent = displayCopy('Not estimated', this.currentLang);
 
     const guideEl = document.getElementById('cf-guideline-grade');
     if (guideEl && c.biomcp_evidence) {
@@ -2150,7 +2180,7 @@ class ClinLoopApp {
     }
 
     const evText = document.getElementById('cf-evidence-text');
-    if (evText) evText.textContent = 'No survival outcome model exists; nothing is estimated.';
+    if (evText) evText.textContent = displayCopy('No survival outcome model exists; nothing is estimated.', this.currentLang);
 
     for (const [id, steps, danger] of [
       ['cf-neglected-steps', cf.neglected_path, true],
@@ -2171,12 +2201,12 @@ class ClinLoopApp {
     const item = make('div', 'cf-step');
     const body = make('div', 'cf-step-body');
     const title = make('div', 'cf-step-title-row');
-    title.append(make('span', 'cf-step-state', step.state),
-      make('span', 'cf-step-stage ' + (danger ? 'stage-danger' : 'stage-success'), step.stage));
+    title.append(make('span', 'cf-step-state', displayCopy(step.state, this.currentLang)),
+      make('span', 'cf-step-stage ' + (danger ? 'stage-danger' : 'stage-success'), displayCopy(step.stage, this.currentLang)));
     const meta = make('div', 'cf-step-meta');
     meta.append(make('span', '', this.currentLang === 'ko' ? '예시 · 모델 예측 아님' : 'Illustration only · not a model prediction'));
-    body.append(title, make('div', 'cf-step-desc', step.desc), meta);
-    item.append(make('div', 'cf-step-time', step.time), body);
+    body.append(title, make('div', 'cf-step-desc', displayCopy(/survival|malpractice|mortality|risk was/i.test(step.desc) ? 'This is an unvalidated hypothetical outcome; no survival, harm-reduction or legal-risk estimate is established.' : step.desc, this.currentLang)), meta);
+    item.append(make('div', 'cf-step-time', displayCopy(step.time, this.currentLang)), body);
     return item;
   }
 
@@ -2221,25 +2251,25 @@ class ClinLoopApp {
     const statusPill = document.getElementById('mtl-status-pill');
 
     if (isClosed) {
-      if (marginEl) marginEl.innerHTML = `<span style="color: var(--emerald-safe); font-weight: 700;">ρ(Φ, t) = +∞ (Invariant Formally Satisfied via Closed Loop)</span>`;
+      if (marginEl) marginEl.innerHTML = `<span style="color: var(--emerald-safe); font-weight: 700;">ρ(Φ, t) = +∞ (${displayCopy('Invariant Formally Satisfied via Closed Loop', this.currentLang)})</span>`;
       if (statusPill) {
-        statusPill.textContent = 'Invariant SATISFIED ✓';
+        statusPill.textContent = displayCopy('Invariant SATISFIED ✓', this.currentLang);
         statusPill.style.background = 'rgba(5, 223, 114, 0.15)';
         statusPill.style.color = 'var(--emerald-safe)';
         statusPill.style.borderColor = 'rgba(5, 223, 114, 0.4)';
       }
     } else if (margin >= 0) {
-      if (marginEl) marginEl.innerHTML = `ρ(Φ, t) = T_crit - Δt = ${tCrit}d - ${deltaT}d = <span style="color: var(--emerald-safe); font-weight: 700;">+${margin}d (Safe Window Active)</span>`;
+      if (marginEl) marginEl.innerHTML = `ρ(Φ, t) = T_crit - Δt = ${tCrit}d - ${deltaT}d = <span style="color: var(--emerald-safe); font-weight: 700;">+${margin}d (${displayCopy('Safe Window Active', this.currentLang)})</span>`;
       if (statusPill) {
-        statusPill.textContent = `Safe Margin: +${margin} Days`;
+        statusPill.textContent = displayCopy(`Safe Margin: +${margin} Days`, this.currentLang);
         statusPill.style.background = 'rgba(5, 223, 114, 0.15)';
         statusPill.style.color = 'var(--emerald-safe)';
         statusPill.style.borderColor = 'rgba(5, 223, 114, 0.4)';
       }
     } else {
-      if (marginEl) marginEl.innerHTML = `ρ(Φ, t) = T_crit - Δt = ${tCrit}d - ${deltaT}d = <span style="color: var(--crimson-danger); font-weight: 700;">${margin}d (CRITICAL TEMPORAL BREACH)</span>`;
+      if (marginEl) marginEl.innerHTML = `ρ(Φ, t) = T_crit - Δt = ${tCrit}d - ${deltaT}d = <span style="color: var(--crimson-danger); font-weight: 700;">${margin}d (${displayCopy('CRITICAL TEMPORAL BREACH', this.currentLang)})</span>`;
       if (statusPill) {
-        statusPill.textContent = `INVARIANT VIOLATED (${margin}d)`;
+        statusPill.textContent = displayCopy(`INVARIANT VIOLATED (${margin}d)`, this.currentLang);
         statusPill.style.background = 'rgba(255, 42, 95, 0.15)';
         statusPill.style.color = 'var(--crimson-danger)';
         statusPill.style.borderColor = 'rgba(255, 42, 95, 0.4)';
@@ -2296,14 +2326,14 @@ class ClinLoopApp {
     const c = this.currentCase;
     const isEnglish = this.outreachLang === 'en';
     const message = isEnglish
-      ? 'AI-generated draft ready for 1-click physician approval. Communication staged securely.'
+      ? 'Synthetic demonstration text. This is not a clinical instruction or a message for a real patient. A clinician must review actual records and use an approved contact process.'
       : '합성 데이터 시연용 문구입니다. 임상 지시나 실제 환자에게 보낼 메시지가 아닙니다. 담당 의료진이 실제 기록을 검토하고 승인된 절차로 환자 연락 여부를 결정해야 합니다.';
 
     const setText = (id, value) => {
       const element = document.getElementById(id);
       if (element) element.textContent = value;
     };
-    setText('kakao-outreach-title', isEnglish ? `Secure Patient Message · ${c.scenario_id}` : `임상 사례 안내문 · ${c.scenario_id}`);
+    setText('kakao-outreach-title', isEnglish ? `Sample Patient Message · ${c.scenario_id}` : `임상 사례 안내문 · ${c.scenario_id}`);
     setText('kakao-jargon-text', isEnglish ? 'Clinical case selected' : '임상 사례 선택됨');
     setText('kakao-outreach-body', message);
     setText('kakao-dept-slot', isEnglish ? 'No appointment reserved' : '예약된 일정 없음');
@@ -2357,12 +2387,14 @@ class ClinLoopApp {
     entry.className = `audit-entry audit-entry-${type}`;
     const ts = new Date().toISOString().slice(11,19) + ' UTC';
     const engineIcons = { system:'RESEARCH', kakao:'MESSAGE PREVIEW', order:'LOCAL SIMULATION', model:'RESEARCH', warning:'STATUS', simulation:'LOCAL ONLY' };
-    entry.innerHTML = `
-      <span class="audit-ts">${ts}</span>
-      <span class="audit-engine">${engineIcons[type] || engine}</span>
-      <span class="audit-action">${action}</span>
-      <span class="audit-phi-badge">${phiSafe ? '✅ No PHI' : '⚠️ PHI Check'}</span>
-    `;
+    for (const [className, text, translate] of [
+      ['audit-ts',ts,false], ['audit-engine',engineIcons[type] || engine,true],
+      ['audit-action',action,true], ['audit-phi-badge',phiSafe ? '✅ No PHI' : '⚠️ PHI Check',true]
+    ]) {
+      const node=document.createElement('span');node.className=className;
+      if (translate && window.ClinLoopUI) window.ClinLoopUI.set(node,text); else node.textContent=text;
+      entry.appendChild(node);
+    }
     container.insertBefore(entry, container.firstChild);
     // Keep max 20 entries
     while (container.children.length > 20) container.removeChild(container.lastChild);
@@ -2410,10 +2442,10 @@ class ClinLoopApp {
     if (exportBtn) {
       exportBtn.addEventListener('click', () => {
         const entries = document.querySelectorAll('.audit-entry');
-        let report = 'ClinLoop AI — Privacy Audit Report\n';
-        report += 'Generated: ' + new Date().toISOString() + '\n';
-        report += 'Reference standards (design target, not certified): HIPAA Safe Harbor 45 CFR §164.514(b), Korean PIPA Articles 23-24\n\n';
-        report += 'AUDIT TRAIL:\n';
+        let report = displayCopy('ClinLoop AI — Privacy Audit Report',this.currentLang) + '\n';
+        report += displayCopy('Generated: ' + new Date().toISOString(),this.currentLang) + '\n';
+        report += displayCopy('Reference standards (design target, not certified): HIPAA Safe Harbor 45 CFR §164.514(b), Korean PIPA Articles 23-24',this.currentLang) + '\n\n';
+        report += displayCopy('AUDIT TRAIL:',this.currentLang) + '\n';
         entries.forEach(e => {
           const ts = e.querySelector('.audit-ts')?.textContent || '';
           const engine = e.querySelector('.audit-engine')?.textContent || '';
@@ -2471,7 +2503,8 @@ class ClinLoopApp {
         const matches = result.match(rule.regex);
         if (matches) {
           phiFound.push(rule.name);
-          result = result.replace(rule.regex, rule.replace);
+          const englishReplacement = {주민번호:'[National ID removed]',전화번호:'[Phone removed]',Email:'[Email removed]',URL:'[URL removed]','IP 주소':'[IP removed]',날짜:match=>match.slice(0,4),'한국어 날짜':match=>match.slice(0,4)};
+          result = result.replace(rule.regex, this.currentLang === 'en' ? englishReplacement[rule.name] || rule.replace : rule.replace);
           stripped += matches.length;
         }
       });
@@ -2479,39 +2512,56 @@ class ClinLoopApp {
       return { result, stripped, pseudo, phiFound: [...new Set(phiFound)] };
     };
 
-    let debounceTimer;
-    input.addEventListener('input', () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
+    const sampleText = {
+      en: `Patient: SAMPLE-01 (date of birth: 1978-03-12)
+National ID: 780312-1234567
+Phone: 010-1234-5678
+Email: sample@example.invalid
+Fictional address: Example City
+CT finding (2024-03-15): 14 mm right lower lobe ground-glass nodule
+Synthetic finding: lung nodule. Malignancy risk is not estimated; clinician review required.`,
+      ko: `환자: 가상환자 (생년월일: 1978-03-12)
+주민번호: 780312-1234567
+전화: 010-1234-5678
+이메일: sample@example.invalid
+가상 주소: 예시 도시
+CT 소견 (2024-03-15): 우하엽 14mm 간유리음영 결절 발견
+합성 소견: 폐 결절 · 악성 위험은 추정하지 않음; 의료진 검토 필요`
+    };
+    let activeSample = null;
+    const renderPrivacy = () => {
+        if (activeSample && input.value === activeSample) { activeSample=sampleText[this.currentLang]; input.value=activeSample; }
+        else activeSample=null; // Never rewrite a user-edited source.
         const raw = input.value;
         if (!raw.trim()) {
-          output.textContent = '[De-identified output will appear here in real-time]';
-          if (countBadge) countBadge.textContent = 'PHI 항목: 0개 탐지됨';
+          output.textContent = this.currentLang === 'ko' ? '[예시 처리 결과가 여기에 표시됩니다]' : '[Demonstration output appears here]';
+          if (countBadge) countBadge.textContent = this.currentLang === 'ko' ? '개인정보 항목: 0개 표시됨' : 'Personal-data items: 0 flagged';
           if (fstatStripped) fstatStripped.textContent = '0';
           if (fstatPseudo) fstatPseudo.textContent = '0';
           return;
         }
         const { result, stripped, pseudo, phiFound } = deidentify(raw);
         output.textContent = result;
-        if (countBadge) countBadge.textContent = `PHI 항목: ${phiFound.length}개 탐지 → 제거됨 (${phiFound.join(', ') || '없음'})`;
+        if (countBadge) {
+          const names = {주민번호:'National ID',전화번호:'Phone',Email:'Email',URL:'URL','IP 주소':'IP address',날짜:'Date','한국어 날짜':'Korean date','한국 이름':'Korean name'};
+          countBadge.textContent = this.currentLang === 'ko' ? `개인정보 항목: ${phiFound.length}개 표시됨 (${phiFound.map(value=>value==='Email'?'이메일':value).join(', ') || '없음'})` : `Personal-data items: ${phiFound.length} flagged (${phiFound.map(value=>names[value] || value).join(', ') || 'none'})`;
+        }
         if (fstatStripped) fstatStripped.textContent = String(stripped);
         if (fstatPseudo) fstatPseudo.textContent = String(pseudo);
         if (shieldAnim && (stripped > 0 || pseudo > 0)) {
           shieldAnim.classList.add('active');
           setTimeout(() => shieldAnim.classList.remove('active'), 500);
         }
-      }, 180);
-    });
+    };
+    this.renderPrivacyLocale = renderPrivacy;
+    let debounceTimer;
+    input.addEventListener('input', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(renderPrivacy, 180); });
+    renderPrivacy();
 
     if (sampleBtn) {
       sampleBtn.addEventListener('click', () => {
-        input.value = `환자: 김민준 (생년월일: 1978-03-12)
-주민번호: 780312-1234567
-전화: 010-1234-5678
-이메일: minjun.kim@hospital.ac.kr
-주소: 경기도 수원시 팔달구
-CT 소견 (2024-03-15): 우하엽 14mm 간유리음영 결절 발견
-합성 소견: 폐 결절 · 악성 위험은 추정하지 않음; 의료진 검토 필요`;
+        activeSample = sampleText[this.currentLang];
+        input.value = activeSample;
         input.dispatchEvent(new Event('input'));
       });
     }
