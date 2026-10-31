@@ -99,3 +99,18 @@ test('specific dynamic status templates localize their prose rather than matchin
   const ko=ui.translate(text,'ko');assert(/[가-힣]/.test(ko),text);assert(ko.includes('synthetic')||ko.includes('SC-01'));
  }
 });
+
+test('activity entries use a stable case ID and switch language without changing source evidence',()=>{
+ const fs=require('node:fs'),vm=require('node:vm'),e=env();e.ko.events.click();
+ const container={children:[],insertBefore(node){this.children.unshift(node);}},doc={addEventListener(){},getElementById:()=>container,createElement(){const n=new El();n.children=[];n.appendChild=child=>{n.children.push(child);e.nodes.push(child);};return n;}};
+ const source=fs.readFileSync('js/app.js','utf8'),c={window:{ClinLoopUI:ui},document:doc,location:{hostname:'clinloopai.app',protocol:'https:'}};
+ vm.runInNewContext(source+'\nthis.add=ClinLoopApp.prototype.addAuditEntry;',c);
+ // Exercise the real preview handler's activity construction, before opening the dialog.
+ const begin=source.indexOf("btnSummaryKakao.addEventListener('click', () => {")+"btnSummaryKakao.addEventListener('click', () => {".length;
+ const end=source.indexOf('        this.updateOutreachModal();',begin);
+ const app={currentCase:{scenario_id:'SC-SYNTHETIC',scenario_name:'A deliberately English case title'},addAuditEntry:c.add};
+ vm.runInNewContext('(function(){'+source.slice(begin,end)+'}).call(app)',{...c,app});
+ let entries=()=>container.children.flatMap(n=>n.children).map(n=>n.textContent).join(' ');
+ assert.match(entries(),/SC-SYNTHETIC/);assert(!entries().includes('deliberately English'));assert.match(entries(),/미리보기/);
+ e.en.events.click();assert(!/[가-힣]/.test(entries()));assert.match(entries(),/nothing was sent/);
+});
