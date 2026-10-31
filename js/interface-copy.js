@@ -1347,5 +1347,7 @@ if(typeof module==='object'&&module.exports)module.exports=copy;else root.ClinLo
   "model only: needs clinician review": "모델만 제안: 의료진 검토 필요",
   "Clinical case": "임상 사례"
 ,  "This changes only the browser example. It sends no orders or patient messages.": "브라우저 예시만 변경합니다. 오더나 환자 메시지를 전송하지 않습니다."
-,  "Design and use principles. This research preview is not authorized for clinical use; regulatory classification and independent review are pending.": "설계 및 사용 원칙입니다. 이 연구 미리보기는 임상 사용 승인을 받지 않았으며 규제 분류 및 독립 검토는 대기 중입니다."
+,  "Design and use principles. This research preview is not authorized for clinical use; regulatory classification and independent review are pending.": "설계 및 사용 원칙입니다. 이 연구 미리보기는 임상 사용 승인을 받지 않았으며 규제 분류 및 독립 검토는 대기 중입니다.",
+  "Example message preview": "임상 사례 안내문 미리보기",
+  "📍 Appointment status:": "📍 예약 상태:"
 });
