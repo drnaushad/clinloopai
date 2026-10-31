@@ -637,8 +637,7 @@ class ClinLoopApp {
     if (btnAction && orderModal) {
       btnAction.addEventListener('click', () => {
         if (!this.currentCase || this.closedOverrides.has(this.currentCase.scenario_id)) return;
-        document.getElementById('modal-pt-name').textContent = `${this.currentCase.patient_id} (${this.currentCase.scenario_name})`;
-        document.getElementById('modal-order-desc').textContent = this.currentCase.missing_followup || 'Clinical follow-up for review';
+        this.updateOrderPreview();
         orderModal.classList.add('open');
       });
     }
@@ -1014,6 +1013,7 @@ class ClinLoopApp {
       }
       this.updateOutreachModal();
       this.updateEmrComparisonContent();
+      this.updateOrderPreview();
 
       this.renderCaseTabs();
       this.updateSummaryView();
@@ -1451,6 +1451,14 @@ class ClinLoopApp {
 
     this.updateDetailsPanel(this.currentCase, true);
     this.applyFilters();
+  }
+
+  updateOrderPreview() {
+    const c=this.currentCase;
+    if (!c) return;
+    const name=document.getElementById('modal-pt-name'), action=document.getElementById('modal-order-desc');
+    if (name) name.textContent=`${c.patient_id} (${this.currentLang === 'ko' ? c.title_kr || displayCopy(c.scenario_name,'ko') : c.scenario_name})`;
+    if (action) action.textContent=displayCopy(c.missing_followup || 'Clinical follow-up for review',this.currentLang);
   }
 
   updateEmrComparisonContent() {
