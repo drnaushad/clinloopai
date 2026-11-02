@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-01.language2",
+  "version": "2026-11-02.engine1",
   "channel": "research-preview",
   "engine_source_commit": "9332100304846852c8d35d6b77820e5941ad566f",
   "verification_scope": "Recovered engine source; static packaging and publication have separate GitHub Actions checks.",
@@ -9,9 +9,9 @@
   "human_approvals": 0,
   "engine_source_files_pending_review": 47,
   "software_checks": {
-    "tests_passed": 1510,
+    "tests_passed": 1515,
     "subtests_passed": 239,
-    "git_checks_passed_separately": 26,
+    "git_checks_passed_separately": 37,
     "optional_imaging_adapter_not_run": true,
     "synthetic_load_passed": true,
     "synthetic_benchmark_passed": true
@@ -91,8 +91,19 @@
     "OIDC/SMART discovery/JWKS/connection-check transports do not share every clinical-data budget. Endpoint TLS/DNS policies and previously reported Epic PDF attachment HTTP 400 integration require separate authorized environment testing."
   ],
   "public_site_scope": "Static synthetic preview; no hospital backend and no authorization for patient information.",
-  "release_notes": "docs/releases/20261030.md",
+  "release_notes": "docs/releases/20261102.md",
   "engine_source_commit_scope": "Local verified recovery commit; published engine file hashes match this source snapshot.",
   "engine_source_sha256": "80d4488efbd302b4d1f111c6f3d44d19f8a24516c34c96e9ac35ee65537a6f9c",
-  "publication_method": "Existing GitHub CI plus an allowlisted static artifact on a dedicated Pages branch. Workflow permission expansion is deferred."
+  "publication_method": "Existing GitHub CI plus an allowlisted static artifact on a dedicated Pages branch. Workflow permission expansion is deferred.",
+  "browser_analysis": {
+    "packaged_dependency_files": 21,
+    "source_checksums_verified_before_execution": true,
+    "built_in_examples_verified": [
+      "lung-nodule",
+      "positive-fit",
+      "warfarin-inr"
+    ],
+    "public_report_checks": "Local processing checks only; no clinical accuracy estimate",
+    "clinical_engine_changed": false
+  }
 }

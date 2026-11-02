@@ -4,7 +4,12 @@ import hashlib
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
+
+if __package__ in (None, ''):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.build_engine_manifest import browser_sources
 
 PAGES = ('index', 'worklist', 'governance', 'imaging', 'patient', 'quality', 'pilot',
          'analyse', 'reports', 'review', 'validation', 'deployment', 'private')
@@ -16,7 +21,8 @@ PUBLIC_DATA = ('cases.json', 'fhir_example_bundle.json', 'radiology_test_bundle.
                'report_review_schema.json', 'engineering_release_status.json')
 PUBLIC_DOCS = ('docs/reviews/RETURNED_REVIEW_CORRECTIONS_20261027.md',
                'docs/reviews/gmlp-gap-assessment-20261027.json',
-               'docs/reviews/EVIDENCE_REVIEW_20261029.md', 'docs/releases/20261030.md')
+               'docs/reviews/EVIDENCE_REVIEW_20261029.md', 'docs/releases/20261030.md',
+               'docs/releases/20261102.md')
 ASSET_DIRS = {'css': {'.css'}, 'js': {'.js', '.json'},
               'icons': {'.png', '.svg', '.ico'}, 'smart': {'.html', '.css'},
               'demo/api': {'.json'}, 'demo/examples': {'.json'}}
@@ -28,6 +34,12 @@ def build(source: Path, output: Path) -> dict:
         raise ValueError('Public artifact output must be a new directory')
     selected = set(ROOT_FILES) | {'data/' + p for p in PUBLIC_DATA} | set(PUBLIC_DOCS)
     tracked = set(subprocess.check_output(['git', 'ls-files', '-z'], cwd=source).decode().split('\0'))
+    engine = browser_sources(source)
+    if not set(engine['files']) <= tracked:
+        raise ValueError('Browser engine source must be tracked')
+    bundle_name = 'js/engine_sources.json'
+    if (source/bundle_name).exists() or (source/bundle_name).is_symlink():
+        raise ValueError('Browser engine bundle must be generated from source, not supplied')
     for directory, extensions in ASSET_DIRS.items():
         base = source/directory
         if not base.is_dir() or base.is_symlink():
@@ -52,8 +64,11 @@ def build(source: Path, output: Path) -> dict:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source/name, target)
         hashes[name] = hashlib.sha256(target.read_bytes()).hexdigest()
+    bundle_path = output/bundle_name
+    bundle_path.write_text(json.dumps(engine, ensure_ascii=False, sort_keys=True) + '\n', encoding='utf-8')
+    hashes[bundle_name] = hashlib.sha256(bundle_path.read_bytes()).hexdigest()
     return {'public_files': len(hashes), 'sha256': hashes,
-            'scope': 'Static synthetic research preview; no server code, tests, secrets, databases or recovery artifacts.'}
+            'scope': 'Static synthetic research preview and browser analysis dependency bundle; no server endpoints, tests, secrets, databases or recovery artifacts.'}
 
 
 def main():

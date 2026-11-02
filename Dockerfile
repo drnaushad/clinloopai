@@ -62,6 +62,8 @@ COPY data/cases.json data/fhir_example_bundle.json data/radiology_test_bundle.js
 COPY index.html worklist.html governance.html imaging.html patient.html quality.html pilot.html analyse.html reports.html review.html validation.html deployment.html private.html version.json config.js manifest.json sw.js favicon.ico ./web/
 COPY css ./web/css
 COPY js ./web/js
+COPY scripts/build_engine_manifest.py ./scripts/build_engine_manifest.py
+RUN python scripts/build_engine_manifest.py --bundle-output web/js/engine_sources.json
 COPY icons ./web/icons
 COPY demo/examples ./web/demo/examples
 COPY demo/api ./web/demo/api
