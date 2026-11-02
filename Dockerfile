@@ -63,7 +63,7 @@ COPY index.html worklist.html governance.html imaging.html patient.html quality.
 COPY css ./web/css
 COPY js ./web/js
 COPY scripts/build_engine_manifest.py ./scripts/build_engine_manifest.py
-RUN python scripts/build_engine_manifest.py --bundle-output web/js/engine_sources.json
+RUN python scripts/build_engine_manifest.py --manifest web/js/engine_manifest.json --bundle-output web/js/engine_sources.json
 COPY icons ./web/icons
 COPY demo/examples ./web/demo/examples
 COPY demo/api ./web/demo/api
@@ -73,7 +73,7 @@ COPY data/cases.json data/fhir_example_bundle.json data/radiology_test_bundle.js
 COPY smart ./web/smart
 # Only the two public evidence documents linked from Validation; never copy all docs.
 COPY docs/reviews/RETURNED_REVIEW_CORRECTIONS_20261027.md docs/reviews/gmlp-gap-assessment-20261027.json docs/reviews/EVIDENCE_REVIEW_20261029.md ./web/docs/reviews/
-COPY docs/releases/20261030.md ./web/docs/releases/
+COPY docs/releases/20261030.md docs/releases/20261102.md ./web/docs/releases/
 
 # Unprivileged user; state on a mounted volume
 RUN useradd --system --uid 10001 --home-dir /var/lib/clinloop clinloop \

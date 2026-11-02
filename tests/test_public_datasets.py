@@ -71,8 +71,12 @@ class TestMIMIC(unittest.TestCase):
 
     def test_every_module_is_read(self):
         ids = {r["id"] for r in self.people["19990001"]}
-        self.assertTrue({"29990001", "ed-39990001", "lab-2", "micro-1", "rx-501-1", "note-19990001-RR-1",
+        self.assertTrue({"29990001", "ed-39990001", "lab-2", "micro-1", "note-19990001-RR-1",
                          "note-19990001-DS-1", "cxr-59990001"} <= ids)
+        prescriptions = [r for r in self.people['19990001'] if r['resourceType'] == 'MedicationRequest']
+        self.assertEqual(len(prescriptions), 1)
+        self.assertTrue(prescriptions[0]['id'].startswith('rx-'))
+        self.assertIn({'system': 'urn:mimic:pharmacy_id', 'value': '501'}, prescriptions[0]['identifier'])
         self.assertNotIn("micro-2", ids)             # an antibiotic row is not a second culture
         cxr = [r for r in self.people["19990001"] if r["id"] == "cxr-59990001"]
         self.assertEqual(len(cxr), 1)                # one report per study, not per image

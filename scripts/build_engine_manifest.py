@@ -57,7 +57,7 @@ def build(root=ROOT) -> Dict:
             "sha256": {name: hashlib.sha256((Path(root)/name).read_bytes()).hexdigest() for name in files}}
 
 
-def browser_sources(root=ROOT) -> Dict:
+def browser_sources(root=ROOT, manifest_path=None) -> Dict:
     """Return only the dependency closure, refusing stale manifests or redirected source files."""
     root = Path(root).resolve()
     # Validate paths before reading source (including parent-directory symlinks).
@@ -67,7 +67,7 @@ def browser_sources(root=ROOT) -> Dict:
     for path in package.rglob('*'):
         if path.is_symlink():
             raise ValueError('Browser engine source cannot contain symlinks')
-    manifest = json.loads((root/'js'/'engine_manifest.json').read_text(encoding='utf-8'))
+    manifest = json.loads(Path(manifest_path or root/'js'/'engine_manifest.json').read_text(encoding='utf-8'))
     expected = build(root)
     if manifest != expected:
         raise ValueError('Browser engine manifest is stale or unsafe; rebuild it')
@@ -78,9 +78,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--bundle-output', type=Path,
                         help='Validate the manifest and write a new browser-only source bundle')
+    parser.add_argument('--manifest', type=Path, help='Manifest location in a packaged container layout')
     args = parser.parse_args()
     if args.bundle_output:
-        content = browser_sources()
+        content = browser_sources(manifest_path=args.manifest)
         args.bundle_output.parent.mkdir(parents=True, exist_ok=True)
         with args.bundle_output.open('x', encoding='utf-8') as f:
             json.dump(content, f, ensure_ascii=False, sort_keys=True)

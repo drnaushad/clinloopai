@@ -148,3 +148,19 @@ def test_engine_packaging_fails_closed_before_writing(source, tmp_path, damage):
     with pytest.raises(ValueError):
         m.build(source,output)
     assert not output.exists()
+
+
+def test_bundle_cli_uses_the_container_web_manifest_layout(source):
+    scripts = source/'scripts'
+    scripts.mkdir()
+    shutil.copyfile(Path(__file__).parents[1]/'scripts/build_engine_manifest.py', scripts/'build_engine_manifest.py')
+    web = source/'web/js'
+    web.mkdir(parents=True)
+    shutil.move(source/'js/engine_manifest.json', web/'engine_manifest.json')
+    done = subprocess.run([sys.executable, 'scripts/build_engine_manifest.py', '--manifest',
+                           'web/js/engine_manifest.json', '--bundle-output', 'web/js/engine_sources.json'],
+                          cwd=source, capture_output=True, text=True, timeout=30)
+    assert done.returncode == 0, done.stderr
+    manifest = json.loads((web/'engine_manifest.json').read_text())
+    sources = json.loads((web/'engine_sources.json').read_text())
+    assert set(sources['files']) == set(manifest['files'])
