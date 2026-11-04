@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-01.language2",
+  "version": "2026-11-02.engine1",
   "channel": "research-preview",
   "engine_source_commit": "9332100304846852c8d35d6b77820e5941ad566f",
   "verification_scope": "Recovered engine source; static packaging and publication have separate GitHub Actions checks.",
@@ -9,9 +9,9 @@
   "human_approvals": 0,
   "engine_source_files_pending_review": 47,
   "software_checks": {
-    "tests_passed": 1510,
+    "tests_passed": 1518,
     "subtests_passed": 239,
-    "git_checks_passed_separately": 26,
+    "git_checks_passed_separately": 38,
     "optional_imaging_adapter_not_run": true,
     "synthetic_load_passed": true,
     "synthetic_benchmark_passed": true
@@ -91,8 +91,27 @@
     "OIDC/SMART discovery/JWKS/connection-check transports do not share every clinical-data budget. Endpoint TLS/DNS policies and previously reported Epic PDF attachment HTTP 400 integration require separate authorized environment testing."
   ],
   "public_site_scope": "Static synthetic preview; no hospital backend and no authorization for patient information.",
-  "release_notes": "docs/releases/20261030.md",
-  "engine_source_commit_scope": "Local verified recovery commit; published engine file hashes match this source snapshot.",
-  "engine_source_sha256": "80d4488efbd302b4d1f111c6f3d44d19f8a24516c34c96e9ac35ee65537a6f9c",
-  "publication_method": "Existing GitHub CI plus an allowlisted static artifact on a dedicated Pages branch. Workflow permission expansion is deferred."
+  "release_notes": "docs/releases/20261102.md",
+  "engine_source_commit_scope": "Recovered baseline commit, not the deployed revision. deployment.json records the published source commit. MIMIC adapter row identity changed in this release; clinical interpretation rules did not.",
+  "engine_source_sha256": "7734fdeaf9d3260f6df1bb5e73bedb8e9a109f7ae8f4f40d98adae5c98923ac2",
+  "publication_method": "Existing GitHub CI plus an allowlisted static artifact on a dedicated Pages branch. Workflow permission expansion is deferred.",
+  "browser_analysis": {
+    "packaged_dependency_files": 21,
+    "source_checksums_verified_before_execution": true,
+    "built_in_examples_verified": [
+      "lung-nodule",
+      "positive-fit",
+      "warfarin-inr"
+    ],
+    "public_report_checks": "Local processing checks only; no clinical accuracy estimate",
+    "browser_engine_changed": false,
+    "clinical_interpretation_rules_changed": false,
+    "mimic_adapter_changed": true,
+    "public_demo_patients_processed_locally": 100,
+    "public_demo_resources": 131765,
+    "public_demo_events": 131257,
+    "public_demo_gold_standard": null,
+    "mimic_adapter_clinician_review": "pending"
+  },
+  "recovery_engine_source_sha256": "80d4488efbd302b4d1f111c6f3d44d19f8a24516c34c96e9ac35ee65537a6f9c"
 }

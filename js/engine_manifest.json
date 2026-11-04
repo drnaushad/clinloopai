@@ -27,5 +27,29 @@
   "src/clinloop_engine/safety_clock.py",
   "src/clinloop_engine/second_reader.py",
   "src/clinloop_engine/temporal_hypergraph.py"
- ]
+ ],
+ "source_bundle": "js/engine_sources.json",
+ "sha256": {
+  "src/clinloop_engine/__init__.py": "7b86431d0e7de80feb1a4e368cfe19bace68b51802b0d917184f8016727d3a42",
+  "src/clinloop_engine/ai_review.py": "f484e70473ffa4fd88cba6a27699475731ba06f9a3b392fa92fd5af223a29070",
+  "src/clinloop_engine/basis.py": "7136ef98be4c090c63d72cf48fa9af8ea2e75f9021b7fb00e8641712e5948b86",
+  "src/clinloop_engine/browser_analyse.py": "004df23c59b109db9fbdce182fb144c7240602d57baf041d2e404a2a26876e2f",
+  "src/clinloop_engine/clinical_ontology.py": "d601d7755bf766da48d60faade42d2313710a1881b3144b034a4d0e04389978c",
+  "src/clinloop_engine/config/critical_findings.json": "58fad6c62e44371040db755fc4c8693aa20796169322d2716674847416634f4c",
+  "src/clinloop_engine/ecg.py": "f9e25d747b909d36a54c0bcb9b4ff54c38876c5e501395dadb212a5e1e58744d",
+  "src/clinloop_engine/fhir_ingest.py": "6708a97264fb0e4f9b2e2175baa76c7537c20045701807be0228c1c3e7f717ca",
+  "src/clinloop_engine/fhir_integration.py": "571ca23dc9e4c9269cfa9eeeb39c0d65ef4793a38bffb505e99cc69044df6919",
+  "src/clinloop_engine/guideline_reports.py": "38021d53fef23e1880bdf382fa3b2cb3c9f770c1766c95b029d021351d7f4324",
+  "src/clinloop_engine/imaging_fhir.py": "289ef40f66e2b709ec885406f33a01e060989a92e85604a2a5eb086d15f780f6",
+  "src/clinloop_engine/loop_detector.py": "8173ca34036753b32da15e8f09fa315e5becfc27e1d5cc471ad25f899ceb621f",
+  "src/clinloop_engine/motifs.py": "ea2269c9b3edef9f19adaa1f8af47b9b2b0bd7c48e130d29519372eb5d163800",
+  "src/clinloop_engine/note_reader.py": "d151e88ef8a68315f26254c5806887999fca56d78e4a9c1b9a1b4686d171b9de",
+  "src/clinloop_engine/profile.py": "eb52de3f9a78d3db9ccf7b9ff7e9260199a52d0eaf0476891ff909ff3917b74a",
+  "src/clinloop_engine/radiology.py": "3c13ad37097955e5b22d68dce9b7690274b4813bc124892ee5d16dadf1f8173d",
+  "src/clinloop_engine/report_text.py": "6d6e4b4414d120c1e178494faf6fa74fdd1a20e378b917835f89735bf39e098f",
+  "src/clinloop_engine/risk_scorer.py": "41dae5dfbb7b351aa77c4dc9abab141dd54b6feca7da3e50758a8a432b996e1e",
+  "src/clinloop_engine/safety_clock.py": "20fee6bf265e6c4b4e2781aaafd919c742e3cd2a170e59ce83ebe843d0c4d0c7",
+  "src/clinloop_engine/second_reader.py": "3d6ffcd3cbc2e45ea165b9c93dd10d05a6afd91cec0b74bf4d99738a8cdb6d6b",
+  "src/clinloop_engine/temporal_hypergraph.py": "51523128b19104e91d13f170a968abab2957707e78ea58dd3de572702e800ff1"
+ }
 }

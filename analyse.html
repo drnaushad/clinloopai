@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko" data-workspace="analyse" data-language-options="en ko">
 <head>
-<script src="js/display-start.js?v=2026_11_01_language2"></script>
+<script src="js/display-start.js?v=2026_11_02_engine1"></script>
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -136,16 +136,16 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
 }
 </style>
 <script src="config.js"></script>
-<script src="js/demo.js?v=2026_11_01_language2"></script>
-<script src="js/appnav.js?v=2026_11_01_language2"></script>
-<link rel="stylesheet" href="css/responsive.css?v=2026_11_01_language2">
-<script defer src="js/language-controls.js?v=2026_11_01_language2"></script>
-<link rel="stylesheet" href="css/app-chrome.css?v=2026_11_01_language2"><script defer src="js/appearance-controls.js?v=2026_11_01_language2"></script><script defer src="js/workspace-shell.js?v=2026_11_01_language2"></script><script src="js/interface-copy.js?v=2026_11_01_language2"></script><script src="js/interface-language.js?v=2026_11_01_language2"></script>
+<script src="js/demo.js?v=2026_11_02_engine1"></script>
+<script src="js/appnav.js?v=2026_11_02_engine1"></script>
+<link rel="stylesheet" href="css/responsive.css?v=2026_11_02_engine1">
+<script defer src="js/language-controls.js?v=2026_11_02_engine1"></script>
+<link rel="stylesheet" href="css/app-chrome.css?v=2026_11_02_engine1"><script defer src="js/appearance-controls.js?v=2026_11_02_engine1"></script><script defer src="js/workspace-shell.js?v=2026_11_02_engine1"></script><script src="js/interface-copy.js?v=2026_11_02_engine1"></script><script src="js/interface-language.js?v=2026_11_02_engine1"></script><script src="js/analysis-copy.js?v=2026_11_02_engine1"></script>
 <link rel="canonical" href="https://clinloopai.app/analyse">
 </head>
 <body class="clinloop-page"><a class="skip-link shell-skip" href="#clinloop-workspace">Skip to workspace</a>
 <!-- clinloop-shell:start -->
-<header class="clinloop-shell" data-static-shell="true" data-release-version="2026-11-01.language2"><div class="clinloop-shell-top"><a class="clinloop-shell-brand" href="./"><img src="icons/logo.svg" alt="" width="32" height="32"><span data-ui-copy>ClinLoop AI</span></a><div class="clinloop-shell-controls" role="group" aria-label="Display and account" data-ui-attributes="aria-label" data-ui-en-aria-label="Display and account"><div role="group" data-shell-account=""><div class="appearance-controls" role="group" aria-label="Appearance" data-ui-attributes="aria-label" data-ui-en-aria-label="Appearance"><button type="button" aria-pressed="true"><span data-nav-language="en">Light</span><span data-nav-language="ko">라이트</span></button><button type="button" aria-pressed="false"><span data-nav-language="en">Dark</span><span data-nav-language="ko">다크</span></button></div><button hidden data-legacy-language="true" type="button" id="btn-lang" aria-label="Language">English</button><div class="prominent-lang-pill" role="group" aria-label="Language" data-ui-attributes="aria-label" data-ui-en-aria-label="Language"><button type="button" id="lang-opt-en" data-language="en" aria-pressed="true">English</button><button type="button" id="lang-opt-ko" data-language="ko" aria-pressed="false">한국어</button></div></div></div></div><nav class="app-nav clinloop-shell-links" aria-label="ClinLoop pages" data-ui-attributes="aria-label" data-ui-en-aria-label="ClinLoop pages"><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-0"><span class="clinloop-nav-group-label" id="nav-group-0"><span data-nav-language="en">Clinical workspace</span><span data-nav-language="ko">진료 작업 공간</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="./" data-label-en="Cockpit" data-label-ko="종합 화면"><span data-nav-language="en">Cockpit</span><span data-nav-language="ko">종합 화면</span></a><a class="app-nav-link" href="worklist" data-label-en="Worklist" data-label-ko="업무 목록"><span data-nav-language="en">Worklist</span><span data-nav-language="ko">업무 목록</span></a><a class="app-nav-link" href="patient" data-label-en="Patient graph" data-label-ko="환자 그래프"><span data-nav-language="en">Patient graph</span><span data-nav-language="ko">환자 그래프</span></a><a class="app-nav-link" href="quality" data-label-en="Quality" data-label-ko="품질 지표"><span data-nav-language="en">Quality</span><span data-nav-language="ko">품질 지표</span></a><a class="app-nav-link" href="governance" data-label-en="Rule sign-off" data-label-ko="규칙 승인"><span data-nav-language="en">Rule sign-off</span><span data-nav-language="ko">규칙 승인</span></a><a class="app-nav-link" href="pilot" data-label-en="Pilot review" data-label-ko="시범 검토"><span data-nav-language="en">Pilot review</span><span data-nav-language="ko">시범 검토</span></a><a class="app-nav-link" href="imaging" data-label-en="Imaging" data-label-ko="영상"><span data-nav-language="en">Imaging</span><span data-nav-language="ko">영상</span></a><a class="app-nav-link" href="analyse" data-label-en="Analyse patient" data-label-ko="환자 분석" aria-current="page"><span data-nav-language="en">Analyse patient</span><span data-nav-language="ko">환자 분석</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-1"><span class="clinloop-nav-group-label" id="nav-group-1"><span data-nav-language="en">Research</span><span data-nav-language="ko">연구</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="reports" data-label-en="Report models" data-label-ko="보고서 모델 비교"><span data-nav-language="en">Report models</span><span data-nav-language="ko">보고서 모델 비교</span></a><a class="app-nav-link" href="review" data-label-en="Report review" data-label-ko="보고서 검토"><span data-nav-language="en">Report review</span><span data-nav-language="ko">보고서 검토</span></a><a class="app-nav-link" href="private" data-label-en="Personal workspace" data-label-ko="개인 작업 공간"><span data-nav-language="en">Personal workspace</span><span data-nav-language="ko">개인 작업 공간</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-2"><span class="clinloop-nav-group-label" id="nav-group-2"><span data-nav-language="en">Evidence and setup</span><span data-nav-language="ko">검증 및 설정</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="validation" data-label-en="Validation evidence" data-label-ko="검증 근거"><span data-nav-language="en">Validation evidence</span><span data-nav-language="ko">검증 근거</span></a><a class="app-nav-link" href="deployment" data-label-en="International setup" data-label-ko="국제 배포 계획"><span data-nav-language="en">International setup</span><span data-nav-language="ko">국제 배포 계획</span></a></div></div></nav><div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label><select id="clinloop-page-picker"><optgroup label="Clinical workspace"><option value="/">Cockpit</option><option value="/worklist">Worklist</option><option value="/patient">Patient graph</option><option value="/quality">Quality</option><option value="/governance">Rule sign-off</option><option value="/pilot">Pilot review</option><option value="/imaging">Imaging</option><option value="/analyse" selected>Analyse patient</option></optgroup><optgroup label="Research"><option value="/reports">Report models</option><option value="/review">Report review</option><option value="/private">Personal workspace</option></optgroup><optgroup label="Evidence and setup"><option value="/validation">Validation evidence</option><option value="/deployment">International setup</option></optgroup></select></div><details class="clinloop-workflow-guide"><summary><span data-nav-language="en">Choose a workflow</span><span data-nav-language="ko">작업 흐름 선택</span></summary><div class="clinloop-workflow-grid"><div><a href="review"><span data-nav-language="en">Review report text</span><span data-nav-language="ko">보고서 텍스트 검토</span></a><p><span data-nav-language="en">Load TXT in your browser or import PDF, scans, photos and DICOM through your personal gateway. Check the complete source before model review (6000 UTF-8 bytes).</span><span data-nav-language="ko">TXT는 브라우저에서, PDF·스캔·사진·DICOM은 개인 게이트웨이에서 불러옵니다. 모델 검토(UTF-8 6000바이트) 전에 전체 원문을 확인하세요.</span></p></div><div><a href="analyse"><span data-nav-language="en">Try follow-up detection</span><span data-nav-language="ko">후속 조치 탐지 체험</span></a><p><span data-nav-language="en">Start with a synthetic example, a FHIR .json bundle or radiology/pathology report text. The browser demo needs no model connection.</span><span data-nav-language="ko">합성 예제, FHIR .json 번들 또는 영상·병리 보고서 텍스트로 시작하세요. 브라우저 데모는 모델 연결이 필요 없습니다.</span></p></div><div><a href="imaging"><span data-nav-language="en">Explore document and imaging workflows</span><span data-nav-language="ko">문서 및 영상 작업 흐름 살펴보기</span></a><p><span data-nav-language="en">DICOM image pixels, medical images and waveforms need a separate validated imaging workflow. The public Imaging page shows local-installation demonstrations.</span><span data-nav-language="ko">DICOM 화소, 의료영상 및 파형에는 별도로 검증된 영상 작업 흐름이 필요합니다. 공개 영상 화면은 로컬 설치 기능을 시연합니다.</span></p></div><div><a href="validation"><span data-nav-language="en">Check evidence and limitations</span><span data-nav-language="ko">검증 근거 및 한계 확인</span></a><p><span data-nav-language="en">See measured results, supported tasks and pending reviews before choosing a workflow or comparing models. Universal clinical accuracy is not established.</span><span data-nav-language="ko">작업 흐름 선택이나 모델 비교 전에 측정 결과, 지원 작업 및 검토 현황을 확인하세요. 모든 임상 작업에 대한 정확도는 입증되지 않았습니다.</span></p></div></div></details><aside class="research-release-notice" role="note"><span data-nav-language="en">Research preview · synthetic data only. Independent review and clinical validation pending. <a href="validation#engineering-release">Review status</a></span><span data-nav-language="ko">연구 미리보기 · 합성 데이터 전용. 독립 검토 및 임상 검증 대기 중. <a href="validation#engineering-release">검토 현황</a></span><small class="release-version">2026-11-01.language2</small></aside></header>
+<header class="clinloop-shell" data-static-shell="true" data-release-version="2026-11-02.engine1"><div class="clinloop-shell-top"><a class="clinloop-shell-brand" href="./"><img src="icons/logo.svg" alt="" width="32" height="32"><span data-ui-copy>ClinLoop AI</span></a><div class="clinloop-shell-controls" role="group" aria-label="Display and account" data-ui-attributes="aria-label" data-ui-en-aria-label="Display and account"><div role="group" data-shell-account=""><div class="appearance-controls" role="group" aria-label="Appearance" data-ui-attributes="aria-label" data-ui-en-aria-label="Appearance"><button type="button" aria-pressed="true"><span data-nav-language="en">Light</span><span data-nav-language="ko">라이트</span></button><button type="button" aria-pressed="false"><span data-nav-language="en">Dark</span><span data-nav-language="ko">다크</span></button></div><button hidden data-legacy-language="true" type="button" id="btn-lang" aria-label="Language">English</button><div class="prominent-lang-pill" role="group" aria-label="Language" data-ui-attributes="aria-label" data-ui-en-aria-label="Language"><button type="button" id="lang-opt-en" data-language="en" aria-pressed="true">English</button><button type="button" id="lang-opt-ko" data-language="ko" aria-pressed="false">한국어</button></div></div></div></div><nav class="app-nav clinloop-shell-links" aria-label="ClinLoop pages" data-ui-attributes="aria-label" data-ui-en-aria-label="ClinLoop pages"><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-0"><span class="clinloop-nav-group-label" id="nav-group-0"><span data-nav-language="en">Clinical workspace</span><span data-nav-language="ko">진료 작업 공간</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="./" data-label-en="Cockpit" data-label-ko="종합 화면"><span data-nav-language="en">Cockpit</span><span data-nav-language="ko">종합 화면</span></a><a class="app-nav-link" href="worklist" data-label-en="Worklist" data-label-ko="업무 목록"><span data-nav-language="en">Worklist</span><span data-nav-language="ko">업무 목록</span></a><a class="app-nav-link" href="patient" data-label-en="Patient graph" data-label-ko="환자 그래프"><span data-nav-language="en">Patient graph</span><span data-nav-language="ko">환자 그래프</span></a><a class="app-nav-link" href="quality" data-label-en="Quality" data-label-ko="품질 지표"><span data-nav-language="en">Quality</span><span data-nav-language="ko">품질 지표</span></a><a class="app-nav-link" href="governance" data-label-en="Rule sign-off" data-label-ko="규칙 승인"><span data-nav-language="en">Rule sign-off</span><span data-nav-language="ko">규칙 승인</span></a><a class="app-nav-link" href="pilot" data-label-en="Pilot review" data-label-ko="시범 검토"><span data-nav-language="en">Pilot review</span><span data-nav-language="ko">시범 검토</span></a><a class="app-nav-link" href="imaging" data-label-en="Imaging" data-label-ko="영상"><span data-nav-language="en">Imaging</span><span data-nav-language="ko">영상</span></a><a class="app-nav-link" href="analyse" data-label-en="Analyse patient" data-label-ko="환자 분석" aria-current="page"><span data-nav-language="en">Analyse patient</span><span data-nav-language="ko">환자 분석</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-1"><span class="clinloop-nav-group-label" id="nav-group-1"><span data-nav-language="en">Research</span><span data-nav-language="ko">연구</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="reports" data-label-en="Report models" data-label-ko="보고서 모델 비교"><span data-nav-language="en">Report models</span><span data-nav-language="ko">보고서 모델 비교</span></a><a class="app-nav-link" href="review" data-label-en="Report review" data-label-ko="보고서 검토"><span data-nav-language="en">Report review</span><span data-nav-language="ko">보고서 검토</span></a><a class="app-nav-link" href="private" data-label-en="Personal workspace" data-label-ko="개인 작업 공간"><span data-nav-language="en">Personal workspace</span><span data-nav-language="ko">개인 작업 공간</span></a></div></div><div class="clinloop-nav-group" role="group" aria-labelledby="nav-group-2"><span class="clinloop-nav-group-label" id="nav-group-2"><span data-nav-language="en">Evidence and setup</span><span data-nav-language="ko">검증 및 설정</span></span><div class="clinloop-nav-group-links"><a class="app-nav-link" href="validation" data-label-en="Validation evidence" data-label-ko="검증 근거"><span data-nav-language="en">Validation evidence</span><span data-nav-language="ko">검증 근거</span></a><a class="app-nav-link" href="deployment" data-label-en="International setup" data-label-ko="국제 배포 계획"><span data-nav-language="en">International setup</span><span data-nav-language="ko">국제 배포 계획</span></a></div></div></nav><div class="clinloop-shell-mobile"><label for="clinloop-page-picker">Go to page</label><select id="clinloop-page-picker"><optgroup label="Clinical workspace"><option value="/">Cockpit</option><option value="/worklist">Worklist</option><option value="/patient">Patient graph</option><option value="/quality">Quality</option><option value="/governance">Rule sign-off</option><option value="/pilot">Pilot review</option><option value="/imaging">Imaging</option><option value="/analyse" selected>Analyse patient</option></optgroup><optgroup label="Research"><option value="/reports">Report models</option><option value="/review">Report review</option><option value="/private">Personal workspace</option></optgroup><optgroup label="Evidence and setup"><option value="/validation">Validation evidence</option><option value="/deployment">International setup</option></optgroup></select></div><details class="clinloop-workflow-guide"><summary><span data-nav-language="en">Choose a workflow</span><span data-nav-language="ko">작업 흐름 선택</span></summary><div class="clinloop-workflow-grid"><div><a href="review"><span data-nav-language="en">Review report text</span><span data-nav-language="ko">보고서 텍스트 검토</span></a><p><span data-nav-language="en">Load TXT in your browser or import PDF, scans, photos and DICOM through your personal gateway. Check the complete source before model review (6000 UTF-8 bytes).</span><span data-nav-language="ko">TXT는 브라우저에서, PDF·스캔·사진·DICOM은 개인 게이트웨이에서 불러옵니다. 모델 검토(UTF-8 6000바이트) 전에 전체 원문을 확인하세요.</span></p></div><div><a href="analyse"><span data-nav-language="en">Try follow-up detection</span><span data-nav-language="ko">후속 조치 탐지 체험</span></a><p><span data-nav-language="en">Start with a synthetic example, a FHIR .json bundle or radiology/pathology report text. The browser demo needs no model connection.</span><span data-nav-language="ko">합성 예제, FHIR .json 번들 또는 영상·병리 보고서 텍스트로 시작하세요. 브라우저 데모는 모델 연결이 필요 없습니다.</span></p></div><div><a href="imaging"><span data-nav-language="en">Explore document and imaging workflows</span><span data-nav-language="ko">문서 및 영상 작업 흐름 살펴보기</span></a><p><span data-nav-language="en">DICOM image pixels, medical images and waveforms need a separate validated imaging workflow. The public Imaging page shows local-installation demonstrations.</span><span data-nav-language="ko">DICOM 화소, 의료영상 및 파형에는 별도로 검증된 영상 작업 흐름이 필요합니다. 공개 영상 화면은 로컬 설치 기능을 시연합니다.</span></p></div><div><a href="validation"><span data-nav-language="en">Check evidence and limitations</span><span data-nav-language="ko">검증 근거 및 한계 확인</span></a><p><span data-nav-language="en">See measured results, supported tasks and pending reviews before choosing a workflow or comparing models. Universal clinical accuracy is not established.</span><span data-nav-language="ko">작업 흐름 선택이나 모델 비교 전에 측정 결과, 지원 작업 및 검토 현황을 확인하세요. 모든 임상 작업에 대한 정확도는 입증되지 않았습니다.</span></p></div></div></details><aside class="research-release-notice" role="note"><span data-nav-language="en">Research preview · synthetic data only. Independent review and clinical validation pending. <a href="validation#engineering-release">Review status</a></span><span data-nav-language="ko">연구 미리보기 · 합성 데이터 전용. 독립 검토 및 임상 검증 대기 중. <a href="validation#engineering-release">검토 현황</a></span><small class="release-version">2026-11-02.engine1</small></aside></header>
 <!-- clinloop-shell:end -->
 <div class="wrap" id="clinloop-workspace" role="main" tabindex="-1">
   <header>
@@ -285,12 +285,14 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       tooBig: '파일이 너무 큽니다 (최대 5 MB).', exampleFailed: '예시를 불러오지 못했습니다.',
       summary: (r) => `환자 ${r.patients}명 · 이벤트 ${r.events}건 · 열린 루프 ${r.active_loops}건 · 전체 ${r.detections.length}건`,
       evaluatedAt: (w) => `평가 시점: ${w}`,
-      none: '이 자료에서 추적할 후속 조치를 찾지 못했습니다.',
+      scopeNote: '일부 후속 조치 규칙만 검사합니다. 모든 이상 소견을 탐지하거나 진단하지 않습니다. 의료진이 전체 원문을 검토해야 합니다.',
+      coverageWarning: '분석 범위 불완전: 환자 또는 임상 이벤트를 읽지 못했습니다. 처리 중 경고와 원본 자료를 확인하세요. 결과가 없다고 정상이라는 뜻은 아닙니다.',
+      none: '이 자료에서 추적할 후속 조치를 찾지 못했습니다. 정상 보고서이거나 진료가 완료되었다는 뜻이 아닙니다. 전체 원문을 확인하세요.',
       warnings: '처리 중 경고', ingested: (r) => `환자 ${r.patients}명, 이벤트 ${r.events}건을 처리했습니다. 신규 루프 ${r.loops.new ?? 0}건, 갱신 ${r.loops.updated ?? 0}건, 엔진이 종결 ${r.loops.resolved_by_engine ?? 0}건 · 현재 열린 루프 ${r.active_loops}건.`,
       toWorklist: '작업 목록에서 보기 →',
       status: { open: '열림', needs_human_review: '사람 검토 필요', closed: '종결', delayed: '지연 종결' },
       severity: { critical: '위급', high: '높음', moderate: '중간', low: '낮음' },
-      patient: '환자', due: '기한', trigger: '계기', overdue: '기한 지남', basisTitle: '근거 (쉬운 말)', evidenceTitle: '기술적 근거',
+      patient: '환자', due: '기한', trigger: '계기', overdue: '기한 지남', basisTitle: '원문 및 엔진 근거', evidenceTitle: '엔진 원문 근거 (변경하지 않음)', sourceNote: '원문 인용과 엔진의 판단 근거, 의약품명, 식별자 및 참고 문헌은 원래 언어를 유지합니다.',
       rule: '규칙', source: (s) => `자료: ${s}`, srcFile: '선택한 파일', srcPaste: '붙여넣은 판독지', srcExample: '예시',
     },
     en: {
@@ -319,12 +321,14 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       tooBig: 'The file is too large (5 MB at most).', exampleFailed: 'The example could not be loaded.',
       summary: (r) => `${r.patients} patient(s) · ${r.events} event(s) · ${r.active_loops} open loop(s) · ${r.detections.length} in total`,
       evaluatedAt: (w) => `Evaluated at ${w}`,
-      none: 'No follow-up obligations to track were found in this data.',
+      scopeNote: 'Only selected follow-up rules are checked. This does not detect or diagnose every abnormality. A clinician must review the complete original report.',
+      coverageWarning: 'Incomplete analysis coverage: no patient or clinical events could be read. Check the processing warnings and original data. Empty results do not establish normal findings.',
+      none: 'No follow-up obligations to track were found in this data. This does not establish a normal report or completed care. Review the complete original report.',
       warnings: 'Warnings while reading the data', ingested: (r) => `Processed ${r.patients} patient(s), ${r.events} event(s): ${r.loops.new ?? 0} new loop(s), ${r.loops.updated ?? 0} updated, ${r.loops.resolved_by_engine ?? 0} closed by the engine · ${r.active_loops} open now.`,
       toWorklist: 'Open the worklist →',
       status: { open: 'Open', needs_human_review: 'Needs human review', closed: 'Closed', delayed: 'Closed late' },
       severity: { critical: 'Critical', high: 'High', moderate: 'Moderate', low: 'Low' },
-      patient: 'Patient', due: 'Due', trigger: 'Trigger', overdue: 'Overdue', basisTitle: 'Basis (plain language)', evidenceTitle: 'Technical evidence',
+      patient: 'Patient', due: 'Due', trigger: 'Trigger', overdue: 'Overdue', basisTitle: 'Source and engine evidence', evidenceTitle: 'Original engine evidence (unchanged)', sourceNote: 'Source quotations and original engine rationale, medication names, identifiers and references below keep their original language.',
       rule: 'Rule', source: (s) => `Source: ${s}`, srcFile: 'chosen file', srcPaste: 'pasted report', srcExample: 'example',
     },
   };
@@ -403,7 +407,24 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   function startEngine() {
     if (engine) return engine;
     engine = (async () => {
-      const manifest = await (await fetch('js/engine_manifest.json', { cache: 'no-cache' })).json();
+      const manifestResponse = await fetch('js/engine_manifest.json', { cache: 'no-cache' });
+      if (!manifestResponse.ok) throw new Error('engine manifest');
+      const manifest = await manifestResponse.json();
+      if (manifest.source_bundle !== 'js/engine_sources.json') throw new Error('engine manifest');
+      const sourceResponse = await fetch('js/engine_sources.json', { cache: 'no-cache' });
+      if (!sourceResponse.ok) throw new Error('engine sources');
+      const sources = (await sourceResponse.json()).files;
+      if (!sources || Object.keys(sources).length !== manifest.files.length) throw new Error('engine sources');
+      // Verify the complete bundle before starting Python or writing any virtual files.
+      const files = await Promise.all(manifest.files.map(async (f) => {
+        if (!/^src\/clinloop_engine\/(?:[a-z_]+\.py|config\/critical_findings\.json)$/.test(f) ||
+            typeof sources[f] !== 'string') throw new Error('engine source path');
+        const bytes = new TextEncoder().encode(sources[f]);
+        const digest = await crypto.subtle.digest('SHA-256', bytes);
+        const hash = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+        if (hash !== manifest.sha256[f]) throw new Error('engine source checksum');
+        return [f, sources[f]];
+      }));
       setRun(t().loadingRuntime);
       if (!window.loadPyodide) await loadScript(PYODIDE_URL + 'pyodide.js');
       const py = await window.loadPyodide({ indexURL: PYODIDE_URL });
@@ -412,12 +433,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       await py.loadPackage(manifest.packages.map((p) => p.endsWith('.whl') ? PYODIDE_URL + p : p));
       setRun(t().loadingEngine);
       const root = '/home/pyodide/clinloop/';
-      // The engine's own files, from this website; nothing about the patient is in these requests
-      const files = await Promise.all(manifest.files.map(async (f) => {
-        const r = await fetch(f, { cache: 'no-cache' });
-        if (!r.ok) throw new Error('engine file');
-        return [f, await r.text()];
-      }));
+      // Only public engine code is downloaded; patient data stays in browser memory.
       for (const [f, text] of files) {
         py.FS.mkdirTree(root + f.split('/').slice(0, -1).join('/'));
         py.FS.writeFile(root + f, text);
@@ -451,6 +467,7 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
   }
 
   function drawDetections(r, source) {
+    const display = window.ClinLoopAnalysisCopy;
     const now = r.evaluation_time ? asUtc(r.evaluation_time) : new Date();
     const cards = r.detections.map((d) => {
       const overdue = d.status === 'open' && d.deadline && asUtc(d.deadline) < now;
@@ -458,24 +475,26 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       const sev = d.severity || 'low';
       return `<article class="card loop ${esc(d.status === 'closed' ? 'closed' : sev)}">
         <div class="loop-head">
-          <h3 class="loop-title">${esc(d.rule_name)}</h3>
+          <h3 class="loop-title">${esc(display.ruleName(d.rule_name, d.rule_id, lang))}</h3>
           <span class="chip neutral">${esc(d.rule_id)}</span>
           <span class="chip ${chipFor(d.status)}">${esc(t().status[d.status] || d.status)}</span>
           <span class="chip ${esc(sev)}">${esc(t().severity[sev] || sev)}</span>
           ${overdue ? `<span class="chip overdue">${esc(t().overdue)}</span>` : ''}
         </div>
         <div class="meta"><span>${esc(t().patient)} <b>${esc(d.patient_id)}</b></span>
-          <span>${esc(t().trigger)} <b>${esc(d.trigger_event)}</b> · ${esc(fmtDate(d.trigger_time))}</span>
+          <span>${esc(t().trigger)} <b>${esc(display.eventLabel(d.trigger_event, lang))}</b> · ${esc(fmtDate(d.trigger_time))}</span>
           <span>${esc(t().due)} <b>${esc(fmtDate(d.deadline))}</b></span></div>
-        ${d.status !== 'closed' && d.missing ? `<p class="missing">${esc(d.missing)}</p>` : ''}
-        ${d.status !== 'closed' && d.recommended_action ? `<p class="action">${esc(d.recommended_action)}</p>` : ''}
-        ${basis && basis.length ? `<details open><summary>${esc(t().basisTitle)}</summary><ul class="basis">${basis.map((b) => `<li>${esc(b)}</li>`).join('')}</ul></details>` : ''}
-        ${d.evidence && d.evidence.length ? `<details><summary>${esc(t().evidenceTitle)}</summary><div class="evidence">${esc(d.evidence.join('\n'))}</div></details>` : ''}
+        ${d.status !== 'closed' && d.missing ? `<p class="missing">${esc(display.missingText(d.missing, lang))}</p>` : ''}
+        ${d.status !== 'closed' && d.recommended_action ? `<p class="action">${esc(display.actionText(d.recommended_action, lang))}</p>` : ''}
+        ${basis && basis.length ? `<details open><summary>${esc(t().basisTitle)}</summary><p class="source-note">${esc(t().sourceNote)}</p><ul class="basis">${basis.map((b) => `<li>${esc(b)}</li>`).join('')}</ul></details>` : ''}
+        ${d.evidence && d.evidence.length ? `<details><summary>${esc(t().evidenceTitle)}</summary><div class="evidence">${esc(JSON.stringify({ rule_name: d.rule_name, trigger_event: d.trigger_event, missing: d.missing, recommended_action: d.recommended_action, basis: d.basis, evidence: d.evidence }, null, 2))}</div></details>` : ''}
       </article>`;
     }).join('');
     $('results').innerHTML = `<div class="card summary-line"><strong>${esc(t().summary(r))}</strong>
         <div class="sub" style="font-size:.85rem;">${esc(t().evaluatedAt(fmtDate(r.evaluation_time)))} · ${esc(t().source(source()))}</div>
-        ${r.warnings.length ? `<details><summary>${esc(t().warnings)} (${r.warnings.length})</summary><ul class="warnings">${r.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}
+        <p class="analysis-scope">${esc(t().scopeNote)}</p>
+        ${!r.patients || !r.events ? `<p class="warnings" role="alert">${esc(t().coverageWarning)}</p>` : ''}
+        ${r.warnings.length ? `<details open><summary>${esc(t().warnings)} (${r.warnings.length})</summary><p class="source-note">${esc(t().sourceNote)}</p><ul class="warnings">${r.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}
       </div>` + (cards || `<div class="card empty">${esc(t().none)}</div>`);
     setRun('');
     $('results').focus();
