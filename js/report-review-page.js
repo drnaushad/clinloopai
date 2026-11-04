@@ -109,10 +109,13 @@
       const q=document.createElement('blockquote');q.textContent=item.quote;
       const follow=document.createElement('p');if(item.follow_up_quote){const label=document.createElement('span');ui.set(label,'Quoted follow-up: ');follow.append(label,document.createTextNode(item.follow_up_quote));}else ui.set(follow,'No explicit follow-up quoted; this does not exclude a required follow-up.');
       const deadline=document.createElement('p');if(item.deadline_quote){const label=document.createElement('span');ui.set(label,'Quoted timing: ');deadline.append(label,document.createTextNode(item.deadline_quote));}else ui.set(deadline,'No source timing quoted. No deadline calculated.');
-      const context=document.createElement('p');context.className='source-context';
-      const prefix=document.createElement('span');ui.set(prefix,'Surrounding source (first match): ');context.append(prefix,document.createTextNode(item.source_context));
+      const context=document.createElement('div');context.className='source-context';
+      for(const source of item.source_matches||[{context:item.source_context}]){
+        const p=document.createElement('p'),prefix=document.createElement('span');
+        ui.set(prefix,'Surrounding source: ');p.append(prefix,document.createTextNode(source.context));context.append(p);
+      }
       const matches=document.createElement('p');ui.set(matches, item.source_occurrences>1?
-        'This quote occurs '+item.source_occurrences+' times. Review every occurrence in the original report; the first match is shown here.':
+        'This quote occurs '+item.source_occurrences+' times. All matching contexts are shown; verify each against the original report.':
         'One exact occurrence found. Verify surrounding negation, dates, units and laterality in the original.');
       section.append(h,q,context,matches,follow,deadline);box.append(section);}
     if (review.unlinked_source_sentences && review.unlinked_source_sentences.length) {
@@ -135,7 +138,7 @@
       let review;
       if($('mode').value==='local'){
         const raw=await local.run(model,text,{schema,system:api.SYSTEM+' Report category: '+type+'.'});
-        review=api.validate(JSON.parse(raw),text);
+        review=api.validate(api.parseReviewJSON(raw),text);
       }else review=await research.run(text,type,$('research-confirm').checked);
       if(current===epoch&&(version!==sourceVersion||text!==$('report').value||type!==$('report-type').value||model!==$('model').value)){status('Source or model changed. Review again.');return;}
       if(current===epoch){render(review);status('Source matching passed. Clinical interpretation still requires human review.');}

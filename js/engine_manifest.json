@@ -18,6 +18,7 @@
   "src/clinloop_engine/guideline_reports.py",
   "src/clinloop_engine/imaging_fhir.py",
   "src/clinloop_engine/loop_detector.py",
+  "src/clinloop_engine/model_json.py",
   "src/clinloop_engine/motifs.py",
   "src/clinloop_engine/note_reader.py",
   "src/clinloop_engine/profile.py",
@@ -42,6 +43,7 @@
   "src/clinloop_engine/guideline_reports.py": "38021d53fef23e1880bdf382fa3b2cb3c9f770c1766c95b029d021351d7f4324",
   "src/clinloop_engine/imaging_fhir.py": "289ef40f66e2b709ec885406f33a01e060989a92e85604a2a5eb086d15f780f6",
   "src/clinloop_engine/loop_detector.py": "8173ca34036753b32da15e8f09fa315e5becfc27e1d5cc471ad25f899ceb621f",
+  "src/clinloop_engine/model_json.py": "631a499b7c69e9dc3e55b15867a0b8e5d2ce5019daa31f4d9219ac858912a85a",
   "src/clinloop_engine/motifs.py": "ea2269c9b3edef9f19adaa1f8af47b9b2b0bd7c48e130d29519372eb5d163800",
   "src/clinloop_engine/note_reader.py": "d151e88ef8a68315f26254c5806887999fca56d78e4a9c1b9a1b4686d171b9de",
   "src/clinloop_engine/profile.py": "eb52de3f9a78d3db9ccf7b9ff7e9260199a52d0eaf0476891ff909ff3917b74a",
@@ -49,7 +51,7 @@
   "src/clinloop_engine/report_text.py": "6d6e4b4414d120c1e178494faf6fa74fdd1a20e378b917835f89735bf39e098f",
   "src/clinloop_engine/risk_scorer.py": "41dae5dfbb7b351aa77c4dc9abab141dd54b6feca7da3e50758a8a432b996e1e",
   "src/clinloop_engine/safety_clock.py": "20fee6bf265e6c4b4e2781aaafd919c742e3cd2a170e59ce83ebe843d0c4d0c7",
-  "src/clinloop_engine/second_reader.py": "3d6ffcd3cbc2e45ea165b9c93dd10d05a6afd91cec0b74bf4d99738a8cdb6d6b",
-  "src/clinloop_engine/temporal_hypergraph.py": "51523128b19104e91d13f170a968abab2957707e78ea58dd3de572702e800ff1"
+  "src/clinloop_engine/second_reader.py": "22b87a6b4c61d64999bd1b4b5aa87a4d7a111f379d1bba274f18dbccc054da79",
+  "src/clinloop_engine/temporal_hypergraph.py": "3b1d51233b54022d255a820242dc8d94b5a932f178f80dc2261a83f80859aa55"
  }
 }

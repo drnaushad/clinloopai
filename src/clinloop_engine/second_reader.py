@@ -39,6 +39,7 @@ from typing import Any, Callable, Dict, List, Optional, Set
 
 from .clinical_ontology import EventType
 from .imaging_fhir import CLINLOOP_TAG_SYSTEM
+from .model_json import strict_object
 
 logger = logging.getLogger("clinloop.second_reader")
 
@@ -143,6 +144,8 @@ def reader_contract() -> str:
     """Reader code/prompt/name contract; checkpoint identity is bound separately."""
     with open(__file__, "rb") as source:
         code = source.read()
+    from pathlib import Path
+    code += Path(__file__).with_name('model_json.py').read_bytes()
     name = os.environ.get("CLINLOOP_SECOND_READER_MODEL", "medgemma:27b")
     return hashlib.sha256(code + (prompt_digest() + name).encode()).hexdigest()
 
@@ -191,7 +194,6 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],
                 names: Optional[List[str]] = None) -> Dict[str, Any]:
     """The model's actionable items for one report, each verified against the report's own words."""
     from .document_reader import scrub_identifiers
-    from .imaging_ai import _json_object
     if not isinstance(text, str):
         return {"available": False, "reason": "Invalid report; human review required", "items": []}
     clean = scrub_identifiers(text, names)
@@ -205,8 +207,12 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],
         return {"available": False, "reason": "Incomplete model response; human review required", "items": []}
     if out.get("error") or not isinstance(out.get("text"), str) or not out["text"].strip():
         return {"available": False, "reason": "Model unavailable or returned no answer", "items": []}
-    parsed = _json_object(out["text"])
-    if not isinstance(parsed.get("items"), list):
+    try:
+        parsed = strict_object(out["text"], fenced=True)
+    except ValueError:
+        return {"available": False, "reason": "Ambiguous or invalid model JSON; human review required", "items": []}
+    if (set(parsed) != {"items"} or not isinstance(parsed.get("items"), list)
+            or len(parsed["items"]) > 30):
         return {"available": False, "reason": "answer was not the expected JSON", "items": [], "model": out.get("model")}
     from .report_text import sentence, affirmed
     haystack, items, positions, dropped, not_actionable = _norm(clean), [], {}, 0, 0

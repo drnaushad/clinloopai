@@ -16,6 +16,38 @@
       throw new Error('Choose a report type and use 1–6000 UTF-8 bytes. Longer reports must be reviewed in an approved local installation; nothing is silently truncated.');
     return text;
   }
+  function parseReviewJSON(text) {
+    if(typeof text!=='string'||new TextEncoder().encode(text).length>50000)
+      throw new Error('Invalid structured response. Human review required.');
+    // Native parsing checks grammar; retain tokens to detect fields which a
+    // normal JSON.parse would silently shadow with the last occurrence.
+    const value=JSON.parse(text,(_key,item)=>{
+      if(typeof item==='number'&&!Number.isFinite(item))throw new Error('Invalid structured response.');
+      return item;
+    });
+    const tokens=text.match(/"(?:\\[\s\S]|[^"\\])*"|[{}\[\]:,]|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null/g)||[];
+    let at=0;
+    function walk(depth){
+      if(depth>64)throw new Error('Invalid structured response.');
+      const token=tokens[at++];
+      if(token==='{'){
+        const keys=new Set();
+        if(tokens[at]!=='}')while(true){
+          const key=JSON.parse(tokens[at++]);
+          if(keys.has(key))throw new Error('Duplicate structured-response field. Human review required.');
+          keys.add(key);at++;walk(depth+1);
+          if(tokens[at]!==',')break;at++;
+        }
+        at++;
+      }else if(token==='['){
+        if(tokens[at]!==']')while(true){walk(depth+1);if(tokens[at]!==',')break;at++;}
+        at++;
+      }
+    }
+    walk(0);
+    if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('Invalid structured response.');
+    return value;
+  }
   function validate(data, text) {
     if (!data || typeof data !== 'object' || Array.isArray(data) ||
         Object.keys(data).sort().join(',') !== 'findings,missing_context' ||
@@ -31,18 +63,22 @@
           typeof f.deadline_quote !== 'string' || f.deadline_quote.length > 200 ||
           (f.deadline_quote && !f.follow_up_quote.includes(f.deadline_quote)))
         throw new Error('A finding or deadline could not be traced to the source. No analysis accepted; human review required.');
-      const preceding = text.slice(Math.max(0, text.indexOf(f.quote)-200), text.indexOf(f.quote)).split(/[.!?\n]/).pop();
-      if (f.assertion === 'present' && /(?:^|:\s*)\s*(?:no\b|without\b|negative for\b)/i.test(preceding + f.quote))
-        throw new Error('Possible negation conflict in model output. No interpretation accepted; human review required.');
       const start=text.indexOf(f.quote),end=start+f.quote.length;
-      let occurrences=0,at=0;
-      while((at=text.indexOf(f.quote,at))!==-1){occurrences++;at+=f.quote.length;}
-      return {...f, source_start:start, source_end:end, source_occurrences:occurrences,
+      let at=0;const source_matches=[];
+      while((at=text.indexOf(f.quote,at))!==-1){
+        const preceding=text.slice(Math.max(0,at-200),at).split(/[.!?\n]/).pop();
+        if(f.assertion==='present'&&/(?:^|:\s*)\s*(?:no\b|without\b|negative for\b)/i.test(preceding+f.quote))
+          throw new Error('Possible negation conflict in model output. No interpretation accepted; human review required.');
+        source_matches.push({start:at,end:at+f.quote.length,context:text.slice(Math.max(0,at-200),Math.min(text.length,at+f.quote.length+200))});
+        if(source_matches.length>12)throw new Error('Source quote is too ambiguous. Human review required.');
+        at+=f.quote.length;
+      }
+      return {...f, source_start:start, source_end:end, source_occurrences:source_matches.length,source_matches,
         source_context:text.slice(Math.max(0,start-200),Math.min(text.length,end+200))};
     });
     // Surface unmatched recommendation-like source sentences for a human, never infer linkage or timing.
     const unlinked_source_sentences = [...new Set(text.split(/(?<=[.!?])\s+|\n+/).map(s=>s.trim()).filter(s=>
-      /\b(?:recommend(?:ed|ation|ations)?|repeat|follow[- ]?up|recheck|refer(?:ral)?)\b/i.test(s) &&
+      /\b(?:recommend(?:ed|s|ation|ations)?|repeat|follow[- ]?up|recheck|refer(?:ral)?)\b|추적|재검|권고|권유|권함|요망|의뢰|필요\s*시|필요시/i.test(s) &&
       !findings.some(f=>f.follow_up_quote && f.follow_up_quote.includes(s))))];
     return {findings, missing_context: [...new Set(data.missing_context)], unlinked_source_sentences,
       human_review_required: true};
@@ -88,6 +124,6 @@
       return validate(data.review,text);
     }
   }
-  const api={TYPES,PROVIDERS,SYSTEM,validText,validate,validateFile,Research};
+  const api={TYPES,PROVIDERS,SYSTEM,validText,parseReviewJSON,validate,validateFile,Research};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.ClinLoopReportReview=api;
 })(typeof window==='undefined'?globalThis:window);

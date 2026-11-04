@@ -112,3 +112,31 @@ test('duplicate or foreign cases cannot silently distort coverage',()=>{
  assert.throws(()=>aggregate([{id:'foreign'}],cases));
  assert.throws(()=>aggregate([],[cases[0],cases[0]]));
 });
+
+test('explicit continuation attempts every planned case while retaining rejected cases in recall',async()=>{
+ const model=stub({review:(c,n)=>n===1?{findings:[{...cases[0].expected[0],quote:'Invented non-source finding.'}],missing_context:[]}:{findings:c.expected,missing_context:[]}});
+ const r=await evaluate({address:'http://localhost:18133',model:MODEL,fetcher:model.fetcher,continueOnFailure:true});
+ assert.equal(r.cases_run,cases.length);assert.equal(r.cases_not_run,0);
+ assert.equal(r.accepted,cases.length-1);assert.equal(r.metrics.rejected_cases,1);
+ assert.equal(r.metrics.rejected_expected_findings,cases[0].expected.length);
+ assert.equal(r.metrics.expected_findings,r.expectations_planned);
+ assert.equal(r.metrics.execution_complete,true);assert.equal(r.metrics.all_outputs_accepted,false);
+ assert(r.metrics.recall_on_attempted_cases<1);assert(r.failure_policy.startsWith('continue;'));
+ assert(!JSON.stringify(r).includes('Invented non-source'));
+ await assert.rejects(evaluate({continueOnFailure:'true'}));
+});
+
+test('changed executable source invalidates metrics even when the checkpoint is unchanged',async()=>{
+ const fs=require('node:fs'),original=fs.readFileSync;let generated=false;
+ const model=stub({review:c=>{generated=true;return {findings:c.expected,missing_context:[]};}});
+ fs.readFileSync=function(file,...args){
+  const value=original.call(this,file,...args);
+  return generated&&String(file).endsWith('/js/report-review.js')?Buffer.concat([value,Buffer.from('\n// synthetic source-change probe')]):value;
+ };
+ try{
+   const r=await evaluate({address:'http://localhost:18133',model:MODEL,fetcher:model.fetcher});
+   assert.equal(r.source_stable,false);assert.equal(r.model_digest,r.final_model_digest);
+   assert.equal(r.provenance_valid,false);assert.equal(r.metrics,null);assert.equal(r.expectations_matched,null);
+   assert.notEqual(r.executable_sha256,r.final_executable_sha256);
+ }finally{fs.readFileSync=original;}
+});
