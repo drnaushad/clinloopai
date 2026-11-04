@@ -28,6 +28,10 @@ def source(tmp_path):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text('public fixture')
     repo = Path(__file__).parents[1]
+    for name in m.PUBLIC_JWKS:
+        target = root/name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(repo/name, target)
     manifest = json.loads((repo/'js/engine_manifest.json').read_text())
     shutil.copyfile(repo/'js/engine_manifest.json', root/'js/engine_manifest.json')
     for name in manifest['files']:
@@ -164,3 +168,48 @@ def test_bundle_cli_uses_the_container_web_manifest_layout(source):
     manifest = json.loads((web/'engine_manifest.json').read_text())
     sources = json.loads((web/'engine_sources.json').read_text())
     assert set(sources['files']) == set(manifest['files'])
+
+
+def test_registered_epic_public_key_urls_are_packaged_without_other_epic_files(source, tmp_path):
+    (source/'epic/private.pem').write_text('SYNTHETIC-PRIVATE-MARKER')
+    (source/'epic/extra.json').write_text('SYNTHETIC-PRIVATE-MARKER')
+    subprocess.run(['git','add','epic'],cwd=source,check=True)
+    output = tmp_path/'public'
+    result = m.build(source, output)
+    assert sorted(p.name for p in (output/'epic').iterdir()) == ['jwks-prod.json', 'jwks.json']
+    for name in m.PUBLIC_JWKS:
+        assert (output/name).read_bytes() == (source/name).read_bytes()
+        assert result['sha256'][name] == hashlib.sha256((source/name).read_bytes()).hexdigest()
+
+
+@pytest.mark.parametrize('field', ['d','p','q','dp','dq','qi','oth','k','private_key'])
+def test_private_key_fields_cannot_enter_public_jwks(source, tmp_path, field):
+    path = source/m.PUBLIC_JWKS[0]
+    body = json.loads(path.read_text())
+    body['keys'][0][field] = 'SYNTHETIC-PRIVATE-MARKER'
+    path.write_text(json.dumps(body))
+    output = tmp_path/'public'
+    with pytest.raises(ValueError, match='public verification keys'):
+        m.build(source, output)
+    assert not output.exists()
+
+
+@pytest.mark.parametrize('damage', ['untracked','symlink','signing_ops','symmetric','malformed'])
+def test_unsafe_jwks_fails_before_output_creation(source, tmp_path, damage):
+    path = source/m.PUBLIC_JWKS[0]
+    body = json.loads(path.read_text())
+    if damage == 'untracked':
+        subprocess.run(['git','rm','--cached',m.PUBLIC_JWKS[0]],cwd=source,check=True,capture_output=True)
+    elif damage == 'symlink':
+        outside = tmp_path/'outside.json'
+        outside.write_bytes(path.read_bytes())
+        path.unlink(); path.symlink_to(outside)
+    elif damage == 'malformed':
+        path.write_text('not JSON')
+    else:
+        body['keys'][0].update({'key_ops':['sign']} if damage=='signing_ops' else {'kty':'oct','k':'SYNTHETIC'})
+        path.write_text(json.dumps(body))
+    output = tmp_path/'public'
+    with pytest.raises(ValueError):
+        m.build(source,output)
+    assert not output.exists()

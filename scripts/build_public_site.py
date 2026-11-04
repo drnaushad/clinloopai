@@ -23,20 +23,63 @@ PUBLIC_DOCS = ('docs/reviews/RETURNED_REVIEW_CORRECTIONS_20261027.md',
                'docs/reviews/gmlp-gap-assessment-20261027.json',
                'docs/reviews/EVIDENCE_REVIEW_20261029.md', 'docs/releases/20261030.md',
                'docs/releases/20261102.md')
+PUBLIC_JWKS = ('epic/jwks.json', 'epic/jwks-prod.json')
 ASSET_DIRS = {'css': {'.css'}, 'js': {'.js', '.json'},
               'icons': {'.png', '.svg', '.ico'}, 'smart': {'.html', '.css'},
               'demo/api': {'.json'}, 'demo/examples': {'.json'}}
+
+
+def validate_public_jwks(path: Path) -> None:
+    """Only signature-verification material may enter the public artifact."""
+    allowed = {'kty', 'kid', 'alg', 'use', 'key_ops', 'n', 'e', 'crv', 'x', 'y'}
+    try:
+        if path.stat().st_size > 16384:
+            raise ValueError()
+        body = json.loads(path.read_text(encoding='utf-8'))
+        if not isinstance(body, dict) or set(body) != {'keys'}:
+            raise ValueError()
+        keys = body['keys']
+        if not isinstance(keys, list) or not 1 <= len(keys) <= 8:
+            raise ValueError()
+        ids = set()
+        for key in keys:
+            if not isinstance(key, dict) or not set(key) <= allowed:
+                raise ValueError()
+            if key.get('use') != 'sig' or key.get('key_ops', ['verify']) != ['verify']:
+                raise ValueError()
+            kid = key.get('kid')
+            if not isinstance(kid, str) or not kid or kid in ids:
+                raise ValueError()
+            ids.add(kid)
+            if key.get('kty') == 'RSA' and key.get('alg') == 'RS384':
+                fields = ('n', 'e')
+                if {'crv', 'x', 'y'} & set(key):
+                    raise ValueError()
+            elif key.get('kty') == 'EC' and key.get('alg') == 'ES384' and key.get('crv') == 'P-384':
+                fields = ('x', 'y')
+                if {'n', 'e'} & set(key):
+                    raise ValueError()
+            else:
+                raise ValueError()
+            if any(not isinstance(key.get(field), str) or not key[field] or
+                   any(c not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_' for c in key[field])
+                   for field in fields):
+                raise ValueError()
+    except (ValueError, TypeError, OSError):
+        raise ValueError('Public JWKS must contain only supported public verification keys') from None
 
 
 def build(source: Path, output: Path) -> dict:
     source, output = source.resolve(), output.absolute()
     if output.exists() or output.is_symlink():
         raise ValueError('Public artifact output must be a new directory')
-    selected = set(ROOT_FILES) | {'data/' + p for p in PUBLIC_DATA} | set(PUBLIC_DOCS)
+    selected = set(ROOT_FILES) | {'data/' + p for p in PUBLIC_DATA} | set(PUBLIC_DOCS) | set(PUBLIC_JWKS)
     tracked = set(subprocess.check_output(['git', 'ls-files', '-z'], cwd=source).decode().split('\0'))
     engine = browser_sources(source)
     if not set(engine['files']) <= tracked:
         raise ValueError('Browser engine source must be tracked')
+    if not set(PUBLIC_JWKS) <= tracked:
+        raise ValueError('Public JWKS must be tracked')
     bundle_name = 'js/engine_sources.json'
     if (source/bundle_name).exists() or (source/bundle_name).is_symlink():
         raise ValueError('Browser engine bundle must be generated from source, not supplied')
@@ -56,6 +99,8 @@ def build(source: Path, output: Path) -> dict:
         path = source/name
         if not path.is_file() or path.is_symlink() or not path.resolve().is_relative_to(source):
             raise ValueError('Required public asset is missing or unsafe')
+    for name in PUBLIC_JWKS:
+        validate_public_jwks(source/name)
     # Validate everything before creating the output. No source files are removed.
     output.mkdir(parents=True)
     hashes = {}
