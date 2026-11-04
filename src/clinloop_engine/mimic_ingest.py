@@ -30,6 +30,7 @@ import argparse
 import base64
 import csv
 import gzip
+import hashlib
 import json
 import os
 import random
@@ -179,13 +180,27 @@ def load(mimic: str, subjects: Iterable[str], note: Optional[str] = None, cxr: O
             "effectiveDateTime": _t(r.get("storetime") or r.get("charttime") or r.get("chartdate")),
             "valueString": f"growth: {r['org_name']}"})
 
+    seen_prescriptions = set()
     for r in _rows(mimic, "hosp", "prescriptions"):
         if r["subject_id"] not in keep or not r.get("drug"):
             continue
         dose = " ".join(x for x in (r.get("dose_val_rx"), r.get("dose_unit_rx"), r.get("route")) if x)
         text = " ".join(x for x in (r["drug"], r.get("prod_strength")) if x)
+        # pharmacy_id / poe_id identify orders, not individual rows: one order
+        # can contain several drugs, components or dose intervals. MIMIC is an
+        # immutable research extract, so bind identity to the complete source
+        # row, independent of CSV column/row ordering. Never discard a distinct
+        # row or weaken the graph's conflicting-identity refusal.
+        row_hash = hashlib.sha256(json.dumps(r, sort_keys=True, ensure_ascii=False,
+                                            separators=(',', ':')).encode('utf-8')).hexdigest()
+        if row_hash in seen_prescriptions:
+            continue
+        seen_prescriptions.add(row_hash)
         out[r["subject_id"]].append({
-            "resourceType": "MedicationRequest", "id": f"rx-{r.get('pharmacy_id') or r.get('poe_id')}-{r.get('poe_seq', '')}",
+            "resourceType": "MedicationRequest", "id": 'rx-' + row_hash[:60],
+            "identifier": [{"system": "urn:mimic:prescription-row-sha256", "value": row_hash}] +
+                          [{"system": 'urn:mimic:' + key, "value": r[key]}
+                           for key in ('pharmacy_id', 'poe_id', 'poe_seq') if r.get(key)],
             "status": "completed", "intent": "order", "subject": ref(r["subject_id"]), "authoredOn": _t(r["starttime"]),
             "medicationCodeableConcept": {"text": text}, **({"dosageInstruction": [{"text": dose}]} if dose else {})})
 

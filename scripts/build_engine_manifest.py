@@ -13,8 +13,11 @@ engine imports; tests/test_analyse_page.py fails when the manifest is out of dat
 """
 
 import ast
+import argparse
+import hashlib
 import json
 import os
+from pathlib import Path
 from typing import Dict, List
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -26,10 +29,9 @@ DATA_FILES = ["src/clinloop_engine/config/critical_findings.json"]
 
 # Network/model-inventory helpers reached only through backend model calls: never used in the browser
 NOT_IN_BROWSER = {"document_reader", "local_llm_engine", "imaging_ai", "model_registry"}
-PACKAGE = os.path.join(ROOT, "src", "clinloop_engine")
 
 
-def engine_modules() -> List[str]:
+def engine_modules(root=ROOT) -> List[str]:
     """Engine modules reachable from the entry point through relative imports, at any depth in the code."""
     seen, todo = set(), [ENTRY.rsplit(".", 1)[1]]
     while todo:
@@ -37,7 +39,7 @@ def engine_modules() -> List[str]:
         if name in seen or name in NOT_IN_BROWSER:
             continue
         seen.add(name)
-        with open(os.path.join(PACKAGE, name + ".py"), encoding="utf-8") as f:
+        with open(os.path.join(root, 'src', 'clinloop_engine', name + ".py"), encoding="utf-8") as f:
             tree = ast.parse(f.read())
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.level == 1 and node.module:
@@ -45,15 +47,46 @@ def engine_modules() -> List[str]:
     return sorted(seen)
 
 
-def build() -> Dict:
-    files = ["src/clinloop_engine/__init__.py"] + [f"src/clinloop_engine/{m}.py" for m in engine_modules()]
+def build(root=ROOT) -> Dict:
+    files = sorted(["src/clinloop_engine/__init__.py"] +
+                   [f"src/clinloop_engine/{m}.py" for m in engine_modules(root)] + DATA_FILES)
     # numpy from the Pyodide repository; networkx as its wheel file alone (by name, Pyodide would also
     # load matplotlib and other optional dependencies the engine never imports)
     return {"pyodide": "0.26.4", "packages": ["numpy", "networkx-3.3-py3-none-any.whl"], "entry": ENTRY,
-            "files": sorted(files + DATA_FILES)}
+            "files": files, "source_bundle": "js/engine_sources.json",
+            "sha256": {name: hashlib.sha256((Path(root)/name).read_bytes()).hexdigest() for name in files}}
+
+
+def browser_sources(root=ROOT, manifest_path=None) -> Dict:
+    """Return only the dependency closure, refusing stale manifests or redirected source files."""
+    root = Path(root).resolve()
+    # Validate paths before reading source (including parent-directory symlinks).
+    package = root/'src'/'clinloop_engine'
+    if any(p.is_symlink() for p in (root/'src', package)):
+        raise ValueError('Browser engine source cannot contain symlinks')
+    for path in package.rglob('*'):
+        if path.is_symlink():
+            raise ValueError('Browser engine source cannot contain symlinks')
+    manifest = json.loads(Path(manifest_path or root/'js'/'engine_manifest.json').read_text(encoding='utf-8'))
+    expected = build(root)
+    if manifest != expected:
+        raise ValueError('Browser engine manifest is stale or unsafe; rebuild it')
+    return {'files': {name: (root/name).read_bytes().decode('utf-8') for name in expected['files']}}
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--bundle-output', type=Path,
+                        help='Validate the manifest and write a new browser-only source bundle')
+    parser.add_argument('--manifest', type=Path, help='Manifest location in a packaged container layout')
+    args = parser.parse_args()
+    if args.bundle_output:
+        content = browser_sources(manifest_path=args.manifest)
+        args.bundle_output.parent.mkdir(parents=True, exist_ok=True)
+        with args.bundle_output.open('x', encoding='utf-8') as f:
+            json.dump(content, f, ensure_ascii=False, sort_keys=True)
+            f.write('\n')
+        return
     with open(MANIFEST, "w", encoding="utf-8") as f:
         json.dump(build(), f, indent=1)
         f.write("\n")

@@ -178,7 +178,7 @@ class TestAnalysePage(unittest.TestCase):
         self.assertIn("Loading patient data needs an admin", self.html)
         # The only requests carrying the bundle go to this hospital's server (state.base)
         for call in re.findall(r"fetch\(([^,)]*)", self.html):
-            self.assertIn(call.strip(), ("state.base + path", "'js/engine_manifest.json'", "f",
+            self.assertIn(call.strip(), ("state.base + path", "'js/engine_manifest.json'", "'js/engine_sources.json'",
                                          "`demo/examples/${btn.dataset.example}.json`"), call)
         self.assertIn('aria-live="polite"', self.html)
 
