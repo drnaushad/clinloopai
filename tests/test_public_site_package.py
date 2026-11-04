@@ -213,3 +213,21 @@ def test_unsafe_jwks_fails_before_output_creation(source, tmp_path, damage):
     with pytest.raises(ValueError):
         m.build(source,output)
     assert not output.exists()
+
+
+@pytest.mark.parametrize('damage', ['shadowed_private_set','duplicate_public_set','duplicate_kid'])
+def test_duplicate_json_properties_cannot_hide_unvalidated_jwks_bytes(source, tmp_path, damage):
+    path = source/m.PUBLIC_JWKS[0]
+    body = json.loads(path.read_text())
+    keys = json.dumps(body['keys'])
+    if damage == 'shadowed_private_set':
+        text = '{"keys":[{"d":"SYNTHETIC-PRIVATE-MARKER"}],"keys":' + keys + '}'
+    elif damage == 'duplicate_public_set':
+        text = '{"keys":' + keys + ',"keys":' + keys + '}'
+    else:
+        text = json.dumps(body).replace('"kid":', '"kid":"SYNTHETIC-PRIVATE-MARKER","kid":', 1)
+    path.write_text(text)
+    output = tmp_path/'public'
+    with pytest.raises(ValueError, match='public verification keys'):
+        m.build(source,output)
+    assert not output.exists()

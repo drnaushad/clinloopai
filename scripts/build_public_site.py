@@ -32,10 +32,21 @@ ASSET_DIRS = {'css': {'.css'}, 'js': {'.js', '.json'},
 def validate_public_jwks(path: Path) -> None:
     """Only signature-verification material may enter the public artifact."""
     allowed = {'kty', 'kid', 'alg', 'use', 'key_ops', 'n', 'e', 'crv', 'x', 'y'}
+
+    def unique_object(pairs: list) -> dict:
+        result = {}
+        for name, value in pairs:
+            if name in result:
+                raise ValueError()
+            result[name] = value
+        return result
+
     try:
         if path.stat().st_size > 16384:
             raise ValueError()
-        body = json.loads(path.read_text(encoding='utf-8'))
+        # The reviewed bytes are copied verbatim. Reject shadowed properties,
+        # rather than validating only the last value selected by json.loads.
+        body = json.loads(path.read_text(encoding='utf-8'), object_pairs_hook=unique_object)
         if not isinstance(body, dict) or set(body) != {'keys'}:
             raise ValueError()
         keys = body['keys']
