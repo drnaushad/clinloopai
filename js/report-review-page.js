@@ -153,7 +153,7 @@
     loading=true;$('report').value='';ui.set($('result'), 'Loading new source. No review yet.');status('Loading new source. Analysis is paused.');sync();
     try {
       const ext=window.ClinLoopFileImport?window.ClinLoopFileImport.kind(file.name,file.size):'txt';let text;
-      if(ext==='txt'){
+      if(['txt','csv','tsv','md'].includes(ext)){
         api.validateFile(file.name,file.size);const buffer=await file.arrayBuffer();text=new TextDecoder('utf-8',{fatal:true}).decode(buffer);api.validText(text,$('report-type').value);
       }else{
         if($('file-options'))$('file-options').open=true;
@@ -170,11 +170,11 @@
             !data.text_review_allowed?'DICOM report is incomplete or contains non-text content. Preview only; text analysis is blocked.':
             'DICOM report text extracted. Check all values, units and context against the original. No pixels were analyzed.');box.append(notice);
         }
-        for(const page of data.pages){const detail=document.createElement('details'),summary=document.createElement('summary'),pre=document.createElement('pre');ui.set(summary,'Source page '+page.number+' · '+page.method);pre.textContent=page.text;detail.append(summary,pre);box.append(detail);}
+        for(const page of data.pages){const detail=document.createElement('details'),summary=document.createElement('summary'),pre=document.createElement('pre');if(data.kind==='docx')ui.set(summary,'Word text in document order (pagination unavailable)');else ui.set(summary,'Source page '+page.number+' · '+page.method);pre.textContent=page.text;detail.append(summary,pre);box.append(detail);}
       }
       if(current===epoch&&version===sourceVersion){$('report').value=text;ui.set($('result'), 'New source loaded. No review yet.');status(importedDocument&&!importedDocument.text_review_allowed?'DICOM preview only. Non-text or incomplete content cannot enter text analysis.':'New source loaded. Check completeness before reviewing.');}
     }
-    catch(_){if(current===epoch&&version===sourceVersion){$('report').value='';importedDocument=null;ui.set($('result'), 'No review yet.');status('File import failed. TXT loads in this browser. For PDF, image or DICOM, start your updated personal gateway with --setup, check its access code and confirm local processing. No partial source was loaded.');}}
+    catch(_){if(current===epoch&&version===sourceVersion){$('report').value='';importedDocument=null;ui.set($('result'), 'No review yet.');status('File import failed. Use complete UTF-8 text or your updated personal gateway for PDF, DOCX, photos and DICOM. Check file limits, gateway access and local-processing consent. Complex Word documents need a complete PDF export. No partial source was loaded.');}}
     finally{if(current===epoch&&version===sourceVersion){loading=false;sync();}}
   }
   $('report-file').addEventListener('change',loadSelectedFile);

@@ -1,6 +1,18 @@
 /** English/Korean interface copy only; source evidence is not a translation target. */
 (function(root,copy){
 if(typeof module==='object'&&module.exports)module.exports=copy;else root.ClinLoopInterfaceCopy=copy;})(typeof window==='undefined'?this:window, {
+  "Upload report: PDF, Word DOCX, photos, DICOM or text exports": "보고서 업로드: PDF, Word DOCX, 사진, DICOM 또는 텍스트 내보내기 파일",
+  "Local file tools for PDF, Word DOCX, scans, photos and DICOM": "PDF, Word DOCX, 스캔, 사진 및 DICOM용 로컬 파일 도구",
+  "One file up to 5 MB; PDF/images up to 20 pages/frames. TXT, CSV, TSV and Markdown must be UTF-8 and fit 6000 bytes. Complete extracted documents can be previewed up to 120000 bytes, but model review requires the whole report to fit 6000 bytes. Nothing is silently shortened.": "파일 1개, 최대 5MB이며 PDF·이미지는 최대 20페이지·프레임입니다. TXT·CSV·TSV·Markdown은 UTF-8 형식으로 6000바이트 이하여야 합니다. 추출된 문서 전체를 최대 120000바이트까지 미리 볼 수 있지만 모델 검토에는 보고서 전체가 6000바이트 이내여야 합니다. 내용을 자동으로 줄이지 않습니다.",
+  "TXT, CSV, TSV and Markdown load as original text in this browser; formulas and markup are never executed. PDF, plain Word DOCX, scanned reports, PNG/JPEG/TIFF photos and DICOM use your personal local gateway. Complex Word documents, legacy DOC, spreadsheets and proprietary formats require a complete PDF or UTF-8 text export. Image pixels and waveforms need a separate validated workflow.": "TXT·CSV·TSV·Markdown은 브라우저에서 원문 텍스트로 불러오며 수식이나 마크업을 실행하지 않습니다. PDF·일반 Word DOCX·스캔 보고서·PNG/JPEG/TIFF 사진·DICOM은 개인 로컬 게이트웨이를 사용합니다. 복잡한 Word 문서, 구형 DOC, 스프레드시트 및 전용 형식은 전체 PDF 또는 UTF-8 텍스트로 내보내야 합니다. 영상 화소와 파형에는 별도로 검증된 작업 흐름이 필요합니다.",
+  "Upload a health report": "건강 보고서 업로드",
+  "Open report upload": "보고서 업로드 열기",
+  "Review laboratory, radiology, pathology, ECG text, discharge summaries and other written health reports. Choose the category on the report review page.": "검사실·영상·병리·심전도 텍스트·퇴원 요약 및 기타 건강 보고서 문서를 검토합니다. 보고서 검토 화면에서 분류를 선택하세요.",
+  "PDF, Word DOCX, scans/photos, DICOM report documents and UTF-8 TXT/CSV/TSV/Markdown are supported through the report review workflow. FHIR JSON below is for linked patient records and follow-up detection.": "보고서 검토 작업 흐름에서 PDF·Word DOCX·스캔/사진·DICOM 보고서 문서·UTF-8 TXT/CSV/TSV/Markdown을 지원합니다. 아래 FHIR JSON은 연결된 환자 기록과 후속 조치 탐지에 사용됩니다.",
+  "File support does not establish diagnostic accuracy. Check the complete source; the public preview accepts synthetic reports only.": "파일 지원이 진단 정확도를 입증하지는 않습니다. 전체 원문을 확인하세요. 공개 미리보기는 합성 보고서만 사용합니다.",
+  "Word text in document order (pagination unavailable)": "문서 순서의 Word 텍스트(페이지 구분 없음)",
+  "File import failed. Use complete UTF-8 text or your updated personal gateway for PDF, DOCX, photos and DICOM. Check file limits, gateway access and local-processing consent. Complex Word documents need a complete PDF export. No partial source was loaded.": "파일을 불러오지 못했습니다. 전체 UTF-8 텍스트를 사용하거나 최신 개인 게이트웨이에서 PDF·DOCX·사진·DICOM을 처리하세요. 파일 제한, 게이트웨이 접근 및 로컬 처리 동의를 확인하세요. 복잡한 Word 문서는 전체 PDF 내보내기가 필요합니다. 일부 원문만 불러오지 않았습니다.",
+  "Use a complete UTF-8 TXT, CSV, TSV or Markdown report up to 6000 bytes. For other formats, use the supported local file importer or export the complete report to PDF.": "6000바이트 이내의 전체 UTF-8 TXT·CSV·TSV·Markdown 보고서를 사용하세요. 다른 형식은 지원되는 로컬 파일 도구를 사용하거나 보고서 전체를 PDF로 내보내세요.",
   "Historical release evidence only (27 October 2026). These counts and review records do not verify the modified recovery candidate or the currently deployed website.": "과거 릴리스 근거만 표시합니다(2026년 10월 27일). 이 수치와 검토 기록은 수정된 복구 후보나 현재 배포된 웹사이트를 검증하지 않습니다.",
   "29 October candidate review and clinical evidence plan": "10월 29일 후보 검토 및 임상 근거 계획",
   "Earlier corrections (27 October)": "이전 수정 사항(10월 27일)",

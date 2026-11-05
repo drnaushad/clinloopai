@@ -609,3 +609,33 @@ personal-gateway codes are cleared before an overdue action can send them. This 
 browser suspension and accessibility-generated clicks. It cannot undo a request already
 received by a model server or securely erase browser/OS memory and provider logs. Real
 patient studies still require the approved private institutional workflow described above.
+
+## Expanded report entry and formats (5 November 2026 candidate)
+
+Analyse patient now provides a prominent **Open report upload** link above the
+FHIR-only controls. FHIR JSON retains its separate purpose: linked patient records
+and selected follow-up rules. Report review covers laboratory, radiology, pathology,
+ECG **report text**, discharge summaries and other written health reports.
+
+| Input | Processing and limits |
+|---|---|
+| TXT, CSV, TSV, Markdown | Strict UTF-8 in browser memory, complete input up to 6000 bytes. Original delimiters, units, markup and formulas remain text; nothing executes. |
+| PDF, PNG/JPEG/TIFF scans and photos | Existing personal local gateway; OCR requires source verification, up to 5 MB and 20 pages/frames. |
+| Word DOCX | Updated personal local gateway; plain paragraphs and simple tables in document order. Preview is one text section, not a claim about Word pagination. |
+| DICOM report documents | Existing encapsulated PDF or supported complete SR text workflow. Non-text/incomplete content remains blocked from text review. |
+| FHIR R4 JSON Bundle | Analyse patient, not the general text importer. |
+| Legacy DOC, XLS/XLSX, RTF, HTML, proprietary exports | Export the complete report to PDF or UTF-8 text first, preserving units, reference intervals, dates and addenda. |
+| Diagnostic image pixels or ECG waveforms | Require a separate clinically validated interpretation workflow. |
+
+DOCX extraction rejects drawings, embedded files, external links, annotations,
+headers/footers/footnotes, generated fields or list numbering, tracked changes,
+hidden text, merged cells and unsupported layout. No partial extraction is accepted;
+export these documents to a complete PDF instead. ZIP entry counts and expanded
+size are bounded; XML entities/DTDs are refused. No new dependencies were added.
+
+All extracted source must be compared with the original. The 120000-byte preview
+limit does not increase the 6000-byte **complete report** model limit. Long reports
+must use an approved installation with a separately evaluated long-document
+workflow; do not split away clinical context to bypass this limit. File import
+makes no model call and does not establish diagnostic accuracy, specialist coverage
+or hospital readiness. The public candidate remains synthetic-only.

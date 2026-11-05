@@ -55,7 +55,7 @@ MAX_FILE_BODY = ((MAX_FILE_BYTES + 2) // 3) * 4 + 2048
 
 class FileImport(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True)
-    extension: Literal['pdf', 'png', 'jpg', 'jpeg', 'tif', 'tiff', 'dcm']
+    extension: Literal['pdf', 'png', 'jpg', 'jpeg', 'tif', 'tiff', 'dcm', 'docx']
     content_base64: str = Field(min_length=4, max_length=MAX_FILE_BODY, repr=False)
     ocr_language: Literal['eng', 'kor+eng'] = 'eng'
     synthetic_only: StrictBool

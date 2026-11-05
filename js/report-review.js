@@ -84,8 +84,8 @@
       human_review_required: true};
   }
   function validateFile(name, size) {
-    if (!/\.txt$/i.test(name) || !Number.isSafeInteger(size) || size < 1 || size > 6000)
-      throw new Error('This preview accepts UTF-8 .txt reports up to 6000 bytes. PDFs, scans, images and waveforms require the hospital’s approved extraction and image workflow.');
+    if (!/\.(txt|csv|tsv|md)$/i.test(name) || !Number.isSafeInteger(size) || size < 1 || size > 6000)
+      throw new Error('Use a complete UTF-8 TXT, CSV, TSV or Markdown report up to 6000 bytes. For other formats, use the supported local file importer or export the complete report to PDF.');
   }
   class Research {
     constructor(fetcher) {this.fetcher=fetcher; this.address=''; this.token=''; this.epoch=0; this.controllers=new Set(); this.model='';this.provider='';this.legacy=false;}

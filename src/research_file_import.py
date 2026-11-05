@@ -4,6 +4,8 @@ from __future__ import annotations
 import hashlib
 import io
 import warnings
+import zipfile
+import xml.etree.ElementTree as ET
 from typing import Any
 
 MAX_FILE_BYTES = 5 * 1024 * 1024
@@ -166,6 +168,104 @@ def _dicom(content: bytes, language: str) -> dict:
                       'DICOM report is incomplete or contains non-text content. Preview only; text analysis is blocked.'}
 
 
+def _docx(content: bytes) -> list[dict]:
+    """Plain Word paragraphs/tables only; reject content we cannot represent completely.
+
+    No embedded files, fields, tracked changes, drawings, headers or linked content
+    are discarded to make a report fit. Word pagination is not inferred.
+    """
+    failure = 'Word document contains unsupported content. Export the complete report to PDF and check every page.'
+    ns = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
+    with zipfile.ZipFile(io.BytesIO(content)) as archive:
+        entries = archive.infolist()
+        names = [entry.filename for entry in entries]
+        if (len(entries) > 256 or len(names) != len(set(names)) or
+                sum(entry.file_size for entry in entries) > 20 * 1024 * 1024 or
+                any(entry.flag_bits & 1 or entry.filename.startswith('/') or
+                    '..' in entry.filename.split('/') for entry in entries)):
+            raise ImportFailure(failure)
+        allowed_parts = {'word/document.xml', 'word/styles.xml', 'word/settings.xml',
+                         'word/fontTable.xml', 'word/webSettings.xml', 'word/numbering.xml'}
+        if ('[Content_Types].xml' not in names or 'word/document.xml' not in names or
+                any(name.startswith('word/') and not name.endswith('/') and name not in allowed_parts and
+                    not name.startswith(('word/theme/', 'word/_rels/')) for name in names)):
+            raise ImportFailure(failure)
+        # Refuse external relationships anywhere, including template and image links.
+        for entry in entries:
+            if entry.filename.endswith(('.xml', '.rels')):
+                raw = archive.read(entry)
+                if b'<!DOCTYPE' in raw.upper() or b'<!ENTITY' in raw.upper() or b'\x00' in raw:
+                    raise ImportFailure(failure)
+                tree = ET.fromstring(raw)
+                if entry.filename.endswith('.rels') and any(
+                        node.attrib.get('TargetMode', '').lower() == 'external' for node in tree.iter()):
+                    raise ImportFailure(failure)
+        document = ET.fromstring(archive.read('word/document.xml'))
+        if document.tag != ns + 'document' or any(child.tag != ns + 'body' for child in document):
+            raise ImportFailure(failure)
+        body = document.find(ns + 'body')
+        if body is None:
+            raise ImportFailure(failure)
+        # An allowlist prevents unfamiliar constructs from disappearing during extraction.
+        containers = {'document', 'body', 'p', 'r', 'tbl', 'tr', 'tc'}
+        properties = {'pPr', 'rPr', 'tblPr', 'tblGrid', 'trPr', 'tcPr', 'sectPr'}
+        leaves = {'t', 'tab', 'br', 'cr', 'lastRenderedPageBreak'}
+        blocked = {'vanish', 'webHidden', 'numPr', 'gridSpan', 'vMerge', 'textDirection',
+                   'headerReference', 'footerReference', 'rPrChange', 'pPrChange', 'sectPrChange',
+                   'tblPrChange', 'trPrChange', 'tcPrChange'}
+        def render(node):
+            if not node.tag.startswith(ns):
+                raise ImportFailure(failure)
+            tag = node.tag[len(ns):]
+            if tag in properties:
+                if any(child.tag.rsplit('}', 1)[-1] in blocked or
+                       child.tag.rsplit('}', 1)[-1].endswith('Change') for child in node.iter()):
+                    raise ImportFailure(failure)
+                # Multiple columns and explicit numbering rely on layout/generated text.
+                for child in node.iter(ns + 'cols'):
+                    if child.attrib.get(ns + 'num', '1') != '1':
+                        raise ImportFailure(failure)
+                return ''
+            if tag not in containers | leaves:
+                raise ImportFailure(failure)
+            if tag == 't':
+                return node.text or ''
+            if tag == 'tab':
+                return '\t'
+            if tag in {'br', 'cr'}:
+                return '\n'
+            if tag == 'lastRenderedPageBreak':
+                return ''
+            result = ''.join(render(child) for child in node)
+            return result + ('\n' if tag in {'p', 'tr'} else '\t' if tag == 'tc' else '')
+        # Style inheritance/numbering can hide text or generate visible list labels.
+        if 'word/styles.xml' in names:
+            styles = ET.fromstring(archive.read('word/styles.xml'))
+            if any(node.tag.rsplit('}', 1)[-1] in {'vanish', 'webHidden'} for node in styles.iter()):
+                raise ImportFailure(failure)
+            by_id = {style.attrib.get(ns + 'styleId'): style for style in styles.findall(ns + 'style')}
+            used = [node.attrib.get(ns + 'val') for node in body.iter()
+                    if node.tag in {ns + 'pStyle', ns + 'rStyle', ns + 'tblStyle'}]
+            used += [style.attrib.get(ns + 'styleId') for style in by_id.values()
+                     if style.attrib.get(ns + 'default') in {'1', 'true'}]
+            seen = set()
+            while used:
+                style_id = used.pop()
+                if style_id in seen:
+                    continue
+                seen.add(style_id)
+                style = by_id.get(style_id)
+                if style is None:
+                    raise ImportFailure(failure)
+                if any(node.tag.rsplit('}', 1)[-1] in blocked for node in style.iter()):
+                    raise ImportFailure(failure)
+                used += [node.attrib.get(ns + 'val') for node in style.findall(ns + 'basedOn')]
+        text = _text(render(body).strip('\n'))
+        if not text.strip():
+            raise ImportFailure('Word document has no readable report text.')
+        return [{'number': 1, 'text': text, 'method': 'docx-text', 'confidence': None}]
+
+
 def import_document(content: bytes, filename: str, language: str = 'eng') -> dict:
     """Extract complete document text or inspect DICOM; never forward bytes to an LLM."""
     if not content or len(content) > MAX_FILE_BYTES:
@@ -178,6 +278,8 @@ def import_document(content: bytes, filename: str, language: str = 'eng') -> dic
             result = {'kind': 'pdf', 'pages': _pdf(content, language), 'text_review_allowed': True}
         elif extension in {'png', 'jpg', 'jpeg', 'tif', 'tiff'}:
             result = {'kind': 'image', 'pages': _image(content, language), 'text_review_allowed': True}
+        elif extension == 'docx':
+            result = {'kind': 'docx', 'pages': _docx(content), 'text_review_allowed': True}
         elif extension == 'dcm':
             result = _dicom(content, language)
         else:
