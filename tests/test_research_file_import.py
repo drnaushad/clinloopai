@@ -194,3 +194,92 @@ def test_parser_worker_does_not_inherit_provider_or_gateway_secrets(monkeypatch)
     assert 'synthetic-private-sentinel' not in json.dumps(runner.call_args.kwargs['env'])
     assert runner.call_args.kwargs['stderr']==subprocess.DEVNULL
     transport.post.assert_not_called()
+
+
+def word(body='<w:p><w:r><w:t>SYNTHETIC: Potassium 4.2 mmol/L</w:t></w:r></w:p>', extra=None):
+    import zipfile
+    ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    buf=io.BytesIO()
+    with zipfile.ZipFile(buf,'w',zipfile.ZIP_DEFLATED) as z:
+        z.writestr('[Content_Types].xml','<Types/>')
+        z.writestr('word/document.xml',f'<w:document xmlns:w="{ns}"><w:body>{body}</w:body></w:document>')
+        for name,data in (extra or {}).items():z.writestr(name,data)
+    return buf.getvalue()
+
+
+def test_word_preserves_order_units_korean_and_simple_table_cells_without_model_calls():
+    body='<w:p><w:r><w:t>합성 보고서</w:t><w:tab/><w:t>No effusion.</w:t></w:r></w:p>'
+    body+='<w:tbl><w:tr><w:tc><w:p><w:r><w:t>Potassium</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>4.2 mmol/L</w:t></w:r></w:p></w:tc></w:tr></w:tbl>'
+    out=import_document(word(body),'synthetic.DOCX')
+    assert out['kind']=='docx' and out['pages'][0]['method']=='docx-text'
+    assert out['text'].startswith('합성 보고서\tNo effusion.')
+    assert out['text'].index('Potassium')<out['text'].index('4.2 mmol/L')
+    assert out['external_model_called'] is False and out['human_check_required']
+
+
+@pytest.mark.parametrize('body',[
+    '<w:p><w:r><w:drawing/></w:r></w:p>',
+    '<w:p><w:r><w:fldChar w:fldCharType="begin"/></w:r></w:p>',
+    '<w:p><w:ins><w:r><w:t>tracked change</w:t></w:r></w:ins></w:p>',
+    '<w:p><w:pPr><w:numPr/></w:pPr><w:r><w:t>list</w:t></w:r></w:p>',
+    '<w:p><w:r><w:rPr><w:vanish/></w:rPr><w:t>hidden</w:t></w:r></w:p>',
+    '<w:tbl><w:tr><w:tc><w:tcPr><w:gridSpan w:val="2"/></w:tcPr></w:tc></w:tr></w:tbl>',
+    '<w:sectPr><w:cols w:num="2"/></w:sectPr>',
+    '<w:p><w:r><w:sym w:char="03BC"/></w:r></w:p>',
+    '<w:p><w:hyperlink><w:r><w:t>linked content</w:t></w:r></w:hyperlink></w:p>',
+])
+def test_word_rejects_unsupported_content_instead_of_returning_partial_source(body):
+    with pytest.raises(ImportFailure,match='unsupported content'):
+        import_document(word(body),'synthetic.docx')
+
+
+@pytest.mark.parametrize('extra',[
+    {'word/media/image1.png':b'fake image'},
+    {'word/header1.xml':'<header/>'},
+    {'word/footnotes.xml':'<footnotes/>'},
+    {'word/vbaProject.bin':b'macro'},
+    {'word/_rels/document.xml.rels':'<Relationships><Relationship TargetMode="External" Target="https://example.test"/></Relationships>'},
+    {'word/settings.xml':'<!DOCTYPE settings [<!ENTITY x "text">]><settings/>'},
+    {'../outside.xml':'<outside/>'},
+])
+def test_word_rejects_archive_content_and_external_links(extra):
+    with pytest.raises(ImportFailure):import_document(word(extra=extra),'synthetic.docx')
+
+
+def test_word_expansion_limit_and_oversize_text_never_truncate():
+    with pytest.raises(ImportFailure):
+        import_document(word(extra={'docProps/large.xml':'x'*(20*1024*1024)}),'synthetic.docx')
+    with pytest.raises(ImportFailure,match='preview limit'):
+        import_document(word('<w:p><w:r><w:t>'+'x'*120001+'</w:t></w:r></w:p>'),'synthetic.docx')
+
+
+def test_word_styles_cannot_hide_numbering_through_inheritance():
+    ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    styles=f'<w:styles xmlns:w="{ns}"><w:style w:styleId="Derived"><w:basedOn w:val="List"/></w:style><w:style w:styleId="List"><w:pPr><w:numPr/></w:pPr></w:style></w:styles>'
+    body='<w:p><w:pPr><w:pStyle w:val="Derived"/></w:pPr><w:r><w:t>SYNTHETIC report</w:t></w:r></w:p>'
+    with pytest.raises(ImportFailure):import_document(word(body,{'word/styles.xml':styles}),'synthetic.docx')
+
+
+def test_word_gateway_runs_the_bounded_worker_without_forwarding_to_provider():
+    c,transport=gateway()
+    response=c.post('/review/files/import',json=upload(extension='docx',content_base64=base64.b64encode(word()).decode()))
+    assert response.status_code==200,response.text
+    data=response.json()
+    assert data['kind']=='docx' and '4.2 mmol/L' in data['text']
+    assert data['external_model_called'] is False
+    transport.post.assert_not_called()
+
+
+def test_word_duplicate_archive_parts_are_rejected():
+    import zipfile
+    content=io.BytesIO(word())
+    with pytest.warns(UserWarning,match='Duplicate name'):
+        with zipfile.ZipFile(content,'a') as z:z.writestr('word/document.xml','<document/>')
+    with pytest.raises(ImportFailure):import_document(content.getvalue(),'synthetic.docx')
+
+
+def test_word_unused_numbering_styles_do_not_prevent_plain_report_import():
+    ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    styles=f'<w:styles xmlns:w="{ns}"><w:style w:styleId="UnusedList"><w:pPr><w:numPr/></w:pPr></w:style></w:styles>'
+    out=import_document(word(extra={'word/styles.xml':styles,'word/numbering.xml':'<numbering/>'}),'synthetic.docx')
+    assert '4.2 mmol/L' in out['text']

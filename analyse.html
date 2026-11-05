@@ -185,6 +185,14 @@ footer { margin-top: 32px; color: var(--dim); font-size: .8rem; }
       <button type="button" id="btn-eval-now" data-i18n="evalNow"></button>
     </section>
 
+    <section class="card" aria-labelledby="report-upload-title">
+      <h2 id="report-upload-title" data-ui-copy>Upload a health report</h2>
+      <p data-ui-copy>Review laboratory, radiology, pathology, ECG text, discharge summaries and other written health reports. Choose the category on the report review page.</p>
+      <p data-ui-copy>PDF, Word DOCX, scans/photos, DICOM report documents and UTF-8 TXT/CSV/TSV/Markdown are supported through the report review workflow. FHIR JSON below is for linked patient records and follow-up detection.</p>
+      <p><a href="review#report-file" data-ui-link><strong data-ui-copy>Open report upload</strong></a></p>
+      <p class="hint" data-ui-copy>File support does not establish diagnostic accuracy. Check the complete source; the public preview accepts synthetic reports only.</p>
+    </section>
+
     <div class="inputs">
       <section class="card" aria-labelledby="h-file">
         <h2 id="h-file" data-i18n="fileTitle"></h2>
