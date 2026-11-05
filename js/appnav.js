@@ -9,7 +9,7 @@
 (function () {
   'use strict';
   // Check for updates without interrupting a report, a form or the current page.
-  var APP_VERSION = '2026-11-02.engine1';
+  var APP_VERSION = '2026-11-05.reports1';
   (function checkVersion() {
     if (!window.fetch || location.protocol === 'file:') return;
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' })

@@ -22,7 +22,7 @@ PUBLIC_DATA = ('cases.json', 'fhir_example_bundle.json', 'radiology_test_bundle.
 PUBLIC_DOCS = ('docs/reviews/RETURNED_REVIEW_CORRECTIONS_20261027.md',
                'docs/reviews/gmlp-gap-assessment-20261027.json',
                'docs/reviews/EVIDENCE_REVIEW_20261029.md', 'docs/releases/20261030.md',
-               'docs/releases/20261102.md')
+               'docs/releases/20261102.md', 'docs/releases/20261105.md')
 PUBLIC_JWKS = ('epic/jwks.json', 'epic/jwks-prod.json')
 ASSET_DIRS = {'css': {'.css'}, 'js': {'.js', '.json'},
               'icons': {'.png', '.svg', '.ico'}, 'smart': {'.html', '.css'},
