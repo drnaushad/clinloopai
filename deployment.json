@@ -1,9 +1,11 @@
 {
-  "version": "2026-11-02.engine1",
-  "source_commit": "f8e4a32113afe461c8e9a61e7c915bf86477b845",
+  "version": "2026-11-05.reports1",
+  "source_commit": "b7c7669272b205142afd4f823f10857671f429aa",
+  "tested_source_commit": "a3e77b288319226079620972a757728234ea8cb2",
   "channel": "research-preview",
   "clinical_use_authorized": false,
-  "pull_request": "https://github.com/drnaushad/clinloopai/pull/63",
-  "published_on": "2026-11-04",
-  "scope": "Synthetic public preview; local public-data processing checks are not clinical validation."
+  "pull_request": "https://github.com/drnaushad/clinloopai/pull/68",
+  "published_on": "2026-11-05",
+  "previous_public_commit": "35cdbe7764899952f6ef60a208a66677bb5a86f7",
+  "scope": "Synthetic public preview. Expanded report formats; no clinical rule or engine changes. DOCX requires the updated personal gateway. Independent clinical validation remains pending."
 }

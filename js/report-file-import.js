@@ -2,12 +2,13 @@
 (function(root){
   'use strict';
   const MAX_BYTES=5*1024*1024;
-  const EXTENSIONS=['pdf','png','jpg','jpeg','tif','tiff','dcm'];
+  const TEXT_EXTENSIONS=['txt','csv','tsv','md'];
+  const EXTENSIONS=['pdf','png','jpg','jpeg','tif','tiff','dcm','docx'];
   function kind(name,size){
     if(typeof name!=='string'||!Number.isInteger(size)||size<1||size>MAX_BYTES)throw Error('Choose a non-empty file up to 5 MB.');
     const ext=name.toLowerCase().split('.').pop();
-    if(ext!=='txt'&&!EXTENSIONS.includes(ext))throw Error('Choose TXT, PDF, PNG, JPEG, TIFF or DICOM.');
-    if(ext==='txt'&&size>6000)throw Error('Text reports must fit within 6000 UTF-8 bytes. Nothing was truncated.');
+    if(!TEXT_EXTENSIONS.includes(ext)&&!EXTENSIONS.includes(ext))throw Error('Unsupported report format. Export the complete report to PDF or UTF-8 text.');
+    if(TEXT_EXTENSIONS.includes(ext)&&size>6000)throw Error('Text reports must fit within 6000 UTF-8 bytes. Nothing was truncated.');
     return ext;
   }
   class Importer{
@@ -15,7 +16,7 @@
     clear(){this.epoch++;if(this.controller)this.controller.abort();this.controller=null;}
     async run(file,address,code,confirmed,language){
       const ext=kind(file.name,file.size);
-      if(ext==='txt')throw Error('Read text files directly in this browser.');
+      if(TEXT_EXTENSIONS.includes(ext))throw Error('Read text files directly in this browser.');
       if(confirmed!==true)throw Error('Confirm synthetic local file processing first.');
       const base=root.ClinLoopPrivate.localAddress(address);
       if(typeof code!=='string'||!/^[A-Za-z0-9_-]{32,128}$/.test(code)||/^(?:sk-|AIza)/i.test(code))throw Error('Enter the separate local gateway access code, not a provider API key.');
@@ -39,8 +40,8 @@
         if(epoch!==this.epoch||c.signal.aborted)throw Error('File import cancelled.');
         if(!data||typeof data.text!=='string'||new TextEncoder().encode(data.text).length>120000||typeof data.text_review_allowed!=='boolean'||
           !Array.isArray(data.pages)||data.pages.length>20||data.page_count!==data.pages.length||data.external_model_called!==false||data.human_check_required!==true||
-          data.sha256!==digest||!['pdf','image','dicom-pdf','dicom-sr','dicom-image'].includes(data.kind)||
-          data.pages.some((p,i)=>p.number!==i+1||typeof p.text!=='string'||!['pdf-text','ocr','dicom-sr'].includes(p.method))||
+          data.sha256!==digest||!['pdf','image','docx','dicom-pdf','dicom-sr','dicom-image'].includes(data.kind)||
+          data.pages.some((p,i)=>p.number!==i+1||typeof p.text!=='string'||!['pdf-text','ocr','docx-text','dicom-sr'].includes(p.method))||
           data.text!==data.pages.map(p=>p.text).join('\n\n')||
           (data.kind==='dicom-image'&&(data.text_review_allowed||data.text||data.pages.length))||
           (data.kind!=='dicom-image'&&data.pages.length===0))throw Error('Unexpected file response. Check the original document.');
