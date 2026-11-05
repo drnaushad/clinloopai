@@ -318,3 +318,16 @@ test('review accessibility click after suspension cannot send an expired source'
   try{Date.now=()=>original()+600001;await p.events['analyze:click']();}finally{Date.now=original;}
   assert(!p.calls.some(x=>x[0]==='localRun'||x[0]==='researchRun'));assert.equal(p.el.report.value,'');
 });
+
+test('UTF-8 report exports preserve source and never execute markup or spreadsheet formulas',async()=>{
+ const text='SYNTHETIC\nTest,Value,Unit\nPotassium,4.2,mmol/L\n=1+1\n<script>throw Error("never run")</script>\n합성';
+ for(const ext of ['txt','csv','tsv','md']){
+  validateFile('synthetic.'+ext,Buffer.byteLength(text));
+  const p=page();p.el['report-file'].files=[{name:'synthetic.'+ext,size:Buffer.byteLength(text),arrayBuffer:async()=>new TextEncoder().encode(text).buffer}];
+  await p.events['report-file:change']();assert.equal(p.el.report.value,text);assert(p.el.analyze.disabled);assert.equal(p.el['complete-confirm'].checked,false);
+ }
+});
+test('invalid UTF-8 exports cannot become partial report text',async()=>{
+ const p=page();p.el['report-file'].files=[{name:'synthetic.csv',size:2,arrayBuffer:async()=>new Uint8Array([255,255]).buffer}];
+ await p.events['report-file:change']();assert.equal(p.el.report.value,'');assert(p.el.analyze.disabled);
+});

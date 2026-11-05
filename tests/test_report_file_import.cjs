@@ -36,3 +36,15 @@ test('a valid-looking digest for a different document cannot be accepted',async(
  const {client}=importer({...doc,sha256:'f'.repeat(64)});
  await assert.rejects(client.run(file,'http://127.0.0.1:18127',CODE,true,'eng'),/Unexpected file response/);
 });
+
+test('new formats are explicitly routed, with text budgets retained',()=>{
+ for(const ext of ['csv','tsv','md','docx'])assert.equal(kind('SYNTHETIC.'+ext.toUpperCase(),300),ext);
+ for(const ext of ['csv','tsv','md'])assert.throws(()=>kind('synthetic.'+ext,6001));
+ for(const ext of ['doc','xls','xlsx','html','rtf','zip','exe'])assert.throws(()=>kind('synthetic.'+ext,300));
+});
+test('Word source response retains its digest and ordered text through local transport',async()=>{
+ const word={...doc,kind:'docx',pages:[{...doc.pages[0],method:'docx-text'}]};
+ const {client,calls}=importer(word);
+ assert.deepEqual(await client.run({...file,name:'synthetic.docx'},'http://localhost:18127',CODE,true,'eng'),word);
+ assert.equal(JSON.parse(calls[0].options.body).extension,'docx');
+});
