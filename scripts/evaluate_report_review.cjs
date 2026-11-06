@@ -4,7 +4,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {Workspace,localAddress}=require('../js/private-workspace.js');
 globalThis.ClinLoopPrivate={localAddress};
-const {validate,validText,SYSTEM}=require('../js/report-review.js');
+const {validate,validText,parseReviewJSON,SYSTEM}=require('../js/report-review.js');
 const fixturePath=path.join(__dirname,'../tests/fixtures/report_review_synthetic.json');
 const fixtures=JSON.parse(fs.readFileSync(fixturePath,'utf8'));
 const hash=value=>crypto.createHash('sha256').update(value).digest('hex');
@@ -71,7 +71,11 @@ function aggregate(cases,planned){
     assertion_errors_on_matched_quotes:sum('assertion_errors'),
     follow_up_errors_on_matched_quotes:sum('follow_up_errors'),deadline_errors_on_matched_quotes:sum('deadline_errors')};
 }
-async function evaluate({address,model,fetcher=fetch}){
+async function evaluate({address,model,fetcher=fetch,continueOnFailure=false}){
+  if(typeof continueOnFailure!=='boolean')throw new Error('Explicit boolean failure policy required.');
+  const executablePaths=[__filename,'../js/private-workspace.js','../js/report-review.js'].map(n=>path.resolve(__dirname,n));
+  const executableHash=()=>hash(executablePaths.map(n=>hash(fs.readFileSync(n))).join(''));
+  const initialExecutableHash=executableHash(),initialFixtureHash=hash(fs.readFileSync(fixturePath));
   checkFixtures();let modelDigest=null;
   const w=new Workspace(async(url,options)=>{
     const r=await fetcher(url,options);
@@ -79,7 +83,8 @@ async function evaluate({address,model,fetcher=fetch}){
     return r;
   }),cases=[];
   const schemaPath=path.join(__dirname,'../data/report_review_schema.json');
-  const schema=JSON.parse(fs.readFileSync(schemaPath,'utf8'));
+  const schemaBytes=fs.readFileSync(schemaPath),initialSchemaHash=hash(schemaBytes);
+  const schema=JSON.parse(schemaBytes.toString('utf8'));
   let initialDigest,finalDigest,provenanceValid=false;
   try{
     await w.connect(localAddress(address),true);initialDigest=modelDigest;
@@ -88,22 +93,27 @@ async function evaluate({address,model,fetcher=fetch}){
     for(const c of fixtures.cases){
       try{
         const raw=await w.run(model,c.text,{schema,system:SYSTEM+' Report category: '+c.report_type+'.'});
-        const review=validate(JSON.parse(raw),c.text);
+        const review=validate(parseReviewJSON(raw),c.text);
         cases.push({id:c.id,report_type:c.report_type,language:c.language||'en',accepted:true,...score(review,c.expected)});
-      }catch(_){cases.push({id:c.id,report_type:c.report_type,language:c.language||'en',accepted:false,error:'Model response failed local transport, completeness or source checks.'});break;}
+      }catch(_){cases.push({id:c.id,report_type:c.report_type,language:c.language||'en',accepted:false,error:'Model response failed local transport, completeness or source checks.'});if(!continueOnFailure)break;}
     }
     await w.request('/api/tags',null,w.epoch);finalDigest=modelDigest;
     provenanceValid=initialDigest===finalDigest;
   }finally{w.clear(true);}
+  const finalExecutableHash=executableHash();
+  const sourceStable=initialExecutableHash===finalExecutableHash&&initialFixtureHash===hash(fs.readFileSync(fixturePath))&&initialSchemaHash===hash(fs.readFileSync(schemaPath));
+  provenanceValid=provenanceValid&&sourceStable;
   const metrics=provenanceValid?aggregate(cases,fixtures.cases):null;
   const by=(key)=>Object.fromEntries([...new Set(fixtures.cases.map(c=>c[key]||'en'))].map(value=>[value,
     provenanceValid?aggregate(cases.filter(c=>c[key]===value),fixtures.cases.filter(c=>(c[key]||'en')===value)):null]));
   return {synthetic_only:true,clinical_accuracy_established:false,reference:'Developer-authored synthetic expectations, not independent clinician labels',model,
     model_digest:initialDigest,final_model_digest:finalDigest,provenance_valid:provenanceValid,
+    failure_policy:continueOnFailure?'continue; rejected output remains an abstention':'stop; remaining cases remain unrun',
+    source_stable:sourceStable,final_executable_sha256:finalExecutableHash,
     provenance_limit:'Boundary checks detect changed checkpoint tags, not a malicious server or an intervening change reverted before completion',
     prompt_sha256:hash(SYSTEM),prompt_template:'SYSTEM + Report category: CASE.report_type + period',
-    schema_sha256:hash(fs.readFileSync(schemaPath)),fixture_sha256:hash(fs.readFileSync(fixturePath)),
-    executable_sha256:hash([__filename,'../js/private-workspace.js','../js/report-review.js'].map(n=>fs.readFileSync(path.resolve(__dirname,n))).map(b=>hash(b)).join('')),
+    schema_sha256:initialSchemaHash,fixture_sha256:initialFixtureHash,
+    executable_sha256:initialExecutableHash,
     cases_planned:fixtures.cases.length,cases_run:cases.length,cases_not_run:fixtures.cases.length-cases.length,
     accepted:cases.filter(c=>c.accepted).length,expectations_matched:metrics?.matched_findings??null,
     expectations_planned:fixtures.cases.reduce((n,c)=>n+c.expected.length,0),metrics,
@@ -112,7 +122,11 @@ async function evaluate({address,model,fetcher=fetch}){
 async function main(){
   if(process.argv.includes('--check-fixtures')){console.log('Validated '+checkFixtures()+' synthetic fixtures; no model was called.');return;}
   const args=process.argv.slice(2),options={};
-  for(let i=0;i<args.length;i+=2){if(!['--model','--address','--output'].includes(args[i])||!args[i+1])throw new Error('Use --model INSTALLED_MODEL --address LOOPBACK_URL --output LOCAL_JSON.');options[args[i].slice(2)]=args[i+1];}
+  for(let i=0;i<args.length;i+=2){if(!['--model','--address','--output','--continue-on-failure'].includes(args[i])||!args[i+1])throw new Error('Use --model INSTALLED_MODEL --address LOOPBACK_URL --output LOCAL_JSON [--continue-on-failure true].');options[args[i].slice(2)]=args[i+1];}
+  if(Object.hasOwn(options,'continue-on-failure')){
+    if(options['continue-on-failure']!=='true')throw new Error('Failure continuation requires explicit true.');
+    options.continueOnFailure=true;delete options['continue-on-failure'];
+  }
   if(!options.model||!options.address||!options.output)throw new Error('Explicit model, loopback address and local output file required.');
   if(fs.existsSync(options.output))throw new Error('Choose a new output filename before running inference.');
   const report=await evaluate(options);fs.writeFileSync(options.output,JSON.stringify(report,null,2)+'\n',{mode:0o600,flag:'wx'});

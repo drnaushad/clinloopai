@@ -1,8 +1,8 @@
 {
-  "version": "2026-11-05.reports1",
+  "version": "2026-11-06.safety1",
   "channel": "research-preview",
   "clinical_validation": "pending",
   "independent_review": "pending",
-  "engine_source_commit": "9332100304846852c8d35d6b77820e5941ad566f",
-  "engine_source_commit_scope": "Recovered baseline; deployment.json records the published source revision."
+  "engine_source_commit": "b7c7669272b205142afd4f823f10857671f429aa",
+  "engine_source_commit_scope": "Candidate baseline on main; data/safety_release_status.json binds candidate software bytes. Not clinical approval."
 }

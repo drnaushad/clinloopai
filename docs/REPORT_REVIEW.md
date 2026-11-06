@@ -3,6 +3,96 @@
 This feature is a synthetic-only draft. It does not make the public website a hospital-ready
 patient-data system, validate a model or change the follow-up engine's clinical scope.
 
+## Clinicians and medical students: choosing and checking a workflow
+
+The public website accepts synthetic examples only. A clinician working with actual patient
+records needs the institution's approved private installation and authorized patient access.
+Students use synthetic cases or institutionally authorized teaching material under supervision;
+they must not upload identifiable records to the public preview or a personal research gateway.
+
+| Task | Workflow | Required interpretation |
+| --- | --- | --- |
+| Understand a laboratory, radiology, pathology, ECG-text, discharge or other text report | Report review, with a complete text source and an explicitly selected model | The category organizes extraction; it does not establish specialty coverage. Compare each assertion and quoted action with the original. |
+| Check whether a supported follow-up obligation has documented completion | Analyse patient with a linked FHIR Bundle, or the authenticated hospital worklist | One pasted report cannot establish the rest of a patient's care history. An order, performed procedure, result review and patient communication are different milestones. |
+| Inspect why an obligation is open or closed | Patient graph and the evidence chain in the private clinical workflow | Verify patient identity, trigger, anatomy/specimen, dates, qualifying completion evidence and the rule's scope. A graph relation alone is not clinical proof. |
+| Read a PDF or scanned report | Approved local extraction, then compare every page/frame with the original before confirmation | OCR errors, missing pages and lost units or negation can invalidate interpretation. Do not shorten a report to evade the input limit. |
+| Interpret image pixels or ECG waveforms | A separate validated modality workflow and qualified clinician | Text extraction and a vision-capable model name do not validate image or waveform diagnosis. |
+
+For each reviewed report:
+
+1. Confirm the source patient, date, report version/addenda, complete page count and report type.
+2. Check the original wording, negation, uncertainty, historical comparisons, units, reference ranges,
+   laterality, specimen and clinical context. Missing or conflicting information needs review.
+3. Inspect all occurrences of a repeated quote. Source matching proves only that words occur in the
+   report; it does not establish the model's interpretation or link an action to the right finding.
+4. Review source sentences the model did not link, including conditional or negated recommendations.
+   Their display is a review aid, not a new action or calculated deadline. No findings is not a normal result.
+5. In an approved clinical installation, a responsible clinician determines the correct action and
+   checks linked orders, procedures, results, communication and follow-up ownership. Use the normal
+   urgent-care pathway for a concerning report; model availability must not delay care.
+
+The English/Korean interface preserves original reports and model output in labelled source sections.
+It does not translate source evidence silently or use interface language as evidence of model accuracy.
+
+## Evidence-integrity candidate, 4 November 2026
+
+The isolated review candidate rejects duplicate JSON fields, multiple concatenated objects,
+nonfinite numbers and prose wrapped around local second-reader output. A single complete local JSON
+code fence remains supported. An ambiguous response is unavailable, never a clean negative.
+The parser source is bound to the second-reader cache contract and clinical rule fingerprints.
+
+The research gateway now rejects the same limited English negation conflicts as the browser,
+including conflicts at later repeated source occurrences. It never relabels an assertion automatically.
+The browser displays all retained matching contexts, with a maximum of twelve per finding; an even
+more ambiguous quote rejects the response. Korean recommendation-like sentences omitted by the model
+also stay visible for human review. These are conservative engineering guards, not a complete
+English/Korean assertion classifier, medical translation system or validated increase in clinical recall.
+
+Temporal graph rebuilds are staged before replacing the previous successful graph. A malformed or
+conflicting trajectory raises an error and leaves the prior graph untouched; the caller must treat
+the new analysis as failed, not current. Events at identical instants use a stable identifier ordering
+for reproducible relations. Clinical decision-source changes invalidate old rule approval fingerprints.
+The candidate requires clinician review before clinical release.
+
+The unchanged 753 exposed synthetic report fixtures produce 635 exact rule sets, 467/582 matched
+expected obligations, 115 misses and 37 extras. The 60 exposed timelines retain 35 exact status sets
+and 53/78 strict status comparisons. These denominators measure different tasks. All four existing
+metamorphic transformations matched 753/753 cases. None supplies independent clinical labels.
+
+Fresh application-transport runs attempted all 24 developer-authored English/Korean synthetic
+reports (six text categories, 27 expected finding tuples) for each of three installed local models.
+The explicit continuation mode retains rejected cases in recall and attempts the remaining cases;
+the default still stops at the first rejection and reports the rest as unrun.
+
+| Installed local model | Cases attempted | Source/schema-accepted cases | Exact expected tuples matched |
+| --- | --- | --- | --- |
+| MedGemma 4B | 24 | 18 | 9 / 27 |
+| MedGemma 27B | 24 | 22 | 14 / 27 |
+| EXAONE 3.5 7.8B | 24 | 18 | 12 / 27 |
+
+Checkpoint digests were unchanged at each run's boundaries. These are strict developer-fixture
+agreement counts, not medical correctness, independent clinical validation or a model ranking.
+Rejected output is not accepted as normal. No cloud-provider performance result is inferred from
+mocked transport tests, account sign-in or a configured key.
+
+The runner now also checks executable, schema and fixture hashes at both boundaries and withholds
+comparison metrics on drift. A regression check reproduces source drift with an unchanged model.
+The MedGemma runs preceded that runner-only provenance enhancement; their exact evaluated transport
+sources and matching executable hashes are preserved in the separate evidence workspace. The EXAONE
+run used the enhanced runner and passed its source-stability check. Report parsing, prompts, schema
+and inference settings were unchanged between these full runs. This is not a repeated-seed study or
+evidence of performance on any hospital's reports.
+
+Before choosing local MedGemma/EXAONE or a GPT, Gemini or Claude API model for an institutional
+study, freeze the exact checkpoint/version, prompts, parameters, schema and code; define the task,
+all eligible cases and allowed data flow; then compare on the same patient-separated, independently
+adjudicated reference cohort. Count rejection, unavailable and unrun cases separately, report
+precision and recall with uncertainty by report type/language/site, and measure missed critical
+actions, false closure and reviewer workload. Model agreement or majority voting is not a reference
+standard. This follows the reporting priorities of
+[TRIPOD-LLM](https://www.nature.com/articles/s41591-024-03425-5) and the independent evaluation and
+human–AI workflow principles in [IMDRF GMLP](https://www.imdrf.org/documents/good-machine-learning-practice-medical-device-development-guiding-principles).
+
 ## Simple model selection (28 October 2026)
 
 Start at **Report review** and choose **Local LLM**, **OpenAI**, **Anthropic / Claude**, or

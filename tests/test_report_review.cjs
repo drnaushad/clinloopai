@@ -216,6 +216,31 @@ test('a quote that drops the preceding negation is not accepted as present',()=>
  assert.throws(()=>validate({findings:[{quote:'pleural effusion',assertion:'present',follow_up_quote:'',deadline_quote:''}],missing_context:[]},text),/negation conflict/);
 });
 
+test('later negated occurrences cannot hide behind an affirmative first match',()=>{
+ const text='SYNTHETIC: pleural effusion previously. No pleural effusion today.';
+ const finding={quote:'pleural effusion',assertion:'present',follow_up_quote:'',deadline_quote:''};
+ assert.throws(()=>validate({findings:[finding],missing_context:[]},text),/negation conflict/);
+ const review=validate({findings:[{...finding,assertion:'historical'}],missing_context:[]},text);
+ assert.equal(review.findings[0].source_matches.length,2);
+ for(const source of review.findings[0].source_matches)assert.equal(text.slice(source.start,source.end),finding.quote);
+});
+
+test('Korean omitted recommendations remain visible, including conditional and negated advice',()=>{
+ for(const text of ['3개월 후 흉부 CT 추적 권고.','필요시 MRI 시행 권함.','추가 검사는 불필요하나 증상 지속 시 재검 요망.']){
+   const review=validate({findings:[],missing_context:[]},text);
+   assert.deepEqual(review.unlinked_source_sentences,[text]);assert.equal(review.findings.length,0);
+ }
+});
+
+test('local review JSON rejects duplicate escaped keys, shadowed findings and nonfinite values',()=>{
+ const {parseReviewJSON}=require('../js/report-review.js');
+ for(const raw of ['{"findings":[1],"findings":[],"missing_context":[]}',
+    '{"items":[],"item\\u0073":[1]}','{"a":[{"x":1,"x":2}]}',
+    '{"a":1e999}','{"a":NaN}','[]','{} {}'])assert.throws(()=>parseReviewJSON(raw));
+ const value={findings:[{quote:'Literal } and { and "quoted" source.'}],missing_context:[]};
+ assert.deepEqual(parseReviewJSON(JSON.stringify(value)),value);
+});
+
 
 test('readiness follows connection, complete source, confirmation and subsequent edits',async()=>{
  const p=page();assert(p.el.analyze.disabled);assert.match(p.el['review-readiness'].textContent,/load and check/);

@@ -32,7 +32,7 @@ class RiskAssessment:
     severity_score: float       # From clinical ontology
     time_risk_score: float      # From Safety Clock
     uncertainty_score: float    # Based on data completeness
-    failure_probability: float  # Historical failure rate estimate
+    failure_probability: float  # Uncalibrated heuristic, or observed overdue state
     actionability_score: float  # Whether clear next action exists
 
     # Composite
@@ -128,20 +128,18 @@ class RiskScorer:
 
     def compute_uncertainty(self, event_details: Dict, n_events: int) -> float:
         """
-        Estimate uncertainty based on data completeness.
-        
-        Higher uncertainty when:
-          - Few events in the trajectory (sparse data)
-          - Key details are missing
-          - Ambiguous clinical information
-        """
-        # Base uncertainty inversely proportional to data richness
-        base = max(0.1, 1.0 - (n_events / 10.0))
+        Estimate trigger-detail incompleteness, not clinical confidence.
 
-        # Missing critical details increase uncertainty
+        Missing keys increase this heuristic. Unrelated trajectory events cannot
+        supply missing trigger evidence; n_events is retained for compatibility.
+        """
+        # This is a completeness heuristic, not a calibrated probability.
+        # Unrelated events do not resolve the trigger's missing clinical context.
+        # Retain n_events for caller compatibility; never use it as confidence.
         missing_penalties = 0.0
         critical_keys = ["condition", "flag", "test", "result", "finding"]
         present = sum(1 for k in critical_keys if k in event_details and event_details[k])
+        base = max(0.1, 1.0 - present / len(critical_keys))
         if len(critical_keys) > 0:
             completeness = present / len(critical_keys)
             missing_penalties = (1.0 - completeness) * 0.3
@@ -256,8 +254,8 @@ class RiskScorer:
             f"Severity: {severity.value} (score: {severity_score:.2f})",
             f"Time Risk: {time_risk_score:.3f} (clock: {clock_reading.clock_state.value})",
             f"Uncertainty: {uncertainty_score:.3f}",
-            (f"Failure: observed (deadline passed; prior {failure_prior:.2f})" if failure_observed
-             else f"Historical Failure Rate: {failure_prob:.2f}"),
+            (f"Failure: observed overdue state (uncalibrated prior {failure_prior:.2f}; not calibrated)" if failure_observed
+             else f"Failure prior (heuristic, not calibrated): {failure_prob:.2f}"),
             f"Actionability: {actionability:.2f}",
             f"Composite Risk: {composite:.4f} → Normalized: {normalized:.3f}",
         ]

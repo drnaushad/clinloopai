@@ -1,5 +1,8 @@
 /* responsive.css: shared phone and tablet fixes for every page (loaded last, after each page's own styles) */
 
+/* Author flex/grid rules must not expose panels explicitly hidden by the app. */
+[hidden] { display: none !important; }
+
 /* Navigation wraps whole links, never single letters */
 header nav { flex-wrap: wrap; row-gap: 8px; justify-content: flex-end; }
 header nav a, header nav button { white-space: nowrap; }

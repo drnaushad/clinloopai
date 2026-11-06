@@ -1,6 +1,12 @@
 /** English/Korean interface copy only; source evidence is not a translation target. */
 (function(root,copy){
 if(typeof module==='object'&&module.exports)module.exports=copy;else root.ClinLoopInterfaceCopy=copy;})(typeof window==='undefined'?this:window, {
+  "Temporal-rule illustration": "시간 규칙 예시",
+  "Example deadline calculation": "기한 계산 예시",
+  "Example: 30-day deadline minus 35 elapsed days = 5 days overdue.": "예시: 기한 30일에서 경과 35일을 빼면 5일 초과입니다.",
+  "This illustration uses synthetic case state and a deadline subtraction. A recorded step does not prove clinical completion or formal safety.": "이 예시는 합성 사례 상태와 기한 차이를 사용합니다. 조치 기록은 임상적 완료나 형식적 안전성을 입증하지 않습니다.",
+  "Tracked step recorded in this example; clinical completion needs source review.": "이 예시에 추적 조치가 기록되었습니다. 임상적 완료는 원문 검토가 필요합니다.",
+  "Example step recorded": "예시 조치 기록됨",
   "Upload report: PDF, Word DOCX, photos, DICOM or text exports": "보고서 업로드: PDF, Word DOCX, 사진, DICOM 또는 텍스트 내보내기 파일",
   "Local file tools for PDF, Word DOCX, scans, photos and DICOM": "PDF, Word DOCX, 스캔, 사진 및 DICOM용 로컬 파일 도구",
   "One file up to 5 MB; PDF/images up to 20 pages/frames. TXT, CSV, TSV and Markdown must be UTF-8 and fit 6000 bytes. Complete extracted documents can be previewed up to 120000 bytes, but model review requires the whole report to fit 6000 bytes. Nothing is silently shortened.": "파일 1개, 최대 5MB이며 PDF·이미지는 최대 20페이지·프레임입니다. TXT·CSV·TSV·Markdown은 UTF-8 형식으로 6000바이트 이하여야 합니다. 추출된 문서 전체를 최대 120000바이트까지 미리 볼 수 있지만 모델 검토에는 보고서 전체가 6000바이트 이내여야 합니다. 내용을 자동으로 줄이지 않습니다.",
@@ -264,6 +270,7 @@ if(typeof module==='object'&&module.exports)module.exports=copy;else root.ClinLo
   "Quoted timing:": "인용된 시기:",
   "No source timing quoted. No deadline calculated.": "원문의 시기 인용이 없습니다. 기한을 계산하지 않았습니다.",
   "Surrounding source (first match):": "주변 원문 (첫 일치):",
+  "Surrounding source:": "주변 원문:",
   "One exact occurrence found. Verify surrounding negation, dates, units and laterality in the original.": "정확히 일치하는 문구 1건을 찾았습니다. 원본의 주변 부정 표현, 날짜, 단위 및 좌우 위치를 확인하세요.",
   "Source sentences needing follow-up review": "후속 조치 검토가 필요한 원문 문장",
   "Model-noted missing context — verify manually": "모델이 표시한 누락 문맥 — 직접 확인하세요",
@@ -404,6 +411,7 @@ if(typeof module==='object'&&module.exports)module.exports=copy;else root.ClinLo
   "{0} / 6000 UTF-8 bytes": "{0} / 6000 UTF-8 바이트",
   "Research gateway connected. Synthetic text is sent to {0} only when you select Review report.": "연구 게이트웨이에 연결되었습니다. 보고서 검토를 선택할 때만 합성 텍스트를 {0}에 전송합니다.",
   "This quote occurs {0} times. Review every occurrence in the original report; the first match is shown here.": "이 인용은 {0}번 나타납니다. 원본의 모든 위치를 검토하세요. 여기는 첫 번째 일치 문맥입니다.",
+  "This quote occurs {0} times. All matching contexts are shown; verify each against the original report.": "이 인용은 {0}번 나타납니다. 일치하는 모든 문맥을 표시합니다. 각각 원본 보고서와 대조해 확인하세요.",
   "Saved: {0}": "저장된 결과: {0}",
   "Live: {0}": "실시간 결과: {0}",
   "Deadline {0} days after the report": "기한: 보고서 후 {0}일",

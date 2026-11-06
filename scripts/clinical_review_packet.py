@@ -11,7 +11,8 @@ from typing import Any, Dict
 CLINICAL = {'clinical_ontology.py', 'radiology.py', 'fhir_ingest.py', 'motifs.py',
             'guideline_reports.py', 'fhir_sync.py', 'note_reader.py', 'ecg.py', 'outreach.py',
             'basis.py', 'loop_detector.py', 'temporal_hypergraph.py',
-            'governance.py', 'second_reader.py'}
+            'governance.py', 'second_reader.py', 'closure_scope.py', 'risk_scorer.py',
+            'model_json.py', 'research_file_import.py', 'research_report_gateway.py'}
 
 
 class ReviewError(ValueError):

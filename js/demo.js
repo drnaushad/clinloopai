@@ -413,6 +413,31 @@
     }
 
     if (demo.static) {
+      var practice = window.CLINLOOP_PRACTICE;
+      if (practice) {
+        var controls = document.createElement('aside');
+        controls.id = 'practice-controls';
+        controls.style.cssText = 'margin:12px;padding:10px;border:1px solid currentColor;border-radius:8px';
+        function label(tag, key, text) {
+          var el = document.createElement(tag);
+          el.setAttribute('data-demo-copy', key); el.textContent = text;
+          controls.append(el); return el;
+        }
+        label('p', 'practiceSaved', 'Practice actions persist in this browser on synthetic patients. Reset clears only these demo actions.');
+        var reset = label('button', 'practiceReset', 'Reset practice actions');
+        reset.type = 'button';
+        var confirm = document.createElement('div'); confirm.hidden = true;
+        controls.append(confirm);
+        var question = label('p', 'practiceConfirm', 'Clear the saved demo actions in this browser?');
+        var yes = label('button', 'practiceYes', 'Clear demo actions and reload'); yes.type = 'button';
+        var no = label('button', 'practiceCancel', 'Cancel'); no.type = 'button';
+        confirm.append(question, yes, no);
+        reset.addEventListener('click', function () { confirm.hidden = false; yes.focus(); });
+        no.addEventListener('click', function () { confirm.hidden = true; reset.focus(); });
+        yes.addEventListener('click', function () { practice.reset(); window.location.reload(); });
+        var snapshotNotice = document.getElementById('snapshot-status');
+        if (snapshotNotice) snapshotNotice.after(controls); else document.body.prepend(controls);
+      }
       window.fetch(window.CLINLOOP_API_BASE.replace(STATIC_PATH, '') + '/demo/api/index.json')
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (index) {
