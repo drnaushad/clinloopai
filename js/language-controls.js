@@ -11,6 +11,11 @@
   // keep their source language and are never rewritten by this presenter.
   var notices = {
     en: {
+      practiceSaved: 'Practice actions persist in this browser on synthetic patients. Reset clears only these demo actions.',
+      practiceReset: 'Reset practice actions',
+      practiceConfirm: 'Clear the saved demo actions in this browser?',
+      practiceYes: 'Clear demo actions and reload',
+      practiceCancel: 'Cancel',
       snapshot: 'Synthetic snapshot · no live hospital connection. Actions here are browser-only simulations.',
       unavailable: 'Unavailable in this public demo. Use an approved local installation, or try synthetic text in Analyse patient.',
       controls: 'View local-installation controls (unavailable in this demo)',
@@ -20,6 +25,11 @@
       loadFailed: 'The examples could not be loaded. Refresh to try again.'
     },
     ko: {
+      practiceSaved: '합성 환자에 대한 연습 조치는 이 브라우저에 저장됩니다. 초기화하면 이 데모 조치만 지워집니다.',
+      practiceReset: '연습 조치 초기화',
+      practiceConfirm: '이 브라우저에 저장된 데모 조치를 지울까요?',
+      practiceYes: '데모 조치 지우고 새로고침',
+      practiceCancel: '취소',
       snapshot: '합성 스냅샷 · 실제 병원과 연결되어 있지 않습니다. 여기의 조치는 브라우저 안에서만 시뮬레이션됩니다.',
       unavailable: '이 공개 데모에서는 사용할 수 없습니다. 승인된 로컬 설치를 사용하거나 환자 분석에서 합성 텍스트를 시험해 보세요.',
       controls: '로컬 설치용 기능 보기 (이 데모에서는 사용할 수 없음)',

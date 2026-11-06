@@ -1328,6 +1328,7 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
     by_patient: Dict[str, List[Dict]] = defaultdict(list)
     warnings: List[str] = []
     uncertain_status_count = 0
+    incomplete_patients = set()
     patients = _patient_context(bundle_or_resources, warnings)
     resources = list(_resources(bundle_or_resources))
     token = _CURRENT_RESOURCES.set(resources)
@@ -1356,6 +1357,7 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
             mapped = mapper(r) if mapper else []
         except Exception as e:      # one malformed resource must not stop every other patient's monitoring
             warnings.append(f"FHIR resource: could not be read ({type(e).__name__}); skipped")
+            incomplete_patients.add(pid)
             continue
         if explicit:
             ts = mapped[0][1] if mapped else _first(
@@ -1368,18 +1370,24 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
             uncertain_status_count += 1
         for etype, ts, details in mapped:
             if not ts:
+                incomplete_patients.add(pid)
                 if "FHIR resource: no timestamp; skipped" not in warnings:
                     warnings.append("FHIR resource: no timestamp; skipped")
                 continue
             try:
                 normalize_timestamp(ts)
             except (ValueError, TypeError):   # "10/01/2026": skipped with a warning, the rest of the feed goes on
+                incomplete_patients.add(pid)
                 if "FHIR resource: unreadable date; skipped" not in warnings:
                     warnings.append("FHIR resource: unreadable date; skipped")
                 continue
             # Deterministic id: the same resource yields the same loop key on
             # every ingest, whatever order the bundle lists resources in.
             suffix = details.pop("event_suffix", None)   # several plans from one note
+            from .closure_scope import resource_scope
+            scope = resource_scope(r, norm_ref)
+            if scope:
+                details["closure_scope"] = scope
             by_patient[pid].append({
                 "event_id": f"{rtype}/{rid}:{etype}" + (f":{suffix}" if suffix else ""),
                 "patient_id": pid,
@@ -1434,6 +1442,14 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) -> 
         # Patterns that depend on "now" (age reached by today) use the evaluation time, not the wall clock
         apply_patterns(events, {**patients.get(pid, {}), "evaluation_time": evaluation_time})
         apply_ai_review(events)
+        if pid in incomplete_patients:
+            # Feed incompleteness is a real review reason, independent of how
+            # many unrelated events happen to exist. Do not invent skipped facts.
+            for event in events:
+                details = event["details"]
+                note = "Some source resources could not be mapped; reconcile the complete record with a human reviewer"
+                previous = details.get("review_note_all")
+                details["review_note_all"] = (str(previous) + "; " + note) if previous else note
     return dict(by_patient), warnings
 
 

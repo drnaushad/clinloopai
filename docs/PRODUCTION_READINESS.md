@@ -5,6 +5,31 @@ does about each need, the design decisions behind it, and what is still missing.
 document for the team, the hospital's IT and privacy officers and its regulatory adviser. It is not
 legal or regulatory advice.
 
+## 4 November 2026 review candidate: unresolved release gates
+
+The public key publication and Epic authentication repairs are merged separately (PRs 64/65).
+The subsequent evidence-integrity/atomic-graph candidate remains a separate clinical-review draft.
+See [Report review](REPORT_REVIEW.md) for the clinician/student workflows, exact engineering changes
+and measured regression/model limits. It has not upgraded the running hospital-facing service or
+turned the public synthetic preview into a real-patient service.
+
+| Gate | Current evidence/limitation | Required next evidence |
+| --- | --- | --- |
+| Clinical source approval | Decision sources changed; this AI review is not clinician sign-off | Line-by-line clinician review, independent engineering review and approval of exact new fingerprints |
+| End-to-end report recall | Reused synthetic fixtures still miss 115 of 582 expected obligations and contain 37 extras | Independently adjudicated all-eligible, patient-separated cohorts for every intended report type and language; pre-specified clinically justified targets and uncertainty bounds |
+| Multiple findings and links | Rule-ID scoring collapses repeated instances; quote occurrence is not lesion/action identity | Finding-level and obligation-instance references, source/action linkage, laterality/specimen tests and adjudication of multiple-lesion workflows |
+| LLM reliability | Local availability, structured JSON and exact quotes do not establish correct interpretation | Frozen, source-bound local/cloud model comparisons; prompt-injection, omission, negation, numerical/unit and context tests; no automatic model substitution |
+| Hospital patient histories | Sandbox connections do not establish complete longitudinal records | Validated local mappings, linked results/attachments, incremental updates, corrections/deletions, outages, cursor recovery and cross-patient safeguards |
+| Epic identifier compatibility | Authentication succeeds; the final 17:52 KST synthetic probe still returned a 66-character Observation ID after the saved 64-character setting | Epic investigation and a fresh passing strict full-group ingestion; do not truncate IDs or bypass validation |
+| Operational use | No prospective patient-benefit or actual-site workflow evaluation established | Approved silent pilot with named owners, handover/escalation, downtime procedures, alert burden and clinical outcome measurement |
+| Institutional release | Software tests are not institutional authorization | Hospital privacy/security, hosting/backup/key-management, access/audit, capacity and applicable regulatory assessment, with accountable sign-off |
+
+Release decisions must preserve these distinctions: a supported text category is not validated
+specialty accuracy; a successful connection is not complete data coverage; an accepted model output
+is not verified medical interpretation; a tracked obligation's completion is not completed overall care.
+Uncertainty and missing evidence remain visible for clinician review. No universal accuracy or
+patient-safety guarantee is made.
+
 ## 2026-10-27 local research candidate and review provenance
 
 Version `2026-10-27.research1` was prepared and uploaded to a separate preview branch; publication to main and the live website was not completed. The corrected research2 candidate includes the subsequent engineering and review-provenance corrections. Independent source review is deferred, with zero human approvals. The 22-file engine/ML/release packet now also covers the review-tool provenance correction, for 23 pending source files. Candidate pages display research-preview status; this does not describe a newly deployed public release. Offline learned comparators do not become clinical prediction services. No shared backend, GPU, model service or hospital integration was restarted or enabled.

@@ -18,7 +18,7 @@ ROOT_FILES = tuple(p + '.html' for p in PAGES) + (
     'favicon.ico', 'robots.txt', 'sitemap.xml', 'public-models.json')
 PUBLIC_DATA = ('cases.json', 'fhir_example_bundle.json', 'radiology_test_bundle.json',
                'validation_status.json', 'deployment_modules.json', 'research_release_status.json',
-               'report_review_schema.json', 'engineering_release_status.json')
+               'report_review_schema.json', 'engineering_release_status.json', 'safety_release_status.json')
 PUBLIC_DOCS = ('docs/reviews/RETURNED_REVIEW_CORRECTIONS_20261027.md',
                'docs/reviews/gmlp-gap-assessment-20261027.json',
                'docs/reviews/EVIDENCE_REVIEW_20261029.md', 'docs/releases/20261030.md',

@@ -283,3 +283,16 @@ def test_word_unused_numbering_styles_do_not_prevent_plain_report_import():
     styles=f'<w:styles xmlns:w="{ns}"><w:style w:styleId="UnusedList"><w:pPr><w:numPr/></w:pPr></w:style></w:styles>'
     out=import_document(word(extra={'word/styles.xml':styles,'word/numbering.xml':'<numbering/>'}),'synthetic.docx')
     assert '4.2 mmol/L' in out['text']
+
+
+@pytest.mark.parametrize('format_tag',['vertAlign w:val="superscript"','vertAlign w:val="subscript"','strike','dstrike','position w:val="6"','rtl'])
+def test_word_rejects_meaningful_run_formatting_instead_of_flattening_units_or_deleted_values(format_tag):
+    body='<w:p><w:r><w:t>SYNTHETIC WBC 4.2 x 10</w:t></w:r><w:r><w:rPr><w:'+format_tag+'/></w:rPr><w:t>9</w:t></w:r><w:r><w:t>/L</w:t></w:r></w:p>'
+    with pytest.raises(ImportFailure,match='unsupported content'):
+        import_document(word(body),'synthetic.docx')
+
+
+def test_word_inherited_superscript_is_not_flattened():
+    ns='http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    style=f'<w:styles xmlns:w="{ns}"><w:style w:styleId="Sup"><w:rPr><w:vertAlign w:val="superscript"/></w:rPr></w:style></w:styles>'
+    with pytest.raises(ImportFailure):import_document(word(extra={'word/styles.xml':style}),'synthetic.docx')

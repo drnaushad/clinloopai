@@ -211,6 +211,7 @@ def _docx(content: bytes) -> list[dict]:
         properties = {'pPr', 'rPr', 'tblPr', 'tblGrid', 'trPr', 'tcPr', 'sectPr'}
         leaves = {'t', 'tab', 'br', 'cr', 'lastRenderedPageBreak'}
         blocked = {'vanish', 'webHidden', 'numPr', 'gridSpan', 'vMerge', 'textDirection',
+                   'vertAlign', 'strike', 'dstrike', 'position', 'rtl', 'bidi',
                    'headerReference', 'footerReference', 'rPrChange', 'pPrChange', 'sectPrChange',
                    'tblPrChange', 'trPrChange', 'tcPrChange'}
         def render(node):
@@ -241,7 +242,7 @@ def _docx(content: bytes) -> list[dict]:
         # Style inheritance/numbering can hide text or generate visible list labels.
         if 'word/styles.xml' in names:
             styles = ET.fromstring(archive.read('word/styles.xml'))
-            if any(node.tag.rsplit('}', 1)[-1] in {'vanish', 'webHidden'} for node in styles.iter()):
+            if any(node.tag.rsplit('}', 1)[-1] in {'vanish', 'webHidden', 'vertAlign', 'strike', 'dstrike', 'position', 'rtl', 'bidi'} for node in styles.iter()):
                 raise ImportFailure(failure)
             by_id = {style.attrib.get(ns + 'styleId'): style for style in styles.findall(ns + 'style')}
             used = [node.attrib.get(ns + 'val') for node in body.iter()

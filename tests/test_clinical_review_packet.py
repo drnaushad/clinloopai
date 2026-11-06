@@ -53,6 +53,15 @@ def test_generated_packet_is_pending_and_never_authorizes_care(draft):
     assert packet['files'][0]['identity_verification_reference'] is None
 
 
+@pytest.mark.parametrize('name',['closure_scope.py','risk_scorer.py','model_json.py',
+                                 'research_file_import.py','research_report_gateway.py'])
+def test_evidence_and_ranking_changes_require_clinician_review(draft,name):
+    root,base,_=draft
+    (root/'src'/name).write_text('# Synthetic pending source\n')
+    row=next(row for row in build(root,base)['files'] if row['file']=='src/'+name)
+    assert row['requires_clinician'] and row['decision']=='pending'
+
+
 def test_complete_receipts_do_not_become_clinical_validation(draft):
     root, base, _ = draft
     result = verify(approved(build(root, base)), root, base)

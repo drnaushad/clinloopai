@@ -2235,7 +2235,7 @@ class ClinLoopApp {
 
     this.renderFhirResource('DiagnosticReport');
 
-    // MTL Robustness Invariant
+    // Synthetic temporal-rule illustration; no formal verification claim.
     const isOverridden = this.closedOverrides.has(c.scenario_id);
     const isClosed = (c.ground_truth_status === 'closed') || isOverridden;
     const tCrit = c.biomcp_evidence ? c.biomcp_evidence.derived_t_crit : 30;
@@ -2251,25 +2251,25 @@ class ClinLoopApp {
     const statusPill = document.getElementById('mtl-status-pill');
 
     if (isClosed) {
-      if (marginEl) marginEl.innerHTML = `<span style="color: var(--emerald-safe); font-weight: 700;">ρ(Φ, t) = +∞ (${displayCopy('Invariant Formally Satisfied via Closed Loop', this.currentLang)})</span>`;
+      if (marginEl) marginEl.textContent = displayCopy('Tracked step recorded in this example; clinical completion needs source review.', this.currentLang);
       if (statusPill) {
-        statusPill.textContent = displayCopy('Invariant SATISFIED ✓', this.currentLang);
+        statusPill.textContent = displayCopy('Example step recorded', this.currentLang);
         statusPill.style.background = 'rgba(5, 223, 114, 0.15)';
         statusPill.style.color = 'var(--emerald-safe)';
         statusPill.style.borderColor = 'rgba(5, 223, 114, 0.4)';
       }
     } else if (margin >= 0) {
-      if (marginEl) marginEl.innerHTML = `ρ(Φ, t) = T_crit - Δt = ${tCrit}d - ${deltaT}d = <span style="color: var(--emerald-safe); font-weight: 700;">+${margin}d (${displayCopy('Safe Window Active', this.currentLang)})</span>`;
+      if (marginEl) marginEl.textContent = (this.currentLang === 'ko' ? `예시: 기한 ${tCrit}일 − 경과 ${deltaT}일 = ${margin}일 남음` : `Example: ${tCrit}-day deadline − ${deltaT} elapsed days = ${margin} days remaining`);
       if (statusPill) {
-        statusPill.textContent = displayCopy(`Safe Margin: +${margin} Days`, this.currentLang);
+        statusPill.textContent = (this.currentLang === 'ko' ? `예시: ${margin}일 남음` : `Example: ${margin} days remaining`);
         statusPill.style.background = 'rgba(5, 223, 114, 0.15)';
         statusPill.style.color = 'var(--emerald-safe)';
         statusPill.style.borderColor = 'rgba(5, 223, 114, 0.4)';
       }
     } else {
-      if (marginEl) marginEl.innerHTML = `ρ(Φ, t) = T_crit - Δt = ${tCrit}d - ${deltaT}d = <span style="color: var(--crimson-danger); font-weight: 700;">${margin}d (${displayCopy('CRITICAL TEMPORAL BREACH', this.currentLang)})</span>`;
+      if (marginEl) marginEl.textContent = (this.currentLang === 'ko' ? `예시: 기한 ${tCrit}일 − 경과 ${deltaT}일 = ${-margin}일 초과` : `Example: ${tCrit}-day deadline − ${deltaT} elapsed days = ${-margin} days overdue`);
       if (statusPill) {
-        statusPill.textContent = displayCopy(`INVARIANT VIOLATED (${margin}d)`, this.currentLang);
+        statusPill.textContent = (this.currentLang === 'ko' ? `예시: ${-margin}일 초과` : `Example: ${-margin} days overdue`);
         statusPill.style.background = 'rgba(255, 42, 95, 0.15)';
         statusPill.style.color = 'var(--crimson-danger)';
         statusPill.style.borderColor = 'rgba(255, 42, 95, 0.4)';

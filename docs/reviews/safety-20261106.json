@@ -1,0 +1,413 @@
+{
+  "format_version": 2,
+  "base_commit": "b7c7669272b205142afd4f823f10857671f429aa",
+  "files": [
+    {
+      "file": "js/app.js",
+      "sha256": "46acd0eb55bd533842b96fcbec118c0ffa375ba68b32613d623b90a69117edc9",
+      "changed_hunks": [
+        "@@ -2238 +2238 @@ class ClinLoopApp {",
+        "@@ -2254 +2254 @@ class ClinLoopApp {",
+        "@@ -2256 +2256 @@ class ClinLoopApp {",
+        "@@ -2262 +2262 @@ class ClinLoopApp {",
+        "@@ -2264 +2264 @@ class ClinLoopApp {",
+        "@@ -2270 +2270 @@ class ClinLoopApp {",
+        "@@ -2272 +2272 @@ class ClinLoopApp {"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "js/appnav.js",
+      "sha256": "3ec0051eef52b16ec1b2a1b98d6d9d775b6fa854cd3578ca46b4e7297604ac3d",
+      "changed_hunks": [
+        "@@ -12 +12 @@"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "js/demo.js",
+      "sha256": "1497b65d5174adbf9d359a0153d5dba05e7020a89d8b7129af4b834d63f51293",
+      "changed_hunks": [
+        "@@ -415,0 +416,25 @@"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "js/interface-copy.js",
+      "sha256": "b85828d9ce310b760bfb7b68633dffea719d958a357f90ac2e1018ecdc752252",
+      "changed_hunks": [
+        "@@ -3,0 +4,6 @@ if(typeof module==='object'&&module.exports)module.exports=copy;else root.ClinLo",
+        "@@ -266,0 +273 @@ if(typeof module==='object'&&module.exports)module.exports=copy;else root.ClinLo",
+        "@@ -406,0 +414 @@ if(typeof module==='object'&&module.exports)module.exports=copy;else root.ClinLo"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "js/language-controls.js",
+      "sha256": "12fd3117190613688a5d3e112f69986a563ea960fcdcbe3d7c913f18e2b8a8d2",
+      "changed_hunks": [
+        "@@ -13,0 +14,5 @@",
+        "@@ -22,0 +28,5 @@"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "js/report-review-page.js",
+      "sha256": "31aabfd9d3272a84f64a690d45a96798cd1f3ddcf4877467e08a930a306b8d5a",
+      "changed_hunks": [
+        "@@ -112,2 +112,5 @@",
+        "@@ -115 +118 @@",
+        "@@ -138 +141 @@"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "js/report-review.js",
+      "sha256": "ab53eaa35cd526323a513ceb8333d2cd9de2484cf60f52333c5f2095b18546a1",
+      "changed_hunks": [
+        "@@ -18,0 +19,32 @@",
+        "@@ -34,3 +65,0 @@",
+        "@@ -38,3 +67,10 @@",
+        "@@ -45 +81 @@",
+        "@@ -91 +127 @@"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "scripts/build_public_site.py",
+      "sha256": "32e4bdb45eadc1a788aee86a972ae76e8662a0bd8327822d73e509300491110f",
+      "changed_hunks": [
+        "@@ -21 +21 @@ PUBLIC_DATA = ('cases.json', 'fhir_example_bundle.json', 'radiology_test_bundle."
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "scripts/clinical_review_packet.py",
+      "sha256": "50cc179d76a53235264681940e9b889e07c3153d0a88b7c5a0196d03ab3aa68b",
+      "changed_hunks": [
+        "@@ -14 +14,2 @@ CLINICAL = {'clinical_ontology.py', 'radiology.py', 'fhir_ingest.py', 'motifs.py"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "scripts/evaluate_report_review.cjs",
+      "sha256": "619380f107e058b31e4c75a8f425889f1fc9bdb840972fc1f69cb5817c664a5a",
+      "changed_hunks": [
+        "@@ -7 +7 @@ globalThis.ClinLoopPrivate={localAddress};",
+        "@@ -74 +74,5 @@ function aggregate(cases,planned){",
+        "@@ -82 +86,2 @@ async function evaluate({address,model,fetcher=fetch}){",
+        "@@ -91 +96 @@ async function evaluate({address,model,fetcher=fetch}){",
+        "@@ -93 +98 @@ async function evaluate({address,model,fetcher=fetch}){",
+        "@@ -97,0 +103,3 @@ async function evaluate({address,model,fetcher=fetch}){",
+        "@@ -102,0 +111,2 @@ async function evaluate({address,model,fetcher=fetch}){",
+        "@@ -105,2 +115,2 @@ async function evaluate({address,model,fetcher=fetch}){",
+        "@@ -115 +125,5 @@ async function main(){"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "scripts/safety_release_check.py",
+      "sha256": "1fc56e1f5351902492e01bf8ab5622ac743fb6ed17455adda16b00b0f57e7cc4",
+      "changed_hunks": [
+        "new file: review every line"
+      ],
+      "requires_clinician": false,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/closure_scope.py",
+      "sha256": "285fb76e3591feabfd65856ee65d1d85551e57ec1a2525b38809f9a2fbb96066",
+      "changed_hunks": [
+        "new file: review every line"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/fhir_ingest.py",
+      "sha256": "64459c62c643b1037668610ded56abbe067682e0418a35df1fcd4a4745bf0213",
+      "changed_hunks": [
+        "@@ -1330,0 +1331 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1358,0 +1360 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1370,0 +1373 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1376,0 +1380 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1382,0 +1387,4 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->",
+        "@@ -1436,0 +1445,8 @@ def _bundle_to_events(bundle_or_resources: Any, evaluation_time: Any = None) ->"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/governance.py",
+      "sha256": "e1942a9710a7792e133a7be62af6a618bed216af29742504d941560e41c23dfc",
+      "changed_hunks": [
+        "@@ -95 +95 @@ _DECISION_SOURCES = (\"clinical_ontology.py\", \"fhir_ingest.py\", \"radiology.py\", \""
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/model_json.py",
+      "sha256": "631a499b7c69e9dc3e55b15867a0b8e5d2ce5019daa31f4d9219ac858912a85a",
+      "changed_hunks": [
+        "new file: review every line"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/risk_scorer.py",
+      "sha256": "98ceb88779245948f6657542413a255721f41d42af1f1ef6bc9908fb4adb223a",
+      "changed_hunks": [
+        "@@ -35 +35 @@ class RiskAssessment:",
+        "@@ -131,9 +131 @@ class RiskScorer:",
+        "@@ -141 +133,6 @@ class RiskScorer:",
+        "@@ -144,0 +142 @@ class RiskScorer:",
+        "@@ -259,2 +257,2 @@ class RiskScorer:"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/second_reader.py",
+      "sha256": "22b87a6b4c61d64999bd1b4b5aa87a4d7a111f379d1bba274f18dbccc054da79",
+      "changed_hunks": [
+        "@@ -41,0 +42 @@ from .imaging_fhir import CLINLOOP_TAG_SYSTEM",
+        "@@ -145,0 +147,2 @@ def reader_contract() -> str:",
+        "@@ -194 +196,0 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],",
+        "@@ -208,2 +210,6 @@ def read_report(text: str, model: Callable[[str, str], Dict[str, Any]],"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/clinloop_engine/temporal_hypergraph.py",
+      "sha256": "651ec65ba684c319e1b35ab64be241ea69b11a071a9fd65caf1bb6d664fb2db8",
+      "changed_hunks": [
+        "@@ -210,0 +211,13 @@ class DynamicTemporalHypergraph:",
+        "@@ -217,3 +230,3 @@ class DynamicTemporalHypergraph:",
+        "@@ -220,0 +234,6 @@ class DynamicTemporalHypergraph:",
+        "@@ -261,4 +279,0 @@ class DynamicTemporalHypergraph:",
+        "@@ -267 +282,4 @@ class DynamicTemporalHypergraph:",
+        "@@ -582,0 +601,6 @@ class DynamicTemporalHypergraph:"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/research_file_import.py",
+      "sha256": "192398459e773c36a87e54820ddd5e0176c57e719484b5becdd89bc049052eae",
+      "changed_hunks": [
+        "@@ -213,0 +214 @@ def _docx(content: bytes) -> list[dict]:",
+        "@@ -244 +245 @@ def _docx(content: bytes) -> list[dict]:"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    },
+    {
+      "file": "src/research_report_gateway.py",
+      "sha256": "d52c6f10432105c5a1b914cc4d6d21fc7bece3669b323b6799df12e9070dd5f6",
+      "changed_hunks": [
+        "@@ -21,0 +22 @@ import requests",
+        "@@ -109,0 +111,10 @@ def verify_review(value: Any, text: str) -> Dict[str, Any]:",
+        "@@ -129 +140 @@ def response_review(response: Dict[str, Any], text: str) -> Dict[str, Any]:",
+        "@@ -201 +212 @@ def parse_provider_response(provider: str, response: Dict[str, Any], text: str)",
+        "@@ -397 +408 @@ def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:"
+      ],
+      "requires_clinician": true,
+      "reviewer": null,
+      "reviewer_role": null,
+      "reviewed_at": null,
+      "review_origin": "unassigned",
+      "human_review_attested": false,
+      "independence_attested": false,
+      "identity_verification_reference": null,
+      "decision": "pending",
+      "line_by_line_review_complete": false,
+      "notes": []
+    }
+  ],
+  "software_tests_do_not_approve_clinical_use": true,
+  "runtime_rule_signoffs_created": false
+}

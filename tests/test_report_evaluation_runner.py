@@ -12,4 +12,4 @@ def test_report_evaluation_scoring_and_provenance():
     result = subprocess.run(['node', '--test-reporter=tap', 'tests/test_report_evaluation.cjs'], cwd=root,
                             capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert '# pass 16' in result.stdout
+    assert '# pass 18' in result.stdout

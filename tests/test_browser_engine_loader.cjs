@@ -11,7 +11,10 @@ async function attempt(change=()=>{},http=200){
  try{await vm.runInNewContext(loader,context);return {writes,calls};}catch(error){return {error,writes,calls};}
 }
 test('actual page loader verifies and installs every manifest asset',async()=>{
- const r=await attempt();assert.equal(r.error,undefined);assert.equal(r.writes.length,21);assert.equal(r.calls.length,1);
+ const r=await attempt();assert.equal(r.error,undefined);
+ const manifest=JSON.parse(fs.readFileSync('js/engine_manifest.json','utf8'));
+ assert.deepEqual(r.writes.slice().sort(),manifest.files.map(f=>'/home/pyodide/clinloop/'+f).sort());
+ assert.equal(r.calls.length,1);
 });
 for(const [name,change] of [
  ['altered source',(m,s)=>{s.files[m.files[0]]+='\n# tampered';}],
