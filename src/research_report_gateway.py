@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any, Dict, Literal
 
 import requests
+from .clinloop_engine.model_json import strict_object
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -107,6 +108,16 @@ def verify_review(value: Any, text: str) -> Dict[str, Any]:
                 (finding.follow_up_quote and finding.follow_up_quote not in text) or
                 (finding.deadline_quote and finding.deadline_quote not in finding.follow_up_quote)):
             raise ValueError(ERROR)
+        # Match every source occurrence; the first may be affirmative while a
+        # later occurrence is negated. This is a conservative conflict check,
+        # not a medical assertion classifier, and never relabels model output.
+        start = 0
+        while (start := text.find(finding.quote, start)) != -1:
+            preceding = re.split(r'[.!?\n]', text[max(0, start-200):start])[-1]
+            if finding.assertion == 'present' and re.search(
+                    r'(?:^|:\s*)\s*(?:no\b|without\b|negative for\b)', preceding + finding.quote, re.I):
+                raise ValueError(ERROR)
+            start += len(finding.quote)
     return review.model_dump()
 
 
@@ -126,7 +137,7 @@ def response_review(response: Dict[str, Any], text: str) -> Dict[str, Any]:
             chunks.append(content['text'])
     if len(chunks) != 1 or len(chunks[0]) > 50000:
         raise ValueError(ERROR)
-    return verify_review(json.loads(chunks[0]), text)
+    return verify_review(strict_object(chunks[0]), text)
 
 
 def provider_schema(value: Any) -> Any:
@@ -198,7 +209,7 @@ def parse_provider_response(provider: str, response: Dict[str, Any], text: str) 
         raise ValueError(ERROR)
     if len(chunks) != 1 or len(chunks[0]) > 50000:
         raise ValueError(ERROR)
-    return verify_review(json.loads(chunks[0]), text)
+    return verify_review(strict_object(chunks[0]), text)
 
 
 def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:
@@ -394,7 +405,7 @@ def create_app(settings: Dict[str, Any], transport=None) -> FastAPI:
                         raw.extend(chunk)
                         if len(raw) > 256000:
                             raise ValueError(ERROR)
-                    review = parse_provider_response(req.provider, json.loads(raw), req.text)
+                    review = parse_provider_response(req.provider, strict_object(raw.decode('utf-8')), req.text)
             except Exception:
                 raise HTTPException(502, ERROR) from None
             return {'review': review, 'provider': req.provider, 'model': model, 'human_review_required': True,

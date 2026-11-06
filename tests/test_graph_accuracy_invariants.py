@@ -221,6 +221,39 @@ def test_exact_duplicate_replay_cannot_add_graph_relations_or_self_edges():
     assert all(edge["source"] != edge["target"] for edge in replayed["edges"])
 
 
+@pytest.mark.parametrize('invalid', [
+    event('bad-time', timestamp='not-a-timestamp'),
+    event('bad-details', details=['invalid']),
+    event('bad-identity', patient=['invalid']),
+    event('', details={}),
+    event('bad-type', event_type=None),
+])
+def test_rejected_rebuild_preserves_the_complete_previous_graph(invalid):
+    graph = DynamicTemporalHypergraph(NOW)
+    graph.build_from_patient_trajectory([event()])
+    nodes, edges, temporal = graph.nodes, graph.hyperedges, graph.graph
+    with pytest.raises(ValueError):
+        graph.build_from_patient_trajectory([event('replacement'), invalid])
+    assert graph.nodes is nodes and graph.hyperedges is edges and graph.graph is temporal
+    assert set(graph.nodes) == {'trigger'}
+    assert next(h for h in graph.get_all_loops() if h.obligation_rule.rule_id == 'R017').status == 'open'
+
+
+def test_conflicting_rebuild_preserves_previous_graph_and_ties_are_order_independent():
+    graph = DynamicTemporalHypergraph(NOW)
+    graph.build_from_patient_trajectory([event()])
+    with pytest.raises(ValueError):
+        graph.build_from_patient_trajectory([event('replacement'), event('replacement', details={})])
+    assert set(graph.nodes) == {'trigger'}
+    rows = [event('c'), event('a'), event('b')]
+    graph.build_from_patient_trajectory(rows)
+    before = list(graph.graph.edges)
+    graph.build_from_patient_trajectory(list(reversed(rows)))
+    assert list(graph.graph.edges) == before == [('a', 'b'), ('b', 'c')]
+    graph.build_from_patient_trajectory([])
+    assert not graph.nodes and not graph.hyperedges and not graph.graph
+
+
 def test_manual_upload_commit_failure_preserves_all_old_snapshots_and_loops():
     from src.clinloop_engine import clinical_api
     from src.clinloop_engine.auth import User

@@ -208,16 +208,35 @@ class DynamicTemporalHypergraph:
         return normalize_timestamp(ts)
 
     def build_from_patient_trajectory(self, events: List[Dict]) -> None:
+        """Replace the graph atomically after the complete trajectory builds.
+
+        A rejected history must not expose partially rebuilt evidence or erase
+        the last successful graph. The caller still receives the failure.
+        """
+        candidate = DynamicTemporalHypergraph(evaluation_time=self.evaluation_time)
+        candidate._build_trajectory(events)
+        self.nodes = candidate.nodes
+        self.hyperedges = candidate.hyperedges
+        self.graph = candidate.graph
+        self._edge_counter = candidate._edge_counter
+
+    def _build_trajectory(self, events: List[Dict]) -> None:
         """
         Construct the hypergraph from a list of clinical events.
         
         Each event dict has: event_id, patient_id, event_type, timestamp, details
         """
         # One trajectory has one patient. Validate before touching a prior graph.
-        identities = {evt.get("patient_id") for evt in events if isinstance(evt, dict)}
-        if (any(not isinstance(evt, dict) for evt in events) or len(identities) > 1
-                or any(not isinstance(pid, str) or not pid.strip() for pid in identities)):
+        if not isinstance(events, list) or any(not isinstance(evt, dict) for evt in events):
+            raise ValueError("Patient trajectory contains invalid event records")
+        if any(not isinstance(evt.get("patient_id"), str) or not evt["patient_id"].strip() for evt in events):
             raise ValueError("Patient trajectory contains an unresolved or mixed patient identity")
+        if len({evt["patient_id"] for evt in events}) > 1:
+            raise ValueError("Patient trajectory contains an unresolved or mixed patient identity")
+        if any(not isinstance(evt.get("event_id"), str) or not evt["event_id"].strip()
+               or not isinstance(evt.get("event_type"), str) or not evt["event_type"].strip()
+               or not isinstance(evt.get("details", {}), dict) for evt in events):
+            raise ValueError("Patient trajectory contains invalid event records")
         # This method rebuilds a complete history; stale follow-ups from an earlier
         # build must not close an obligation after the record has changed.
         self.nodes.clear()
@@ -258,13 +277,12 @@ class DynamicTemporalHypergraph:
             )
             self.nodes[node.node_id] = node
             nodes_list.append(node)
-            self.graph.add_node(node.node_id, **{
-                "event_type": node.event_type,
-                "timestamp": str(node.timestamp),
-            })
 
         # Step 2: Sort by timestamp
-        nodes_list.sort(key=lambda n: n.timestamp)
+        nodes_list.sort(key=lambda n: (n.timestamp, n.node_id))
+        self.nodes = {node.node_id: node for node in nodes_list}
+        for node in nodes_list:
+            self.graph.add_node(node.node_id, event_type=node.event_type, timestamp=str(node.timestamp))
 
         # Step 3: Build temporal edges between consecutive events
         for i in range(len(nodes_list) - 1):
